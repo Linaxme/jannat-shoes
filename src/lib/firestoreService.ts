@@ -1,4 +1,6 @@
 import { db, collection, getDocs, doc, setDoc, deleteDoc, writeBatch } from './firebase';
+import { ShoeProduct, Customer, SalesRep, Order, DuePaymentLog, UserAccount, SystemConfig } from '../types';
+import { INITIAL_USER_ACCOUNTS, DEFAULT_SYSTEM_CONFIG } from '../data/initialData';
 
 export async function deleteDocumentFromFirestore(collectionName: string, id: string) {
   try {
@@ -8,8 +10,23 @@ export async function deleteDocumentFromFirestore(collectionName: string, id: st
     console.error(`Error deleting from ${collectionName}/${id}:`, err);
   }
 }
-import { ShoeProduct, Customer, SalesRep, Order, DuePaymentLog, UserAccount, SystemConfig } from '../types';
-import { INITIAL_PRODUCTS, INITIAL_CUSTOMERS, INITIAL_SALES_REPS, INITIAL_ORDERS, INITIAL_PAYMENT_LOGS, INITIAL_USER_ACCOUNTS, DEFAULT_SYSTEM_CONFIG } from '../data/initialData';
+
+export async function clearAllDatabaseData() {
+  try {
+    const collectionsToClear = ['products', 'customers', 'sellers', 'orders', 'paymentLogs'];
+    for (const colName of collectionsToClear) {
+      const snap = await getDocs(collection(db, colName));
+      const batch = writeBatch(db);
+      snap.docs.forEach(d => {
+        batch.delete(doc(db, colName, d.id));
+      });
+      await batch.commit();
+    }
+    console.log('All products, customers, sellers, orders and payment logs cleared from database!');
+  } catch (err) {
+    console.error('Error clearing database data:', err);
+  }
+}
 
 export async function fetchFirestoreData() {
   try {
@@ -30,39 +47,36 @@ export async function fetchFirestoreData() {
     const systemConfigs: SystemConfig[] = configSnap.docs.map(d => ({ id: d.id, ...d.data() } as SystemConfig));
     const systemConfig = systemConfigs.length > 0 ? systemConfigs[0] : DEFAULT_SYSTEM_CONFIG;
 
-    // If Firestore is completely empty, seed it automatically with initial data!
-    if (products.length === 0 && customers.length === 0) {
-      await seedFirestoreData();
-      return {
-        products: INITIAL_PRODUCTS,
-        customers: INITIAL_CUSTOMERS,
-        sellers: INITIAL_SALES_REPS,
-        orders: INITIAL_ORDERS,
-        paymentLogs: INITIAL_PAYMENT_LOGS,
-        userAccounts: INITIAL_USER_ACCOUNTS,
-        systemConfig: DEFAULT_SYSTEM_CONFIG,
-        isSeeded: true
-      };
+    if (userAccounts.length === 0) {
+      const batch = writeBatch(db);
+      INITIAL_USER_ACCOUNTS.forEach(u => {
+        batch.set(doc(db, 'userAccounts', u.id), u);
+      });
+      await batch.commit();
+    }
+
+    if (systemConfigs.length === 0) {
+      await setDoc(doc(db, 'systemConfig', DEFAULT_SYSTEM_CONFIG.id), DEFAULT_SYSTEM_CONFIG);
     }
 
     return {
-      products: products.length > 0 ? products : INITIAL_PRODUCTS,
-      customers: customers.length > 0 ? customers : INITIAL_CUSTOMERS,
-      sellers: sellers.length > 0 ? sellers : INITIAL_SALES_REPS,
-      orders: orders,
-      paymentLogs: paymentLogs,
+      products,
+      customers,
+      sellers,
+      orders,
+      paymentLogs,
       userAccounts: userAccounts.length > 0 ? userAccounts : INITIAL_USER_ACCOUNTS,
-      systemConfig: systemConfig,
+      systemConfig,
       isSeeded: false
     };
   } catch (err) {
     console.error('Error fetching from Firestore:', err);
     return {
-      products: INITIAL_PRODUCTS,
-      customers: INITIAL_CUSTOMERS,
-      sellers: INITIAL_SALES_REPS,
-      orders: INITIAL_ORDERS,
-      paymentLogs: INITIAL_PAYMENT_LOGS,
+      products: [],
+      customers: [],
+      sellers: [],
+      orders: [],
+      paymentLogs: [],
       userAccounts: INITIAL_USER_ACCOUNTS,
       systemConfig: DEFAULT_SYSTEM_CONFIG,
       isSeeded: false
@@ -71,47 +85,7 @@ export async function fetchFirestoreData() {
 }
 
 export async function seedFirestoreData() {
-  try {
-    const batch = writeBatch(db);
-
-    INITIAL_PRODUCTS.forEach(item => {
-      const ref = doc(db, 'products', item.id);
-      batch.set(ref, item);
-    });
-
-    INITIAL_CUSTOMERS.forEach(item => {
-      const ref = doc(db, 'customers', item.id);
-      batch.set(ref, item);
-    });
-
-    INITIAL_SALES_REPS.forEach(item => {
-      const ref = doc(db, 'sellers', item.id);
-      batch.set(ref, item);
-    });
-
-    INITIAL_ORDERS.forEach(item => {
-      const ref = doc(db, 'orders', item.id);
-      batch.set(ref, item);
-    });
-
-    INITIAL_PAYMENT_LOGS.forEach(item => {
-      const ref = doc(db, 'paymentLogs', item.id);
-      batch.set(ref, item);
-    });
-
-    INITIAL_USER_ACCOUNTS.forEach(item => {
-      const ref = doc(db, 'userAccounts', item.id);
-      batch.set(ref, item);
-    });
-
-    const configRef = doc(db, 'systemConfig', DEFAULT_SYSTEM_CONFIG.id);
-    batch.set(configRef, DEFAULT_SYSTEM_CONFIG);
-
-    await batch.commit();
-    console.log('Firestore successfully seeded with Jannat Shoes wholesale data!');
-  } catch (err) {
-    console.error('Error seeding Firestore:', err);
-  }
+  // Empty seed function kept for backwards compatibility if referenced
 }
 
 export async function saveDocumentToFirestore(collectionName: string, id: string, data: any) {

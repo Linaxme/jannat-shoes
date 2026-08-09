@@ -35,7 +35,7 @@ import { UserManagement } from './components/UserManagement';
 import { SellerPerformance } from './components/SellerPerformance';
 import { FeatureManagement } from './components/FeatureManagement';
 import { SMSPanel } from './components/SMSPanel';
-import { fetchFirestoreData, seedFirestoreData, saveDocumentToFirestore, deleteDocumentFromFirestore } from './lib/firestoreService';
+import { fetchFirestoreData, seedFirestoreData, saveDocumentToFirestore, deleteDocumentFromFirestore, clearAllDatabaseData } from './lib/firestoreService';
 import { generateSMSMessage, sendAutoSMS, SMSType } from './utils/smsService';
 import { OrderItem } from './types';
 
@@ -66,11 +66,11 @@ export default function App() {
   });
   const [isLoadingCloud, setIsLoadingCloud] = useState<boolean>(true);
 
-  const [products, setProducts] = useState<ShoeProduct[]>(INITIAL_PRODUCTS);
-  const [customers, setCustomers] = useState<Customer[]>(INITIAL_CUSTOMERS);
-  const [sellers, setSellers] = useState<SalesRep[]>(INITIAL_SALES_REPS);
-  const [orders, setOrders] = useState<Order[]>(INITIAL_ORDERS);
-  const [paymentLogs, setPaymentLogs] = useState<DuePaymentLog[]>(INITIAL_PAYMENT_LOGS);
+  const [products, setProducts] = useState<ShoeProduct[]>([]);
+  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [sellers, setSellers] = useState<SalesRep[]>([]);
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [paymentLogs, setPaymentLogs] = useState<DuePaymentLog[]>([]);
   const [userAccounts, setUserAccounts] = useState<UserAccount[]>(INITIAL_USER_ACCOUNTS);
   const [systemConfig, setSystemConfig] = useState<SystemConfig>(DEFAULT_SYSTEM_CONFIG);
 
@@ -83,16 +83,44 @@ export default function App() {
     });
   };
 
+  const handleClearDatabase = async () => {
+    await clearAllDatabaseData();
+    setProducts([]);
+    setCustomers([]);
+    setSellers([]);
+    setOrders([]);
+    setPaymentLogs([]);
+    triggerToast('ডাটাবেজের সকল ডেমো ডাটা সফলভাবে ক্লিয়ার করা হয়েছে!');
+  };
+
   // Load from Firestore on mount
   useEffect(() => {
     async function loadData() {
       setIsLoadingCloud(true);
+      
+      // Perform one-time check and cleanup for lingering demo data
+      const isClearedBefore = localStorage.getItem('demo_data_cleared_v3');
+      if (!isClearedBefore) {
+        await clearAllDatabaseData();
+        localStorage.setItem('demo_data_cleared_v3', 'true');
+      }
+
       const res = await fetchFirestoreData();
-      setProducts(res.products);
-      setCustomers(res.customers);
-      setSellers(res.sellers);
-      setOrders(sortOrdersByRecency(res.orders));
-      setPaymentLogs(res.paymentLogs);
+      
+      const isDemoId = (id: string) => /^(prod_|cust_|seller_|ord_|log_)\d+$/.test(id);
+      
+      const cleanProducts = res.products.filter(p => !isDemoId(p.id));
+      const cleanCustomers = res.customers.filter(c => !isDemoId(c.id));
+      const cleanSellers = res.sellers.filter(s => !isDemoId(s.id));
+      const cleanOrders = res.orders.filter(o => !isDemoId(o.id));
+      const cleanPaymentLogs = res.paymentLogs.filter(p => !isDemoId(p.id));
+
+      setProducts(cleanProducts);
+      setCustomers(cleanCustomers);
+      setSellers(cleanSellers);
+      setOrders(sortOrdersByRecency(cleanOrders));
+      setPaymentLogs(cleanPaymentLogs);
+
       if (res.userAccounts && res.userAccounts.length > 0) {
         let hasAdmin = res.userAccounts.some((u) => u.role === 'admin');
         let accounts = res.userAccounts.map((u) => {
@@ -121,9 +149,6 @@ export default function App() {
         setSystemConfig(res.systemConfig);
       }
       setIsLoadingCloud(false);
-      if (res.isSeeded) {
-        triggerToast(t('toast_default_data_seeded'));
-      }
     }
     loadData();
   }, []);
@@ -877,6 +902,7 @@ export default function App() {
             systemConfig={systemConfig}
             activeTheme={activeTheme}
             onUpdateSystemConfig={handleUpdateSystemConfig}
+            onClearDatabase={handleClearDatabase}
           />
         )}
 
