@@ -1,0 +1,342 @@
+import React, { useRef, useState } from 'react';
+import { Order } from '../types';
+import { formatTaka, toBnDigit, formatBnDate } from '../utils/formatters';
+import { Printer, X, CheckCircle2, PhoneCall, MapPin, Store, Download, Loader2, Share2, Eye } from 'lucide-react';
+import html2canvas from 'html2canvas';
+
+interface InvoiceModalProps {
+  order: Order | null;
+  onClose: () => void;
+}
+
+export const InvoiceModal: React.FC<InvoiceModalProps> = ({ order, onClose }) => {
+  const memoRef = useRef<HTMLDivElement>(null);
+  const [isDownloading, setIsDownloading] = useState(false);
+  const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
+
+  if (!order) return null;
+
+  const handlePrint = () => {
+    window.print();
+  };
+
+  const handleDownload = async () => {
+    if (!memoRef.current) return;
+    try {
+      setIsDownloading(true);
+      const canvas = await html2canvas(memoRef.current, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: '#ffffff',
+      });
+
+      const blob = await new Promise<Blob | null>((resolve) =>
+        canvas.toBlob(resolve, 'image/png')
+      );
+
+      if (!blob) {
+        throw new Error('Canvas blob failed');
+      }
+
+      const fileName = `Jannat_Memo_${order.memoNo}.png`;
+      const file = new File([blob], fileName, { type: 'image/png' });
+
+      // Try Web Share API first for mobile devices (allows direct save to Gallery / Photos)
+      if (
+        navigator.canShare &&
+        navigator.canShare({ files: [file] }) &&
+        /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
+      ) {
+        try {
+          await navigator.share({
+            files: [file],
+            title: `মেমো নং ${order.memoNo}`,
+            text: `মেসার্স জান্নাত সুজ - ক্যাশ মেমো ${order.memoNo}`,
+          });
+          setIsDownloading(false);
+          return;
+        } catch (shareErr: any) {
+          if (shareErr.name === 'AbortError') {
+            setIsDownloading(false);
+            return;
+          }
+          console.warn('Web Share failed, falling back to URL download:', shareErr);
+        }
+      }
+
+      // Fallback 1: Create Blob URL and trigger download link
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = fileName;
+      link.target = '_blank';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      // Save preview URL in case browser blocks automatic popup
+      setImagePreviewUrl(url);
+
+    } catch (err) {
+      console.error('Failed to download memo image:', err);
+      if (memoRef.current) {
+        try {
+          const canvas = await html2canvas(memoRef.current, { scale: 2, backgroundColor: '#ffffff' });
+          setImagePreviewUrl(canvas.toDataURL('image/png'));
+        } catch (e) {
+          alert('ডাউনলোড করতে সমস্যা হয়েছে। দয়া করে স্ক্রিনশট অথবা প্রিন্ট অপশন ব্যবহার করুন।');
+        }
+      }
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-2 sm:p-4 overflow-y-auto">
+      <div className="bg-white text-slate-900 rounded-2xl max-w-2xl w-full p-3 sm:p-6 shadow-2xl space-y-4 my-auto print:shadow-none print:p-0 print:max-w-none print:w-full print:m-0">
+        
+        {/* Modal Controls (Hidden in Print) */}
+        <div className="flex items-center justify-between border-b pb-3 print:hidden">
+          <div className="flex items-center gap-2 text-emerald-700 font-bold text-xs sm:text-sm">
+            <CheckCircle2 className="w-5 h-5 shrink-0" />
+            <span>ক্যাশ মেমো প্রস্তুত হয়েছে</span>
+          </div>
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            <button
+              onClick={handleDownload}
+              disabled={isDownloading}
+              className="px-3 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-400 text-white font-bold rounded-xl text-xs flex items-center gap-1.5 shadow transition-colors"
+            >
+              {isDownloading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+              <span>ডাউনলোড</span>
+            </button>
+            <button
+              onClick={handlePrint}
+              className="px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs flex items-center gap-1.5 shadow transition-colors"
+            >
+              <Printer className="w-4 h-4" />
+              <span>প্রিন্ট</span>
+            </button>
+            <button
+              onClick={onClose}
+              className="p-2 text-slate-400 hover:text-slate-700 rounded-lg"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
+
+        {/* PRINTABLE MEMO CONTENT AREA */}
+        <div ref={memoRef} className="p-3 sm:p-4 border-2 border-slate-900 rounded-xl space-y-3 text-xs font-sans bg-white print:border-none print:p-0">
+          
+          {/* Shop Header */}
+          <div className="text-center border-b-2 border-slate-900 pb-2.5 space-y-0.5">
+            <h1 className="text-lg sm:text-xl font-black text-slate-900 tracking-tight flex items-center justify-center gap-2">
+              <Store className="w-5 h-5 text-slate-900 hidden sm:inline" />
+              মেসার্স জান্নাত সুজ
+            </h1>
+            <p className="text-[11px] font-semibold text-slate-700">
+              সকল প্রকার দেশী ও বিদেশী পুরুষ, মহিলা ও বাচ্চাদের পাইকারি জুতা বিক্রয় কেন্দ্র
+            </p>
+            <div className="text-[10px] text-slate-600 flex flex-wrap items-center justify-center gap-x-3 gap-y-0.5 mt-0.5">
+              <span className="flex items-center gap-1">
+                <MapPin className="w-3 h-3 text-slate-500" />
+                ফুলবাড়িয়া পাইকারি জুতা মার্কেট (২য় তলা), ঢাকা
+              </span>
+              <span className="flex items-center gap-1">
+                <PhoneCall className="w-3 h-3 text-slate-500" />
+                ফোন: ০১৭১১-০০১১৮৮, ০১৮২২-৩৩৪৪৫৫
+              </span>
+            </div>
+            <div className="inline-block px-3 py-0.5 bg-slate-900 text-white font-bold text-[11px] rounded-full mt-1 uppercase tracking-widest">
+              ক্যাশ মেমো / চালান
+            </div>
+          </div>
+
+          {/* Memo Meta & Customer Info Grid */}
+          <div className="grid grid-cols-2 gap-3 bg-slate-50 p-2.5 rounded-lg border border-slate-200 text-[11px]">
+            <div className="space-y-0.5">
+              <div><span className="font-bold">দোকান:</span> {order.shopName}</div>
+              <div><span className="font-bold">প্রোপাইটার:</span> {order.customerName}</div>
+              <div><span className="font-bold">ঠিকানা:</span> {order.customerAddress}</div>
+              <div><span className="font-bold">মোবাইল:</span> {order.customerPhone}</div>
+            </div>
+            <div className="space-y-0.5 text-right">
+              <div><span className="font-bold">মেমো নং:</span> <span className="font-mono font-bold text-indigo-900">{order.memoNo}</span></div>
+              <div><span className="font-bold">তারিখ:</span> {formatBnDate(order.date)} ({order.time})</div>
+              <div><span className="font-bold">সেলার:</span> {order.sellerName}</div>
+              <div><span className="font-bold">পেমেন্ট:</span> {order.paymentMethod}</div>
+            </div>
+          </div>
+
+          {/* Itemized Table (Optimized for Mobile single-page view without horizontal scroll) */}
+          <div className="w-full">
+            <table className="w-full text-left border-collapse border border-slate-900 text-[10px] sm:text-[11px]">
+              <thead>
+                <tr className="bg-slate-900 text-white font-bold">
+                  <th className="p-1 border border-slate-900 text-center w-6">ক্র:</th>
+                  <th className="p-1 border border-slate-900">আর্টিকল</th>
+                  <th className="p-1 border border-slate-900 text-center">সাইজ</th>
+                  <th className="p-1 border border-slate-900 text-center">পরিমাণ</th>
+                  <th className="p-1 border border-slate-900 text-center">মোট জোড়া</th>
+                  <th className="p-1 border border-slate-900 text-right">দর (৳)</th>
+                  <th className="p-1 border border-slate-900 text-right">মোট (৳)</th>
+                </tr>
+              </thead>
+              <tbody>
+                {order.items.map((item, idx) => {
+                  const artCode = item.articleCode || (item as any).articleNo || (item as any).article || '-';
+                  const sizes = item.sizeRange || (item as any).size || (item as any).color || '-';
+                  const pairs = item.totalPairs ?? (item as any).pairQty ?? (item as any).quantityInput ?? 0;
+                  const price = item.unitSellPrice ?? (item as any).rate ?? (item as any).price ?? 0;
+                  const itemTotal = item.totalAmount ?? (item as any).itemTotal ?? (pairs * price);
+                  const qtyInput = item.quantityInput || pairs;
+                  const unitLabel = item.unitType === 'cartons' ? 'ডজন' : 'জোড়া';
+
+                  return (
+                    <tr key={idx} className="border-b border-slate-300">
+                      <td className="p-1 border border-slate-900 text-center font-mono">{toBnDigit(idx + 1)}</td>
+                      <td className="p-1 border border-slate-900 font-mono font-bold">
+                        {artCode}
+                      </td>
+                      <td className="p-1 border border-slate-900 text-center">{sizes}</td>
+                      <td className="p-1 border border-slate-900 text-center">
+                        {toBnDigit(qtyInput)} {unitLabel}
+                      </td>
+                      <td className="p-1 border border-slate-900 text-center font-semibold">
+                        {toBnDigit(pairs)}
+                      </td>
+                      <td className="p-1 border border-slate-900 text-right font-mono">{formatTaka(price)}</td>
+                      <td className="p-1 border border-slate-900 text-right font-mono font-bold">{formatTaka(itemTotal)}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Calculations Summary Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-start pt-1">
+            
+            {/* Note & Policy */}
+            <div className="text-[10px] text-slate-600 space-y-0.5 bg-slate-50 p-2 rounded border border-slate-200">
+              <div className="font-bold text-slate-800">শর্তাবলী:</div>
+              <div>১. বিক্রিত মাল ফেরত নেওয়া হয় না, তবে স্টক পরিবর্তন সাপেক্ষ।</div>
+              <div>২. মেমো ছাড়া কোনো অভিযোগ গ্রহণযোগ্য নয়।</div>
+              {order.notes && (
+                <div className="mt-0.5 font-semibold text-slate-800">নোট: {order.notes}</div>
+              )}
+            </div>
+
+            {/* Calculations */}
+            <table className="w-full text-[10px] sm:text-[11px]">
+              <tbody>
+                <tr>
+                  <td className="py-0.5 text-slate-600">মোট জোড়া:</td>
+                  <td className="py-0.5 text-right font-bold">{toBnDigit(order.totalPairs)} জোড়া</td>
+                </tr>
+                <tr>
+                  <td className="py-0.5 text-slate-600">মোট মূল্য:</td>
+                  <td className="py-0.5 text-right font-semibold">{formatTaka(order.subTotal)}</td>
+                </tr>
+                {order.discount > 0 && (
+                  <tr>
+                    <td className="py-0.5 text-rose-600 font-medium">ডিসকাউন্ট (ছাড়):</td>
+                    <td className="py-0.5 text-right text-rose-600 font-semibold">- {formatTaka(order.discount)}</td>
+                  </tr>
+                )}
+                <tr className="border-t border-slate-900 font-bold text-xs">
+                  <td className="py-1">সর্বমোট নিট বিল:</td>
+                  <td className="py-1 text-right font-black">{formatTaka(order.grandTotal)}</td>
+                </tr>
+                <tr className="text-emerald-700 font-bold">
+                  <td className="py-0.5">জমা/নগদ প্রদান:</td>
+                  <td className="py-0.5 text-right font-black">{formatTaka(order.paidAmount)}</td>
+                </tr>
+                <tr className="text-rose-700 font-bold border-t border-slate-300">
+                  <td className="py-0.5">চালানের বাকী:</td>
+                  <td className="py-0.5 text-right font-black">{formatTaka(order.dueAmount)}</td>
+                </tr>
+                <tr className="text-slate-600">
+                  <td className="py-0.5">পূর্বের মার্কেট বাকী:</td>
+                  <td className="py-0.5 text-right font-semibold">{formatTaka(order.previousDue)}</td>
+                </tr>
+                <tr className="bg-slate-900 text-white font-bold border-t border-slate-900">
+                  <td className="p-1">বর্তমান মোট বাকী:</td>
+                  <td className="p-1 text-right font-black text-amber-300">{formatTaka(order.totalNetDue)}</td>
+                </tr>
+              </tbody>
+            </table>
+
+          </div>
+
+          {/* Signatures Footer */}
+          <div className="flex items-center justify-between pt-8 text-[10px] text-slate-700">
+            <div className="border-t border-slate-800 pt-1 text-center w-28">
+              ক্রেতার স্বাক্ষর
+            </div>
+            <div className="border-t border-slate-800 pt-1 text-center w-28 font-bold">
+              জান্নাত সুজ পক্ষে
+            </div>
+          </div>
+
+        </div>
+
+        {/* Mobile Image Download / Long-press Modal Fallback */}
+        {imagePreviewUrl && (
+          <div className="fixed inset-0 z-[60] bg-slate-950/90 backdrop-blur-md flex flex-col items-center justify-center p-3 sm:p-4">
+            <div className="bg-slate-900 border border-slate-700 text-white p-4 rounded-2xl max-w-lg w-full space-y-3 text-center shadow-2xl">
+              <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+                <span className="text-xs font-bold text-emerald-400 flex items-center gap-1.5">
+                  <Download className="w-4 h-4" />
+                  মেমো ছবি গ্যালারিতে সেভ করুন
+                </span>
+                <button
+                  onClick={() => setImagePreviewUrl(null)}
+                  className="p-1 text-slate-400 hover:text-white rounded-lg"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="text-xs text-slate-300 bg-amber-500/10 border border-amber-500/30 p-2.5 rounded-xl text-left space-y-1">
+                <div className="font-bold text-amber-300">📱 ফোনে ডাউনলোড করার সহজ উপায়:</div>
+                <div>১. নিচের ছবির ওপর ১-২ সেকেন্ড আঙুল দিয়ে চেপে রাখুন (Long Press)।</div>
+                <div>২. অপশন থেকে <strong>"Save Image"</strong>, <strong>"Download Image"</strong> অথবা <strong>"Share Image"</strong> সিলেক্ট করুন।</div>
+              </div>
+
+              <div className="max-h-[55vh] overflow-y-auto rounded-xl border border-slate-700 p-1 bg-white">
+                <img
+                  src={imagePreviewUrl}
+                  alt={`Memo ${order.memoNo}`}
+                  className="w-full h-auto rounded"
+                />
+              </div>
+
+              <div className="flex gap-2 pt-1">
+                <a
+                  href={imagePreviewUrl}
+                  download={`Jannat_Memo_${order.memoNo}.png`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-2 transition"
+                >
+                  <Download className="w-4 h-4" />
+                  ডাউনলোড করুন
+                </a>
+                <button
+                  onClick={() => setImagePreviewUrl(null)}
+                  className="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-xl text-xs transition"
+                >
+                  বন্ধ করুন
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+      </div>
+    </div>
+  );
+};
