@@ -221,7 +221,7 @@ export const DueManagement: React.FC<DueManagementProps> = ({
     if (localStatus === 'failed') {
       return (
         <>
-          <span className="text-rose-400">✖</span>
+          <span className="text-rose-400">X</span>
           <span className="text-rose-400">ব্যর্থ!</span>
         </>
       );

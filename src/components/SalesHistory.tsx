@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Order, UITheme } from '../types';
+import { Order, UITheme, UserRole } from '../types';
 import { formatTaka, toBnDigit, formatBnDate } from '../utils/formatters';
 import { History, Search, Filter, Printer, CheckCircle, PackageCheck, Truck, List, LayoutGrid, Store, User, Trash2, ChevronDown, ChevronUp, Eye, ShoppingBag } from 'lucide-react';
 
@@ -9,6 +9,7 @@ interface SalesHistoryProps {
   onSelectOrderForInvoice: (order: Order) => void;
   onConfirmDelivery: (orderId: string) => void;
   onDeleteOrder?: (orderId: string) => void;
+  currentUserRole?: UserRole;
 }
 
 export const SalesHistory: React.FC<SalesHistoryProps> = ({
@@ -17,6 +18,7 @@ export const SalesHistory: React.FC<SalesHistoryProps> = ({
   onSelectOrderForInvoice,
   onConfirmDelivery,
   onDeleteOrder,
+  currentUserRole = 'admin',
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('সব');
@@ -27,6 +29,8 @@ export const SalesHistory: React.FC<SalesHistoryProps> = ({
   const [viewMode, setViewMode] = useState<'table' | 'card'>(
     typeof window !== 'undefined' && window.innerWidth < 768 ? 'card' : 'table'
   );
+
+  const isCustomer = currentUserRole === 'customer';
 
   const getDozenText = (pairs: number) => {
     const dozen = (pairs / 12).toFixed(1).replace(/\.0$/, '');
@@ -70,14 +74,14 @@ export const SalesHistory: React.FC<SalesHistoryProps> = ({
         <div className="flex items-center gap-2.5 flex-1 min-w-0">
           <span className="text-xs sm:text-sm font-bold text-amber-400 tracking-wide whitespace-nowrap flex items-center gap-1.5">
             <History className="w-3.5 h-3.5 text-amber-400" />
-            বিক্রয় ইতিহাস
+            {isCustomer ? 'আপনার অর্ডার হিস্টোরি' : 'বিক্রয় ইতিহাস'}
           </span>
           <div className="h-px bg-gradient-to-r from-amber-500/40 via-slate-800 to-transparent flex-1" />
         </div>
 
         <div className="flex items-center gap-3 bg-slate-900 px-3 py-1.5 rounded-xl border border-slate-800 text-xs shrink-0">
           <div>
-            <span className="text-slate-400 text-[11px] mr-1">মোট বিক্রি:</span>
+            <span className="text-slate-400 text-[11px] mr-1">{isCustomer ? 'মোট অর্ডার ক্রয়:' : 'মোট বিক্রি:'}</span>
             <span className="font-bold text-amber-300">{formatTaka(totalFilteredSales)}</span>
           </div>
           <div className="h-3 w-px bg-slate-700" />
@@ -109,8 +113,8 @@ export const SalesHistory: React.FC<SalesHistoryProps> = ({
             className="bg-slate-950 border border-slate-700 text-xs text-slate-200 rounded-xl px-3 py-2 focus:outline-none"
           >
             <option value="সব">সব</option>
-            <option value="booked">📦 বুকিং (পেন্ডিং)</option>
-            <option value="delivered">⚡ ডেলিভারি</option>
+            <option value="booked">বুকিং (পেন্ডিং)</option>
+            <option value="delivered">ডেলিভারি</option>
           </select>
 
           {/* Status Filter */}

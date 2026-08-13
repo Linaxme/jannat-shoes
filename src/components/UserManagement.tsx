@@ -53,28 +53,25 @@ export const UserManagement: React.FC<UserManagementProps> = ({
   const [password, setPassword] = useState<string>('seller123');
   const [role, setRole] = useState<UserRole>('seller');
   const [phone, setPhone] = useState<string>('');
-  const [area, setArea] = useState<string>('ফেনী ও নোয়াখালী রুট');
   const [targetPairs, setTargetPairs] = useState<number>(1000);
-  const [commissionRate, setCommissionRate] = useState<number>(2.0);
+  const [targetAmount, setTargetAmount] = useState<number>(0);
 
   // Password reset modal state
   const [resetTargetUser, setResetTargetUser] = useState<UserAccount | null>(null);
   const [newPasswordInput, setNewPasswordInput] = useState<string>('');
 
-  // Seller target/commission edit state
+  // Seller edit state
   const [editingSeller, setEditingSeller] = useState<SalesRep | null>(null);
   const [editTargetPairs, setEditTargetPairs] = useState<number>(1000);
-  const [editCommissionRate, setEditCommissionRate] = useState<number>(2.0);
-  const [editArea, setEditArea] = useState<string>('');
+  const [editTargetAmount, setEditTargetAmount] = useState<number>(0);
 
   const handleUpdateSellerSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (editingSeller && onUpdateSeller) {
       onUpdateSeller({
         ...editingSeller,
-        area: editArea,
         monthlyTargetPairs: editTargetPairs,
-        commissionRatePercent: editCommissionRate,
+        monthlyTargetAmount: editTargetAmount,
       });
       setEditingSeller(null);
     }
@@ -95,9 +92,10 @@ export const UserManagement: React.FC<UserManagementProps> = ({
         id: createdSellerId,
         name: name,
         phone: phone || loginId,
-        area: area,
+        area: '',
         monthlyTargetPairs: targetPairs,
-        commissionRatePercent: commissionRate,
+        monthlyTargetAmount: targetAmount,
+        commissionRatePercent: 0,
       };
     }
 
@@ -109,7 +107,6 @@ export const UserManagement: React.FC<UserManagementProps> = ({
       password: password,
       role: role,
       phone: phone.trim() || loginId.trim(),
-      area: area,
       sellerId: createdSellerId,
       isActive: true,
       createdAt: new Date().toISOString().split('T')[0],
@@ -123,7 +120,8 @@ export const UserManagement: React.FC<UserManagementProps> = ({
     setLoginId('');
     setPassword('seller123');
     setPhone('');
-    setArea('ফেনী ও নোয়াখালী রুট');
+    setTargetPairs(1000);
+    setTargetAmount(0);
     setShowAddModal(false);
   };
 
@@ -260,7 +258,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({
           </button>
         ) : (
           <div className="px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-[11px] text-slate-400">
-            🔒 {t('user_mgmt_desc')}
+            {t('user_mgmt_desc')}
           </div>
         )}
       </div>
@@ -393,14 +391,6 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                       </div>
 
                       <div className="flex items-center justify-between bg-slate-900 px-2.5 py-2 rounded-lg border border-slate-800">
-                        <span className="text-slate-400 flex items-center gap-1">
-                          <MapPin className="w-3.5 h-3.5 text-slate-400" />
-                          {t('area_route')}:
-                        </span>
-                        <span className="text-slate-200 font-medium">{usr.area || sellerData?.area || 'N/A'}</span>
-                      </div>
-
-                      <div className="flex items-center justify-between bg-slate-900 px-2.5 py-2 rounded-lg border border-slate-800">
                         <span className="text-slate-400">{t('status')}:</span>
                         <span>
                           {usr.isActive ? (
@@ -415,45 +405,38 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                         </span>
                       </div>
 
-                      {sellerData && (
-                        <>
-                          {(!systemConfig || systemConfig.enableTargetSystem) && (
-                            <div className="flex items-center justify-between bg-slate-900 px-2.5 py-2 rounded-lg border border-slate-800">
-                              <span className="text-slate-400 flex items-center gap-1">
-                                <Target className="w-3.5 h-3.5 text-amber-400" />
-                                মাসিক টার্গেট:
-                              </span>
-                              <span className="text-amber-300 font-bold">{toBnDigit(sellerData.monthlyTargetPairs || 0)} জোড়া</span>
-                            </div>
-                          )}
-
-                          {(!systemConfig || systemConfig.enableCommissionSystem) && (
-                            <div className="flex items-center justify-between bg-slate-900 px-2.5 py-2 rounded-lg border border-slate-800">
-                              <span className="text-slate-400 flex items-center gap-1">
-                                <Percent className="w-3.5 h-3.5 text-emerald-400" />
-                                কমিশন রেট:
-                              </span>
-                              <span className="text-emerald-400 font-bold">{toBnDigit(sellerData.commissionRatePercent || 0)}%</span>
-                            </div>
-                          )}
-                        </>
+                      {sellerData && (!systemConfig || systemConfig.enableTargetSystem !== false) && (
+                        <div className="space-y-1">
+                          <div className="flex items-center justify-between bg-slate-900 px-2.5 py-2 rounded-lg border border-slate-800">
+                            <span className="text-slate-400 flex items-center gap-1">
+                              <Target className="w-3.5 h-3.5 text-amber-400" />
+                              টার্গেট (জোড়া):
+                            </span>
+                            <span className="text-amber-300 font-bold">{toBnDigit(sellerData.monthlyTargetPairs || 0)} জোড়া</span>
+                          </div>
+                          <div className="flex items-center justify-between bg-slate-900 px-2.5 py-2 rounded-lg border border-slate-800">
+                            <span className="text-slate-400 flex items-center gap-1">
+                              <Target className="w-3.5 h-3.5 text-emerald-400" />
+                              টার্গেট (টাকায়):
+                            </span>
+                            <span className="text-emerald-400 font-bold">৳ {toBnDigit(sellerData.monthlyTargetAmount || 0)}</span>
+                          </div>
+                        </div>
                       )}
                     </div>
-
                     {/* Card Actions */}
                     <div className="pt-2 border-t border-slate-800/40 flex flex-wrap items-center gap-2">
-                      {sellerData && (currentUser.role === 'admin' || currentUser.role === 'super_admin') && (!systemConfig || systemConfig.enableTargetSystem || systemConfig.enableCommissionSystem) && (
+                      {sellerData && (currentUser.role === 'admin' || currentUser.role === 'super_admin') && (!systemConfig || systemConfig.enableTargetSystem !== false) && (
                         <button
                           onClick={() => {
                             setEditingSeller(sellerData);
                             setEditTargetPairs(sellerData.monthlyTargetPairs || 1000);
-                            setEditCommissionRate(sellerData.commissionRatePercent || 2.0);
-                            setEditArea(sellerData.area || '');
+                            setEditTargetAmount(sellerData.monthlyTargetAmount || 0);
                           }}
                           className="flex-1 min-w-[120px] py-1.5 bg-slate-800 hover:bg-slate-700 text-emerald-400 border border-emerald-500/30 rounded-lg text-xs font-semibold transition flex items-center justify-center gap-1.5 cursor-pointer"
                         >
                           <Edit className="w-3.5 h-3.5" />
-                          <span>টার্গেট ও কমিশন সেট</span>
+                          <span>টার্গেট সেট</span>
                         </button>
                       )}
 
@@ -587,11 +570,6 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                         </div>
 
                         <div className="space-y-1">
-                          <div className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">এলাকা / রুট</div>
-                          <div className="text-slate-200 font-medium">{usr.area || sellerData?.area || 'N/A'}</div>
-                        </div>
-
-                        <div className="space-y-1">
                           <div className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">স্ট্যাটাস</div>
                           <div>
                             {usr.isActive ? (
@@ -607,44 +585,38 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                         </div>
                       </div>
 
-                      {sellerData && (
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs pt-3 border-t border-slate-800/40">
-                          {(!systemConfig || systemConfig.enableTargetSystem) && (
-                            <div className="space-y-1">
-                              <div className="text-[10px] text-slate-500 uppercase font-bold tracking-wider flex items-center gap-1">
-                                <Target className="w-3.5 h-3.5 text-amber-400" />
-                                মাসিক বিক্রয় টার্গেট
-                              </div>
-                              <div className="text-amber-300 font-bold">{toBnDigit(sellerData.monthlyTargetPairs || 0)} জোড়া</div>
+                      {sellerData && (!systemConfig || systemConfig.enableTargetSystem !== false) && (
+                        <div className="grid grid-cols-2 gap-4 text-xs pt-3 border-t border-slate-800/40">
+                          <div className="space-y-1">
+                            <div className="text-[10px] text-slate-500 uppercase font-bold tracking-wider flex items-center gap-1">
+                              <Target className="w-3.5 h-3.5 text-amber-400" />
+                              মাসিক টার্গেট (জোড়া)
                             </div>
-                          )}
-
-                          {(!systemConfig || systemConfig.enableCommissionSystem) && (
-                            <div className="space-y-1">
-                              <div className="text-[10px] text-slate-500 uppercase font-bold tracking-wider flex items-center gap-1">
-                                <Percent className="w-3.5 h-3.5 text-emerald-400" />
-                                কমিশন পারসেন্টেজ
-                              </div>
-                              <div className="text-emerald-400 font-bold">{toBnDigit(sellerData.commissionRatePercent || 0)}%</div>
+                            <div className="text-amber-300 font-bold">{toBnDigit(sellerData.monthlyTargetPairs || 0)} জোড়া</div>
+                          </div>
+                          <div className="space-y-1">
+                            <div className="text-[10px] text-slate-500 uppercase font-bold tracking-wider flex items-center gap-1">
+                              <Target className="w-3.5 h-3.5 text-emerald-400" />
+                              মাসিক টার্গেট (টাকায়)
                             </div>
-                          )}
+                            <div className="text-emerald-400 font-bold">৳ {toBnDigit(sellerData.monthlyTargetAmount || 0)}</div>
+                          </div>
                         </div>
                       )}
 
                       {/* Expandable Action Buttons */}
                       <div className="pt-3 border-t border-slate-800/50 flex items-center justify-end gap-3">
-                        {sellerData && (currentUser.role === 'admin' || currentUser.role === 'super_admin') && (!systemConfig || systemConfig.enableTargetSystem || systemConfig.enableCommissionSystem) && (
+                        {sellerData && (currentUser.role === 'admin' || currentUser.role === 'super_admin') && (!systemConfig || systemConfig.enableTargetSystem !== false) && (
                           <button
                             onClick={() => {
                               setEditingSeller(sellerData);
                               setEditTargetPairs(sellerData.monthlyTargetPairs || 1000);
-                              setEditCommissionRate(sellerData.commissionRatePercent || 2.0);
-                              setEditArea(sellerData.area || '');
+                              setEditTargetAmount(sellerData.monthlyTargetAmount || 0);
                             }}
                             className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-emerald-400 border border-emerald-500/30 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer"
                           >
                             <Edit className="w-3.5 h-3.5" />
-                            <span>টার্গেট ও কমিশন সেট করুন</span>
+                            <span>টার্গেট সেট করুন</span>
                           </button>
                         )}
 
@@ -730,7 +702,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                 onClick={() => setShowAddModal(false)}
                 className="text-slate-400 hover:text-white p-1"
               >
-                ✕
+                X
               </button>
             </div>
 
@@ -823,53 +795,33 @@ export const UserManagement: React.FC<UserManagementProps> = ({
 
               {role === 'customer' && (
                 <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-[11px] text-emerald-300">
-                  ✨ দোকানদার এই মোবাইল নম্বর ও পাসওয়ার্ড ব্যবহার করে অনলাইনে ক্যাটালগ লগইন করতে পারবেন এবং তাদের অর্ডারের তথ্য প্রাক-পূরণ হবে।
+                  দোকানদার এই মোবাইল নম্বর ও পাসওয়ার্ড ব্যবহার করে অনলাইনে ক্যাটালগ লগইন করতে পারবেন এবং তাদের অর্ডারের তথ্য প্রাক-পূরণ হবে।
                 </div>
               )}
 
-              {/* Extra seller details if role is seller */}
-              {role === 'seller' && (
-                <div className="p-3.5 bg-slate-950 border border-slate-800 rounded-xl space-y-3">
-                  <div className="text-[11px] font-bold text-amber-400 uppercase tracking-wider flex items-center gap-1">
-                    <MapPin className="w-3.5 h-3.5" /> সেলার ডিটেইলস (কমিশন ও রুট)
-                  </div>
-
-                  <div>
-                    <label className="block font-semibold text-slate-300 mb-1">বিক্রয় এলাকা</label>
+              {role === 'seller' && (!systemConfig || systemConfig.enableTargetSystem !== false) && (
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl space-y-2">
+                    <label className="block font-semibold text-slate-300 mb-1 text-[11px] uppercase tracking-wider">
+                      টার্গেট (জোড়া)
+                    </label>
                     <input
-                      type="text"
-                      placeholder="যেমন: ফেনী, নোয়াখালী ও চৌমুহনী রুট"
-                      value={area}
-                      onChange={(e) => setArea(e.target.value)}
-                      className="w-full bg-slate-900 border border-slate-700 text-slate-100 p-2 rounded-lg focus:outline-none focus:border-amber-400"
+                      type="number"
+                      value={targetPairs}
+                      onChange={(e) => setTargetPairs(Number(e.target.value))}
+                      className="w-full bg-slate-950 border border-slate-700 text-slate-100 font-mono p-2.5 rounded-xl focus:outline-none focus:border-amber-400"
                     />
                   </div>
-
-                  <div className="grid grid-cols-2 gap-3">
-                    {(!systemConfig || systemConfig.enableTargetSystem) ? (
-                      <div>
-                        <label className="block font-semibold text-slate-300 mb-1">মাসিক টার্গেট</label>
-                        <input
-                          type="number"
-                          value={targetPairs}
-                          onChange={(e) => setTargetPairs(Number(e.target.value))}
-                          className="w-full bg-slate-900 border border-slate-700 text-slate-100 p-2 rounded-lg focus:outline-none focus:border-amber-400"
-                        />
-                      </div>
-                    ) : null}
-
-                    {(!systemConfig || systemConfig.enableCommissionSystem) ? (
-                      <div>
-                        <label className="block font-semibold text-slate-300 mb-1">কমিশন (%)</label>
-                        <input
-                          type="number"
-                          step="0.1"
-                          value={commissionRate}
-                          onChange={(e) => setCommissionRate(Number(e.target.value))}
-                          className="w-full bg-slate-900 border border-slate-700 text-slate-100 p-2 rounded-lg focus:outline-none focus:border-amber-400"
-                        />
-                      </div>
-                    ) : null}
+                  <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl space-y-2">
+                    <label className="block font-semibold text-slate-300 mb-1 text-[11px] uppercase tracking-wider">
+                      টার্গেট (টাকায়)
+                    </label>
+                    <input
+                      type="number"
+                      value={targetAmount || ''}
+                      onChange={(e) => setTargetAmount(Number(e.target.value))}
+                      className="w-full bg-slate-950 border border-slate-700 text-slate-100 font-mono p-2.5 rounded-xl focus:outline-none focus:border-emerald-400"
+                    />
                   </div>
                 </div>
               )}
@@ -937,59 +889,40 @@ export const UserManagement: React.FC<UserManagementProps> = ({
         </div>
       )}
 
-      {/* Edit Seller Target / Commission Modal */}
+      {/* Edit Seller Target Modal */}
       {editingSeller && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
           <div className="w-full max-w-sm bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4">
             <h3 className="text-sm font-bold text-slate-100 flex items-center gap-2">
-              <Edit className="w-4 h-4 text-amber-400" />
-              <span>টার্গেট ও কমিশন আপডেট: {editingSeller.name}</span>
+              <Target className="w-4 h-4 text-amber-400" />
+              <span>টার্গেট আপডেট: {editingSeller.name}</span>
             </h3>
 
             <form onSubmit={handleUpdateSellerSubmit} className="space-y-4 text-xs">
-              <div>
-                <label className="block font-semibold text-slate-300 mb-1">বিক্রয় এলাকা (Route Area)</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="যেমন: ফেনী, নোয়াখালী রুট"
-                  value={editArea}
-                  onChange={(e) => setEditArea(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-700 text-slate-100 p-2.5 rounded-xl focus:outline-none focus:border-amber-400"
-                />
-              </div>
-
               <div className="grid grid-cols-2 gap-3">
-                {(!systemConfig || systemConfig.enableTargetSystem) ? (
-                  <div>
-                    <label className="block font-semibold text-slate-300 mb-1">মাসিক টার্গেট (জোড়া)</label>
-                    <input
-                      type="number"
-                      required
-                      min="1"
-                      placeholder="যেমন: ১০০০"
-                      value={editTargetPairs}
-                      onChange={(e) => setEditTargetPairs(Number(e.target.value))}
-                      className="w-full bg-slate-950 border border-slate-700 text-slate-100 p-2.5 rounded-xl focus:outline-none focus:border-amber-400"
-                    />
-                  </div>
-                ) : <div className="hidden" />}
-
-                {(!systemConfig || systemConfig.enableCommissionSystem) ? (
-                  <div>
-                    <label className="block font-semibold text-slate-300 mb-1">কমিশন (%)</label>
-                    <input
-                      type="number"
-                      required
-                      step="0.1"
-                      min="0"
-                      placeholder="যেমন: ২.৫"
-                      value={editCommissionRate}
-                      onChange={(e) => setEditCommissionRate(Number(e.target.value))}
-                      className="w-full bg-slate-950 border border-slate-700 text-slate-100 p-2.5 rounded-xl focus:outline-none focus:border-amber-400"
-                    />
-                  </div>
-                ) : <div className="hidden" />}
+                <div>
+                  <label className="block font-semibold text-slate-300 mb-1">টার্গেট (জোড়া)</label>
+                  <input
+                    type="number"
+                    required
+                    min="0"
+                    placeholder="যেমন: ১০০০"
+                    value={editTargetPairs}
+                    onChange={(e) => setEditTargetPairs(Number(e.target.value))}
+                    className="w-full bg-slate-950 border border-slate-700 text-slate-100 p-2.5 rounded-xl focus:outline-none focus:border-amber-400"
+                  />
+                </div>
+                <div>
+                  <label className="block font-semibold text-slate-300 mb-1">টার্গেট (টাকায়)</label>
+                  <input
+                    type="number"
+                    min="0"
+                    placeholder="যেমন: ৫০০০"
+                    value={editTargetAmount || ''}
+                    onChange={(e) => setEditTargetAmount(Number(e.target.value))}
+                    className="w-full bg-slate-950 border border-slate-700 text-slate-100 p-2.5 rounded-xl focus:outline-none focus:border-emerald-400"
+                  />
+                </div>
               </div>
 
               <div className="flex justify-end gap-2 pt-2">
@@ -1015,3 +948,4 @@ export const UserManagement: React.FC<UserManagementProps> = ({
     </div>
   );
 };
+

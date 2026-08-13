@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { ShoeProduct, UITheme, Order, UserAccount, SystemConfig } from '../types';
 import { formatTaka, toBnDigit, pairsToCartonText } from '../utils/formatters';
 import { useLanguage } from '../contexts/LanguageContext';
+import { ProductImageDisplay } from './Shoe2DPlaceholder';
 import {
   Boxes,
   Search,
@@ -203,7 +204,7 @@ export const StockManagement: React.FC<StockManagementProps> = ({
       pairsPerCarton: 12,
       stockPairs: initialStockPairs,
       minStockAlert: 24,
-      imageUrl: imageUrl.trim() || presetShoeImages[0],
+      imageUrl: imageUrl.trim(),
       updatedAt: new Date().toISOString().split('T')[0]
     };
 
@@ -239,7 +240,7 @@ export const StockManagement: React.FC<StockManagementProps> = ({
       buyPrice: editBuyPrice,
       sellPrice: editSellPrice,
       stockPairs: editStockPairs,
-      imageUrl: editImageUrl.trim() || presetShoeImages[0],
+      imageUrl: editImageUrl.trim(),
       updatedAt: new Date().toISOString().split('T')[0],
     };
 
@@ -260,6 +261,18 @@ export const StockManagement: React.FC<StockManagementProps> = ({
 
   const handleConfirmRestock = () => {
     if (!restockProductId) return;
+    
+    if (addedPairsInput === 0) {
+      alert('অনুগ্রহ করে সঠিক পরিমাণ দিন!');
+      return;
+    }
+    
+    const targetProduct = products.find(p => p.id === restockProductId);
+    if (addedPairsInput < 0 && targetProduct && Math.abs(addedPairsInput) > targetProduct.stockPairs) {
+       alert('স্টকের চেয়ে বেশি পরিমাণ বাদ দেওয়া যাবে না!');
+       return;
+    }
+
     onRestockProduct(restockProductId, addedPairsInput);
     setRestockProductId(null);
   };
@@ -401,13 +414,12 @@ export const StockManagement: React.FC<StockManagementProps> = ({
                 >
                   {/* Thumbnail Image */}
                   <div className="relative aspect-square w-full rounded-lg overflow-hidden border border-slate-800 bg-slate-900 mb-2">
-                    <img
+                    <ProductImageDisplay
                       src={p.imageUrl}
                       alt={p.articleCode}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform"
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=300&auto=format&fit=crop&q=80';
-                      }}
+                      articleCode={p.articleCode}
+                      category={p.category}
+                      size="lg"
                     />
                     <button
                       type="button"
@@ -415,7 +427,7 @@ export const StockManagement: React.FC<StockManagementProps> = ({
                         e.stopPropagation();
                         setPreviewImage({ url: p.imageUrl, articleCode: p.articleCode });
                       }}
-                      className="absolute bottom-1 right-1 bg-slate-950/80 text-amber-300 p-1 rounded-md shadow backdrop-blur-xs cursor-pointer"
+                      className="absolute bottom-1 right-1 bg-slate-950/80 text-amber-300 p-1 rounded-md shadow backdrop-blur-xs cursor-pointer z-10"
                       title="ছবি বড় করে দেখুন"
                     >
                       <ZoomIn className="w-3.5 h-3.5" />
@@ -546,15 +558,14 @@ export const StockManagement: React.FC<StockManagementProps> = ({
                       onClick={() => setPreviewImage({ url: p.imageUrl, articleCode: p.articleCode })}
                       title="ছবি বড় করে দেখতে ক্লিক করুন"
                     >
-                      <img
+                      <ProductImageDisplay
                         src={p.imageUrl}
                         alt={p.articleCode}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform"
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=300&auto=format&fit=crop&q=80';
-                        }}
+                        articleCode={p.articleCode}
+                        category={p.category}
+                        size="sm"
                       />
-                      <div className="absolute bottom-1 right-1 bg-slate-950/80 text-amber-300 p-1 rounded-md shadow backdrop-blur-xs">
+                      <div className="absolute bottom-1 right-1 bg-slate-950/80 text-amber-300 p-1 rounded-md shadow backdrop-blur-xs z-10">
                         <ZoomIn className="w-3.5 h-3.5" />
                       </div>
                     </div>
@@ -701,17 +712,17 @@ export const StockManagement: React.FC<StockManagementProps> = ({
                           <div 
                             className="relative group cursor-pointer flex-shrink-0 w-12 h-12 rounded-xl overflow-hidden border border-slate-800 bg-slate-950 shadow-sm"
                             onClick={() => setPreviewImage({ url: p.imageUrl, articleCode: p.articleCode })}
-                            title="ছবি বড় করে দেখতে ক্লিক করুন"
+                            title="ছবি দেখতে ক্লিক করুন"
                           >
-                            <img
+                            <ProductImageDisplay
                               src={p.imageUrl}
                               alt={p.articleCode}
-                              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-200"
-                              onError={(e) => {
-                                (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=200&auto=format&fit=crop&q=80';
-                              }}
+                              articleCode={p.articleCode}
+                              category={p.category}
+                              size="xs"
+                              showLabel={false}
                             />
-                            <div className="absolute inset-0 bg-slate-950/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-amber-300">
+                            <div className="absolute inset-0 bg-slate-950/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-amber-300 z-10">
                               <ZoomIn className="w-4 h-4" />
                             </div>
                           </div>
@@ -944,7 +955,7 @@ export const StockManagement: React.FC<StockManagementProps> = ({
                   </label>
                   {imageUrl && (
                     <span className="text-xs text-emerald-400 font-medium truncate max-w-[200px]">
-                      ✓ ছবি সংযুক্ত হয়েছে
+                       ছবি সংযুক্ত হয়েছে
                     </span>
                   )}
                 </div>
@@ -1171,13 +1182,13 @@ export const StockManagement: React.FC<StockManagementProps> = ({
         </div>
       )}
 
-      {/* Restock Modal */}
+      {/* Restock & Adjustment Modal */}
       {restockProductId && (
         <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-slate-900 border border-slate-700 rounded-2xl max-w-sm w-full p-5 space-y-4 shadow-2xl">
             <h3 className="text-base font-bold text-white flex items-center gap-2">
               <RefreshCw className="w-4 h-4 text-emerald-400" />
-              নতুন মাল রি-স্টক
+              স্টক অ্যাডজাস্টমেন্ট (রিটার্ন / ড্যামেজ)
             </h3>
 
             <div className="space-y-3 text-xs">
@@ -1186,23 +1197,24 @@ export const StockManagement: React.FC<StockManagementProps> = ({
               </p>
 
               <div>
-                <label className="block text-slate-300 font-medium mb-1">যোগ করার জুতার পরিমাণ (জোড়া)</label>
+                <label className="block text-slate-300 font-medium mb-1">জুতার পরিমাণ (জোড়া)</label>
                 <input
                   type="number"
-                  min="1"
                   value={addedPairsInput}
                   onChange={(e) => setAddedPairsInput(parseInt(e.target.value) || 0)}
+                  placeholder="যেমন: 12 (যোগ) অথবা -2 (বাদ)"
                   className="w-full bg-slate-950 border border-slate-700 text-emerald-400 font-bold rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-emerald-500"
                 />
                 <p className="text-[10px] text-slate-400 mt-1">
-                  ({pairsToCartonText(addedPairsInput, 12)})
+                  * নতুন স্টক বা রিটার্ন হলে পজিটিভ সংখ্যা দিন (যেমন: 12)<br/>
+                  * ড্যামেজ বা মিসিং হলে নেগেটিভ সংখ্যা দিন (যেমন: -2)
                 </p>
               </div>
 
               <div className="flex items-center justify-end gap-2 pt-2">
                 <button
                   onClick={() => setRestockProductId(null)}
-                  className="px-4 py-2 bg-slate-800 text-slate-300 rounded-xl font-medium cursor-pointer"
+                  className="px-4 py-2 bg-slate-800 text-slate-300 rounded-xl font-medium cursor-pointer transition-colors hover:bg-slate-700"
                 >
                   বাতিল
                 </button>
@@ -1241,18 +1253,17 @@ export const StockManagement: React.FC<StockManagementProps> = ({
                 className="text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 rounded-full w-8 h-8 flex items-center justify-center font-bold text-sm transition-colors cursor-pointer"
                 title="বন্ধ করুন"
               >
-                ✕
+                X
               </button>
             </div>
 
             <div className="flex items-center justify-center bg-slate-950 rounded-xl overflow-hidden min-h-[250px] max-h-[70vh] border border-slate-800 p-2">
-              <img
+              <ProductImageDisplay
                 src={previewImage.url}
                 alt={previewImage.articleCode || 'পণ্যের ছবি'}
+                articleCode={previewImage.articleCode}
+                size="xl"
                 className="max-h-[65vh] w-auto max-w-full object-contain rounded-lg shadow-lg"
-                onError={(e) => {
-                  (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=800&auto=format&fit=crop&q=80';
-                }}
               />
             </div>
 

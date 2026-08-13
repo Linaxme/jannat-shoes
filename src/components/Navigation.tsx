@@ -4,10 +4,13 @@ import {
   LayoutDashboard,
   Boxes,
   Receipt,
+  ShoppingBag,
+  Clock,
+  History,
 } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 
-export type NavTab = 'dashboard' | 'pos' | 'stock' | 'due' | 'sales' | 'pending' | 'users' | 'features' | 'sms' | 'catalog';
+export type NavTab = 'dashboard' | 'pos' | 'stock' | 'due' | 'sales' | 'pending' | 'users' | 'features' | 'sms' | 'catalog' | 'seller-tracking';
 
 interface NavigationProps {
   activeTab: NavTab;
@@ -16,6 +19,7 @@ interface NavigationProps {
   dueAlertCount: number;
   lowStockCount: number;
   currentUserRole?: UserRole;
+  pendingOrdersCount?: number;
 }
 
 export const Navigation: React.FC<NavigationProps> = ({
@@ -24,10 +28,17 @@ export const Navigation: React.FC<NavigationProps> = ({
   dueAlertCount,
   lowStockCount,
   currentUserRole = 'admin',
+  pendingOrdersCount = 0,
 }) => {
   const { t } = useLanguage();
 
+  const isCustomer = currentUserRole === 'customer';
+
   const allTabs = [
+    { id: 'catalog' as NavTab, label: 'প্রোডাক্ট ক্যাটালগ', icon: ShoppingBag, roles: ['customer'] },
+    { id: 'pending' as NavTab, label: 'অর্ডার স্ট্যাটাস', icon: Clock, badgeCount: pendingOrdersCount, badgeColor: 'bg-amber-500', roles: ['customer'] },
+    { id: 'sales' as NavTab, label: 'অর্ডার হিস্টোরি', icon: History, roles: ['customer'] },
+
     { id: 'dashboard' as NavTab, label: t('dashboard'), icon: LayoutDashboard, roles: ['super_admin', 'admin', 'seller'] },
     { id: 'stock' as NavTab, label: t('stock'), icon: Boxes, badgeCount: lowStockCount, badgeColor: 'bg-rose-500', roles: ['super_admin', 'admin', 'seller'] },
     { id: 'due' as NavTab, label: t('due'), icon: Receipt, badgeCount: dueAlertCount, badgeColor: 'bg-indigo-500', roles: ['super_admin', 'admin', 'seller'] },

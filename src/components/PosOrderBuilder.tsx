@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { ShoeProduct, Customer, SalesRep, OrderItem, Order, UserAccount, SystemConfig } from '../types';
 import { formatTaka, toBnDigit } from '../utils/formatters';
+import { ProductImageDisplay } from './Shoe2DPlaceholder';
 import {
   ShoppingBag,
   Search,
@@ -196,6 +197,16 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
     const existingIndex = cartItems.findIndex(
       (item) => item.productId === prod!.id && item.unitType === entryUnitType
     );
+    
+    // Check total existing pairs in POS cart for this product
+    const currentCartPairs = cartItems
+      .filter((item) => item.productId === prod!.id)
+      .reduce((sum, item) => sum + item.totalPairs, 0);
+
+    if (currentCartPairs + calculatedPairs > prod.stockPairs) {
+      alert(`দুঃখিত, পর্যাপ্ত স্টক নেই! বর্তমানে স্টক আছে ${toBnDigit(prod.stockPairs)} জোড়া।`);
+      return;
+    }
 
     if (existingIndex > -1) {
       const updated = [...cartItems];
@@ -241,9 +252,23 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
     const updated = [...cartItems];
     const item = updated[index];
     const product = products.find((p) => p.id === item.productId);
+    
+    if (!product) return;
+
     const pairsPerCarton = product ? product.pairsPerCarton : 12;
 
     const newPairs = item.unitType === 'cartons' ? newQtyInput * pairsPerCarton : newQtyInput;
+    
+    // Check total pairs for this product across all POS cart items (excluding the old quantity of THIS item)
+    const otherCartPairs = cartItems
+      .filter((c, i) => c.productId === item.productId && i !== index)
+      .reduce((sum, c) => sum + c.totalPairs, 0);
+
+    if (otherCartPairs + newPairs > product.stockPairs) {
+      alert(`দুঃখিত, পর্যাপ্ত স্টক নেই! বর্তমানে স্টক আছে ${toBnDigit(product.stockPairs)} জোড়া।`);
+      return;
+    }
+
     updated[index] = {
       ...item,
       quantityInput: newQtyInput,
@@ -351,14 +376,17 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
       alert('দোকানের নাম ও প্রোপাইটারের নাম পূরণ করা আবশ্যক!');
       return;
     }
+    const sellerId = currentUser?.sellerId || currentSellerInfo.id || currentUser?.id || '';
+    const sellerName = currentSellerInfo.name || currentUser?.name || 'প্রধান শাখা';
+
     const newCust: Customer = {
       id: `c-${Date.now()}`,
-      name: newCustName,
-      shopName: newShopName,
-      address: newAddress || 'ঢাকা',
-      phone: newPhone || '01700-000000',
-      assignedSellerId: currentSellerInfo.id,
-      assignedSellerName: currentSellerInfo.name,
+      name: newCustName.trim(),
+      shopName: newShopName.trim(),
+      address: newAddress.trim() || 'ঢাকা',
+      phone: newPhone.trim() || '01700-000000',
+      assignedSellerId: sellerId,
+      assignedSellerName: sellerName,
       currentDue: 0,
       creditLimit: 50000,
     };
@@ -460,7 +488,7 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
                   : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-slate-200'
               }`}
             >
-              <div className="text-xs font-bold">📦 স্যাম্পল অর্ডার বুকিং (পরের দিন ডেলিভারি)</div>
+              <div className="text-xs font-bold">স্যাম্পল অর্ডার বুকিং (পরের দিন ডেলিভারি)</div>
               <div className="text-[10px] text-slate-300 mt-0.5">মার্কেটে স্যাম্পল দেখিয়ে অর্ডার নেওয়া। স্টকে বুকড থাকবে, ডেলিভারি কনফার্ম করলে মেমো ও স্টক কাটবে।</div>
             </button>
             <button
@@ -472,7 +500,7 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
                   : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-slate-200'
               }`}
             >
-              <div className="text-xs font-bold">⚡ সরাসরি ক্যাশ মেমো / বিক্রি</div>
+              <div className="text-xs font-bold">সরাসরি ক্যাশ মেমো / বিক্রি</div>
               <div className="text-[10px] text-slate-300 mt-0.5">শোরুম থেকে তাৎক্ষণিক বিক্রি ও সাথে সাথে স্টক থেকে মাইনাস হবে।</div>
             </button>
           </div>
@@ -519,14 +547,16 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
                     className="p-2.5 hover:bg-slate-800 cursor-pointer flex items-center justify-between text-xs transition-colors"
                   >
                     <div className="flex items-center gap-2">
-                      <img
-                        src={p.imageUrl}
-                        alt={p.articleCode}
-                        className="w-8 h-8 object-cover rounded-lg border border-slate-800 bg-slate-900 flex-shrink-0"
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=100&auto=format&fit=crop&q=80';
-                        }}
-                      />
+                      <div className="w-8 h-8 rounded-lg overflow-hidden border border-slate-800 bg-slate-900 flex-shrink-0">
+                        <ProductImageDisplay
+                          src={p.imageUrl}
+                          alt={p.articleCode}
+                          articleCode={p.articleCode}
+                          category={p.category}
+                          size="xs"
+                          showLabel={false}
+                        />
+                      </div>
                       <div className="font-bold text-amber-300 font-mono text-xs">{p.articleCode}</div>
                     </div>
                     <div className="text-right">

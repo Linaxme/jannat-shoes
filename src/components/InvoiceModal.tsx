@@ -109,14 +109,27 @@ export const InvoiceModal: React.FC<InvoiceModalProps> = ({ order, onClose }) =>
               className="px-3 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-400 text-white font-bold rounded-xl text-xs flex items-center gap-1.5 shadow transition-colors"
             >
               {isDownloading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
-              <span>ডাউনলোড</span>
+              <span className="hidden sm:inline">ডাউনলোড</span>
+            </button>
+            <button
+              onClick={() => {
+                const text = `মেসার্স জান্নাত সুজ\nক্যাশ মেমো: ${order.memoNo}\nতারিখ: ${formatBnDate(order.date)}\n\nদোকান: ${order.customerShop}\nমোট জোড়া: ${toBnDigit(order.totalPairs)}\nনিট বিল: ${formatTaka(order.grandTotal)}\nনগদ জমা: ${formatTaka(order.paidAmount)}\nবর্তমান মোট বাকী: ${formatTaka(order.totalNetDue)}\n\nধন্যবাদ!`;
+                let phoneStr = order.customerPhone.replace(/[^0-9]/g, '');
+                if (phoneStr && phoneStr.length === 11) phoneStr = '88' + phoneStr;
+                const url = `https://wa.me/${phoneStr}?text=${encodeURIComponent(text)}`;
+                window.open(url, '_blank');
+              }}
+              className="px-3 py-2 bg-[#25D366] hover:bg-[#20bd5a] text-white font-bold rounded-xl text-xs flex items-center gap-1.5 shadow transition-colors"
+            >
+              <Share2 className="w-4 h-4" />
+              <span className="hidden sm:inline">WhatsApp</span>
             </button>
             <button
               onClick={handlePrint}
               className="px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs flex items-center gap-1.5 shadow transition-colors"
             >
               <Printer className="w-4 h-4" />
-              <span>প্রিন্ট</span>
+              <span className="hidden sm:inline">প্রিন্ট</span>
             </button>
             <button
               onClick={onClose}
@@ -301,7 +314,7 @@ export const InvoiceModal: React.FC<InvoiceModalProps> = ({ order, onClose }) =>
               </div>
 
               <div className="text-xs text-slate-300 bg-amber-500/10 border border-amber-500/30 p-2.5 rounded-xl text-left space-y-1">
-                <div className="font-bold text-amber-300">📱 ফোনে ডাউনলোড করার সহজ উপায়:</div>
+                <div className="font-bold text-amber-300">ফোনে ডাউনলোড করার সহজ উপায়:</div>
                 <div>১. নিচের ছবির ওপর ১-২ সেকেন্ড আঙুল দিয়ে চেপে রাখুন (Long Press)।</div>
                 <div>২. অপশন থেকে <strong>"Save Image"</strong>, <strong>"Download Image"</strong> অথবা <strong>"Share Image"</strong> সিলেক্ট করুন।</div>
               </div>

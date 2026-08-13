@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { ShoeProduct, Customer, Order, OrderItem, UserAccount, SystemConfig } from '../types';
 import { LoginModal } from './LoginModal';
 import { formatTaka, toBnDigit } from '../utils/formatters';
+import { ProductImageDisplay } from './Shoe2DPlaceholder';
 import {
   ShoppingBag,
   Search,
@@ -231,7 +232,7 @@ export const CustomerStorefront: React.FC<CustomerStorefrontProps> = ({
           setCustomerName(match.name);
           setAddress(match.address);
           setMatchedCustomer(match);
-          setMatchedNotice(`✨ ${match.shopName} - আপনার নিবন্ধিত দোকানের তথ্য প্রাক-পূরণ করা হয়েছে।`);
+          setMatchedNotice(`${match.shopName} - আপনার নিবন্ধিত দোকানের তথ্য প্রাক-পূরণ করা হয়েছে।`);
         } else {
           setPhone(currentUser.phone || '');
           setCustomerName(currentUser.name || '');
@@ -288,7 +289,7 @@ export const CustomerStorefront: React.FC<CustomerStorefrontProps> = ({
     setShopName(cust.shopName);
     setCustomerName(cust.name);
     setAddress(cust.address);
-    setMatchedNotice(`✨ ${cust.shopName} (${cust.name}) - এর দোকানের তথ্য সফলভাবে পূর্ণ হয়েছে`);
+    setMatchedNotice(`${cust.shopName} (${cust.name}) - এর দোকানের তথ্য সফলভাবে পূর্ণ হয়েছে`);
   };
 
   const configuredCategories = systemConfig?.categories && systemConfig.categories.length > 0
@@ -322,6 +323,17 @@ export const CustomerStorefront: React.FC<CustomerStorefrontProps> = ({
     if (qty <= 0) return;
     const pairsPerCarton = product.pairsPerCarton || 12;
     const calculatedPairs = unitType === 'cartons' ? qty * pairsPerCarton : qty;
+
+    // Calculate current pairs in cart for this product
+    const currentCartPairs = cart
+      .filter((item) => item.product.id === product.id)
+      .reduce((sum, item) => sum + item.totalPairs, 0);
+
+    if (currentCartPairs + calculatedPairs > product.stockPairs) {
+      alert(`দুঃখিত, পর্যাপ্ত স্টক নেই! বর্তমানে স্টক আছে ${toBnDigit(product.stockPairs)} জোড়া।`);
+      return;
+    }
+
     const itemAmount = calculatedPairs * product.sellPrice;
 
     setCart((prevCart) => {
@@ -360,16 +372,29 @@ export const CustomerStorefront: React.FC<CustomerStorefrontProps> = ({
       removeFromCart(index);
       return;
     }
+    
+    const item = cart[index];
+    const pairsPerCarton = item.product.pairsPerCarton || 12;
+    const newPairs = item.unitType === 'cartons' ? newQty * pairsPerCarton : newQty;
+
+    // Check total pairs for this product across all cart items (excluding the old quantity of THIS item)
+    const otherCartPairs = cart
+      .filter((c, i) => c.product.id === item.product.id && i !== index)
+      .reduce((sum, c) => sum + c.totalPairs, 0);
+
+    if (otherCartPairs + newPairs > item.product.stockPairs) {
+      alert(`দুঃখিত, পর্যাপ্ত স্টক নেই! বর্তমানে স্টক আছে ${toBnDigit(item.product.stockPairs)} জোড়া।`);
+      return;
+    }
+
     setCart((prevCart) => {
       const updated = [...prevCart];
-      const item = updated[index];
-      const pairsPerCarton = item.product.pairsPerCarton || 12;
-      const newPairs = item.unitType === 'cartons' ? newQty * pairsPerCarton : newQty;
+      const targetItem = updated[index];
       updated[index] = {
-        ...item,
+        ...targetItem,
         quantityInput: newQty,
         totalPairs: newPairs,
-        totalAmount: newPairs * item.product.sellPrice,
+        totalAmount: newPairs * targetItem.product.sellPrice,
       };
       return updated;
     });
@@ -578,21 +603,13 @@ export const CustomerStorefront: React.FC<CustomerStorefrontProps> = ({
                     onClick={() => setPreviewProduct(product)}
                     className="relative aspect-square bg-slate-950 rounded-xl overflow-hidden border border-slate-800/80 flex items-center justify-center cursor-pointer group/img"
                   >
-                    {product.imageUrl ? (
-                      <img
-                        src={product.imageUrl}
-                        alt={product.name}
-                        className="w-full h-full object-cover group-hover/img:scale-105 transition-transform duration-300"
-                        onError={(e) => {
-                          (e.target as HTMLElement).style.display = 'none';
-                        }}
-                      />
-                    ) : (
-                      <div className="text-slate-600 flex flex-col items-center gap-1 p-2 text-center">
-                        <ShoppingBag className="w-6 h-6 text-slate-700" />
-                        <span className="text-[9px] text-slate-500 font-bold">{product.brand}</span>
-                      </div>
-                    )}
+                    <ProductImageDisplay
+                      src={product.imageUrl}
+                      alt={product.name}
+                      articleCode={product.articleCode}
+                      category={product.category}
+                      size="md"
+                    />
 
                     {/* Quick View Button Overlay */}
                     <div className="absolute inset-0 bg-slate-950/40 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center">
@@ -639,7 +656,7 @@ export const CustomerStorefront: React.FC<CustomerStorefrontProps> = ({
                   <button
                     onClick={() => handleAddToCart(product, 'cartons', 1)}
                     disabled={isOutOfStock}
-                    className="w-full py-1.5 bg-amber-500/10 hover:bg-amber-500 border border-amber-500/40 hover:text-slate-950 text-amber-300 font-extrabold text-[10px] rounded-lg flex items-center justify-center gap-1 transition cursor-pointer disabled:opacity-40"
+                    className="w-full py-1.5 bg-amber-500/10 hover:bg-amber-500 border border-amber-500/40 hover:text-slate-950 text-amber-300 font-extrabold text-[10px] rounded-lg flex items-center justify-center gap-1 transition cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
                   >
                     <Plus className="w-3 h-3" />
                     +১ ডজন (১২ জোড়া)
@@ -647,7 +664,7 @@ export const CustomerStorefront: React.FC<CustomerStorefrontProps> = ({
                   <button
                     onClick={() => handleAddToCart(product, 'pairs', 6)}
                     disabled={isOutOfStock}
-                    className="w-full py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-[10px] rounded-lg transition cursor-pointer disabled:opacity-40"
+                    className="w-full py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-[10px] rounded-lg transition cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
                   >
                     +৬ জোড়া স্যাম্পল
                   </button>
@@ -702,14 +719,14 @@ export const CustomerStorefront: React.FC<CustomerStorefrontProps> = ({
             </button>
 
             <div className="aspect-[4/3] bg-slate-950 rounded-xl overflow-hidden border border-slate-800 flex items-center justify-center">
-              {previewProduct.imageUrl ? (
-                <img src={previewProduct.imageUrl} alt={previewProduct.name} className="w-full h-full object-contain" />
-              ) : (
-                <div className="text-slate-600 flex flex-col items-center gap-2">
-                  <ShoppingBag className="w-12 h-12" />
-                  <span className="text-xs">{previewProduct.brand}</span>
-                </div>
-              )}
+              <ProductImageDisplay
+                src={previewProduct.imageUrl}
+                alt={previewProduct.name}
+                articleCode={previewProduct.articleCode}
+                category={previewProduct.category}
+                size="xl"
+                className="w-full h-full object-contain"
+              />
             </div>
 
             <div className="space-y-2">
@@ -901,7 +918,7 @@ export const CustomerStorefront: React.FC<CustomerStorefrontProps> = ({
                         setCustomerName(selected.name);
                         setAddress(selected.address);
                         setMatchedCustomer(selected);
-                        setMatchedNotice(`✨ ${selected.shopName} (${selected.name}) - দোকানের তথ্য সফলভাবে পূর্ণ করা হয়েছে`);
+                        setMatchedNotice(`${selected.shopName} (${selected.name}) - দোকানের তথ্য সফলভাবে পূর্ণ করা হয়েছে`);
                       } else if (val === 'NEW') {
                         setPhone('');
                         setShopName('');

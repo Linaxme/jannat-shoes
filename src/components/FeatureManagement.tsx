@@ -388,24 +388,6 @@ export const FeatureManagement: React.FC<FeatureManagementProps> = ({
               </button>
             </div>
 
-            {/* Toggle 3: Commission System */}
-            <div className="p-4 bg-slate-950/60 rounded-xl border border-slate-800 flex items-start justify-between gap-4 transition-all hover:border-slate-700/60">
-              <div className="space-y-1">
-                <div className="text-xs sm:text-sm font-bold text-slate-100 flex items-center gap-1.5">
-                  <span>সেলার কমিশন সিস্টেম</span>
-                </div>
-                <div className="text-[11px] text-slate-400 leading-relaxed">
-                  সেলারদের জন্য নির্দিষ্ট শতাংশ বা পারসেন্টেজ হারে স্বয়ংক্রিয় কমিশন হিসাব করার সুবিধা অন বা অফ করে রাখুন।
-                </div>
-              </div>
-              <button
-                onClick={() => onUpdateSystemConfig({ ...systemConfig, enableCommissionSystem: !systemConfig.enableCommissionSystem })}
-                className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${systemConfig.enableCommissionSystem ? 'bg-purple-600' : 'bg-slate-700'}`}
-              >
-                <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${systemConfig.enableCommissionSystem ? 'translate-x-5' : 'translate-x-0'}`} />
-              </button>
-            </div>
-
             {/* Toggle 4: Sample Booking */}
             <div className="p-4 bg-slate-950/60 rounded-xl border border-slate-800 flex items-start justify-between gap-4 transition-all hover:border-slate-700/60">
               <div className="space-y-1">

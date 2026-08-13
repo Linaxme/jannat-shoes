@@ -32,8 +32,8 @@ import { PendingOrders } from './components/PendingOrders';
 import { LoginModal } from './components/LoginModal';
 import { CustomerStorefront } from './components/CustomerStorefront';
 import { UserManagement } from './components/UserManagement';
-import { SellerPerformance } from './components/SellerPerformance';
 import { FeatureManagement } from './components/FeatureManagement';
+import { SellerTracking } from './components/SellerTracking';
 import { SMSPanel } from './components/SMSPanel';
 import { fetchFirestoreData, seedFirestoreData, saveDocumentToFirestore, deleteDocumentFromFirestore, clearAllDatabaseData } from './lib/firestoreService';
 import { generateSMSMessage, sendAutoSMS, SMSType } from './utils/smsService';
@@ -97,29 +97,14 @@ export default function App() {
   useEffect(() => {
     async function loadData() {
       setIsLoadingCloud(true);
-      
-      // Perform one-time check and cleanup for lingering demo data
-      const isClearedBefore = localStorage.getItem('demo_data_cleared_v3');
-      if (!isClearedBefore) {
-        await clearAllDatabaseData();
-        localStorage.setItem('demo_data_cleared_v3', 'true');
-      }
 
       const res = await fetchFirestoreData();
-      
-      const isDemoId = (id: string) => /^(prod_|cust_|seller_|ord_|log_)\d+$/.test(id);
-      
-      const cleanProducts = res.products.filter(p => !isDemoId(p.id));
-      const cleanCustomers = res.customers.filter(c => !isDemoId(c.id));
-      const cleanSellers = res.sellers.filter(s => !isDemoId(s.id));
-      const cleanOrders = res.orders.filter(o => !isDemoId(o.id));
-      const cleanPaymentLogs = res.paymentLogs.filter(p => !isDemoId(p.id));
 
-      setProducts(cleanProducts);
-      setCustomers(cleanCustomers);
-      setSellers(cleanSellers);
-      setOrders(sortOrdersByRecency(cleanOrders));
-      setPaymentLogs(cleanPaymentLogs);
+      setProducts(res.products || []);
+      setCustomers(res.customers || []);
+      setSellers(res.sellers || []);
+      setOrders(sortOrdersByRecency(res.orders || []));
+      setPaymentLogs(res.paymentLogs || []);
 
       if (res.userAccounts && res.userAccounts.length > 0) {
         let hasAdmin = res.userAccounts.some((u) => u.role === 'admin');
@@ -143,7 +128,69 @@ export default function App() {
           };
           accounts.push(defaultAdmin);
         }
-        setUserAccounts(accounts);
+
+        // Bi-directional sync between customers and userAccounts
+        const syncAccs = [...accounts];
+        const syncCusts = [...(res.customers || [])];
+        let accsUpdated = false;
+        let custsUpdated = false;
+
+        syncCusts.forEach((c) => {
+          const cPhone = (c.phone || '').replace(/\D/g, '');
+          const exists = syncAccs.some(
+            (u) =>
+              (u.phone && u.phone.replace(/\D/g, '') === cPhone) ||
+              u.loginId.replace(/\D/g, '') === cPhone ||
+              (u.shopName && u.shopName.trim().toLowerCase() === c.shopName.trim().toLowerCase())
+          );
+          if (!exists) {
+            const newU: UserAccount = {
+              id: `usr_sync_${c.id}`,
+              name: c.name,
+              shopName: c.shopName,
+              loginId: c.phone || `017${Math.floor(10000000 + Math.random() * 90000000)}`,
+              password: '123456',
+              role: 'customer',
+              phone: c.phone,
+              area: c.address,
+              isActive: true,
+              createdAt: new Date().toISOString().split('T')[0],
+            };
+            syncAccs.push(newU);
+            saveDocumentToFirestore('userAccounts', newU.id, newU);
+            accsUpdated = true;
+          }
+        });
+
+        syncAccs.forEach((u) => {
+          if (u.role === 'customer') {
+            const uPhone = (u.phone || u.loginId || '').replace(/\D/g, '');
+            const exists = syncCusts.some(
+              (c) =>
+                (c.phone && c.phone.replace(/\D/g, '') === uPhone) ||
+                (u.shopName && c.shopName.trim().toLowerCase() === u.shopName.trim().toLowerCase())
+            );
+            if (!exists) {
+              const newC: Customer = {
+                id: `c_sync_${u.id}`,
+                name: u.name,
+                shopName: u.shopName || u.name,
+                address: u.area || 'ঢাকা',
+                phone: u.phone || u.loginId,
+                assignedSellerId: u.sellerId || '',
+                assignedSellerName: 'প্রধান শাখা',
+                currentDue: 0,
+                creditLimit: 50000,
+              };
+              syncCusts.push(newC);
+              saveDocumentToFirestore('customers', newC.id, newC);
+              custsUpdated = true;
+            }
+          }
+        });
+
+        if (custsUpdated) setCustomers(syncCusts);
+        setUserAccounts(syncAccs);
       }
       if (res.systemConfig) {
         setSystemConfig(res.systemConfig);
@@ -264,6 +311,23 @@ export default function App() {
     if (newSeller) {
       setSellers((prev) => [newSeller, ...prev]);
       await saveDocumentToFirestore('sellers', newSeller.id, newSeller);
+    }
+
+    // If adding a shopkeeper (customer role), also create a Customer record so it appears in POS & Due management
+    if (newAcc.role === 'customer') {
+      const newCust: Customer = {
+        id: `c_${Date.now()}`,
+        name: newAcc.name,
+        shopName: newAcc.shopName || newAcc.name,
+        address: newAcc.area || 'ঢাকা',
+        phone: newAcc.phone || newAcc.loginId,
+        assignedSellerId: currentUser?.sellerId || currentUser?.id || '',
+        assignedSellerName: currentUser?.name || 'প্রধান শাখা',
+        currentDue: 0,
+        creditLimit: 50000,
+      };
+      setCustomers((prev) => [newCust, ...prev]);
+      await saveDocumentToFirestore('customers', newCust.id, newCust);
     }
 
     triggerToast(t('toast_user_added').replace('{{name}}', newAcc.name).replace('{{role}}', newAcc.role));
@@ -478,7 +542,14 @@ export default function App() {
     if (updatedTarget) {
       await saveDocumentToFirestore('products', productId, updatedTarget);
     }
-    triggerToast(t('toast_stock_added').replace('{{pairs}}', addedPairs.toString()));
+    
+    if (addedPairs > 0) {
+      triggerToast(t('toast_stock_added').replace('{{pairs}}', addedPairs.toString()));
+    } else if (addedPairs < 0) {
+      triggerToast(`${Math.abs(addedPairs)} জোড়া সফলভাবে কমানো হয়েছে`);
+    } else {
+      triggerToast(`স্টক অপরিবর্তিত`);
+    }
   };
 
   // 5. Update Product Handler
@@ -500,6 +571,34 @@ export default function App() {
   const handleQuickAddCustomer = async (newCust: Customer) => {
     setCustomers((prev) => [newCust, ...prev]);
     await saveDocumentToFirestore('customers', newCust.id, newCust);
+
+    // Also create UserAccount so the shop appears under "নিবন্ধিত দোকান" in User Management
+    const phoneVal = newCust.phone?.trim() || `017${Math.floor(10000000 + Math.random() * 90000000)}`;
+    const phoneClean = phoneVal.replace(/\D/g, '');
+    const existingUser = userAccounts.find(
+      (u) =>
+        (u.phone && u.phone.replace(/\D/g, '') === phoneClean) ||
+        u.loginId.replace(/\D/g, '') === phoneClean ||
+        (u.shopName && u.shopName.trim().toLowerCase() === newCust.shopName.trim().toLowerCase())
+    );
+
+    if (!existingUser) {
+      const newUserAcc: UserAccount = {
+        id: `usr_${Date.now()}`,
+        name: newCust.name,
+        shopName: newCust.shopName,
+        loginId: phoneVal,
+        password: '123456',
+        role: 'customer',
+        phone: phoneVal,
+        area: newCust.address,
+        isActive: true,
+        createdAt: new Date().toISOString().split('T')[0],
+      };
+      setUserAccounts((prev) => [newUserAcc, ...prev]);
+      await saveDocumentToFirestore('userAccounts', newUserAcc.id, newUserAcc);
+    }
+
     triggerToast(t('toast_customer_added').replace('{{shopName}}', newCust.shopName));
   };
 
@@ -508,6 +607,31 @@ export default function App() {
   // Helper functions to filter visible data based on current user role and permissions
   const getVisibleOrders = () => {
     if (!currentUser) return [];
+    if (currentUser.role === 'customer') {
+      const userPhoneDigits = (currentUser.phone || currentUser.loginId || '').replace(/\D/g, '');
+      const userShopLower = (currentUser.shopName || currentUser.name || '').toLowerCase().trim();
+
+      return orders.filter((o) => {
+        const oPhoneDigits = (o.phone || o.customerPhone || '').replace(/\D/g, '');
+        const oShopLower = (o.shopName || '').toLowerCase().trim();
+
+        const phoneMatch = Boolean(
+          userPhoneDigits &&
+          oPhoneDigits &&
+          userPhoneDigits.length >= 6 &&
+          oPhoneDigits.length >= 6 &&
+          (userPhoneDigits.endsWith(oPhoneDigits) || oPhoneDigits.endsWith(userPhoneDigits))
+        );
+
+        const shopMatch = Boolean(
+          userShopLower &&
+          oShopLower &&
+          (userShopLower === oShopLower || userShopLower.includes(oShopLower) || oShopLower.includes(userShopLower))
+        );
+
+        return phoneMatch || shopMatch;
+      });
+    }
     if (currentUser.role === 'seller' && systemConfig && !systemConfig.allowSellerToSeeOtherSellersSales) {
       return orders.filter(o => o.sellerId === currentUser.sellerId || !o.isClaimed || !o.sellerId || o.sellerName.includes('উন্মুক্ত'));
     }
@@ -517,7 +641,15 @@ export default function App() {
   const getVisibleCustomers = () => {
     if (!currentUser) return [];
     if (currentUser.role === 'seller' && systemConfig && !systemConfig.allowSellerToSeeOtherSellersDue) {
-      return customers.filter(c => c.assignedSellerId === currentUser.sellerId);
+      const sId = currentUser.sellerId || currentUser.id;
+      return customers.filter(
+        (c) =>
+          c.assignedSellerId === sId ||
+          c.assignedSellerId === currentUser.id ||
+          c.assignedSellerId === currentUser.sellerId ||
+          !c.assignedSellerId ||
+          c.assignedSellerName === currentUser.name
+      );
     }
     return customers;
   };
@@ -582,10 +714,13 @@ export default function App() {
     totalPairs: number
   ): Promise<Order | null> => {
     const cleanPhone = shopkeeperData.phone.trim();
+    const phoneDigits = cleanPhone.replace(/\D/g, '');
     
-    // Check if customer already exists in database with this phone number
+    // Check if customer already exists in database with this phone number or shop name
     let targetCustomer = customers.find(
-      (c) => c.phone.replace(/\D/g, '') === cleanPhone.replace(/\D/g, '')
+      (c) =>
+        (c.phone && c.phone.replace(/\D/g, '') === phoneDigits) ||
+        (c.shopName && c.shopName.trim().toLowerCase() === shopkeeperData.shopName.trim().toLowerCase())
     );
 
     let updatedCustomersList = [...customers];
@@ -612,6 +747,7 @@ export default function App() {
         shopName: shopkeeperData.shopName || targetCustomer.shopName,
         name: shopkeeperData.customerName || targetCustomer.name,
         address: shopkeeperData.address || targetCustomer.address,
+        phone: cleanPhone || targetCustomer.phone,
       };
       targetCustomer = updatedCust;
       updatedCustomersList = customers.map((c) => (c.id === updatedCust.id ? updatedCust : c));
@@ -619,17 +755,21 @@ export default function App() {
       saveDocumentToFirestore('customers', updatedCust.id, updatedCust);
     }
 
-    // Check/Create UserAccount
+    // Check/Create/Sync UserAccount
     let existingUser = userAccounts.find(
-      (u) => u.loginId.replace(/\D/g, '') === cleanPhone.replace(/\D/g, '') || u.phone.replace(/\D/g, '') === cleanPhone.replace(/\D/g, '')
+      (u) =>
+        (u.phone && u.phone.replace(/\D/g, '') === phoneDigits) ||
+        u.loginId.replace(/\D/g, '') === phoneDigits ||
+        (u.shopName && u.shopName.trim().toLowerCase() === shopkeeperData.shopName.trim().toLowerCase())
     );
 
-    if (!existingUser && shopkeeperData.password) {
+    if (!existingUser) {
       const newUserAcc: UserAccount = {
         id: `USER-${Date.now().toString().slice(-6)}`,
         name: shopkeeperData.customerName,
+        shopName: shopkeeperData.shopName,
         loginId: cleanPhone,
-        password: shopkeeperData.password,
+        password: shopkeeperData.password || '123456',
         role: 'customer',
         phone: cleanPhone,
         area: shopkeeperData.address,
@@ -639,6 +779,18 @@ export default function App() {
       const updatedUserAccs = [newUserAcc, ...userAccounts];
       setUserAccounts(updatedUserAccs);
       saveDocumentToFirestore('userAccounts', newUserAcc.id, newUserAcc);
+    } else {
+      const updatedUserAcc: UserAccount = {
+        ...existingUser,
+        name: shopkeeperData.customerName || existingUser.name,
+        shopName: shopkeeperData.shopName || existingUser.shopName,
+        phone: cleanPhone || existingUser.phone,
+        area: shopkeeperData.address || existingUser.area,
+        password: shopkeeperData.password || existingUser.password,
+      };
+      const updatedUserAccs = userAccounts.map((u) => (u.id === existingUser.id ? updatedUserAcc : u));
+      setUserAccounts(updatedUserAccs);
+      saveDocumentToFirestore('userAccounts', existingUser.id, updatedUserAcc);
     }
 
     const newMemoNo = `MEMO-WEB-${Date.now().toString().slice(-5)}`;
@@ -700,6 +852,97 @@ export default function App() {
     return newOrder;
   };
 
+  const handleRegisterShopkeeper = async (data: {
+    shopName: string;
+    name: string;
+    phone: string;
+    address: string;
+    password?: string;
+  }): Promise<UserAccount> => {
+    const cleanPhone = data.phone.trim();
+    const phoneDigits = cleanPhone.replace(/\D/g, '');
+
+    // 1. Check if Customer record exists in customers state
+    let targetCustomer = customers.find(
+      (c) =>
+        (c.phone && c.phone.replace(/\D/g, '') === phoneDigits) ||
+        (c.shopName && c.shopName.trim().toLowerCase() === data.shopName.trim().toLowerCase())
+    );
+
+    if (targetCustomer) {
+      // Auto sync existing customer record
+      const updatedCust: Customer = {
+        ...targetCustomer,
+        shopName: data.shopName.trim() || targetCustomer.shopName,
+        name: data.name.trim() || targetCustomer.name,
+        address: data.address.trim() || targetCustomer.address,
+        phone: cleanPhone || targetCustomer.phone,
+      };
+      targetCustomer = updatedCust;
+      setCustomers((prev) => prev.map((c) => (c.id === updatedCust.id ? updatedCust : c)));
+      await saveDocumentToFirestore('customers', updatedCust.id, updatedCust);
+    } else {
+      // Create new customer record so it lists under "নিবন্ধিত দোকান" (Registered Shops)
+      targetCustomer = {
+        id: `CUST-${Date.now().toString().slice(-6)}`,
+        name: data.name.trim(),
+        shopName: data.shopName.trim(),
+        address: data.address.trim() || 'ঢাকা',
+        phone: cleanPhone,
+        assignedSellerId: '',
+        assignedSellerName: 'অনলাইন রেজিস্ট্রেশন',
+        currentDue: 0,
+        creditLimit: 50000,
+      };
+      setCustomers((prev) => [targetCustomer!, ...prev]);
+      await saveDocumentToFirestore('customers', targetCustomer.id, targetCustomer);
+    }
+
+    // 2. Check if UserAccount exists in userAccounts state
+    let existingUser = userAccounts.find(
+      (u) =>
+        (u.phone && u.phone.replace(/\D/g, '') === phoneDigits) ||
+        u.loginId.replace(/\D/g, '') === phoneDigits ||
+        (u.shopName && u.shopName.trim().toLowerCase() === data.shopName.trim().toLowerCase())
+    );
+
+    let targetUser: UserAccount;
+    if (existingUser) {
+      // Auto sync existing user account with password & details
+      targetUser = {
+        ...existingUser,
+        name: data.name.trim() || existingUser.name,
+        shopName: data.shopName.trim() || existingUser.shopName,
+        phone: cleanPhone || existingUser.phone,
+        area: data.address.trim() || existingUser.area,
+        password: data.password ? data.password.trim() : existingUser.password,
+        role: 'customer',
+        isActive: true,
+      };
+      setUserAccounts((prev) => prev.map((u) => (u.id === targetUser.id ? targetUser : u)));
+      await saveDocumentToFirestore('userAccounts', targetUser.id, targetUser);
+    } else {
+      // Create new UserAccount for the shopkeeper
+      targetUser = {
+        id: `USER-${Date.now().toString().slice(-6)}`,
+        name: data.name.trim(),
+        shopName: data.shopName.trim(),
+        loginId: cleanPhone,
+        password: data.password ? data.password.trim() : '123456',
+        role: 'customer',
+        phone: cleanPhone,
+        area: data.address.trim() || 'ঢাকা',
+        isActive: true,
+        createdAt: new Date().toISOString().split('T')[0],
+      };
+      setUserAccounts((prev) => [targetUser, ...prev]);
+      await saveDocumentToFirestore('userAccounts', targetUser.id, targetUser);
+    }
+
+    triggerToast(`${targetUser.shopName || targetUser.name} - দোকান রেজিস্ট্রেশন ও সিংক সম্পূর্ণ!`);
+    return targetUser;
+  };
+
   return (
       <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-slate-950 text-slate-100 font-sans antialiased pb-12 selection:bg-amber-500 selection:text-slate-950">
         
@@ -711,6 +954,7 @@ export default function App() {
               handleLoginSuccess(user);
               setIsLoginModalOpen(false);
             }}
+            onRegisterShopkeeper={handleRegisterShopkeeper}
             onClose={() => setIsLoginModalOpen(false)}
           />
         )}
@@ -760,6 +1004,7 @@ export default function App() {
         activeTheme={activeTheme}
         dueAlertCount={dueAlertCount}
         lowStockCount={lowStockCount}
+        pendingOrdersCount={pendingOrdersCount}
         currentUserRole={currentUser?.role || 'customer'}
       />
 
@@ -886,14 +1131,15 @@ export default function App() {
               onUpdateSeller={handleUpdateSeller}
               onDeleteUserAccount={handleDeleteUserAccount}
             />
-            <SellerPerformance
-              sellers={sellers}
-              orders={orders}
-              customers={customers}
-              activeTheme={activeTheme}
-              systemConfig={systemConfig}
-            />
           </div>
+        )}
+
+        {activeTab === 'seller-tracking' && currentUser && (
+          <SellerTracking
+            sellers={sellers}
+            orders={orders}
+            customers={userAccounts.filter(u => u.role === 'customer')}
+          />
         )}
 
         {activeTab === 'features' && currentUser && (

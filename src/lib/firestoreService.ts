@@ -1,4 +1,4 @@
-import { db, collection, getDocs, doc, setDoc, deleteDoc, writeBatch } from './firebase';
+import { db, collection, getDocs, doc, setDoc, deleteDoc, writeBatch, query, where, orderBy } from './firebase';
 import { ShoeProduct, Customer, SalesRep, Order, DuePaymentLog, UserAccount, SystemConfig } from '../types';
 import { INITIAL_USER_ACCOUNTS, DEFAULT_SYSTEM_CONFIG } from '../data/initialData';
 
@@ -30,6 +30,7 @@ export async function clearAllDatabaseData() {
 
 export async function fetchFirestoreData() {
   try {
+
     const productsSnap = await getDocs(collection(db, 'products'));
     const customersSnap = await getDocs(collection(db, 'customers'));
     const sellersSnap = await getDocs(collection(db, 'sellers'));
@@ -88,10 +89,28 @@ export async function seedFirestoreData() {
   // Empty seed function kept for backwards compatibility if referenced
 }
 
+// Helper to strip undefined values recursively so Firestore setDoc does not throw errors
+function sanitizeForFirestore(obj: any): any {
+  if (obj === null || obj === undefined) return null;
+  if (typeof obj !== 'object') return obj;
+  if (Array.isArray(obj)) {
+    return obj.map(sanitizeForFirestore);
+  }
+  const cleaned: Record<string, any> = {};
+  for (const key of Object.keys(obj)) {
+    const val = obj[key];
+    if (val !== undefined) {
+      cleaned[key] = sanitizeForFirestore(val);
+    }
+  }
+  return cleaned;
+}
+
 export async function saveDocumentToFirestore(collectionName: string, id: string, data: any) {
   try {
     const ref = doc(db, collectionName, id);
-    await setDoc(ref, data, { merge: true });
+    const sanitized = sanitizeForFirestore(data);
+    await setDoc(ref, sanitized, { merge: true });
   } catch (err) {
     console.error(`Error saving to ${collectionName}/${id}:`, err);
   }

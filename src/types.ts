@@ -60,6 +60,7 @@ export interface SalesRep {
   phone: string;
   area: string; // সেলস এলাকা
   monthlyTargetPairs: number; // মাসিক টার্গেট (জোড়া)
+  monthlyTargetAmount?: number; // মাসিক টার্গেট (টাকায়)
   commissionRatePercent: number; // কমিশন শতাংশ (যেমন 2.5%)
 }
 
