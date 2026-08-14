@@ -53,12 +53,18 @@ export async function sendAutoSMS(phone: string, message: string): Promise<{ suc
   }
 
   try {
-    const response = await fetch('/api/send-sms', {
+    // Determine Endpoint: Cloudflare/Firebase Functions fallback or local Express API
+    const isLocalOrNode = window.location.hostname === 'localhost' || window.location.hostname.includes('run.app');
+    
+    // In production or custom domains, default to Cloud Function if configured or standard API
+    const functionUrl = (import.meta as any).env?.VITE_FIREBASE_FUNCTION_SMS_URL || '/api/send-sms';
+
+    const response = await fetch(functionUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ phone, message }),
+      body: JSON.stringify({ phone, message, to: phone }),
     });
 
     if (!response.ok) {

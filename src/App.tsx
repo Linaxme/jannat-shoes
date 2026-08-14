@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   ShoeProduct,
   Customer,
@@ -109,8 +109,17 @@ export default function App() {
       if (res.userAccounts && res.userAccounts.length > 0) {
         let hasAdmin = res.userAccounts.some((u) => u.role === 'admin');
         let accounts = res.userAccounts.map((u) => {
-          if (u.role === 'admin' && (u.name.includes('মালিক') || u.name === 'Store Admin' || u.name === 'এডমিন')) {
-            return { ...u, name: 'মো আলাউদ্দিন ইসলাম' };
+          if (u.role === 'admin') {
+            const updatedAdmin = {
+              ...u,
+              name: u.name.includes('মালিক') || u.name === 'Store Admin' || u.name === 'এডমিন' ? 'মো আলাউদ্দিন ইসলাম' : u.name,
+              phone: u.phone === '01711002233' || !u.phone ? '01872259237' : u.phone,
+              loginId: u.loginId === '01711002233' || !u.loginId ? '01872259237' : u.loginId,
+            };
+            if (u.phone === '01711002233' || u.loginId === '01711002233') {
+              saveDocumentToFirestore('userAccounts', updatedAdmin.id, updatedAdmin);
+            }
+            return updatedAdmin;
           }
           return u;
         });
@@ -118,15 +127,16 @@ export default function App() {
           const defaultAdmin: UserAccount = {
             id: 'usr_admin',
             name: 'মো আলাউদ্দিন ইসলাম',
-            loginId: '01711002233',
+            loginId: '01872259237',
             password: 'admin1234',
             role: 'admin',
-            phone: '01711002233',
+            phone: '01872259237',
             email: 'alauddin@linax.com',
             isActive: true,
             createdAt: '2026-01-01'
           };
           accounts.push(defaultAdmin);
+          saveDocumentToFirestore('userAccounts', defaultAdmin.id, defaultAdmin);
         }
 
         // Bi-directional sync between customers and userAccounts
@@ -374,9 +384,13 @@ export default function App() {
   };
 
   const handleUpdateSeller = async (updatedSeller: SalesRep) => {
-    setSellers((prev) =>
-      prev.map((s) => (s.id === updatedSeller.id ? updatedSeller : s))
-    );
+    setSellers((prev) => {
+      const exists = prev.some((s) => s.id === updatedSeller.id);
+      if (exists) {
+        return prev.map((s) => (s.id === updatedSeller.id ? updatedSeller : s));
+      }
+      return [updatedSeller, ...prev];
+    });
     await saveDocumentToFirestore('sellers', updatedSeller.id, updatedSeller);
     triggerToast(t('toast_seller_updated').replace('{{name}}', updatedSeller.name));
   };
@@ -657,10 +671,68 @@ export default function App() {
   const getVisiblePaymentLogs = () => {
     if (!currentUser) return [];
     if (currentUser.role === 'seller' && systemConfig && !systemConfig.allowSellerToSeeOtherSellersDue) {
-      return paymentLogs.filter(log => log.sellerId === currentUser.sellerId);
+      return paymentLogs.filter(
+        log =>
+          log.sellerId === currentUser.sellerId ||
+          log.sellerId === currentUser.id ||
+          log.receivedBy === currentUser.name
+      );
     }
     return paymentLogs;
   };
+
+  // Combine dedicated sales reps + Admin (who also acts as a seller), excluding developer/super_admin
+  const allSellers = useMemo(() => {
+    const list: SalesRep[] = [...sellers].filter(
+      (s) =>
+        s.role !== 'super_admin' &&
+        !s.name.includes('সুপার এডমিন') &&
+        !s.area?.includes('সুপার এডমিন')
+    );
+
+    // Only 'admin' role accounts are Admin+Seller (super_admin is developer-only)
+    const adminAccounts = userAccounts.filter((u) => u.role === 'admin');
+
+    adminAccounts.forEach((adminUser) => {
+      const alreadyInList = list.some(
+        (s) =>
+          s.id === adminUser.sellerId ||
+          s.id === adminUser.id ||
+          (adminUser.phone && s.phone === adminUser.phone) ||
+          s.name.trim().toLowerCase() === adminUser.name.trim().toLowerCase()
+      );
+
+      if (!alreadyInList) {
+        list.unshift({
+          id: adminUser.sellerId || adminUser.id,
+          name: adminUser.name,
+          phone: adminUser.phone || adminUser.loginId,
+          area: adminUser.area || 'প্রধান শাখা (এডমিন ও সেলার)',
+          monthlyTargetPairs: 1000,
+          monthlyTargetAmount: 0,
+          commissionRatePercent: 0,
+          role: 'admin',
+          isAdmin: true,
+        });
+      } else {
+        const idx = list.findIndex(
+          (s) =>
+            s.id === adminUser.sellerId ||
+            s.id === adminUser.id ||
+            s.name.trim().toLowerCase() === adminUser.name.trim().toLowerCase()
+        );
+        if (idx !== -1) {
+          list[idx] = {
+            ...list[idx],
+            role: 'admin',
+            isAdmin: true,
+          };
+        }
+      }
+    });
+
+    return list;
+  }, [sellers, userAccounts]);
 
   const dueAlertCount = getVisibleCustomers().filter((c) => c.currentDue > 0).length;
   const lowStockCount = products.filter((p) => p.stockPairs <= p.minStockAlert).length;
@@ -1041,7 +1113,7 @@ export default function App() {
           <PosOrderBuilder
             products={products}
             customers={getVisibleCustomers()}
-            sellers={sellers}
+            sellers={allSellers}
             currentUser={currentUser}
             activeTheme={activeTheme}
             systemConfig={systemConfig}
@@ -1079,9 +1151,10 @@ export default function App() {
         {activeTab === 'due' && (
           <DueManagement
             customers={getVisibleCustomers()}
-            sellers={sellers}
+            sellers={allSellers}
             paymentLogs={getVisiblePaymentLogs()}
             activeTheme={activeTheme}
+            currentUser={currentUser}
             onRecordPayment={handleRecordPayment}
             onTriggerSMS={async (type, phone, name, shopName, data, customerId) => {
               // Automatically send SMS directly and get success status
@@ -1121,7 +1194,7 @@ export default function App() {
             <UserManagement
               currentUser={currentUser}
               userAccounts={userAccounts}
-              sellers={sellers}
+              sellers={allSellers}
               activeTheme={activeTheme}
               systemConfig={systemConfig}
               onUpdateSystemConfig={handleUpdateSystemConfig}
@@ -1136,9 +1209,10 @@ export default function App() {
 
         {activeTab === 'seller-tracking' && currentUser && (
           <SellerTracking
-            sellers={sellers}
+            sellers={allSellers}
             orders={orders}
-            customers={userAccounts.filter(u => u.role === 'customer')}
+            customers={customers}
+            paymentLogs={paymentLogs}
           />
         )}
 

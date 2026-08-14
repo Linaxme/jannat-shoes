@@ -470,12 +470,12 @@ export const CustomerStorefront: React.FC<CustomerStorefrontProps> = ({
 
       {/* Minimal Store Catalog Header */}
       <div className="flex items-center justify-between gap-3 pt-1 pb-1">
-        <div className="flex items-center gap-2.5 flex-1 min-w-0">
-          <span className="text-xs sm:text-sm font-bold text-amber-400 tracking-wide whitespace-nowrap flex items-center gap-1.5">
-            <ShoppingBag className="w-3.5 h-3.5 text-amber-400" />
+        <div className="flex items-center gap-3 flex-1 min-w-0">
+          <span className="text-base sm:text-lg md:text-xl font-black text-amber-400 tracking-wide whitespace-nowrap flex items-center gap-2">
+            <ShoppingBag className="w-5 h-5 text-amber-400" />
             অনলাইন অর্ডার
           </span>
-          <div className="h-px bg-gradient-to-r from-amber-500/40 via-slate-800 to-transparent flex-1" />
+          <div className="h-0.5 bg-gradient-to-r from-amber-500/50 via-slate-800 to-transparent flex-1" />
         </div>
 
         {/* Login or Shopkeeper Button */}

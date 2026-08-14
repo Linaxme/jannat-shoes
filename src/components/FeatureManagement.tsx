@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { SystemConfig, UserAccount, UITheme } from '../types';
-import { Sliders, Settings2, Plus, Trash2, Layers, RefreshCw, Tag, AlertTriangle, Database } from 'lucide-react';
+import { Sliders, Settings2, Plus, Trash2, Layers, Tag, AlertTriangle, Database, ChevronDown, ChevronUp } from 'lucide-react';
+import { toBnDigit } from '../utils/formatters';
 
 interface FeatureManagementProps {
   currentUser: UserAccount;
@@ -19,7 +20,7 @@ export const FeatureManagement: React.FC<FeatureManagementProps> = ({
   const [newCategoryInput, setNewCategoryInput] = useState('');
   const [catError, setCatError] = useState<string | null>(null);
   const [deletingCategory, setDeletingCategory] = useState<string | null>(null);
-  const [showResetConfirm, setShowResetConfirm] = useState<boolean>(false);
+  const [isCategoryExpanded, setIsCategoryExpanded] = useState<boolean>(false);
   const [showClearDbConfirm, setShowClearDbConfirm] = useState<boolean>(false);
   const [isClearing, setIsClearing] = useState<boolean>(false);
 
@@ -71,17 +72,8 @@ export const FeatureManagement: React.FC<FeatureManagementProps> = ({
     setCatError(null);
   };
 
-  const confirmResetCategories = () => {
-    onUpdateSystemConfig({
-      ...systemConfig,
-      categories: defaultCategories,
-    });
-    setShowResetConfirm(false);
-    setCatError(null);
-  };
-
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       
       {/* Delete Confirmation Modal */}
       {deletingCategory && (
@@ -113,42 +105,6 @@ export const FeatureManagement: React.FC<FeatureManagementProps> = ({
                 className="px-3.5 py-1.5 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-xs font-bold transition shadow-lg shadow-rose-600/20 cursor-pointer"
               >
                 হ্যাঁ, মুছে ফেলুন
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Reset Categories Confirmation Modal */}
-      {showResetConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fade-in">
-          <div className="bg-slate-900 border border-slate-700 p-5 rounded-2xl max-w-sm w-full space-y-4 shadow-2xl">
-            <div className="flex items-center gap-3">
-              <div className="p-2.5 bg-amber-500/10 text-amber-400 rounded-xl">
-                <RefreshCw className="w-5 h-5" />
-              </div>
-              <div>
-                <h4 className="text-sm font-bold text-white">ডিফল্ট ক্যাটাগরি রিস্টোর</h4>
-                <p className="text-xs text-slate-400">আপনি কি নিশ্চিত?</p>
-              </div>
-            </div>
-            <p className="text-xs text-slate-300">
-              সকল ক্যাটাগরি রিস্টোর করে পূর্বের ডিফল্ট ক্যাটাগরি তালিকায় ফিরে যেতে চান?
-            </p>
-            <div className="flex justify-end gap-2 pt-2">
-              <button
-                type="button"
-                onClick={() => setShowResetConfirm(false)}
-                className="px-3.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold transition cursor-pointer"
-              >
-                বাতিল
-              </button>
-              <button
-                type="button"
-                onClick={confirmResetCategories}
-                className="px-3.5 py-1.5 bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-xl text-xs font-bold transition shadow-lg shadow-amber-500/20 cursor-pointer"
-              >
-                হ্যাঁ, রিস্টোর করুন
               </button>
             </div>
           </div>
@@ -200,20 +156,14 @@ export const FeatureManagement: React.FC<FeatureManagementProps> = ({
         </div>
       )}
 
-      {/* Page Title */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-slate-900 border border-slate-800 p-4 sm:p-5 rounded-2xl">
-        <div className="flex items-center gap-3">
-          <div className="p-3 bg-amber-500/10 text-amber-400 rounded-xl">
-            <Sliders className="w-6 h-6" />
-          </div>
-          <div>
-            <h2 className="text-base sm:text-lg font-bold text-white flex items-center gap-2">
-              সেটিং ও ক্যাটাগরি ব্যবস্থাপনা (Admin Settings)
-            </h2>
-            <p className="text-xs sm:text-sm text-slate-400">
-              ক্যাটাগরি নির্ধারণ এবং অ্যাপ্লিকেশনের বিভিন্ন মডিউল নিয়ন্ত্রণ করুন।
-            </p>
-          </div>
+      {/* Minimal Header like Dashboard */}
+      <div className="flex items-center justify-between gap-3 pt-1 pb-1">
+        <div className="flex items-center gap-3 flex-1 min-w-0">
+          <span className="text-base sm:text-lg md:text-xl font-black text-amber-400 tracking-wide whitespace-nowrap flex items-center gap-2">
+            <Sliders className="w-5 h-5 text-amber-400" />
+            এডমিন সেটিং
+          </span>
+          <div className="h-0.5 bg-gradient-to-r from-amber-500/50 via-slate-800 to-transparent flex-1" />
         </div>
       </div>
 
@@ -243,93 +193,99 @@ export const FeatureManagement: React.FC<FeatureManagementProps> = ({
         </button>
       </div>
 
-      {/* Category Management Card */}
-      <div className="bg-slate-900 border border-amber-500/30 p-5 sm:p-6 rounded-2xl shadow-xl space-y-4">
-        <div className="flex items-center justify-between pb-3 border-b border-slate-800 flex-wrap gap-2">
-          <div className="flex items-center gap-2.5">
-            <div className="p-2 bg-amber-500/10 text-amber-400 rounded-xl">
+      {/* Set Category Expandable Card */}
+      <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-lg transition-all">
+        {/* Accordion Header */}
+        <button
+          type="button"
+          onClick={() => setIsCategoryExpanded(!isCategoryExpanded)}
+          className="w-full p-4 sm:p-4.5 flex items-center justify-between gap-3 text-left hover:bg-slate-800/40 transition cursor-pointer"
+        >
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-amber-500/10 text-amber-400 rounded-xl shrink-0">
               <Layers className="w-5 h-5" />
             </div>
-            <div>
-              <h3 className="text-sm sm:text-base font-bold text-white">
-                প্রোডাক্ট ক্যাটাগরি সেটিং (Manage Categories)
+            <div className="flex items-center gap-2.5">
+              <h3 className="text-sm sm:text-base font-bold text-slate-100">
+                সেট ক্যাটাগরি
               </h3>
-              <p className="text-[11px] sm:text-xs text-slate-400 mt-0.5">
-                এখান থেকে সেট করা ক্যাটাগরিগুলো স্টক ইনপুট ড্রপডাউন এবং কাস্টমার ক্যাটালগে সরাসরি প্রদর্শিত হবে।
-              </p>
+              <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-amber-500/10 text-amber-300 border border-amber-500/30">
+                {toBnDigit(categoriesList.length)}টি
+              </span>
             </div>
           </div>
 
-          <button
-            type="button"
-            onClick={() => setShowResetConfirm(true)}
-            className="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs font-semibold flex items-center gap-1 transition cursor-pointer"
-            title="ডিফল্ট ক্যাটাগরি রিস্টোর করুন"
-          >
-            <RefreshCw className="w-3.5 h-3.5 text-amber-400" />
-            <span>ডিফল্ট ক্যাটাগরি</span>
-          </button>
-        </div>
-
-        {/* Add Category Form */}
-        <form onSubmit={handleAddCategory} className="flex flex-col sm:flex-row gap-2.5 items-stretch sm:items-center">
-          <div className="relative flex-1">
-            <Tag className="w-4 h-4 text-amber-400 absolute left-3 top-1/2 -translate-y-1/2" />
-            <input
-              type="text"
-              value={newCategoryInput}
-              onChange={(e) => {
-                setNewCategoryInput(e.target.value);
-                setCatError(null);
-              }}
-              placeholder="নতুন ক্যাটাগরির নাম লিখুন (যেমন: জুয়েলারি / কেডস / চামড়ার জুতা)..."
-              className="w-full bg-slate-950 border border-slate-800 text-amber-300 rounded-xl pl-9 pr-3 py-2 text-xs font-bold focus:outline-none focus:border-amber-500"
-            />
+          <div className="flex items-center gap-2 text-slate-400">
+            <span className="text-xs hidden sm:inline text-slate-400">
+              {isCategoryExpanded ? 'লুকান' : 'দেখুন / পরিবর্তন'}
+            </span>
+            <div className="p-1 rounded-lg bg-slate-950 border border-slate-800 text-amber-400">
+              {isCategoryExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+            </div>
           </div>
-          <button
-            type="submit"
-            className="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black rounded-xl text-xs flex items-center justify-center gap-1.5 cursor-pointer transition shadow-md shadow-amber-500/10 shrink-0"
-          >
-            <Plus className="w-4 h-4 stroke-[3]" />
-            <span>ক্যাটাগরি যুক্ত করুন</span>
-          </button>
-        </form>
+        </button>
 
-        {catError && (
-          <p className="text-rose-400 text-xs font-semibold flex items-center gap-1">
-            <AlertTriangle className="w-3.5 h-3.5" />
-            <span>{catError}</span>
-          </p>
-        )}
-
-        {/* Active Categories Chips */}
-        <div className="space-y-2 pt-2">
-          <label className="block text-xs font-bold text-slate-300">
-            বর্তমান সক্রিয় ক্যাটাগরি সমূহ ({categoriesList.length} টি):
-          </label>
-          <div className="flex flex-wrap gap-2">
-            {categoriesList.map((cat, idx) => (
-              <div
-                key={idx}
-                className="bg-slate-950 border border-slate-800 px-3 py-1.5 rounded-xl flex items-center gap-2 text-xs font-bold text-slate-200 group hover:border-slate-700 transition"
-              >
-                <span className="text-amber-400">•</span>
-                <span>{cat}</span>
-                <button
-                  type="button"
-                  onClick={() => {
+        {/* Accordion Body */}
+        {isCategoryExpanded && (
+          <div className="p-4 sm:p-5 border-t border-slate-800/80 bg-slate-950/40 space-y-4 animate-fade-in">
+            {/* Add Category Form */}
+            <form onSubmit={handleAddCategory} className="flex flex-col sm:flex-row gap-2 items-stretch sm:items-center">
+              <div className="relative flex-1">
+                <Tag className="w-4 h-4 text-amber-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  value={newCategoryInput}
+                  onChange={(e) => {
+                    setNewCategoryInput(e.target.value);
                     setCatError(null);
-                    setDeletingCategory(cat);
                   }}
-                  className="text-slate-500 hover:text-rose-400 transition p-1 rounded cursor-pointer hover:bg-rose-500/10"
-                  title="মুছে ফেলুন"
-                >
-                  <Trash2 className="w-3.5 h-3.5 text-rose-400" />
-                </button>
+                  placeholder="নতুন ক্যাটাগরির নাম লিখুন (যেমন: জুয়েলারি / কেডস / চামড়ার জুতা)..."
+                  className="w-full bg-slate-900 border border-slate-800 text-amber-300 rounded-xl pl-9 pr-3 py-2 text-xs font-bold focus:outline-none focus:border-amber-500"
+                />
               </div>
-            ))}
+              <button
+                type="submit"
+                className="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black rounded-xl text-xs flex items-center justify-center gap-1.5 cursor-pointer transition shadow-md shadow-amber-500/10 shrink-0"
+              >
+                <Plus className="w-4 h-4 stroke-[3]" />
+                <span>যুক্ত করুন</span>
+              </button>
+            </form>
+
+            {catError && (
+              <p className="text-rose-400 text-xs font-semibold flex items-center gap-1">
+                <AlertTriangle className="w-3.5 h-3.5" />
+                <span>{catError}</span>
+              </p>
+            )}
+
+            {/* Active Categories Chips */}
+            <div className="space-y-2 pt-1">
+              <div className="flex flex-wrap gap-2">
+                {categoriesList.map((cat, idx) => (
+                  <div
+                    key={idx}
+                    className="bg-slate-900 border border-slate-800 px-3 py-1.5 rounded-xl flex items-center gap-2 text-xs font-bold text-slate-200 group hover:border-slate-700 transition"
+                  >
+                    <span className="text-amber-400">•</span>
+                    <span>{cat}</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setCatError(null);
+                        setDeletingCategory(cat);
+                      }}
+                      className="text-slate-500 hover:text-rose-400 transition p-0.5 rounded cursor-pointer hover:bg-rose-500/10"
+                      title="মুছে ফেলুন"
+                    >
+                      <Trash2 className="w-3.5 h-3.5 text-rose-400" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       {/* Feature Switches & Controls (Super Admin Only) */}

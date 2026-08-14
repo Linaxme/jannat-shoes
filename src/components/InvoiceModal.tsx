@@ -2,7 +2,7 @@ import React, { useRef, useState } from 'react';
 import { Order } from '../types';
 import { formatTaka, toBnDigit, formatBnDate } from '../utils/formatters';
 import { Printer, X, CheckCircle2, PhoneCall, MapPin, Store, Download, Loader2, Share2, Eye } from 'lucide-react';
-import html2canvas from 'html2canvas';
+import { toBlob, toPng } from 'html-to-image';
 
 interface InvoiceModalProps {
   order: Order | null;
@@ -24,18 +24,15 @@ export const InvoiceModal: React.FC<InvoiceModalProps> = ({ order, onClose }) =>
     if (!memoRef.current) return;
     try {
       setIsDownloading(true);
-      const canvas = await html2canvas(memoRef.current, {
-        scale: 2,
-        useCORS: true,
+      
+      const blob = await toBlob(memoRef.current, {
         backgroundColor: '#ffffff',
+        pixelRatio: 2,
+        cacheBust: true,
       });
 
-      const blob = await new Promise<Blob | null>((resolve) =>
-        canvas.toBlob(resolve, 'image/png')
-      );
-
       if (!blob) {
-        throw new Error('Canvas blob failed');
+        throw new Error('Failed to generate image blob');
       }
 
       const fileName = `Jannat_Memo_${order.memoNo}.png`;
@@ -81,9 +78,13 @@ export const InvoiceModal: React.FC<InvoiceModalProps> = ({ order, onClose }) =>
       console.error('Failed to download memo image:', err);
       if (memoRef.current) {
         try {
-          const canvas = await html2canvas(memoRef.current, { scale: 2, backgroundColor: '#ffffff' });
-          setImagePreviewUrl(canvas.toDataURL('image/png'));
+          const dataUrl = await toPng(memoRef.current, {
+            backgroundColor: '#ffffff',
+            pixelRatio: 2,
+          });
+          setImagePreviewUrl(dataUrl);
         } catch (e) {
+          console.error('Fallback image preview failed:', e);
           alert('ডাউনলোড করতে সমস্যা হয়েছে। দয়া করে স্ক্রিনশট অথবা প্রিন্ট অপশন ব্যবহার করুন।');
         }
       }

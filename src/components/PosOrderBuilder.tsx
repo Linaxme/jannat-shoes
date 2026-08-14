@@ -16,6 +16,8 @@ import {
   ShieldCheck,
   RotateCcw,
   Save,
+  ClipboardList,
+  Zap,
 } from 'lucide-react';
 
 interface PosOrderBuilderProps {
@@ -402,29 +404,27 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
   return (
     <div className="space-y-5 max-w-5xl mx-auto">
       
-      {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-900 p-4 rounded-2xl border border-slate-800">
-        <div>
-          <h2 className="text-base sm:text-lg font-bold text-white flex items-center gap-2">
+      {/* Minimal Header like Dashboard */}
+      <div className="flex items-center justify-between gap-3 pt-1 pb-1">
+        <div className="flex items-center gap-3 flex-1 min-w-0">
+          <span className="text-base sm:text-lg md:text-xl font-black text-amber-400 tracking-wide whitespace-nowrap flex items-center gap-2">
             <ShoppingBag className="w-5 h-5 text-amber-400" />
-            বিক্রয় মেমো জেনারেটর
-          </h2>
-          <p className="text-xs text-slate-400 mt-0.5">
-            প্রোডাক্ট নাম, পরিমাণ ও দাম বসিয়ে দ্রুত মেমো তৈরি করুন
-          </p>
+            বিক্রয় ও অর্ডার বুকিং
+          </span>
+          <div className="h-0.5 bg-gradient-to-r from-amber-500/50 via-slate-800 to-transparent flex-1" />
         </div>
 
         {/* Draft indicator & Reset button */}
         {cartItems.length > 0 && (
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 shrink-0">
             <span className="px-2.5 py-1 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-300 text-[11px] font-medium flex items-center gap-1.5">
               <Save className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
-              <span>খসড়া সংরক্ষিত ({toBnDigit(cartItems.length)}টি প্রোডাক্ট)</span>
+              <span>খসড়া ({toBnDigit(cartItems.length)}টি)</span>
             </span>
             <button
               type="button"
               onClick={handleClearDraft}
-              className="px-2.5 py-1 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 text-rose-300 hover:text-rose-200 text-[11px] font-bold flex items-center gap-1 transition-colors"
+              className="px-2.5 py-1 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 text-rose-300 hover:text-rose-200 text-[11px] font-bold flex items-center gap-1 transition-colors cursor-pointer"
               title="নতুন মেমো শুরু করুন"
             >
               <RotateCcw className="w-3.5 h-3.5" />
@@ -433,6 +433,39 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
           </div>
         )}
       </div>
+
+      {/* Two Tabs: অর্ডার বুকিং (Order Booking) vs সরাসরি বিক্রয় (Direct Sale) */}
+      {(!systemConfig || systemConfig.enableSampleBooking) && (
+        <div className="bg-slate-900 border border-slate-800 p-1.5 rounded-2xl">
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              onClick={() => setOrderType('sample_booking')}
+              className={`flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl font-bold text-xs sm:text-sm transition-all cursor-pointer ${
+                orderType === 'sample_booking'
+                  ? 'bg-amber-500 text-slate-950 shadow-md font-black'
+                  : 'bg-slate-950/80 text-slate-400 hover:text-slate-200 hover:bg-slate-800/80 border border-slate-800/80'
+              }`}
+            >
+              <ClipboardList className={`w-4 h-4 ${orderType === 'sample_booking' ? 'text-slate-950' : 'text-amber-400'}`} />
+              <span>অর্ডার বুকিং</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setOrderType('direct_sale')}
+              className={`flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl font-bold text-xs sm:text-sm transition-all cursor-pointer ${
+                orderType === 'direct_sale'
+                  ? 'bg-emerald-500 text-slate-950 shadow-md font-black'
+                  : 'bg-slate-950/80 text-slate-400 hover:text-slate-200 hover:bg-slate-800/80 border border-slate-800/80'
+              }`}
+            >
+              <Zap className={`w-4 h-4 ${orderType === 'direct_sale' ? 'text-slate-950' : 'text-emerald-400'}`} />
+              <span>সরাসরি বিক্রয়</span>
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Customer Selection Card */}
       <div className="bg-slate-900 border border-slate-800 p-4 rounded-2xl space-y-3">
@@ -471,41 +504,6 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
           )}
         </div>
       </div>
-
-      {/* Order Mode Selector: Sample Booking vs Direct Sale */}
-      {(!systemConfig || systemConfig.enableSampleBooking) && (
-        <div className="bg-slate-900 border border-slate-800 p-4 rounded-2xl space-y-2">
-          <label className="block text-xs font-semibold text-slate-300">
-            অর্ডারের ধরণ / প্রসেস নির্বাচন করুন:
-          </label>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <button
-              type="button"
-              onClick={() => setOrderType('sample_booking')}
-              className={`p-3 rounded-xl border text-left transition-all ${
-                orderType === 'sample_booking'
-                  ? 'bg-amber-500/20 border-amber-500 text-amber-300 font-bold'
-                  : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-slate-200'
-              }`}
-            >
-              <div className="text-xs font-bold">স্যাম্পল অর্ডার বুকিং (পরের দিন ডেলিভারি)</div>
-              <div className="text-[10px] text-slate-300 mt-0.5">মার্কেটে স্যাম্পল দেখিয়ে অর্ডার নেওয়া। স্টকে বুকড থাকবে, ডেলিভারি কনফার্ম করলে মেমো ও স্টক কাটবে।</div>
-            </button>
-            <button
-              type="button"
-              onClick={() => setOrderType('direct_sale')}
-              className={`p-3 rounded-xl border text-left transition-all ${
-                orderType === 'direct_sale'
-                  ? 'bg-emerald-500/20 border-emerald-500 text-emerald-300 font-bold'
-                  : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-slate-200'
-              }`}
-            >
-              <div className="text-xs font-bold">সরাসরি ক্যাশ মেমো / বিক্রি</div>
-              <div className="text-[10px] text-slate-300 mt-0.5">শোরুম থেকে তাৎক্ষণিক বিক্রি ও সাথে সাথে স্টক থেকে মাইনাস হবে।</div>
-            </button>
-          </div>
-        </div>
-      )}
 
       {/* QUICK ENTRY BOX (Product Search, Quantity & Price Inputs) */}
       <div className="bg-slate-900 border border-amber-500/30 p-4 rounded-2xl space-y-3 shadow-lg">
@@ -822,14 +820,16 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
           type="button"
           onClick={handleSubmitOrder}
           disabled={cartItems.length === 0}
-          className={`w-full py-3 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow transition-all ${
+          className={`w-full py-3.5 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow transition-all ${
             cartItems.length > 0
-              ? 'bg-amber-500 hover:bg-amber-400 text-slate-950 cursor-pointer'
+              ? orderType === 'sample_booking'
+                ? 'bg-amber-500 hover:bg-amber-400 text-slate-950 cursor-pointer shadow-amber-500/20'
+                : 'bg-emerald-500 hover:bg-emerald-400 text-slate-950 cursor-pointer shadow-emerald-500/20'
               : 'bg-slate-800 text-slate-500 cursor-not-allowed'
           }`}
         >
           <CheckCircle className="w-5 h-5" />
-          মেমো নিশ্চিত করুন
+          {orderType === 'sample_booking' ? 'অর্ডার বুকিং নিশ্চিত করুন' : 'সরাসরি বিক্রয় মেমো নিশ্চিত করুন'}
         </button>
 
       </div>

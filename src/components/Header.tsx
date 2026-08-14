@@ -71,14 +71,14 @@ export const Header: React.FC<HeaderProps> = ({
   };
 
   const allTabs = [
+    { id: 'pos' as NavTab, label: 'মেমো', icon: ShoppingCart, roles: ['super_admin', 'admin', 'seller'] },
+    { id: 'pending' as NavTab, label: currentUserRole === 'customer' ? 'অর্ডার স্ট্যাটাস' : 'পেন্ডিং অর্ডার', icon: Clock, badgeCount: pendingOrdersCount, badgeColor: 'bg-amber-500', roles: ['super_admin', 'admin', 'seller', 'customer'] },
     { id: 'catalog' as NavTab, label: isStaff ? 'ক্যাটালগ' : 'প্রোডাক্ট ক্যাটালগ', icon: ShoppingBag, roles: ['super_admin', 'admin', 'seller', 'customer'] },
-    { id: 'pending' as NavTab, label: currentUserRole === 'customer' ? 'অর্ডার স্ট্যাটাস' : t('pending'), icon: Clock, badgeCount: pendingOrdersCount, badgeColor: 'bg-amber-500', roles: ['super_admin', 'admin', 'seller', 'customer'] },
-    { id: 'sales' as NavTab, label: currentUserRole === 'customer' ? 'অর্ডার হিস্টোরি' : t('history'), icon: History, roles: ['super_admin', 'admin', 'seller', 'customer'] },
-    { id: 'pos' as NavTab, label: t('pos'), icon: ShoppingCart, roles: ['super_admin', 'admin', 'seller'] },
-    { id: 'users' as NavTab, label: t('users'), icon: UserPlus, roles: ['super_admin', 'admin', ...(systemConfig?.allowSellerToManageUsers ? ['seller'] : [])] },
-    { id: 'seller-tracking' as NavTab, label: 'সেলার ট্র্যাকিং', icon: TrendingUp, roles: ['super_admin', 'admin'] },
-    ...(systemConfig?.enableSMS !== false ? [{ id: 'sms' as NavTab, label: t('sms'), icon: MessageSquare, roles: ['super_admin', 'admin'] }] : []),
+    { id: 'sales' as NavTab, label: currentUserRole === 'customer' ? 'অর্ডার হিস্টোরি' : 'বিক্রয় ইতিহাস', icon: History, roles: ['super_admin', 'admin', 'seller', 'customer'] },
+    { id: 'seller-tracking' as NavTab, label: 'সেলস ট্র্যাকিং', icon: TrendingUp, roles: ['super_admin', 'admin'] },
+    { id: 'users' as NavTab, label: 'ইউজার', icon: UserPlus, roles: ['super_admin', 'admin', ...(systemConfig?.allowSellerToManageUsers ? ['seller'] : [])] },
     { id: 'features' as NavTab, label: 'সেটিং', icon: Sliders, roles: ['super_admin', 'admin'] },
+    ...(systemConfig?.enableSMS !== false ? [{ id: 'sms' as NavTab, label: t('sms'), icon: MessageSquare, roles: ['super_admin', 'admin'] }] : []),
   ];
 
   const visibleDrawerTabs = allTabs.filter((t) => t.roles.includes(currentUserRole));

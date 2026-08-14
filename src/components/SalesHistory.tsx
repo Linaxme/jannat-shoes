@@ -71,12 +71,12 @@ export const SalesHistory: React.FC<SalesHistoryProps> = ({
       
       {/* Minimal Header */}
       <div className="flex items-center justify-between gap-3 pt-1 pb-1">
-        <div className="flex items-center gap-2.5 flex-1 min-w-0">
-          <span className="text-xs sm:text-sm font-bold text-amber-400 tracking-wide whitespace-nowrap flex items-center gap-1.5">
-            <History className="w-3.5 h-3.5 text-amber-400" />
+        <div className="flex items-center gap-3 flex-1 min-w-0">
+          <span className="text-base sm:text-lg md:text-xl font-black text-amber-400 tracking-wide whitespace-nowrap flex items-center gap-2">
+            <History className="w-5 h-5 text-amber-400" />
             {isCustomer ? 'আপনার অর্ডার হিস্টোরি' : 'বিক্রয় ইতিহাস'}
           </span>
-          <div className="h-px bg-gradient-to-r from-amber-500/40 via-slate-800 to-transparent flex-1" />
+          <div className="h-0.5 bg-gradient-to-r from-amber-500/50 via-slate-800 to-transparent flex-1" />
         </div>
 
         <div className="flex items-center gap-3 bg-slate-900 px-3 py-1.5 rounded-xl border border-slate-800 text-xs shrink-0">

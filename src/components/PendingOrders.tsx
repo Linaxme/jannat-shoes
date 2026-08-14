@@ -86,15 +86,20 @@ export const PendingOrders: React.FC<PendingOrdersProps> = ({
     <div className="space-y-4">
       {/* Header & Stats Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1 pb-1">
-        <div className="flex items-center gap-2.5 flex-1 min-w-0">
-          <span className="text-xs sm:text-sm font-bold text-amber-400 tracking-wide whitespace-nowrap flex items-center gap-1.5">
-            <Clock className="w-4 h-4 text-amber-400" />
-            {isCustomer ? 'আপনার অর্ডার স্ট্যাটাস (পেন্ডিং বুকিং)' : 'পেন্ডিং স্যাম্পল বুকিং'} ({toBnDigit(filteredOrders.length)} টি)
+        <div className="flex items-center gap-3 flex-1 min-w-0">
+          <span className="text-base sm:text-lg md:text-xl font-black text-amber-400 tracking-wide whitespace-nowrap flex items-center gap-2">
+            <Clock className="w-5 h-5 text-amber-400" />
+            পেন্ডিং অর্ডার
           </span>
-          <div className="h-px bg-gradient-to-r from-amber-500/40 via-slate-800 to-transparent flex-1 hidden sm:block" />
+          <div className="h-0.5 bg-gradient-to-r from-amber-500/50 via-slate-800 to-transparent flex-1" />
         </div>
 
         <div className="flex items-center gap-3 bg-slate-900 px-3 py-1.5 rounded-xl border border-slate-800 text-xs shrink-0 self-start sm:self-auto">
+          <div>
+            <span className="text-slate-400 text-[11px] mr-1">মোট অর্ডার:</span>
+            <span className="font-bold text-slate-200">{toBnDigit(filteredOrders.length)} টি</span>
+          </div>
+          <div className="h-3 w-px bg-slate-700" />
           <div>
             <span className="text-slate-400 text-[11px] mr-1">মোট জোড়া:</span>
             <span className="font-bold text-amber-300">{toBnDigit(totalPendingPairs)} জোড়া</span>

@@ -115,19 +115,19 @@ export const Dashboard: React.FC<DashboardProps> = ({
       
       {/* Minimal Dashboard Header */}
       <div className="flex items-center justify-between gap-3 pt-1 pb-1">
-        <div className="flex items-center gap-2.5 flex-1 min-w-0">
-          <span className="text-xs sm:text-sm font-bold text-amber-400 tracking-wide whitespace-nowrap flex items-center gap-1.5">
-            <LayoutDashboard className="w-3.5 h-3.5 text-amber-400" />
+        <div className="flex items-center gap-3 flex-1 min-w-0">
+          <span className="text-base sm:text-lg md:text-xl font-black text-amber-400 tracking-wide whitespace-nowrap flex items-center gap-2">
+            <LayoutDashboard className="w-5 h-5 text-amber-400" />
             ড্যাশবোর্ড
           </span>
-          <div className="h-px bg-gradient-to-r from-amber-500/40 via-slate-800 to-transparent flex-1" />
+          <div className="h-0.5 bg-gradient-to-r from-amber-500/50 via-slate-800 to-transparent flex-1" />
         </div>
 
         <button
           onClick={() => onNavigate('pos')}
-          className="px-3.5 py-1.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black rounded-xl text-xs flex items-center gap-1.5 shadow-md shadow-amber-500/10 transition cursor-pointer shrink-0"
+          className="px-3.5 py-1.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black rounded-xl text-xs sm:text-sm flex items-center gap-1.5 shadow-md shadow-amber-500/10 transition cursor-pointer shrink-0"
         >
-          <PlusCircle className="w-3.5 h-3.5 stroke-[2.5]" />
+          <PlusCircle className="w-4 h-4 stroke-[2.5]" />
           <span>নতুন মেমো</span>
         </button>
       </div>

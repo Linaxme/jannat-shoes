@@ -55,7 +55,7 @@ export const INITIAL_USER_ACCOUNTS: UserAccount[] = [
     loginId: 'admin@linax.com',
     password: 'admin1234',
     role: 'super_admin',
-    phone: '01700000000',
+    phone: '01826990490',
     email: 'admin@linax.com',
     isActive: true,
     createdAt: '2026-01-01'
@@ -63,10 +63,10 @@ export const INITIAL_USER_ACCOUNTS: UserAccount[] = [
   {
     id: 'usr_admin',
     name: 'মো আলাউদ্দিন ইসলাম',
-    loginId: '01711002233',
+    loginId: '01872259237',
     password: 'admin1234',
     role: 'admin',
-    phone: '01711002233',
+    phone: '01872259237',
     email: 'alauddin@linax.com',
     isActive: true,
     createdAt: '2026-01-01'
@@ -85,7 +85,7 @@ export const DEFAULT_SYSTEM_CONFIG: SystemConfig = {
   allowGuestBrowsingAndOrder: true,
   allowSellerToSeeFinancials: false,
   allowSellerToSeeOtherSellersSales: false,
-  allowSellerToSeeOtherSellersDue: false,
+  allowSellerToSeeOtherSellersDue: true,
   allowSellerToEditStock: false,
   allowSellerToManageUsers: false,
   smsBalance: 50,
