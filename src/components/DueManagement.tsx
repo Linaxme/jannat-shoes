@@ -91,10 +91,10 @@ export const DueManagement: React.FC<DueManagementProps> = ({
       if (c.currentDue <= 0) return false;
 
       const matchesSearch =
-        c.shopName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        c.address.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (c.assignedSellerName && c.assignedSellerName.toLowerCase().includes(searchTerm.toLowerCase()));
+        (c.shopName || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (c.name || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (c.address || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (c.assignedSellerName && (c.assignedSellerName || "").toLowerCase().includes(searchTerm.toLowerCase()));
 
       let matchesSeller = true;
       if (selectedSellerFilter !== 'সব') {

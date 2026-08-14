@@ -55,9 +55,9 @@ export const SellerTracking: React.FC<SellerTrackingProps> = ({
         const matchName =
           o.sellerName &&
           seller.name &&
-          (o.sellerName.toLowerCase() === seller.name.toLowerCase() ||
-            seller.name.toLowerCase().includes(o.sellerName.toLowerCase()) ||
-            o.sellerName.toLowerCase().includes(seller.name.toLowerCase()));
+          ((o.sellerName || "").toLowerCase() === (seller.name || "").toLowerCase() ||
+            (seller.name || "").toLowerCase().includes((o.sellerName || "").toLowerCase()) ||
+            (o.sellerName || "").toLowerCase().includes((seller.name || "").toLowerCase()));
         return matchId || matchName;
       });
 
@@ -73,9 +73,9 @@ export const SellerTracking: React.FC<SellerTrackingProps> = ({
         const matchName =
           cSellerName &&
           seller.name &&
-          (cSellerName.toLowerCase() === seller.name.toLowerCase() ||
-            seller.name.toLowerCase().includes(cSellerName.toLowerCase()) ||
-            cSellerName.toLowerCase().includes(seller.name.toLowerCase()));
+          (cSellerName.toLowerCase() === (seller.name || "").toLowerCase() ||
+            (seller.name || "").toLowerCase().includes(cSellerName.toLowerCase()) ||
+            cSellerName.toLowerCase().includes((seller.name || "").toLowerCase()));
         return matchId || matchName;
       });
 

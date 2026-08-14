@@ -62,7 +62,7 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
   const currentSellerInfo = useMemo(() => {
     if (currentUser) {
       const matchedSeller = sellers.find(
-        (s) => s.id === currentUser.sellerId || s.name.toLowerCase() === currentUser.name.toLowerCase()
+        (s) => s.id === currentUser.sellerId || (s.name || "").toLowerCase() === (currentUser.name || "").toLowerCase()
       );
       const sellerIdVal = currentUser.sellerId || matchedSeller?.id || currentUser.loginId || currentUser.id;
       return {
@@ -147,9 +147,9 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
     if (!productSearchInput.trim()) return false;
     const q = productSearchInput.toLowerCase();
     return (
-      p.articleCode.toLowerCase().includes(q) ||
-      p.name.toLowerCase().includes(q) ||
-      p.brand.toLowerCase().includes(q)
+      (p.articleCode || "").toLowerCase().includes(q) ||
+      (p.name || "").toLowerCase().includes(q) ||
+      (p.brand || "").toLowerCase().includes(q)
     );
   });
 
@@ -176,8 +176,8 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
     if (!prod && productSearchInput.trim()) {
       const match = products.find(
         (p) =>
-          p.articleCode.toLowerCase() === productSearchInput.trim().toLowerCase() ||
-          p.name.toLowerCase().includes(productSearchInput.trim().toLowerCase())
+          (p.articleCode || "").toLowerCase() === productSearchInput.trim().toLowerCase() ||
+          (p.name || "").toLowerCase().includes(productSearchInput.trim().toLowerCase())
       );
       if (match) prod = match;
     }

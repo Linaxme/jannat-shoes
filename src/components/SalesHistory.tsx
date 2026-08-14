@@ -39,10 +39,10 @@ export const SalesHistory: React.FC<SalesHistoryProps> = ({
 
   const filteredOrders = orders.filter((ord) => {
     const matchesSearch =
-      ord.memoNo.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      ord.shopName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      ord.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      ord.sellerName.toLowerCase().includes(searchTerm.toLowerCase());
+      (ord.memoNo || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (ord.shopName || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (ord.customerName || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (ord.sellerName || "").toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesStatus = statusFilter === 'সব' || ord.status === statusFilter;
     const matchesDelivery =

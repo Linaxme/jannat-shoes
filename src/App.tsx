@@ -48,7 +48,7 @@ export default function App() {
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        if (parsed && (parsed.role === 'admin' || parsed.role === 'super_admin') && (parsed.name === 'Store Admin' || parsed.name === 'এডমিন' || parsed.name === 'জান্নাত সুজ' || parsed.name.includes('মালিক /') || parsed.name.includes('জান্নাত'))) {
+        if (parsed && (parsed.role === 'admin' || parsed.role === 'super_admin') && (parsed.name === 'Store Admin' || parsed.name === 'এডমিন' || parsed.name === 'জান্নাত সুজ' || parsed.name?.includes('মালিক /') || parsed.name?.includes('জান্নাত'))) {
           parsed.name = 'মো আলাউদ্দিন ইসলাম';
           localStorage.setItem('lixa_active_user', JSON.stringify(parsed));
         }
@@ -149,9 +149,9 @@ export default function App() {
           const cPhone = (c.phone || '').replace(/\D/g, '');
           const exists = syncAccs.some(
             (u) =>
-              (u.phone && u.phone.replace(/\D/g, '') === cPhone) ||
-              u.loginId.replace(/\D/g, '') === cPhone ||
-              (u.shopName && u.shopName.trim().toLowerCase() === c.shopName.trim().toLowerCase())
+              (u.phone && (u.phone || "").replace(/\D/g, '') === cPhone) ||
+              (u.loginId || "").replace(/\D/g, '') === cPhone ||
+              (u.shopName && (u.shopName || "").trim().toLowerCase() === (c.shopName || "").trim().toLowerCase())
           );
           if (!exists) {
             const newU: UserAccount = {
@@ -177,8 +177,8 @@ export default function App() {
             const uPhone = (u.phone || u.loginId || '').replace(/\D/g, '');
             const exists = syncCusts.some(
               (c) =>
-                (c.phone && c.phone.replace(/\D/g, '') === uPhone) ||
-                (u.shopName && c.shopName.trim().toLowerCase() === u.shopName.trim().toLowerCase())
+                (c.phone && (c.phone || "").replace(/\D/g, '') === uPhone) ||
+                (u.shopName && (c.shopName || "").trim().toLowerCase() === (u.shopName || "").trim().toLowerCase())
             );
             if (!exists) {
               const newC: Customer = {
@@ -591,9 +591,9 @@ export default function App() {
     const phoneClean = phoneVal.replace(/\D/g, '');
     const existingUser = userAccounts.find(
       (u) =>
-        (u.phone && u.phone.replace(/\D/g, '') === phoneClean) ||
-        u.loginId.replace(/\D/g, '') === phoneClean ||
-        (u.shopName && u.shopName.trim().toLowerCase() === newCust.shopName.trim().toLowerCase())
+        (u.phone && (u.phone || "").replace(/\D/g, '') === phoneClean) ||
+        (u.loginId || "").replace(/\D/g, '') === phoneClean ||
+        (u.shopName && (u.shopName || "").trim().toLowerCase() === (newCust.shopName || "").trim().toLowerCase())
     );
 
     if (!existingUser) {
@@ -699,7 +699,7 @@ export default function App() {
           s.id === adminUser.sellerId ||
           s.id === adminUser.id ||
           (adminUser.phone && s.phone === adminUser.phone) ||
-          s.name.trim().toLowerCase() === adminUser.name.trim().toLowerCase()
+          (s.name || "").trim().toLowerCase() === (adminUser.name || "").trim().toLowerCase()
       );
 
       if (!alreadyInList) {
@@ -719,7 +719,7 @@ export default function App() {
           (s) =>
             s.id === adminUser.sellerId ||
             s.id === adminUser.id ||
-            s.name.trim().toLowerCase() === adminUser.name.trim().toLowerCase()
+            (s.name || "").trim().toLowerCase() === (adminUser.name || "").trim().toLowerCase()
         );
         if (idx !== -1) {
           list[idx] = {
@@ -791,8 +791,8 @@ export default function App() {
     // Check if customer already exists in database with this phone number or shop name
     let targetCustomer = customers.find(
       (c) =>
-        (c.phone && c.phone.replace(/\D/g, '') === phoneDigits) ||
-        (c.shopName && c.shopName.trim().toLowerCase() === shopkeeperData.shopName.trim().toLowerCase())
+        (c.phone && (c.phone || "").replace(/\D/g, '') === phoneDigits) ||
+        (c.shopName && (c.shopName || "").trim().toLowerCase() === (shopkeeperData.shopName || "").trim().toLowerCase())
     );
 
     let updatedCustomersList = [...customers];
@@ -830,9 +830,9 @@ export default function App() {
     // Check/Create/Sync UserAccount
     let existingUser = userAccounts.find(
       (u) =>
-        (u.phone && u.phone.replace(/\D/g, '') === phoneDigits) ||
-        u.loginId.replace(/\D/g, '') === phoneDigits ||
-        (u.shopName && u.shopName.trim().toLowerCase() === shopkeeperData.shopName.trim().toLowerCase())
+        (u.phone && (u.phone || "").replace(/\D/g, '') === phoneDigits) ||
+        (u.loginId || "").replace(/\D/g, '') === phoneDigits ||
+        (u.shopName && (u.shopName || "").trim().toLowerCase() === (shopkeeperData.shopName || "").trim().toLowerCase())
     );
 
     if (!existingUser) {
@@ -937,8 +937,8 @@ export default function App() {
     // 1. Check if Customer record exists in customers state
     let targetCustomer = customers.find(
       (c) =>
-        (c.phone && c.phone.replace(/\D/g, '') === phoneDigits) ||
-        (c.shopName && c.shopName.trim().toLowerCase() === data.shopName.trim().toLowerCase())
+        (c.phone && (c.phone || "").replace(/\D/g, '') === phoneDigits) ||
+        (c.shopName && (c.shopName || "").trim().toLowerCase() === (data.shopName || "").trim().toLowerCase())
     );
 
     if (targetCustomer) {
@@ -973,9 +973,9 @@ export default function App() {
     // 2. Check if UserAccount exists in userAccounts state
     let existingUser = userAccounts.find(
       (u) =>
-        (u.phone && u.phone.replace(/\D/g, '') === phoneDigits) ||
-        u.loginId.replace(/\D/g, '') === phoneDigits ||
-        (u.shopName && u.shopName.trim().toLowerCase() === data.shopName.trim().toLowerCase())
+        (u.phone && (u.phone || "").replace(/\D/g, '') === phoneDigits) ||
+        (u.loginId || "").replace(/\D/g, '') === phoneDigits ||
+        (u.shopName && (u.shopName || "").trim().toLowerCase() === (data.shopName || "").trim().toLowerCase())
     );
 
     let targetUser: UserAccount;

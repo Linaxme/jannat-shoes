@@ -149,9 +149,9 @@ export const UserManagement: React.FC<UserManagementProps> = ({
     }
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase().trim();
-      const matchName = u.name.toLowerCase().includes(q);
+      const matchName = (u.name || "").toLowerCase().includes(q);
       const matchShop = (u.shopName || '').toLowerCase().includes(q);
-      const matchLogin = u.loginId.toLowerCase().includes(q);
+      const matchLogin = (u.loginId || "").toLowerCase().includes(q);
       const matchPhone = (u.phone || '').toLowerCase().includes(q);
       return matchName || matchShop || matchLogin || matchPhone;
     }

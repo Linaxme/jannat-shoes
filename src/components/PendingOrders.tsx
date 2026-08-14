@@ -61,11 +61,11 @@ export const PendingOrders: React.FC<PendingOrdersProps> = ({
       const term = searchTerm.toLowerCase().trim();
       if (!term) return true;
       return (
-        ord.memoNo.toLowerCase().includes(term) ||
-        ord.shopName.toLowerCase().includes(term) ||
-        ord.customerName.toLowerCase().includes(term) ||
+        (ord.memoNo || "").toLowerCase().includes(term) ||
+        (ord.shopName || "").toLowerCase().includes(term) ||
+        (ord.customerName || "").toLowerCase().includes(term) ||
         ord.customerPhone.includes(term) ||
-        ord.sellerName.toLowerCase().includes(term)
+        (ord.sellerName || "").toLowerCase().includes(term)
       );
     })
     .sort((a, b) => {

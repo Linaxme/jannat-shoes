@@ -167,8 +167,8 @@ export const StockManagement: React.FC<StockManagementProps> = ({
 
   const filteredProducts = products.filter((p) => {
     return (
-      p.articleCode.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (p.brand && p.brand.toLowerCase().includes(searchTerm.toLowerCase()))
+      (p.articleCode || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (p.brand && (p.brand || "").toLowerCase().includes(searchTerm.toLowerCase()))
     );
   });
 

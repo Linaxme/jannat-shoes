@@ -104,9 +104,9 @@ export const CustomerStorefront: React.FC<CustomerStorefrontProps> = ({
   const [profileAuthError, setProfileAuthError] = useState<string | null>(null);
   const [authenticatedCustomer, setAuthenticatedCustomer] = useState<Customer | null>(() => {
     if (currentUser?.phone) {
-      const userDigits = currentUser.phone.replace(/\D/g, '');
+      const userDigits = (currentUser.phone || "").replace(/\D/g, '');
       const match = customers.find((c) => {
-        const cDigits = c.phone.replace(/\D/g, '');
+        const cDigits = (c.phone || '').replace(/\D/g, '');
         return cDigits === userDigits || cDigits.endsWith(userDigits) || userDigits.endsWith(cDigits);
       });
       if (match) return match;
@@ -134,14 +134,14 @@ export const CustomerStorefront: React.FC<CustomerStorefrontProps> = ({
 
     // 1. Search matching user account in userAccounts
     const matchedAccount = userAccounts.find((u) => {
-      const uPhoneDigits = u.phone.replace(/\D/g, '');
-      const uLoginDigits = u.loginId.replace(/\D/g, '');
+      const uPhoneDigits = (u.phone || '').replace(/\D/g, '');
+      const uLoginDigits = (u.loginId || '').replace(/\D/g, '');
       return (uPhoneDigits === cleanPhone || uLoginDigits === cleanPhone) && u.password === enteredPass;
     });
 
     // 2. Find customer by phone
     const matchedCust = customers.find((c) => {
-      const cDigits = c.phone.replace(/\D/g, '');
+      const cDigits = (c.phone || '').replace(/\D/g, '');
       return cDigits === cleanPhone;
     });
 
@@ -189,8 +189,8 @@ export const CustomerStorefront: React.FC<CustomerStorefrontProps> = ({
   // Customer Orders history for verified profile
   const customerOrdersHistory = useMemo(() => {
     if (!authenticatedCustomer) return [];
-    const custDigits = authenticatedCustomer.phone.replace(/\D/g, '');
-    const custShopLower = authenticatedCustomer.shopName.toLowerCase().trim();
+    const custDigits = (authenticatedCustomer.phone || "").replace(/\D/g, '');
+    const custShopLower = (authenticatedCustomer.shopName || authenticatedCustomer.name || '').toLowerCase().trim();
 
     return orders.filter((o) => {
       const oDigits = (o.phone || o.customerPhone || '').replace(/\D/g, '');
@@ -222,7 +222,7 @@ export const CustomerStorefront: React.FC<CustomerStorefrontProps> = ({
       if (currentUser.role === 'customer') {
         const userDigits = (currentUser.phone || '').replace(/\D/g, '');
         const match = customers.find((c) => {
-          const cDigits = c.phone.replace(/\D/g, '');
+          const cDigits = (c.phone || '').replace(/\D/g, '');
           return cDigits && userDigits && (cDigits === userDigits || cDigits.endsWith(userDigits) || userDigits.endsWith(cDigits));
         });
 
@@ -271,7 +271,7 @@ export const CustomerStorefront: React.FC<CustomerStorefrontProps> = ({
 
     if (cleaned.length === 11) {
       const match = customers.find((c) => {
-        const cPhoneDigits = c.phone.replace(/\D/g, '');
+        const cPhoneDigits = (c.phone || '').replace(/\D/g, '');
         return cPhoneDigits === cleaned;
       });
 
@@ -303,9 +303,9 @@ export const CustomerStorefront: React.FC<CustomerStorefrontProps> = ({
       const q = searchQuery.toLowerCase().trim();
       const matchesSearch =
         !q ||
-        p.articleCode.toLowerCase().includes(q) ||
-        p.name.toLowerCase().includes(q) ||
-        p.brand.toLowerCase().includes(q);
+        (p.articleCode || '').toLowerCase().includes(q) ||
+        (p.name || '').toLowerCase().includes(q) ||
+        (p.brand || '').toLowerCase().includes(q);
       return matchesCategory && matchesSearch;
     });
   }, [products, selectedCategory, searchQuery]);

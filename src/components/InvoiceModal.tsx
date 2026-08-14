@@ -115,7 +115,7 @@ export const InvoiceModal: React.FC<InvoiceModalProps> = ({ order, onClose }) =>
             <button
               onClick={() => {
                 const text = `মেসার্স জান্নাত সুজ\nক্যাশ মেমো: ${order.memoNo}\nতারিখ: ${formatBnDate(order.date)}\n\nদোকান: ${order.customerShop}\nমোট জোড়া: ${toBnDigit(order.totalPairs)}\nনিট বিল: ${formatTaka(order.grandTotal)}\nনগদ জমা: ${formatTaka(order.paidAmount)}\nবর্তমান মোট বাকী: ${formatTaka(order.totalNetDue)}\n\nধন্যবাদ!`;
-                let phoneStr = order.customerPhone.replace(/[^0-9]/g, '');
+                let phoneStr = (order.customerPhone || "").replace(/[^0-9]/g, '');
                 if (phoneStr && phoneStr.length === 11) phoneStr = '88' + phoneStr;
                 const url = `https://wa.me/${phoneStr}?text=${encodeURIComponent(text)}`;
                 window.open(url, '_blank');
