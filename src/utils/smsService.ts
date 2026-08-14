@@ -56,16 +56,30 @@ export async function sendAutoSMS(phone: string, message: string): Promise<{ suc
     // Determine Endpoint: Cloudflare/Firebase Functions fallback or local Express API
     const isLocalOrNode = window.location.hostname === 'localhost' || window.location.hostname.includes('run.app');
     
-    // In production or custom domains, default to Cloud Function if configured or standard API
-    const functionUrl = (import.meta as any).env?.VITE_FIREBASE_FUNCTION_SMS_URL || '/api/send-sms';
+    // Use Deployed Cloud Function directly or local fallback
+    const functionUrl = (import.meta as any).env?.VITE_FIREBASE_FUNCTION_SMS_URL || 
+      'https://us-central1-stokm-fe3c1.cloudfunctions.net/sendSms';
 
-    const response = await fetch(functionUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ phone, message, to: phone }),
-    });
+    // Try Cloud Function first, fallback to /api/send-sms if running locally
+    let response;
+    try {
+      response = await fetch(functionUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ to: phone, phone, message }),
+      });
+    } catch (directErr) {
+      // Fallback to local server endpoint if direct cloud function fetch fails
+      response = await fetch('/api/send-sms', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ phone, message, to: phone }),
+      });
+    }
 
     if (!response.ok) {
       const errorText = await response.text();

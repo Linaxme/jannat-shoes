@@ -84,6 +84,64 @@ export const SMSPanel: React.FC<SMSPanelProps> = ({
   const [actionError, setActionError] = useState<string | null>(null);
   const [actionSuccess, setActionSuccess] = useState<string | null>(null);
 
+  // Test SMS Sender States
+  const [testPhone, setTestPhone] = useState<string>('01826990490');
+  const [testMessage, setTestMessage] = useState<string>('মেসার্স জান্নাত সুজ থেকে টেস্ট মেসেজ।');
+  const [isSendingTest, setIsSendingTest] = useState<boolean>(false);
+  const [testResult, setTestResult] = useState<{ success: boolean; message: string } | null>(null);
+
+  const handleSendTestSMS = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!testPhone.trim() || !testMessage.trim()) {
+      setTestResult({ success: false, message: 'মোবাইল নম্বর ও বার্তা লিখুন।' });
+      return;
+    }
+
+    setIsSendingTest(true);
+    setTestResult(null);
+
+    try {
+      // Direct call to deployed Cloud Function with fallback
+      const functionUrl = (import.meta as any).env?.VITE_FIREBASE_FUNCTION_SMS_URL || 
+        'https://us-central1-stokm-fe3c1.cloudfunctions.net/sendSms';
+
+      let response;
+      try {
+        response = await fetch(functionUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ to: testPhone.trim(), phone: testPhone.trim(), message: testMessage.trim() }),
+        });
+      } catch (fErr) {
+        response = await fetch('/api/send-sms', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ phone: testPhone.trim(), message: testMessage.trim() }),
+        });
+      }
+
+      const data = await response.json().catch(() => ({}));
+      if (response.ok && (data.success || data.gatewayResponse)) {
+        setTestResult({
+          success: true,
+          message: `সফলভাবে পাঠানো হয়েছে! ${data.message || 'SMS ডেলিভারি সম্পন্ন।'}`
+        });
+      } else {
+        setTestResult({
+          success: false,
+          message: data.error || data.message || 'এসএমএস পাঠাতে সমস্যা হয়েছে।'
+        });
+      }
+    } catch (err: any) {
+      setTestResult({
+        success: false,
+        message: err.message || 'নেটওয়ার্ক সংযোগ ত্রুটি।'
+      });
+    } finally {
+      setIsSendingTest(false);
+    }
+  };
+
   const fetchTopupRequests = async () => {
     setIsLoadingRequests(true);
     try {
@@ -520,6 +578,69 @@ export const SMSPanel: React.FC<SMSPanelProps> = ({
           <span className="text-xs font-semibold text-slate-400 block mb-1">মোট পাঠানো</span>
           <span className="text-2xl font-black text-blue-400 font-mono">{totalSent} টি</span>
         </div>
+      </div>
+
+      {/* Quick Test SMS Card */}
+      <div className="bg-slate-950/60 border border-slate-800 rounded-xl p-5 shadow-sm space-y-3">
+        <div className="flex items-center justify-between pb-2 border-b border-slate-800/60">
+          <h3 className="text-xs font-bold text-slate-200 uppercase tracking-wider flex items-center gap-2">
+            <Zap className="w-4 h-4 text-amber-400" />
+            <span>সরাসরি টেস্ট SMS পাঠান</span>
+          </h3>
+          <span className="text-[10px] text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded font-mono">
+            Gateway Live
+          </span>
+        </div>
+
+        {testResult && (
+          <div className={`p-3 rounded-xl text-xs flex items-center gap-2 ${
+            testResult.success 
+              ? 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-400' 
+              : 'bg-rose-500/10 border border-rose-500/20 text-rose-400'
+          }`}>
+            {testResult.success ? (
+              <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
+            ) : (
+              <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+            )}
+            <span className="font-semibold">{testResult.message}</span>
+          </div>
+        )}
+
+        <form onSubmit={handleSendTestSMS} className="grid grid-cols-1 md:grid-cols-12 gap-3 items-end">
+          <div className="md:col-span-4 space-y-1">
+            <label className="text-[10px] font-bold text-slate-400 block">মোবাইল নম্বর:</label>
+            <input
+              type="text"
+              value={testPhone}
+              onChange={(e) => setTestPhone(e.target.value)}
+              placeholder="018XXXXXXXX"
+              className="w-full bg-slate-900 border border-slate-700 focus:border-amber-400 text-white rounded-lg px-3 py-2 text-xs font-mono focus:outline-none"
+              required
+            />
+          </div>
+          <div className="md:col-span-6 space-y-1">
+            <label className="text-[10px] font-bold text-slate-400 block">টেস্ট বার্তা:</label>
+            <input
+              type="text"
+              value={testMessage}
+              onChange={(e) => setTestMessage(e.target.value)}
+              placeholder="বার্তা লিখুন..."
+              className="w-full bg-slate-900 border border-slate-700 focus:border-amber-400 text-white rounded-lg px-3 py-2 text-xs focus:outline-none"
+              required
+            />
+          </div>
+          <div className="md:col-span-2">
+            <button
+              type="submit"
+              disabled={isSendingTest}
+              className="w-full py-2 bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-slate-950 font-bold text-xs rounded-lg flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+            >
+              <Send className={`w-3.5 h-3.5 ${isSendingTest ? 'animate-spin' : ''}`} />
+              <span>{isSendingTest ? 'যাচ্ছে...' : 'পাঠান'}</span>
+            </button>
+          </div>
+        </form>
       </div>
 
       {/* Success Notification */}
