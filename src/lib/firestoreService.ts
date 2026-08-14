@@ -30,14 +30,23 @@ export async function clearAllDatabaseData() {
 
 export async function fetchFirestoreData() {
   try {
-
-    const productsSnap = await getDocs(collection(db, 'products'));
-    const customersSnap = await getDocs(collection(db, 'customers'));
-    const sellersSnap = await getDocs(collection(db, 'sellers'));
-    const ordersSnap = await getDocs(collection(db, 'orders'));
-    const paymentLogsSnap = await getDocs(collection(db, 'paymentLogs'));
-    const usersSnap = await getDocs(collection(db, 'userAccounts'));
-    const configSnap = await getDocs(collection(db, 'systemConfig'));
+    const [
+      productsSnap,
+      customersSnap,
+      sellersSnap,
+      ordersSnap,
+      paymentLogsSnap,
+      usersSnap,
+      configSnap
+    ] = await Promise.all([
+      getDocs(collection(db, 'products')),
+      getDocs(collection(db, 'customers')),
+      getDocs(collection(db, 'sellers')),
+      getDocs(collection(db, 'orders')),
+      getDocs(collection(db, 'paymentLogs')),
+      getDocs(collection(db, 'userAccounts')),
+      getDocs(collection(db, 'systemConfig'))
+    ]);
 
     const products: ShoeProduct[] = productsSnap.docs.map(d => ({ id: d.id, ...d.data() } as ShoeProduct));
     const customers: Customer[] = customersSnap.docs.map(d => ({ id: d.id, ...d.data() } as Customer));
