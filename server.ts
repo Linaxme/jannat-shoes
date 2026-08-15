@@ -31,7 +31,7 @@ setInterval(() => {
 
 const SMS_API_URL = 'https://sms.ocs-api.top/api/send-sms';
 const SMS_API_KEY = process.env.SMS_API_KEY || 'WNULRXBVbfMWJLXQkd99TMVKqY7vXeVpYTMVl9Xu';
-const SMS_SENDER_ID = process.env.SMS_SENDER_ID || '8809617626047';
+const SMS_SENDER_ID = '8809617626047';
 
 function formatPhoneNumber(rawPhone: string): string {
   let cleaned = rawPhone.replace(/\D/g, '');

@@ -211,8 +211,8 @@ export const DueManagement: React.FC<DueManagementProps> = ({
   const handleMessageClick = async (cust: Customer) => {
     const todayStr = new Date().toISOString().split('T')[0];
     if (cust.lastDueReminderDate === todayStr) {
-      alert('দুঃখিত, আজ এই কাস্টমারকে ইতিমধ্যে তাগদা মেসেজ পাঠানো হয়েছে! দিনে ১টির বেশি মেসেজ পাঠানো যাবে না।');
-      return;
+      const confirmed = window.confirm('আজ এই কাস্টমারকে ইতিমধ্যে তাগদা মেসেজ পাঠানো হয়েছে! আপনি কি আবার পাঠাতে চান?');
+      if (!confirmed) return;
     }
 
     if (onTriggerSMS) {
@@ -264,7 +264,7 @@ export const DueManagement: React.FC<DueManagementProps> = ({
       return (
         <>
           <CheckCircle className="w-3.5 h-3.5 text-emerald-400" />
-          <span className="text-emerald-400 font-bold">Sent (টিক)</span>
+          <span className="text-emerald-400 font-bold">{localStatus === 'sent' ? 'Sent (টিক)' : 'আবার পাঠান'}</span>
         </>
       );
     }
@@ -495,15 +495,15 @@ export const DueManagement: React.FC<DueManagementProps> = ({
                         </button>
                         <button
                           onClick={() => handleMessageClick(cust)}
-                          disabled={cust.lastDueReminderDate === new Date().toISOString().split('T')[0] || sendingStatuses[cust.id] === 'sending' || sendingStatuses[cust.id] === 'sent'}
+                          disabled={sendingStatuses[cust.id] === 'sending'}
                           className={`px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1 transition-all cursor-pointer ${
-                            cust.lastDueReminderDate === new Date().toISOString().split('T')[0] || sendingStatuses[cust.id] === 'sent'
+                            sendingStatuses[cust.id] === 'sent' || cust.lastDueReminderDate === new Date().toISOString().split('T')[0]
                               ? 'bg-emerald-950/40 text-emerald-400 border border-emerald-500/20 opacity-90'
                               : sendingStatuses[cust.id] === 'sending'
                               ? 'bg-slate-850 text-slate-400 border border-slate-700'
                               : 'bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-500/30'
                           }`}
-                          title={cust.lastDueReminderDate === new Date().toISOString().split('T')[0] ? "আজকে ইতিমধ্যে তাগদা মেসেজ পাঠানো হয়েছে" : "এসএমএস তাগদা পাঠান"}
+                          title={cust.lastDueReminderDate === new Date().toISOString().split('T')[0] ? "আজকে ইতিমধ্যে তাগদা মেসেজ পাঠানো হয়েছে (আবারও পাঠাতে পারেন)" : "এসএমএস তাগদা পাঠান"}
                         >
                           {renderMessageButtonContent(cust)}
                         </button>
@@ -560,15 +560,15 @@ export const DueManagement: React.FC<DueManagementProps> = ({
 
                             <button
                               onClick={() => handleMessageClick(cust)}
-                              disabled={cust.lastDueReminderDate === new Date().toISOString().split('T')[0] || sendingStatuses[cust.id] === 'sending' || sendingStatuses[cust.id] === 'sent'}
+                              disabled={sendingStatuses[cust.id] === 'sending'}
                               className={`px-2.5 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1 transition-all cursor-pointer ${
-                                cust.lastDueReminderDate === new Date().toISOString().split('T')[0] || sendingStatuses[cust.id] === 'sent'
+                                sendingStatuses[cust.id] === 'sent' || cust.lastDueReminderDate === new Date().toISOString().split('T')[0]
                                   ? 'bg-emerald-950/40 text-emerald-400 border border-emerald-500/20 opacity-90'
                                   : sendingStatuses[cust.id] === 'sending'
                                   ? 'bg-slate-850 text-slate-400 border border-slate-700'
                                   : 'bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-500/30'
                               }`}
-                              title={cust.lastDueReminderDate === new Date().toISOString().split('T')[0] ? "আজকে ইতিমধ্যে তাগদা মেসেজ পাঠানো হয়েছে" : "এসএমএস তাগদা পাঠান"}
+                              title={cust.lastDueReminderDate === new Date().toISOString().split('T')[0] ? "আজকে ইতিমধ্যে তাগদা মেসেজ পাঠানো হয়েছে (আবারও পাঠাতে পারেন)" : "এসএমএস তাগদা পাঠান"}
                             >
                               {renderMessageButtonContent(cust)}
                             </button>

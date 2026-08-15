@@ -447,10 +447,14 @@ export default function App() {
     });
     setCustomers(updatedCustomers);
 
-    setSelectedInvoiceOrder(newOrder);
     if (newOrder.deliveryStatus === 'booked') {
       triggerToast(t('toast_order_booked').replace('{{memoNo}}', newOrder.memoNo));
+      // Automatically send SMS for booked order
+      triggerAutomaticSMS('order_placed', newOrder.customerPhone || '', newOrder);
+      // Switch tab to pending list
+      setActiveTab('pending');
     } else {
+      setSelectedInvoiceOrder(newOrder);
       triggerToast(t('toast_memo_created').replace('{{memoNo}}', newOrder.memoNo));
       // Automatically send SMS for direct delivery/sales memo
       triggerAutomaticSMS('order_delivery', newOrder.customerPhone || '', newOrder);

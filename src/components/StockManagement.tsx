@@ -60,6 +60,7 @@ export const StockManagement: React.FC<StockManagementProps> = ({
   const getBookedPairs = (productId: string) => {
     if (!orders) return 0;
     return orders.reduce((sum, order) => {
+      if (order.deliveryStatus !== 'booked') return sum;
       const item = order.items.find((i) => i.productId === productId);
       return sum + (item ? item.totalPairs : 0);
     }, 0);

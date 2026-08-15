@@ -101,24 +101,11 @@ export const SMSPanel: React.FC<SMSPanelProps> = ({
     setTestResult(null);
 
     try {
-      // Direct call to deployed Cloud Function with fallback
-      const functionUrl = (import.meta as any).env?.VITE_FIREBASE_FUNCTION_SMS_URL || 
-        'https://us-central1-stokm-fe3c1.cloudfunctions.net/sendSms';
-
-      let response;
-      try {
-        response = await fetch(functionUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ to: testPhone.trim(), phone: testPhone.trim(), message: testMessage.trim() }),
-        });
-      } catch (fErr) {
-        response = await fetch('/api/send-sms', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ phone: testPhone.trim(), message: testMessage.trim() }),
-        });
-      }
+      const response = await fetch('/api/send-sms', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone: testPhone.trim(), message: testMessage.trim() }),
+      });
 
       const data = await response.json().catch(() => ({}));
       if (response.ok && (data.success || data.gatewayResponse)) {

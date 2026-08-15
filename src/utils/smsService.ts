@@ -20,10 +20,7 @@ export function generateSMSMessage(type: SMSType, data: any): string {
     const paidAmount = data?.paidAmount || 0;
     const totalNetDue = data?.totalNetDue !== undefined ? data.totalNetDue : (data?.dueAmount || 0);
 
-    let paymentInfo = '';
-    if (paidAmount > 0) {
-      paymentInfo = ` জমা: ${formatTaka(paidAmount)}।`;
-    }
+    let paymentInfo = ` জমা: ${formatTaka(paidAmount)}।`;
 
     let dueInfo = '';
     if (totalNetDue > 0) {
@@ -53,37 +50,17 @@ export async function sendAutoSMS(phone: string, message: string): Promise<{ suc
   }
 
   try {
-    // Determine Endpoint: Cloudflare/Firebase Functions fallback or local Express API
-    const isLocalOrNode = window.location.hostname === 'localhost' || window.location.hostname.includes('run.app');
-    
-    // Use Deployed Cloud Function directly or local fallback
-    const functionUrl = (import.meta as any).env?.VITE_FIREBASE_FUNCTION_SMS_URL || 
-      'https://us-central1-stokm-fe3c1.cloudfunctions.net/sendSms';
-
-    // Try Cloud Function first, fallback to /api/send-sms if running locally
-    let response;
-    try {
-      response = await fetch(functionUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ to: phone, phone, message }),
-      });
-    } catch (directErr) {
-      // Fallback to local server endpoint if direct cloud function fetch fails
-      response = await fetch('/api/send-sms', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ phone, message, to: phone }),
-      });
-    }
+    const response = await fetch('/api/send-sms', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ phone, message, to: phone }),
+    });
 
     if (!response.ok) {
-      const errorText = await response.text();
-      return { success: false, error: errorText || 'সার্ভার সাড়া দেয়নি।' };
+      const errorData = await response.json().catch(() => null);
+      return { success: false, error: errorData?.error || errorData?.message || 'সার্ভার সাড়া দেয়নি।' };
     }
 
     const result = await response.json();

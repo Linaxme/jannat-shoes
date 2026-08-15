@@ -309,6 +309,11 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
       return;
     }
 
+    if (orderType === 'sample_booking') {
+      const confirmBooking = window.confirm(`আপনি কি এই অর্ডারটি বুকিং করতে চান?\n\nমোট জোড়া: ${totalPairs}\nআনুমানিক বিল: ৳ ${grandTotal.toLocaleString('bn-BD')}`);
+      if (!confirmBooking) return;
+    }
+
     const todayStr = new Date().toISOString().split('T')[0];
     const nowTime = new Date().toLocaleTimeString('bn-BD', { hour: '2-digit', minute: '2-digit' });
     const memoNo = `MEMO-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;

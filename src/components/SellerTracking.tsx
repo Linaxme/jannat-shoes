@@ -35,9 +35,6 @@ export const SellerTracking: React.FC<SellerTrackingProps> = ({
     const monthStr = monthAgo.toISOString().split('T')[0];
 
     return orders.filter((o) => {
-      // only count approved orders
-      if (o.status !== 'approved') return false;
-
       if (dateFilter === 'today') return o.date >= todayStr;
       if (dateFilter === 'week') return o.date >= weekStr;
       if (dateFilter === 'month') return o.date >= monthStr;
