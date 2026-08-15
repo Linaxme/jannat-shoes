@@ -103,17 +103,17 @@ export const Header: React.FC<HeaderProps> = ({
   return (
     <>
       <header className={`bg-slate-950 border-b border-slate-800 sticky top-0 backdrop-blur-md bg-opacity-95 transition-all duration-150 ${isDrawerOpen ? 'z-50' : 'z-40'}`}>
-      <div className="max-w-7xl mx-auto px-3.5 sm:px-6 py-3.5 sm:py-3">
-        <div className="flex items-stretch justify-between gap-3 sm:gap-4">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 py-2.5 sm:py-2">
+        <div className="flex items-stretch justify-between gap-2 sm:gap-4">
           
           {/* Brand & Store Name */}
-          <div className="flex items-start gap-2.5 sm:gap-3.5 flex-1 min-w-0">
-            <div className="p-2 sm:p-2.5 bg-amber-500 rounded-xl text-slate-950 font-bold flex items-center justify-center shadow-md shadow-amber-500/10 flex-shrink-0 mt-0.5 sm:mt-0">
-              <Store className="w-5 h-5 sm:w-6 sm:h-6 stroke-[2.5]" />
+          <div className="flex items-start gap-2.5 sm:gap-3 flex-1 min-w-0">
+            <div className="p-1.5 sm:p-2 bg-amber-500 rounded-lg text-slate-950 font-bold flex items-center justify-center shadow-md shadow-amber-500/10 flex-shrink-0 mt-0.5">
+              <Store className="w-5 h-5 sm:w-5 sm:h-5 stroke-[2.5]" />
             </div>
-            <div className="text-left flex-1 min-w-0 flex flex-col justify-between py-0.5">
+            <div className="text-left flex-1 min-w-0 flex flex-col justify-between">
               <div>
-                <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+                <div className="flex items-center gap-1.5 flex-wrap">
                   <h1 className="text-sm sm:text-lg font-bold tracking-tight text-white leading-tight">
                     {t('store_name')}
                   </h1>
@@ -123,13 +123,13 @@ export const Header: React.FC<HeaderProps> = ({
                 </div>
 
                 {/* Tagline / Slogan */}
-                <p className="text-[10px] sm:text-xs text-amber-300/90 font-medium leading-normal mt-1 sm:mt-0.5">
+                <p className="text-[10px] sm:text-[11px] text-amber-300/90 font-medium leading-none mt-1 sm:mt-0.5">
                   {t('store_slogan')}
                 </p>
               </div>
 
               {/* Phone & Address */}
-              <div className="text-[10px] sm:text-xs text-slate-300 flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 mt-1.5 sm:mt-1">
+              <div className="text-[10px] sm:text-xs text-slate-300 flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 mt-1.5 sm:mt-0.5">
                 <button
                   type="button"
                   onClick={handleCopyPhone}
@@ -147,7 +147,7 @@ export const Header: React.FC<HeaderProps> = ({
                 </button>
 
                 <span className="hidden sm:inline text-slate-700">•</span>
-                <span className="flex items-center gap-1 text-slate-400">
+                <span className="flex items-center gap-1 text-slate-400 leading-none">
                   <MapPin className="w-3 h-3 text-slate-400 shrink-0" />
                   <span>{t('address')}</span>
                 </span>
@@ -156,21 +156,18 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
 
           {/* Right Side Actions: Menu Button & Date */}
-          <div className="flex flex-col items-end justify-between flex-shrink-0 py-0.5">
+          <div className="flex flex-col items-end justify-between flex-shrink-0">
             <div className="flex items-center gap-2">
               {/* Desktop User Info (Hidden on mobile) */}
               {currentUser && (
-                <div className="hidden md:flex items-center gap-2 bg-slate-900 border border-slate-800 p-1.5 pr-3 rounded-xl">
-                  <div className="w-7 h-7 rounded-lg bg-amber-500/20 text-amber-300 font-bold flex items-center justify-center text-xs border border-amber-500/30">
+                <div className="hidden md:flex items-center gap-2 bg-slate-900 border border-slate-800 p-1 pr-3 rounded-xl">
+                  <div className="w-6 h-6 rounded-lg bg-amber-500/20 text-amber-300 font-bold flex items-center justify-center text-xs border border-amber-500/30">
                     {currentUser.name.charAt(0)}
                   </div>
-                  <div className="text-left">
-                    <div className="text-xs font-bold text-slate-100 flex items-center gap-1.5">
+                  <div className="text-left leading-tight">
+                    <div className="text-[11px] font-bold text-slate-100 flex items-center gap-1.5">
                       <span>{currentUser.name}</span>
                       {getRoleBadge(currentUser.role)}
-                    </div>
-                    <div className="text-[10px] text-slate-400 font-mono">
-                      {t('id_label')}: {currentUser.loginId}
                     </div>
                   </div>
                 </div>
@@ -179,7 +176,7 @@ export const Header: React.FC<HeaderProps> = ({
               {/* Unified Menu Drawer Button */}
               <button
                 onClick={() => setIsDrawerOpen(true)}
-                className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 rounded-xl font-bold text-xs sm:text-sm transition-all duration-150 cursor-pointer relative border ${
+                className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-3 py-1.5 rounded-xl font-bold text-[11px] sm:text-xs transition-all duration-150 cursor-pointer relative border ${
                   isDrawerTabActive || isDrawerOpen
                     ? 'bg-amber-500 text-slate-950 border-amber-500 shadow-md shadow-amber-500/20'
                     : 'bg-slate-900 hover:bg-slate-850 text-slate-200 border-slate-800 hover:border-slate-700'
@@ -190,7 +187,7 @@ export const Header: React.FC<HeaderProps> = ({
                 <span>{t('menu')}</span>
                 
                 {totalDrawerBadges > 0 && (
-                  <span className={`absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full font-black text-[10px] flex items-center justify-center shadow-lg animate-pulse ${
+                  <span className={`absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full font-black text-[9px] flex items-center justify-center shadow-lg animate-pulse ${
                     isDrawerTabActive || isDrawerOpen ? 'bg-slate-950 text-amber-400' : 'bg-amber-500 text-slate-950'
                   }`}>
                     {totalDrawerBadges}
@@ -199,7 +196,7 @@ export const Header: React.FC<HeaderProps> = ({
               </button>
             </div>
             {/* Today's Date */}
-            <div className="text-[11px] sm:text-xs text-slate-300 font-semibold px-1 pr-1.5 pb-0.5">
+            <div className="text-[11px] sm:text-xs text-slate-300 font-semibold px-1 pr-1.5">
               {new Date().toLocaleDateString('bn-BD', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
             </div>
           </div>
