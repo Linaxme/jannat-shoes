@@ -591,33 +591,26 @@ export const FeatureManagement: React.FC<FeatureManagementProps> = ({
         </div>
       </div>
 
-      {/* Section: Android APK Download Link Configuration */}
-      <div className="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-4 shadow-xl">
-        <div className="flex items-center gap-3">
-          <div className="p-2.5 bg-emerald-500/10 text-emerald-400 rounded-xl border border-emerald-500/20">
-            <Smartphone className="w-5 h-5" />
-          </div>
-          <div>
-            <h3 className="text-sm sm:text-base font-bold text-white flex items-center gap-2">
-              অ্যান্ড্রয়েড অ্যাপ (APK) ডাউনলোড লিংক কনফিগারেশন
+      {/* Super Admin: Android APK Download Link Setup */}
+      {currentUser.role === 'super_admin' && (
+        <div className="bg-slate-900 border border-slate-800 p-4 rounded-2xl space-y-3 shadow-xl">
+          <div className="flex items-center justify-between">
+            <h3 className="text-xs sm:text-sm font-bold text-white flex items-center gap-2">
+              <Smartphone className="w-4 h-4 text-purple-400" />
+              <span>Android APK ডাউনলোড লিংক সেটআপ</span>
             </h3>
-            <p className="text-xs text-slate-400 mt-0.5">
-              এখানে আপনার জান্নাত সুজ অ্যান্ড্রয়েড অ্যাপ (APK) এর সরাসরি ডাউনলোড লিংক যুক্ত করুন।
-            </p>
+            <span className="text-[10px] px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 font-mono border border-purple-500/30 font-bold">
+              সুপার এডমিন
+            </span>
           </div>
-        </div>
 
-        <div className="p-4 bg-slate-950/70 border border-slate-800 rounded-xl space-y-3">
-          <label className="block text-xs font-semibold text-slate-300">
-            APK ফাইল সরাসরি ডাউনলোড লিংক (Google Drive / Direct URL):
-          </label>
           <div className="flex flex-col sm:flex-row gap-2">
             <input
               type="url"
               value={apkUrlInput}
               onChange={(e) => setApkUrlInput(e.target.value)}
-              placeholder="https://drive.google.com/uc?export=download&id=... বা সরাসরি apk লিংক"
-              className="flex-1 bg-slate-900 border border-slate-700 text-xs text-white rounded-xl px-3.5 py-2.5 focus:border-amber-500 focus:outline-none placeholder-slate-500"
+              placeholder="APK ডাউনলোড লিংক (Google Drive / Direct URL)"
+              className="flex-1 bg-slate-950 border border-slate-700 text-xs text-white rounded-xl px-3.5 py-2.5 focus:border-purple-500 focus:outline-none placeholder-slate-500"
             />
             <button
               type="button"
@@ -629,34 +622,36 @@ export const FeatureManagement: React.FC<FeatureManagementProps> = ({
                 setApkSaveSuccess(true);
                 setTimeout(() => setApkSaveSuccess(false), 2500);
               }}
-              className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-2 transition cursor-pointer"
+              className="px-4 py-2.5 bg-purple-600 hover:bg-purple-500 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 transition cursor-pointer shrink-0"
             >
               <Check className="w-4 h-4" />
-              <span>লিংক সংরক্ষণ করুন</span>
+              <span>সংরক্ষণ করুন</span>
             </button>
           </div>
 
           {apkSaveSuccess && (
-            <div className="text-xs text-emerald-400 font-semibold flex items-center gap-1.5 pt-1">
-              <Check className="w-3.5 h-3.5" /> APK ডাউনলোড লিংক সফলভাবে সেভ হয়েছে!
+            <div className="text-xs text-emerald-400 font-semibold flex items-center gap-1">
+              <Check className="w-3.5 h-3.5" /> লিংক সংরক্ষিত হয়েছে!
             </div>
           )}
 
           {systemConfig.apkDownloadUrl && (
-            <div className="pt-2 flex items-center justify-between text-xs text-slate-400 border-t border-slate-800">
-              <span className="truncate max-w-[300px]">বর্তমান লিংক: {systemConfig.apkDownloadUrl}</span>
+            <div className="pt-2 flex items-center justify-between text-xs text-slate-400 border-t border-slate-800/80">
+              <span className="truncate max-w-sm font-mono text-[11px]">
+                লিংক: {systemConfig.apkDownloadUrl}
+              </span>
               <a
                 href={systemConfig.apkDownloadUrl}
                 target="_blank"
                 rel="noreferrer"
-                className="text-amber-400 hover:underline flex items-center gap-1 font-semibold"
+                className="text-amber-400 hover:underline flex items-center gap-1 font-semibold shrink-0"
               >
-                <ExternalLink className="w-3.5 h-3.5" /> টেস্ট ডাউনলোড
+                <ExternalLink className="w-3 h-3" /> টেস্ট ওপেন
               </a>
             </div>
           )}
         </div>
-      </div>
+      )}
 
       {/* Section: Custom Broadcast Notification */}
       <div className="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-4 shadow-xl">

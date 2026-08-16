@@ -251,20 +251,6 @@ export const Header: React.FC<HeaderProps> = ({
                 </div>
               )}
 
-              {/* APK Download Button (if URL configured) */}
-              {systemConfig?.apkDownloadUrl && (
-                <a
-                  href={systemConfig.apkDownloadUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 border border-emerald-500/40 rounded-xl text-xs font-bold transition-colors cursor-pointer"
-                  title="অ্যান্ড্রয়েড অ্যাপ (APK) ডাউনলোড করুন"
-                >
-                  <Smartphone className="w-3.5 h-3.5" />
-                  <span className="hidden md:inline">অ্যাপ ডাউনলোড</span>
-                </a>
-              )}
-
               {/* Notification Bell with Dropdown */}
               <div className="relative" ref={notifRef}>
                 <button
@@ -536,22 +522,6 @@ export const Header: React.FC<HeaderProps> = ({
                 </button>
               )}
 
-              {/* Download APK Link */}
-              {systemConfig?.apkDownloadUrl && (
-                <a
-                  href={systemConfig.apkDownloadUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="w-full p-2.5 bg-emerald-950/40 border border-emerald-500/40 text-emerald-300 rounded-xl font-bold text-xs flex items-center justify-between transition cursor-pointer mb-2"
-                >
-                  <div className="flex items-center gap-2">
-                    <Smartphone className="w-4 h-4 text-emerald-400" />
-                    <span>অ্যান্ড্রয়েড APK ডাউনলোড</span>
-                  </div>
-                  <Download className="w-3.5 h-3.5 text-emerald-400" />
-                </a>
-              )}
-
               <div className="p-2 bg-slate-950 border border-slate-800 rounded-xl mb-2 flex items-center justify-between">
                 <div className="flex items-center gap-2.5 text-xs text-slate-300 font-bold">
                   <Languages className="w-4 h-4 text-amber-400" />
@@ -608,6 +578,43 @@ export const Header: React.FC<HeaderProps> = ({
                   </button>
                 );
               })}
+
+              {/* Android Apk Download - At the bottom of menu */}
+              {systemConfig?.apkDownloadUrl ? (
+                <a
+                  href={systemConfig.apkDownloadUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  onClick={() => setIsDrawerOpen(false)}
+                  className="w-full flex items-center justify-between p-2 rounded-xl font-semibold text-xs transition-all cursor-pointer bg-slate-950/60 hover:bg-slate-800 text-slate-200 border border-slate-800/80 mt-1"
+                >
+                  <div className="flex items-center gap-2.5">
+                    <div className="p-1.5 rounded-lg bg-slate-800 text-emerald-400">
+                      <Smartphone className="w-3.5 h-3.5" />
+                    </div>
+                    <span className="text-left text-xs font-medium">Android Apk Download</span>
+                  </div>
+                  <Download className="w-3.5 h-3.5 text-emerald-400" />
+                </a>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => {
+                    alert('কোনো ফাইল নেই');
+                  }}
+                  className="w-full flex items-center justify-between p-2 rounded-xl font-semibold text-xs transition-all cursor-pointer bg-slate-950/60 hover:bg-slate-800/60 text-slate-400 border border-slate-800/80 mt-1"
+                >
+                  <div className="flex items-center gap-2.5">
+                    <div className="p-1.5 rounded-lg bg-slate-800 text-slate-500">
+                      <Smartphone className="w-3.5 h-3.5" />
+                    </div>
+                    <span className="text-left text-xs">Android Apk Download</span>
+                  </div>
+                  <span className="text-[10px] text-amber-400/90 font-medium px-2 py-0.5 bg-amber-500/10 border border-amber-500/20 rounded">
+                    কোনো ফাইল নেই
+                  </span>
+                </button>
+              )}
 
               {currentUser && onLogout && (
                 <div className="pt-3 mt-3 border-t border-slate-800">
