@@ -175,5 +175,19 @@ export interface SystemConfig {
   smsBalance?: number;
   totalSentSms?: number;
   categories?: string[];
+  apkDownloadUrl?: string;
+}
+
+export interface AppNotification {
+  id: string;
+  title: string;
+  message: string;
+  type: 'order_booking' | 'payment_received' | 'low_stock' | 'system_broadcast';
+  createdAt: string; // ISO string
+  read: boolean;
+  orderId?: string;
+  customerId?: string;
+  sellerId?: string;
+  senderName?: string;
 }
 

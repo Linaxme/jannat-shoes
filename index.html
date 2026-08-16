@@ -4,28 +4,23 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>মেসার্স জান্নাত সুজ - শোরুম ও স্টক ম্যানেজমেন্ট</title>
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#0f172a" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="জান্নাত সুজ" />
+    <link rel="icon" type="image/svg+xml" href="/icon-512.svg" />
+    <link rel="apple-touch-icon" href="/icon-512.svg" />
     <script>
-      // Global error handler to catch issues before React mounts
-      window.addEventListener('error', function(e) {
-        document.body.innerHTML = '<div style="padding:20px;color:red;background:black;height:100vh;"><h3>Fatal Error:</h3><p>' + e.message + '</p><pre>' + (e.error ? e.error.stack : '') + '</pre><button onclick="localStorage.clear();window.location.reload();" style="padding:10px;">Clear Cache & Reload</button></div>';
-      });
-      
-      // Force unregister all old service workers to fix blank page issues
+      // Register service worker for PWA support
       if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.getRegistrations().then(function(registrations) {
-          for(let registration of registrations) {
-            registration.unregister();
-            console.log('ServiceWorker unregistered');
-          }
-        });
-      }
-      // Clear all caches if requested
-      if (window.location.search.includes('v=') || window.location.search.includes('refresh=')) {
-        if ('caches' in window) {
-          caches.keys().then((names) => {
-            for (let name of names) caches.delete(name);
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js').then((reg) => {
+            console.log('PWA ServiceWorker registered with scope:', reg.scope);
+          }).catch((err) => {
+            console.log('PWA ServiceWorker registration failed:', err);
           });
-        }
+        });
       }
     </script>
   </head>

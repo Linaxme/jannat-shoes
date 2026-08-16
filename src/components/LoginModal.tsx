@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { UserAccount, UserRole } from '../types';
-import { Phone, Lock, Eye, EyeOff, LogIn, AlertCircle, Footprints, UserCheck, X, ShoppingBag, Store, User, MapPin, UserPlus, CheckCircle2, ShieldCheck, Mail } from 'lucide-react';
+import { Phone, Lock, Eye, EyeOff, LogIn, AlertCircle, Footprints, X, ShoppingBag, Store, User, MapPin, UserPlus, CheckCircle2, Mail } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 
 interface LoginModalProps {
@@ -140,25 +140,6 @@ export const LoginModal: React.FC<LoginModalProps> = ({
       setRegSubmitting(false);
     }
   };
-
-  const quickLogin = (acc: UserAccount) => {
-    setErrorMsg(null);
-    onLoginSuccess(acc);
-  };
-
-  const getRoleBadge = (role: UserRole) => {
-    switch (role) {
-      case 'super_admin':
-        return <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-purple-500/20 text-purple-300 border border-purple-500/30">{t('super_admin')}</span>;
-      case 'admin':
-        return <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">{t('admin')}</span>;
-      case 'seller':
-        return <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-500/20 text-blue-300 border border-blue-500/30">{t('seller')}</span>;
-    }
-  };
-
-  const demoSuperAdmin = userAccounts.find((u) => u.role === 'super_admin');
-  const demoAdmin = userAccounts.find((u) => u.role === 'admin');
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/90 backdrop-blur-md p-4 overflow-y-auto">
@@ -404,61 +385,6 @@ export const LoginModal: React.FC<LoginModalProps> = ({
                 </button>
               </div>
             </form>
-          )}
-
-          {/* Quick Demo Credentials Panel */}
-          {activeTab === 'login' && (
-            <div className="mt-5 pt-4 border-t border-slate-800">
-              <div className="flex items-center justify-between mb-2.5">
-                <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
-                  <ShieldCheck className="w-3.5 h-3.5 text-amber-400" /> {t('quick_demo_login_text')} (সরাসরি ডেমো)
-                </span>
-              </div>
-
-              <div className="space-y-2">
-                {demoSuperAdmin && (
-                  <button
-                    type="button"
-                    onClick={() => quickLogin(demoSuperAdmin)}
-                    className="w-full p-2.5 bg-slate-950 hover:bg-slate-800/80 border border-purple-500/30 rounded-xl text-left flex items-center justify-between transition group cursor-pointer"
-                  >
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs font-bold text-slate-200 group-hover:text-purple-300 transition">
-                          {demoSuperAdmin.name}
-                        </span>
-                        {getRoleBadge('super_admin')}
-                      </div>
-                      <div className="text-[11px] text-slate-400 mt-0.5">
-                        আইডি/ফোন: <span className="text-purple-400 font-mono">{demoSuperAdmin.phone}</span> | পাস: <span className="text-purple-300 font-mono">{demoSuperAdmin.password}</span>
-                      </div>
-                    </div>
-                    <UserCheck className="w-4 h-4 text-purple-400 shrink-0" />
-                  </button>
-                )}
-
-                {demoAdmin && (
-                  <button
-                    type="button"
-                    onClick={() => quickLogin(demoAdmin)}
-                    className="w-full p-2.5 bg-slate-950 hover:bg-slate-800/80 border border-amber-500/30 rounded-xl text-left flex items-center justify-between transition group cursor-pointer"
-                  >
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs font-bold text-slate-200 group-hover:text-amber-300 transition">
-                          {demoAdmin.name}
-                        </span>
-                        {getRoleBadge('admin')}
-                      </div>
-                      <div className="text-[11px] text-slate-400 mt-0.5">
-                        আইডি/ফোন: <span className="text-amber-400 font-mono">{demoAdmin.phone}</span> | পাস: <span className="text-amber-300 font-mono">{demoAdmin.password}</span>
-                      </div>
-                    </div>
-                    <UserCheck className="w-4 h-4 text-amber-400 shrink-0" />
-                  </button>
-                )}
-              </div>
-            </div>
           )}
 
         </div>

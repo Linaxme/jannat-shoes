@@ -1,8 +1,41 @@
-import React, { useState } from 'react';
-import { Store, PhoneCall, MapPin, RefreshCw, LogOut, UserCheck, ShieldAlert, Shield, Menu, X, ChevronRight, ShoppingCart, Clock, TrendingUp, History, UserPlus, Sliders, MessageSquare, Languages, ShoppingBag, User, Check, Copy } from 'lucide-react';
-import { UserAccount, UserRole, SystemConfig } from '../types';
+import React, { useState, useRef, useEffect } from 'react';
+import {
+  Store,
+  PhoneCall,
+  MapPin,
+  RefreshCw,
+  LogOut,
+  UserCheck,
+  ShieldAlert,
+  Shield,
+  Menu,
+  X,
+  ChevronRight,
+  ShoppingCart,
+  Clock,
+  TrendingUp,
+  History,
+  UserPlus,
+  Sliders,
+  MessageSquare,
+  Languages,
+  ShoppingBag,
+  User,
+  Check,
+  Copy,
+  Bell,
+  Smartphone,
+  Download,
+  BarChart3,
+  Trash2,
+  CheckCheck,
+  ChevronDown,
+  ChevronUp,
+} from 'lucide-react';
+import { UserAccount, UserRole, SystemConfig, AppNotification } from '../types';
 import { NavTab } from './Navigation';
 import { useLanguage } from '../contexts/LanguageContext';
+import { toBnDigit } from '../utils/formatters';
 
 interface HeaderProps {
   currentUser?: UserAccount | null;
@@ -16,6 +49,12 @@ interface HeaderProps {
   pendingOrdersCount?: number;
   currentUserRole?: UserRole;
   systemConfig?: SystemConfig;
+  notifications?: AppNotification[];
+  onMarkNotificationAsRead?: (id: string) => void;
+  onMarkAllNotificationsAsRead?: () => void;
+  onClearNotifications?: () => void;
+  onInstallPWA?: () => void;
+  canInstallPWA?: boolean;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -30,12 +69,49 @@ export const Header: React.FC<HeaderProps> = ({
   pendingOrdersCount = 0,
   currentUserRole = 'admin',
   systemConfig,
+  notifications = [],
+  onMarkNotificationAsRead,
+  onMarkAllNotificationsAsRead,
+  onClearNotifications,
+  onInstallPWA,
+  canInstallPWA = false,
 }) => {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [isNotifOpen, setIsNotifOpen] = useState(false);
   const [copiedPhone, setCopiedPhone] = useState(false);
+  const [expandedNotifIds, setExpandedNotifIds] = useState<Record<string, boolean>>({});
+  const notifRef = useRef<HTMLDivElement>(null);
   const { language, setLanguage, t } = useLanguage();
 
   const isStaff = currentUserRole === 'super_admin' || currentUserRole === 'admin' || currentUserRole === 'seller';
+  const unreadNotifsCount = notifications.filter((n) => !n.read).length;
+
+  const toggleExpandNotification = (id: string, e?: React.MouseEvent) => {
+    if (e) {
+      e.stopPropagation();
+    }
+    setExpandedNotifIds((prev) => ({
+      ...prev,
+      [id]: !prev[id],
+    }));
+  };
+
+  // Close notifications on outside click
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent | TouchEvent) => {
+      if (notifRef.current && !notifRef.current.contains(e.target as Node)) {
+        setIsNotifOpen(false);
+      }
+    };
+    if (isNotifOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener('touchstart', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
+    };
+  }, [isNotifOpen]);
 
   const handleCopyPhone = (e?: React.MouseEvent | React.TouchEvent) => {
     if (e) {
@@ -75,6 +151,7 @@ export const Header: React.FC<HeaderProps> = ({
     { id: 'pending' as NavTab, label: currentUserRole === 'customer' ? 'অর্ডার স্ট্যাটাস' : 'পেন্ডিং অর্ডার', icon: Clock, badgeCount: pendingOrdersCount, badgeColor: 'bg-amber-500', roles: ['super_admin', 'admin', 'seller', 'customer'] },
     { id: 'catalog' as NavTab, label: isStaff ? 'ক্যাটালগ' : 'প্রোডাক্ট ক্যাটালগ', icon: ShoppingBag, roles: ['super_admin', 'admin', 'seller', 'customer'] },
     { id: 'sales' as NavTab, label: currentUserRole === 'customer' ? 'অর্ডার হিস্টোরি' : 'বিক্রয় ইতিহাস', icon: History, roles: ['super_admin', 'admin', 'seller', 'customer'] },
+    { id: 'reports' as NavTab, label: 'কাস্টম রিপোর্ট', icon: BarChart3, roles: ['super_admin', 'admin'] },
     { id: 'seller-tracking' as NavTab, label: 'সেলস ট্র্যাকিং', icon: TrendingUp, roles: ['super_admin', 'admin'] },
     { id: 'users' as NavTab, label: 'ইউজার', icon: UserPlus, roles: ['super_admin', 'admin', ...(systemConfig?.allowSellerToManageUsers ? ['seller'] : [])] },
     { id: 'features' as NavTab, label: 'সেটিং', icon: Sliders, roles: ['super_admin', 'admin'] },
@@ -155,12 +232,13 @@ export const Header: React.FC<HeaderProps> = ({
             </div>
           </div>
 
-          {/* Right Side Actions: Menu Button & Date */}
+          {/* Right Side Actions: Notification Bell, APK Button, Menu Button & Date */}
           <div className="flex flex-col items-end justify-between flex-shrink-0">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              
               {/* Desktop User Info (Hidden on mobile) */}
               {currentUser && (
-                <div className="hidden md:flex items-center gap-2 bg-slate-900 border border-slate-800 p-1 pr-3 rounded-xl">
+                <div className="hidden lg:flex items-center gap-2 bg-slate-900 border border-slate-800 p-1 pr-3 rounded-xl">
                   <div className="w-6 h-6 rounded-lg bg-amber-500/20 text-amber-300 font-bold flex items-center justify-center text-xs border border-amber-500/30">
                     {currentUser.name.charAt(0)}
                   </div>
@@ -172,6 +250,177 @@ export const Header: React.FC<HeaderProps> = ({
                   </div>
                 </div>
               )}
+
+              {/* APK Download Button (if URL configured) */}
+              {systemConfig?.apkDownloadUrl && (
+                <a
+                  href={systemConfig.apkDownloadUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 border border-emerald-500/40 rounded-xl text-xs font-bold transition-colors cursor-pointer"
+                  title="অ্যান্ড্রয়েড অ্যাপ (APK) ডাউনলোড করুন"
+                >
+                  <Smartphone className="w-3.5 h-3.5" />
+                  <span className="hidden md:inline">অ্যাপ ডাউনলোড</span>
+                </a>
+              )}
+
+              {/* Notification Bell with Dropdown */}
+              <div className="relative" ref={notifRef}>
+                <button
+                  type="button"
+                  onClick={() => setIsNotifOpen(!isNotifOpen)}
+                  className={`p-2 sm:px-2.5 sm:py-1.5 rounded-xl text-xs font-bold border transition-colors cursor-pointer relative flex items-center gap-1.5 ${
+                    isNotifOpen
+                      ? 'bg-indigo-600 text-white border-indigo-500 shadow-md shadow-indigo-600/20'
+                      : 'bg-slate-900 hover:bg-slate-800 text-slate-300 border-slate-800'
+                  }`}
+                  title="নোটিফিকেশন ও এলার্ট"
+                >
+                  <Bell className="w-4 h-4 text-amber-400" />
+                  {unreadNotifsCount > 0 && (
+                    <span className="absolute -top-1 -right-1 w-4 h-4 bg-rose-500 text-white font-black text-[9px] rounded-full flex items-center justify-center animate-pulse">
+                      {unreadNotifsCount}
+                    </span>
+                  )}
+                </button>
+
+                {/* Notifications Popup Dropdown / Mobile Modal */}
+                {isNotifOpen && (
+                  <>
+                    {/* Mobile Backdrop */}
+                    <div 
+                      className="fixed inset-0 bg-black/60 backdrop-blur-xs z-40 sm:hidden animate-fadeIn"
+                      onClick={() => setIsNotifOpen(false)}
+                    />
+
+                    <div 
+                      onClick={(e) => e.stopPropagation()}
+                      className="fixed left-2.5 right-2.5 top-16 sm:top-full sm:mt-2 sm:right-0 sm:left-auto w-auto sm:w-96 max-h-[82vh] sm:max-h-[480px] bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl z-50 overflow-hidden flex flex-col animate-fadeIn"
+                    >
+                      {/* Popup Header */}
+                      <div className="p-3 bg-slate-950 border-b border-slate-800 flex items-center justify-between shrink-0">
+                        <div className="flex items-center gap-2">
+                          <div className="p-1 rounded-lg bg-amber-500/10 text-amber-400">
+                            <Bell className="w-4 h-4" />
+                          </div>
+                          <span className="font-bold text-xs text-white">নোটিফিকেশন</span>
+                          {unreadNotifsCount > 0 && (
+                            <span className="px-1.5 py-0.5 bg-rose-500/20 text-rose-300 border border-rose-500/30 text-[10px] rounded font-bold">
+                              {toBnDigit(unreadNotifsCount)}টি নতুন
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          {onMarkAllNotificationsAsRead && unreadNotifsCount > 0 && (
+                            <button
+                              type="button"
+                              onClick={onMarkAllNotificationsAsRead}
+                              className="text-[10px] text-amber-400 hover:text-amber-300 flex items-center gap-1 font-bold px-1.5 py-0.5 rounded bg-amber-500/10 border border-amber-500/20 cursor-pointer"
+                              title="সবগুলো পড়া হয়েছে হিসেবে চিহ্নিত করুন"
+                            >
+                              <CheckCheck className="w-3 h-3" /> সব পড়ুন
+                            </button>
+                          )}
+                          {onClearNotifications && notifications.length > 0 && (
+                            <button
+                              type="button"
+                              onClick={onClearNotifications}
+                              className="p-1 text-slate-500 hover:text-rose-400 rounded transition cursor-pointer"
+                              title="সব নোটিফিকেশন মুছুন"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => setIsNotifOpen(false)}
+                            className="w-6 h-6 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center sm:hidden cursor-pointer"
+                            title="বন্ধ করুন"
+                          >
+                            <X className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Notifications List */}
+                      <div className="overflow-y-auto divide-y divide-slate-800/60 no-scrollbar flex-1">
+                        {notifications.length === 0 ? (
+                          <div className="py-10 text-center text-xs text-slate-500 flex flex-col items-center gap-2">
+                            <Bell className="w-8 h-8 text-slate-700" />
+                            <span>বর্তমানে কোনো নোটিফিকেশন নেই</span>
+                          </div>
+                        ) : (
+                          notifications.slice(0, 30).map((n) => {
+                            const isExpanded = !!expandedNotifIds[n.id];
+                            const isLong = (n.message && n.message.length > 70) || (n.message && n.message.includes('\n'));
+
+                            return (
+                              <div
+                                key={n.id}
+                                onClick={() => {
+                                  if (!n.read && onMarkNotificationAsRead) {
+                                    onMarkNotificationAsRead(n.id);
+                                  }
+                                  toggleExpandNotification(n.id);
+                                }}
+                                className={`p-3 text-xs transition cursor-pointer hover:bg-slate-800/80 ${
+                                  !n.read
+                                    ? 'bg-amber-500/5 border-l-2 border-amber-400'
+                                    : 'bg-slate-900/40 hover:bg-slate-800/40'
+                                } ${isExpanded ? 'bg-slate-800/60 ring-1 ring-amber-500/20' : ''}`}
+                              >
+                                <div className="flex items-start justify-between gap-2">
+                                  <div className="flex items-center gap-1.5 flex-1 min-w-0">
+                                    {!n.read && (
+                                      <span className="w-2 h-2 rounded-full bg-amber-400 shrink-0 animate-pulse" />
+                                    )}
+                                    <span className={`font-bold truncate ${!n.read ? 'text-amber-300' : 'text-slate-200'}`}>
+                                      {n.title}
+                                    </span>
+                                  </div>
+                                  <div className="flex items-center gap-1 shrink-0">
+                                    <span className="text-[10px] text-slate-500 font-mono">
+                                      {new Date(n.createdAt).toLocaleTimeString('bn-BD', { hour: '2-digit', minute: '2-digit' })}
+                                    </span>
+                                    {isLong && (
+                                      <span className="text-slate-500 ml-0.5">
+                                        {isExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+
+                                <div className="mt-1">
+                                  <p
+                                    className={`text-[11px] text-slate-300 leading-relaxed whitespace-pre-line break-words transition-all ${
+                                      isExpanded ? '' : 'line-clamp-2'
+                                    }`}
+                                  >
+                                    {n.message}
+                                  </p>
+
+                                  {isLong && (
+                                    <div className="mt-1.5 flex items-center justify-between pt-1 border-t border-slate-800/40 text-[10px]">
+                                      <span className="text-slate-500">
+                                        {new Date(n.createdAt).toLocaleDateString('bn-BD', { day: 'numeric', month: 'short', year: 'numeric' })}
+                                      </span>
+                                      <span className="text-amber-400 font-semibold flex items-center gap-0.5 hover:underline">
+                                        {isExpanded ? 'সংক্ষেপ করুন' : 'পুরো বার্তা পড়ুন'}
+                                      </span>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            );
+                          })
+                        )}
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
 
               {/* Unified Menu Drawer Button */}
               <button
@@ -213,7 +462,7 @@ export const Header: React.FC<HeaderProps> = ({
       >
           <div 
             onClick={(e) => e.stopPropagation()}
-            className="bg-slate-900 border-l border-slate-800 w-full max-w-[275px] h-full flex flex-col shadow-2xl animate-slideLeft"
+            className="bg-slate-900 border-l border-slate-800 w-full max-w-[285px] h-full flex flex-col shadow-2xl animate-slideLeft"
           >
             
             {/* Drawer Header */}
@@ -269,6 +518,40 @@ export const Header: React.FC<HeaderProps> = ({
                 </div>
               )}
 
+              {/* Install PWA Button */}
+              {canInstallPWA && onInstallPWA && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsDrawerOpen(false);
+                    onInstallPWA();
+                  }}
+                  className="w-full p-2.5 bg-gradient-to-r from-amber-500/20 to-amber-600/10 border border-amber-500/40 text-amber-300 rounded-xl font-bold text-xs flex items-center justify-between transition cursor-pointer mb-2"
+                >
+                  <div className="flex items-center gap-2">
+                    <Download className="w-4 h-4 text-amber-400" />
+                    <span>হোম স্ক্রিনে অ্যাপ ইনস্টল করুন</span>
+                  </div>
+                  <span className="text-[10px] bg-amber-500 text-slate-950 px-1.5 py-0.5 rounded font-black">PWA</span>
+                </button>
+              )}
+
+              {/* Download APK Link */}
+              {systemConfig?.apkDownloadUrl && (
+                <a
+                  href={systemConfig.apkDownloadUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="w-full p-2.5 bg-emerald-950/40 border border-emerald-500/40 text-emerald-300 rounded-xl font-bold text-xs flex items-center justify-between transition cursor-pointer mb-2"
+                >
+                  <div className="flex items-center gap-2">
+                    <Smartphone className="w-4 h-4 text-emerald-400" />
+                    <span>অ্যান্ড্রয়েড APK ডাউনলোড</span>
+                  </div>
+                  <Download className="w-3.5 h-3.5 text-emerald-400" />
+                </a>
+              )}
+
               <div className="p-2 bg-slate-950 border border-slate-800 rounded-xl mb-2 flex items-center justify-between">
                 <div className="flex items-center gap-2.5 text-xs text-slate-300 font-bold">
                   <Languages className="w-4 h-4 text-amber-400" />
@@ -289,11 +572,11 @@ export const Header: React.FC<HeaderProps> = ({
                   </button>
                 </div>
               </div>
- 
+
               {visibleDrawerTabs.map((tab) => {
                 const Icon = tab.icon;
                 const isActive = activeTab === tab.id;
- 
+
                 return (
                   <button
                     key={tab.id}
@@ -313,7 +596,7 @@ export const Header: React.FC<HeaderProps> = ({
                       </div>
                       <span className="text-left text-xs">{tab.label}</span>
                     </div>
- 
+
                     <div className="flex items-center gap-1.5">
                       {tab.badgeCount !== undefined && tab.badgeCount > 0 && (
                         <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full text-white ${tab.badgeColor || 'bg-amber-500'}`}>
@@ -325,9 +608,7 @@ export const Header: React.FC<HeaderProps> = ({
                   </button>
                 );
               })}
- 
 
- 
               {currentUser && onLogout && (
                 <div className="pt-3 mt-3 border-t border-slate-800">
                   <button
@@ -343,7 +624,7 @@ export const Header: React.FC<HeaderProps> = ({
                 </div>
               )}
             </div>
- 
+
             {/* Drawer Footer */}
             <div className="p-4 bg-slate-950 border-t border-slate-800 text-center text-[11px] text-slate-500">
               {t('app_version')}
@@ -355,6 +636,7 @@ export const Header: React.FC<HeaderProps> = ({
     </>
   );
 };
+
 
 
 

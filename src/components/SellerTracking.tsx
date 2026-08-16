@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { SalesRep, Order, Customer, DuePaymentLog } from '../types';
 import { Users, TrendingUp, ShoppingCart, ShieldCheck, DollarSign, Wallet, CheckCircle2 } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
-import { toBnDigit, formatTaka } from '../utils/formatters';
+import { toBnDigit, formatTaka, getLocalDateStr } from '../utils/formatters';
 
 interface SellerTrackingProps {
   sellers: SalesRep[];
@@ -18,35 +18,40 @@ export const SellerTracking: React.FC<SellerTrackingProps> = ({
   paymentLogs = [],
 }) => {
   const { t } = useLanguage();
-  const [dateFilter, setDateFilter] = useState<'today' | 'week' | 'month' | 'all'>('month');
+  const [dateFilter, setDateFilter] = useState<'today' | '7days' | 'month' | 'all'>('month');
 
-  // Filter orders by date
-  const filteredOrders = useMemo(() => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const todayStr = today.toISOString().split('T')[0];
+  // Filter orders and payments by date using local time
+  const { filteredOrders, filteredPaymentLogs } = useMemo(() => {
+    const now = new Date();
+    const todayStr = getLocalDateStr(now);
 
-    const weekAgo = new Date();
+    const weekAgo = new Date(now);
     weekAgo.setDate(weekAgo.getDate() - 7);
-    const weekStr = weekAgo.toISOString().split('T')[0];
+    const weekStr = getLocalDateStr(weekAgo);
 
-    const monthAgo = new Date();
-    monthAgo.setMonth(monthAgo.getMonth() - 1);
-    const monthStr = monthAgo.toISOString().split('T')[0];
-
-    return orders.filter((o) => {
-      if (dateFilter === 'today') return o.date >= todayStr;
-      if (dateFilter === 'week') return o.date >= weekStr;
-      if (dateFilter === 'month') return o.date >= monthStr;
+    const matchDate = (dateString?: string) => {
+      if (!dateString) return false;
+      if (dateFilter === 'today') return dateString === todayStr;
+      if (dateFilter === '7days') return dateString >= weekStr && dateString <= todayStr;
+      if (dateFilter === 'month') {
+        const d = new Date(dateString);
+        return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+      }
       return true;
-    });
-  }, [orders, dateFilter]);
+    };
+
+    const fOrders = orders.filter((o) => matchDate(o.date));
+    const fPayments = paymentLogs.filter((p) => matchDate(p.date));
+
+    return { filteredOrders: fOrders, filteredPaymentLogs: fPayments };
+  }, [orders, paymentLogs, dateFilter]);
 
   // Aggregate stats per seller (including Admin + Seller)
   const sellerStats = useMemo(() => {
+    const now = new Date();
     return sellers.map((seller) => {
       // Robust order matching for seller or admin
-      const sellerOrders = filteredOrders.filter((o) => {
+      const isSellerOrder = (o: Order) => {
         if (!o.sellerId && !o.sellerName) return false;
         const matchId = o.sellerId === seller.id || (seller.phone && o.sellerId === seller.phone);
         const matchName =
@@ -56,7 +61,19 @@ export const SellerTracking: React.FC<SellerTrackingProps> = ({
             (seller.name || "").toLowerCase().includes((o.sellerName || "").toLowerCase()) ||
             (o.sellerName || "").toLowerCase().includes((seller.name || "").toLowerCase()));
         return matchId || matchName;
-      });
+      };
+
+      const sellerOrders = filteredOrders.filter(isSellerOrder);
+
+      // Explicitly calculate current month stats for Target Progress (always from 1st of current month)
+      const currentMonthOrders = orders.filter((o) => {
+        if (!o.date) return false;
+        const oDate = new Date(o.date);
+        return oDate.getMonth() === now.getMonth() && oDate.getFullYear() === now.getFullYear();
+      }).filter(isSellerOrder);
+
+      const currentMonthPairsSold = currentMonthOrders.reduce((sum, o) => sum + o.totalPairs, 0);
+      const currentMonthRevenue = currentMonthOrders.reduce((sum, o) => sum + (o.netPayable || o.grandTotal || 0), 0);
 
       const activeCustomersCount = new Set(sellerOrders.map((o) => o.customerId)).size;
       const totalPairsSold = sellerOrders.reduce((sum, o) => sum + o.totalPairs, 0);
@@ -79,8 +96,8 @@ export const SellerTracking: React.FC<SellerTrackingProps> = ({
       const assignedCustomersCount = assignedCustomers.length;
       const totalCustomerDue = assignedCustomers.reduce((sum, c) => sum + (c.currentDue || 0), 0);
 
-      // Due collected by this seller or admin
-      const collectedPayments = paymentLogs.filter((p) => {
+      // Due collected by this seller or admin for the selected filter period
+      const collectedPayments = filteredPaymentLogs.filter((p) => {
         const matchSeller =
           p.sellerId === seller.id ||
           p.sellerName === seller.name ||
@@ -103,13 +120,16 @@ export const SellerTracking: React.FC<SellerTrackingProps> = ({
         totalOrders: sellerOrders.length,
         totalPairsSold,
         totalRevenue,
+        currentMonthPairsSold,
+        currentMonthRevenue,
         activeCustomersCount,
         assignedCustomersCount,
         totalCustomerDue,
         totalCollectedAmount,
       };
     }).sort((a, b) => b.totalRevenue - a.totalRevenue); // Sort by revenue desc
-  }, [sellers, filteredOrders, customers, paymentLogs]);
+  }, [sellers, filteredOrders, filteredPaymentLogs, customers, orders]);
+
 
   // Overall totals
   const totalTeamRevenue = sellerStats.reduce((sum, s) => sum + s.totalRevenue, 0);
@@ -132,8 +152,8 @@ export const SellerTracking: React.FC<SellerTrackingProps> = ({
         <div className="flex items-center gap-1 bg-slate-900 p-1 rounded-xl border border-slate-800 shrink-0 self-start sm:self-auto">
           {[
             { id: 'today', label: 'আজ' },
-            { id: 'week', label: '৭ দিন' },
-            { id: 'month', label: '৩০ দিন' },
+            { id: '7days', label: '৭ দিন' },
+            { id: 'month', label: 'এই মাস' },
             { id: 'all', label: 'সব সময়' },
           ].map((filter) => (
             <button
@@ -217,8 +237,12 @@ export const SellerTracking: React.FC<SellerTrackingProps> = ({
                   </div>
                   <p className="text-xs text-slate-400 flex items-center gap-1 mt-1">
                     <Users className="w-3 h-3 text-slate-500" /> {toBnDigit(stat.assignedCustomersCount)} টি দোকান
-                    <span className="text-slate-600">•</span>
-                    <span>{stat.area || 'প্রধান শাখা'}</span>
+                    {stat.area && stat.area !== 'প্রধান শাখা (এডমিন ও সেলার)' && (
+                      <>
+                        <span className="text-slate-600">•</span>
+                        <span>{stat.area}</span>
+                      </>
+                    )}
                   </p>
                 </div>
               </div>
@@ -254,15 +278,15 @@ export const SellerTracking: React.FC<SellerTrackingProps> = ({
                 <div className="space-y-1.5">
                   <div className="flex items-center justify-between text-[11px] font-bold">
                     <span className="text-slate-400">
-                      টার্গেট (জোড়া): <span className="text-slate-200">{toBnDigit(stat.monthlyTargetPairs || 0)}</span>
+                      টার্গেট জোড়া (এই মাস): <span className="text-slate-200">{toBnDigit(stat.monthlyTargetPairs || 0)}</span>
                     </span>
                     <span
                       className={
-                        stat.totalPairsSold >= (stat.monthlyTargetPairs || 1) ? 'text-amber-400' : 'text-blue-400'
+                        stat.currentMonthPairsSold >= (stat.monthlyTargetPairs || 1) ? 'text-amber-400' : 'text-blue-400'
                       }
                     >
                       {toBnDigit(
-                        Math.min(100, Math.round((stat.totalPairsSold / (stat.monthlyTargetPairs || 1)) * 100))
+                        Math.min(100, Math.round((stat.currentMonthPairsSold / (stat.monthlyTargetPairs || 1)) * 100))
                       )}
                       %
                     </span>
@@ -270,10 +294,10 @@ export const SellerTracking: React.FC<SellerTrackingProps> = ({
                   <div className="w-full bg-slate-800 rounded-full h-2">
                     <div
                       className={`h-2 rounded-full transition-all ${
-                        stat.totalPairsSold >= (stat.monthlyTargetPairs || 1) ? 'bg-amber-500' : 'bg-blue-500'
+                        stat.currentMonthPairsSold >= (stat.monthlyTargetPairs || 1) ? 'bg-amber-500' : 'bg-blue-500'
                       }`}
                       style={{
-                        width: `${Math.min(100, (stat.totalPairsSold / (stat.monthlyTargetPairs || 1)) * 100)}%`,
+                        width: `${Math.min(100, (stat.currentMonthPairsSold / (stat.monthlyTargetPairs || 1)) * 100)}%`,
                       }}
                     ></div>
                   </div>
@@ -285,16 +309,16 @@ export const SellerTracking: React.FC<SellerTrackingProps> = ({
                 <div className="space-y-1.5 pt-1">
                   <div className="flex items-center justify-between text-[11px] font-bold">
                     <span className="text-slate-400">
-                      টার্গেট (টাকায়):{' '}
+                      টার্গেট সেলস (এই মাস):{' '}
                       <span className="text-slate-200">{formatTaka(stat.monthlyTargetAmount || 0)}</span>
                     </span>
                     <span
                       className={
-                        stat.totalRevenue >= (stat.monthlyTargetAmount || 1) ? 'text-emerald-400' : 'text-blue-400'
+                        stat.currentMonthRevenue >= (stat.monthlyTargetAmount || 1) ? 'text-emerald-400' : 'text-blue-400'
                       }
                     >
                       {toBnDigit(
-                        Math.min(100, Math.round((stat.totalRevenue / (stat.monthlyTargetAmount || 1)) * 100))
+                        Math.min(100, Math.round((stat.currentMonthRevenue / (stat.monthlyTargetAmount || 1)) * 100))
                       )}
                       %
                     </span>
@@ -302,10 +326,10 @@ export const SellerTracking: React.FC<SellerTrackingProps> = ({
                   <div className="w-full bg-slate-800 rounded-full h-2">
                     <div
                       className={`h-2 rounded-full transition-all ${
-                        stat.totalRevenue >= (stat.monthlyTargetAmount || 1) ? 'bg-emerald-500' : 'bg-blue-500'
+                        stat.currentMonthRevenue >= (stat.monthlyTargetAmount || 1) ? 'bg-emerald-500' : 'bg-blue-500'
                       }`}
                       style={{
-                        width: `${Math.min(100, (stat.totalRevenue / (stat.monthlyTargetAmount || 1)) * 100)}%`,
+                        width: `${Math.min(100, (stat.currentMonthRevenue / (stat.monthlyTargetAmount || 1)) * 100)}%`,
                       }}
                     ></div>
                   </div>

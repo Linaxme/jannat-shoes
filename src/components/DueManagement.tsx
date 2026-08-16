@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Customer, SalesRep, DuePaymentLog, UITheme, UserAccount } from '../types';
-import { formatTaka, toBnDigit, formatBnDate } from '../utils/formatters';
+import { formatTaka, toBnDigit, formatBnDate, getLocalDateStr } from '../utils/formatters';
 import { useLanguage } from '../contexts/LanguageContext';
 import {
   Receipt,
@@ -77,6 +77,13 @@ export const DueManagement: React.FC<DueManagementProps> = ({
   const isCustomerOfSeller = (c: Customer, seller: SalesRep) => {
     if (c.assignedSellerId && c.assignedSellerId === seller.id) return true;
     if (seller.phone && c.assignedSellerId === seller.phone) return true;
+    if (seller.phone && c.assignedSellerId) {
+      const cleanSPhone = seller.phone.replace(/\D/g, '');
+      const cleanCPhone = c.assignedSellerId.replace(/\D/g, '');
+      if (cleanSPhone && cleanCPhone && cleanSPhone.length >= 6 && (cleanSPhone.endsWith(cleanCPhone) || cleanCPhone.endsWith(cleanSPhone))) {
+        return true;
+      }
+    }
     if (c.assignedSellerName && seller.name) {
       const cn = c.assignedSellerName.trim().toLowerCase();
       const sn = seller.name.trim().toLowerCase();
@@ -166,7 +173,7 @@ export const DueManagement: React.FC<DueManagementProps> = ({
     }
 
     const totalDeduction = paymentAmount + discountAmount;
-    const todayStr = new Date().toISOString().split('T')[0];
+    const todayStr = getLocalDateStr(new Date());
     const prevDue = selectedCustForPayment.currentDue;
     const remDue = Math.max(0, prevDue - totalDeduction);
     const receiptNo = `REC-${new Date().getFullYear()}-${Math.floor(100 + Math.random() * 900)}`;
@@ -604,7 +611,9 @@ export const DueManagement: React.FC<DueManagementProps> = ({
                       </span>
                     )}
                   </div>
-                  <p className="text-xs text-indigo-300 mt-0.5">{seller.area}</p>
+                  {seller.area && seller.area !== 'প্রধান শাখা (এডমিন ও সেলার)' && (
+                    <p className="text-xs text-indigo-300 mt-0.5">{seller.area}</p>
+                  )}
                 </div>
                 <div className="text-right">
                   <div className="text-xs text-slate-400">আন্ডারে মোট বাকী</div>
@@ -616,20 +625,26 @@ export const DueManagement: React.FC<DueManagementProps> = ({
                 <div className="text-xs font-bold text-slate-300">
                   কাস্টমার তালিকা ({toBnDigit(customerCount)} জন):
                 </div>
-                {sCusts.map((c) => (
-                  <div
-                    key={c.id}
-                    className="p-2.5 bg-slate-950/80 rounded-xl border border-slate-800 flex items-center justify-between text-xs"
-                  >
-                    <div>
-                      <div className="font-bold text-slate-200">{c.shopName}</div>
-                      <div className="text-[10px] text-slate-400">{c.address}</div>
+                {sCusts.length > 0 ? (
+                  sCusts.map((c) => (
+                    <div
+                      key={c.id}
+                      className="p-2.5 bg-slate-950/80 rounded-xl border border-slate-800 flex items-center justify-between text-xs"
+                    >
+                      <div>
+                        <div className="font-bold text-slate-200">{c.shopName}</div>
+                        <div className="text-[10px] text-slate-400">{c.address}</div>
+                      </div>
+                      <div className="text-right font-bold text-rose-400">
+                        {formatTaka(c.currentDue)}
+                      </div>
                     </div>
-                    <div className="text-right font-bold text-rose-400">
-                      {formatTaka(c.currentDue)}
-                    </div>
+                  ))
+                ) : (
+                  <div className="p-3 bg-slate-950/40 rounded-xl border border-dashed border-slate-800/80 text-center text-xs text-slate-500 py-3">
+                    এই সেলারের আন্ডারে বর্তমানে কোনো কাস্টমারের বাকী নেই (০ ৳ বাকী)
                   </div>
-                ))}
+                )}
               </div>
             </div>
           ))}

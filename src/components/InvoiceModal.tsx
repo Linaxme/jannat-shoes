@@ -1,7 +1,9 @@
 import React, { useRef, useState } from 'react';
 import { Order } from '../types';
 import { formatTaka, toBnDigit, formatBnDate } from '../utils/formatters';
-import { Printer, X, CheckCircle2, PhoneCall, MapPin, Store, Download, Loader2, Share2, Eye } from 'lucide-react';
+import { Printer, X, CheckCircle2, PhoneCall, MapPin, Store, Download, Loader2, Share2, FileText, Image as ImageIcon } from 'lucide-react';
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
 import { toBlob, toPng } from 'html-to-image';
 
 interface InvoiceModalProps {
@@ -12,6 +14,7 @@ interface InvoiceModalProps {
 export const InvoiceModal: React.FC<InvoiceModalProps> = ({ order, onClose }) => {
   const memoRef = useRef<HTMLDivElement>(null);
   const [isDownloading, setIsDownloading] = useState(false);
+  const [downloadType, setDownloadType] = useState<'image' | 'pdf' | null>(null);
   const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
 
   if (!order) return null;
@@ -20,77 +23,142 @@ export const InvoiceModal: React.FC<InvoiceModalProps> = ({ order, onClose }) =>
     window.print();
   };
 
-  const handleDownload = async () => {
+  const handleDownloadPDF = async () => {
     if (!memoRef.current) return;
     try {
       setIsDownloading(true);
+      setDownloadType('pdf');
       
-      const blob = await toBlob(memoRef.current, {
+      const canvas = await html2canvas(memoRef.current, {
+        scale: 2.5,
+        useCORS: true,
+        logging: false,
         backgroundColor: '#ffffff',
-        pixelRatio: 2,
-        cacheBust: true,
       });
 
-      if (!blob) {
-        throw new Error('Failed to generate image blob');
-      }
+      const imgData = canvas.toDataURL('image/jpeg', 0.95);
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4',
+      });
 
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+      
+      pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight);
+      pdf.save(`Jannat_Memo_${order.memoNo}.pdf`);
+    } catch (err) {
+      console.error('Failed to generate PDF:', err);
+      alert('PDF তৈরিতে সমস্যা হয়েছে। দয়া করে ছবি হিসেবে সেভ বা প্রিন্ট অপশন ব্যবহার করুন।');
+    } finally {
+      setIsDownloading(false);
+      setDownloadType(null);
+    }
+  };
+
+  const handleDownloadImage = async () => {
+    if (!memoRef.current) return;
+    try {
+      setIsDownloading(true);
+      setDownloadType('image');
+      
+      const canvas = await html2canvas(memoRef.current, {
+        scale: 2.5,
+        useCORS: true,
+        logging: false,
+        backgroundColor: '#ffffff',
+      });
+
+      const dataUrl = canvas.toDataURL('image/png');
       const fileName = `Jannat_Memo_${order.memoNo}.png`;
-      const file = new File([blob], fileName, { type: 'image/png' });
 
-      // Try Web Share API first for mobile devices (allows direct save to Gallery / Photos)
-      if (
-        navigator.canShare &&
-        navigator.canShare({ files: [file] }) &&
-        /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
-      ) {
-        try {
-          await navigator.share({
-            files: [file],
-            title: `মেমো নং ${order.memoNo}`,
-            text: `মেসার্স জান্নাত সুজ - ক্যাশ মেমো ${order.memoNo}`,
-          });
-          setIsDownloading(false);
-          return;
-        } catch (shareErr: any) {
-          if (shareErr.name === 'AbortError') {
-            setIsDownloading(false);
+      // Convert to blob for download / share
+      const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/png'));
+      if (blob) {
+        const file = new File([blob], fileName, { type: 'image/png' });
+
+        // Web Share API support for mobile
+        if (
+          navigator.canShare &&
+          navigator.canShare({ files: [file] }) &&
+          /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
+        ) {
+          try {
+            await navigator.share({
+              files: [file],
+              title: `মেমো নং ${order.memoNo}`,
+              text: `মেসার্স জান্নাত সুজ - ক্যাশ মেমো ${order.memoNo}`,
+            });
             return;
+          } catch (shareErr: any) {
+            if (shareErr.name === 'AbortError') return;
+            console.warn('Share failed:', shareErr);
           }
-          console.warn('Web Share failed, falling back to URL download:', shareErr);
         }
       }
 
-      // Fallback 1: Create Blob URL and trigger download link
-      const url = URL.createObjectURL(blob);
+      // Fallback: Direct Download Link
       const link = document.createElement('a');
-      link.href = url;
+      link.href = dataUrl;
       link.download = fileName;
-      link.target = '_blank';
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
 
-      // Save preview URL in case browser blocks automatic popup
-      setImagePreviewUrl(url);
-
+      setImagePreviewUrl(dataUrl);
     } catch (err) {
       console.error('Failed to download memo image:', err);
-      if (memoRef.current) {
-        try {
-          const dataUrl = await toPng(memoRef.current, {
-            backgroundColor: '#ffffff',
-            pixelRatio: 2,
-          });
-          setImagePreviewUrl(dataUrl);
-        } catch (e) {
-          console.error('Fallback image preview failed:', e);
-          alert('ডাউনলোড করতে সমস্যা হয়েছে। দয়া করে স্ক্রিনশট অথবা প্রিন্ট অপশন ব্যবহার করুন।');
+      try {
+        const blob = await toBlob(memoRef.current, { backgroundColor: '#ffffff', pixelRatio: 2 });
+        if (blob) {
+          const url = URL.createObjectURL(blob);
+          setImagePreviewUrl(url);
         }
+      } catch (e) {
+        alert('ছবি ডাউনলোডে সমস্যা হয়েছে। স্ক্রিনশট অথবা প্রিন্ট অপশন ব্যবহার করুন।');
       }
     } finally {
       setIsDownloading(false);
+      setDownloadType(null);
     }
+  };
+
+  const handleShareWhatsApp = () => {
+    let itemsText = '';
+    order.items.forEach((item, idx) => {
+      itemsText += `${idx + 1}. আর্টিকল: ${item.articleCode} | সাইজ: ${item.sizeRange} | ${toBnDigit(item.totalPairs)} জোড়া | দর: ${item.unitSellPrice}৳ | মোট: ${item.totalAmount}৳\n`;
+    });
+
+    const text = `*মেসার্স জান্নাত সুজ - ক্যাশ মেমো*\n` +
+      `--------------------------------\n` +
+      `মেমো নং: *${order.memoNo}*\n` +
+      `তারিখ: ${formatBnDate(order.date)} (${order.time || ''})\n` +
+      `দোকান: *${order.customerShop || order.shopName}*\n` +
+      `প্রোপাইটার: ${order.customerName}\n` +
+      `ঠিকানা: ${order.customerAddress}\n` +
+      `সেলার: ${order.sellerName || 'প্রধান শাখা'}\n\n` +
+      `*পণ্যের বিবরণ:*\n` +
+      `${itemsText}` +
+      `--------------------------------\n` +
+      `মোট জোড়া: *${toBnDigit(order.totalPairs)} জোড়া*\n` +
+      `মোট বিল: *${formatTaka(order.grandTotal)}*\n` +
+      `নগদ জমা: *${formatTaka(order.paidAmount)}*\n` +
+      `চালানের বাকী: *${formatTaka(order.dueAmount)}*\n` +
+      `পূর্বের বাকী: *${formatTaka(order.previousDue)}*\n` +
+      `সর্বমোট বকেয়া (Due): *${formatTaka(order.totalNetDue)}*\n` +
+      `--------------------------------\n` +
+      `_ধন্যবাদ, আবার আসবেন!_\n` +
+      `*মেসার্স জান্নাত সুজ*, ফুলবাড়িয়া, ঢাকা।`;
+
+    let phoneStr = (order.customerPhone || "").replace(/[^0-9]/g, '');
+    if (phoneStr.startsWith('0') && phoneStr.length === 11) {
+      phoneStr = '88' + phoneStr;
+    } else if (phoneStr.length === 10) {
+      phoneStr = '880' + phoneStr;
+    }
+    const url = `https://wa.me/${phoneStr}?text=${encodeURIComponent(text)}`;
+    window.open(url, '_blank');
   };
 
   return (
@@ -98,48 +166,63 @@ export const InvoiceModal: React.FC<InvoiceModalProps> = ({ order, onClose }) =>
       <div className="bg-white text-slate-900 rounded-2xl max-w-2xl w-full p-3 sm:p-6 shadow-2xl space-y-4 my-auto print:shadow-none print:p-0 print:max-w-none print:w-full print:m-0">
         
         {/* Modal Controls (Hidden in Print) */}
-        <div className="flex items-center justify-between border-b pb-3 print:hidden">
+        <div className="flex items-center justify-between border-b pb-3 print:hidden flex-wrap gap-2">
           <div className="flex items-center gap-2 text-emerald-700 font-bold text-xs sm:text-sm">
             <CheckCircle2 className="w-5 h-5 shrink-0" />
-            <span>ক্যাশ মেমো প্রস্তুত হয়েছে</span>
+            <span>ক্যাশ মেমো প্রস্তুত</span>
           </div>
-          <div className="flex items-center gap-1.5 sm:gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+            {/* WhatsApp Button */}
             <button
-              onClick={handleDownload}
-              disabled={isDownloading}
-              className="px-3 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-400 text-white font-bold rounded-xl text-xs flex items-center gap-1.5 shadow transition-colors"
-            >
-              {isDownloading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
-              <span className="hidden sm:inline">ডাউনলোড</span>
-            </button>
-            <button
-              onClick={() => {
-                const text = `মেসার্স জান্নাত সুজ\nক্যাশ মেমো: ${order.memoNo}\nতারিখ: ${formatBnDate(order.date)}\n\nদোকান: ${order.customerShop}\nমোট জোড়া: ${toBnDigit(order.totalPairs)}\nনিট বিল: ${formatTaka(order.grandTotal)}\nনগদ জমা: ${formatTaka(order.paidAmount)}\nবর্তমান মোট বাকী: ${formatTaka(order.totalNetDue)}\n\nধন্যবাদ!`;
-                let phoneStr = (order.customerPhone || "").replace(/[^0-9]/g, '');
-                if (phoneStr && phoneStr.length === 11) phoneStr = '88' + phoneStr;
-                const url = `https://wa.me/${phoneStr}?text=${encodeURIComponent(text)}`;
-                window.open(url, '_blank');
-              }}
-              className="px-3 py-2 bg-[#25D366] hover:bg-[#20bd5a] text-white font-bold rounded-xl text-xs flex items-center gap-1.5 shadow transition-colors"
+              onClick={handleShareWhatsApp}
+              className="px-3 py-2 bg-[#25D366] hover:bg-[#20bd5a] text-white font-bold rounded-xl text-xs flex items-center gap-1.5 shadow transition-colors cursor-pointer"
+              title="হোয়াটসঅ্যাপে মেমোর হিসাব পাঠান"
             >
               <Share2 className="w-4 h-4" />
-              <span className="hidden sm:inline">WhatsApp</span>
+              <span>WhatsApp</span>
             </button>
+
+            {/* Save Image Button */}
+            <button
+              onClick={handleDownloadImage}
+              disabled={isDownloading}
+              className="px-3 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-400 text-white font-bold rounded-xl text-xs flex items-center gap-1.5 shadow transition-colors cursor-pointer"
+              title="ছবি হিসেবে মেমো গ্যালারিতে সেভ করুন"
+            >
+              {isDownloading && downloadType === 'image' ? <Loader2 className="w-4 h-4 animate-spin" /> : <ImageIcon className="w-4 h-4" />}
+              <span className="hidden sm:inline">ছবি সেভ</span>
+            </button>
+
+            {/* PDF Download Button */}
+            <button
+              onClick={handleDownloadPDF}
+              disabled={isDownloading}
+              className="px-3 py-2 bg-rose-600 hover:bg-rose-700 disabled:bg-rose-400 text-white font-bold rounded-xl text-xs flex items-center gap-1.5 shadow transition-colors cursor-pointer"
+              title="PDF ফাইল ডাউনলোড করুন"
+            >
+              {isDownloading && downloadType === 'pdf' ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileText className="w-4 h-4" />}
+              <span className="hidden sm:inline">PDF</span>
+            </button>
+
+            {/* Print Button */}
             <button
               onClick={handlePrint}
-              className="px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs flex items-center gap-1.5 shadow transition-colors"
+              className="px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs flex items-center gap-1.5 shadow transition-colors cursor-pointer"
             >
               <Printer className="w-4 h-4" />
               <span className="hidden sm:inline">প্রিন্ট</span>
             </button>
+
+            {/* Close Button */}
             <button
               onClick={onClose}
-              className="p-2 text-slate-400 hover:text-slate-700 rounded-lg"
+              className="p-2 text-slate-400 hover:text-slate-700 rounded-lg cursor-pointer"
             >
               <X className="w-5 h-5" />
             </button>
           </div>
         </div>
+
 
         {/* PRINTABLE MEMO CONTENT AREA */}
         <div ref={memoRef} className="p-3 sm:p-4 border-2 border-slate-900 rounded-xl space-y-3 text-xs font-sans bg-white print:border-none print:p-0">

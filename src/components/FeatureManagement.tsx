@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { SystemConfig, UserAccount, UITheme } from '../types';
-import { Sliders, Settings2, Plus, Trash2, Layers, Tag, AlertTriangle, Database, ChevronDown, ChevronUp } from 'lucide-react';
+import { Sliders, Settings2, Plus, Trash2, Layers, Tag, AlertTriangle, Database, ChevronDown, ChevronUp, Bell, Smartphone, FileSpreadsheet, Send, ExternalLink, Check, BarChart3, Download } from 'lucide-react';
 import { toBnDigit } from '../utils/formatters';
 
 interface FeatureManagementProps {
@@ -9,6 +9,8 @@ interface FeatureManagementProps {
   activeTheme: UITheme;
   onUpdateSystemConfig: (newConfig: SystemConfig) => void;
   onClearDatabase?: () => Promise<void>;
+  onNavigateToReports?: () => void;
+  onSendNotification?: (title: string, message: string) => void;
 }
 
 export const FeatureManagement: React.FC<FeatureManagementProps> = ({
@@ -16,6 +18,8 @@ export const FeatureManagement: React.FC<FeatureManagementProps> = ({
   systemConfig,
   onUpdateSystemConfig,
   onClearDatabase,
+  onNavigateToReports,
+  onSendNotification,
 }) => {
   const [newCategoryInput, setNewCategoryInput] = useState('');
   const [catError, setCatError] = useState<string | null>(null);
@@ -23,6 +27,15 @@ export const FeatureManagement: React.FC<FeatureManagementProps> = ({
   const [isCategoryExpanded, setIsCategoryExpanded] = useState<boolean>(false);
   const [showClearDbConfirm, setShowClearDbConfirm] = useState<boolean>(false);
   const [isClearing, setIsClearing] = useState<boolean>(false);
+
+  // APK Download Link State
+  const [apkUrlInput, setApkUrlInput] = useState<string>(systemConfig?.apkDownloadUrl || '');
+  const [apkSaveSuccess, setApkSaveSuccess] = useState(false);
+
+  // Broadcast Notification State
+  const [notifTitle, setNotifTitle] = useState('');
+  const [notifMessage, setNotifMessage] = useState('');
+  const [notifSuccess, setNotifSuccess] = useState(false);
 
   if ((currentUser.role !== 'super_admin' && currentUser.role !== 'admin') || !systemConfig) {
     return (
@@ -547,6 +560,175 @@ export const FeatureManagement: React.FC<FeatureManagementProps> = ({
           </div>
         </div>
       )}
+
+      {/* Section: Custom Reports & Downloads (Monthly & Annual) */}
+      <div className="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-4 shadow-xl">
+        <div className="flex items-center justify-between flex-wrap gap-3">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 bg-amber-500/10 text-amber-400 rounded-xl border border-amber-500/20">
+              <FileSpreadsheet className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="text-sm sm:text-base font-bold text-white flex items-center gap-2">
+                কাস্টম রিপোর্ট ও ডাউনলোড (Custom Reports)
+              </h3>
+              <p className="text-xs text-slate-400 mt-0.5">
+                মাসিক ও বার্ষিক পূর্ণাঙ্গ বিক্রয়, বাকী ও পারফরম্যান্স রিপোর্ট PDF ও Excel এ ডাউনলোড করুন।
+              </p>
+            </div>
+          </div>
+
+          {onNavigateToReports && (
+            <button
+              type="button"
+              onClick={onNavigateToReports}
+              className="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded-xl text-xs flex items-center gap-2 shadow transition cursor-pointer"
+            >
+              <BarChart3 className="w-4 h-4" />
+              <span>রিপোর্ট পেজে যান</span>
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Section: Android APK Download Link Configuration */}
+      <div className="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-4 shadow-xl">
+        <div className="flex items-center gap-3">
+          <div className="p-2.5 bg-emerald-500/10 text-emerald-400 rounded-xl border border-emerald-500/20">
+            <Smartphone className="w-5 h-5" />
+          </div>
+          <div>
+            <h3 className="text-sm sm:text-base font-bold text-white flex items-center gap-2">
+              অ্যান্ড্রয়েড অ্যাপ (APK) ডাউনলোড লিংক কনফিগারেশন
+            </h3>
+            <p className="text-xs text-slate-400 mt-0.5">
+              এখানে আপনার জান্নাত সুজ অ্যান্ড্রয়েড অ্যাপ (APK) এর সরাসরি ডাউনলোড লিংক যুক্ত করুন।
+            </p>
+          </div>
+        </div>
+
+        <div className="p-4 bg-slate-950/70 border border-slate-800 rounded-xl space-y-3">
+          <label className="block text-xs font-semibold text-slate-300">
+            APK ফাইল সরাসরি ডাউনলোড লিংক (Google Drive / Direct URL):
+          </label>
+          <div className="flex flex-col sm:flex-row gap-2">
+            <input
+              type="url"
+              value={apkUrlInput}
+              onChange={(e) => setApkUrlInput(e.target.value)}
+              placeholder="https://drive.google.com/uc?export=download&id=... বা সরাসরি apk লিংক"
+              className="flex-1 bg-slate-900 border border-slate-700 text-xs text-white rounded-xl px-3.5 py-2.5 focus:border-amber-500 focus:outline-none placeholder-slate-500"
+            />
+            <button
+              type="button"
+              onClick={() => {
+                onUpdateSystemConfig({
+                  ...systemConfig,
+                  apkDownloadUrl: apkUrlInput.trim(),
+                });
+                setApkSaveSuccess(true);
+                setTimeout(() => setApkSaveSuccess(false), 2500);
+              }}
+              className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-2 transition cursor-pointer"
+            >
+              <Check className="w-4 h-4" />
+              <span>লিংক সংরক্ষণ করুন</span>
+            </button>
+          </div>
+
+          {apkSaveSuccess && (
+            <div className="text-xs text-emerald-400 font-semibold flex items-center gap-1.5 pt-1">
+              <Check className="w-3.5 h-3.5" /> APK ডাউনলোড লিংক সফলভাবে সেভ হয়েছে!
+            </div>
+          )}
+
+          {systemConfig.apkDownloadUrl && (
+            <div className="pt-2 flex items-center justify-between text-xs text-slate-400 border-t border-slate-800">
+              <span className="truncate max-w-[300px]">বর্তমান লিংক: {systemConfig.apkDownloadUrl}</span>
+              <a
+                href={systemConfig.apkDownloadUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="text-amber-400 hover:underline flex items-center gap-1 font-semibold"
+              >
+                <ExternalLink className="w-3.5 h-3.5" /> টেস্ট ডাউনলোড
+              </a>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Section: Custom Broadcast Notification */}
+      <div className="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-4 shadow-xl">
+        <div className="flex items-center gap-3">
+          <div className="p-2.5 bg-indigo-500/10 text-indigo-400 rounded-xl border border-indigo-500/20">
+            <Bell className="w-5 h-5" />
+          </div>
+          <div>
+            <h3 className="text-sm sm:text-base font-bold text-white flex items-center gap-2">
+              সেলার ও স্টাফদের নোটিফিকেশন / এলার্ট পাঠান
+            </h3>
+            <p className="text-xs text-slate-400 mt-0.5">
+              সকল সেলার ও এডমিনদের কাছে জরুরি নোটিশ বা স্টক নির্দেশনা প্রেরণ করুন।
+            </p>
+          </div>
+        </div>
+
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (!notifTitle.trim() || !notifMessage.trim()) return;
+            if (onSendNotification) {
+              onSendNotification(notifTitle.trim(), notifMessage.trim());
+            }
+            setNotifSuccess(true);
+            setNotifTitle('');
+            setNotifMessage('');
+            setTimeout(() => setNotifSuccess(false), 3000);
+          }}
+          className="p-4 bg-slate-950/70 border border-slate-800 rounded-xl space-y-3"
+        >
+          <div>
+            <label className="block text-xs font-semibold text-slate-300 mb-1">নোটিফিকেশনের শিরোনাম (Title):</label>
+            <input
+              type="text"
+              value={notifTitle}
+              onChange={(e) => setNotifTitle(e.target.value)}
+              placeholder="যেমন: নতুন ঈদ কালেকশন স্টক ইন হয়েছে..."
+              className="w-full bg-slate-900 border border-slate-700 text-xs text-white rounded-xl px-3.5 py-2 focus:border-amber-500 focus:outline-none"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-slate-300 mb-1">বিস্তারিত বার্তা (Message):</label>
+            <textarea
+              value={notifMessage}
+              onChange={(e) => setNotifMessage(e.target.value)}
+              placeholder="যেমন: সকল সেলারদের জানানো যাচ্ছে যে নতুন স্পোর্টস কেডস ও লেডিস হিল মার্কেটে এসেছে..."
+              rows={3}
+              className="w-full bg-slate-900 border border-slate-700 text-xs text-white rounded-xl px-3.5 py-2 focus:border-amber-500 focus:outline-none resize-none"
+              required
+            />
+          </div>
+
+          <div className="flex items-center justify-between pt-1">
+            {notifSuccess ? (
+              <span className="text-xs text-emerald-400 font-semibold flex items-center gap-1.5">
+                <Check className="w-4 h-4" /> নোটিফিকেশন সফলভাবে পাঠানো হয়েছে!
+              </span>
+            ) : <span />}
+
+            <button
+              type="submit"
+              className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl text-xs flex items-center gap-2 transition cursor-pointer"
+            >
+              <Send className="w-3.5 h-3.5" />
+              <span>নোটিফিকেশন পাঠান</span>
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 };

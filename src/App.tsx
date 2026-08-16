@@ -35,9 +35,10 @@ import { UserManagement } from './components/UserManagement';
 import { FeatureManagement } from './components/FeatureManagement';
 import { SellerTracking } from './components/SellerTracking';
 import { SMSPanel } from './components/SMSPanel';
+import { Reports } from './components/Reports';
 import { fetchFirestoreData, seedFirestoreData, saveDocumentToFirestore, deleteDocumentFromFirestore, clearAllDatabaseData } from './lib/firestoreService';
 import { generateSMSMessage, sendAutoSMS, SMSType } from './utils/smsService';
-import { OrderItem } from './types';
+import { OrderItem, AppNotification } from './types';
 
 import { CheckCircle2, X } from 'lucide-react';
 
@@ -73,6 +74,91 @@ export default function App() {
   const [paymentLogs, setPaymentLogs] = useState<DuePaymentLog[]>([]);
   const [userAccounts, setUserAccounts] = useState<UserAccount[]>(INITIAL_USER_ACCOUNTS);
   const [systemConfig, setSystemConfig] = useState<SystemConfig>(DEFAULT_SYSTEM_CONFIG);
+
+  // Notification State
+  const [notifications, setNotifications] = useState<AppNotification[]>(() => {
+    const saved = localStorage.getItem('jannat_notifications');
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {
+        return [];
+      }
+    }
+    return [
+      {
+        id: 'notif-welcome',
+        title: 'জান্নাত সুজ সিস্টেমে স্বাগতম',
+        message: 'অনলাইন অর্ডার বুকিং, কাস্টম রিপোর্ট ও নোটিফিকেশন সিস্টেম সক্রিয় আছে।',
+        createdAt: new Date().toISOString(),
+        read: false,
+        type: 'broadcast',
+      },
+    ];
+  });
+
+  const saveNotifications = (newNotifs: AppNotification[]) => {
+    setNotifications(newNotifs);
+    try {
+      localStorage.setItem('jannat_notifications', JSON.stringify(newNotifs));
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const addNotification = (notif: Omit<AppNotification, 'id' | 'createdAt' | 'read'>) => {
+    const item: AppNotification = {
+      ...notif,
+      id: `notif-${Date.now()}`,
+      createdAt: new Date().toISOString(),
+      read: false,
+    };
+    saveNotifications([item, ...notifications]);
+  };
+
+  const handleMarkNotificationAsRead = (id: string) => {
+    saveNotifications(notifications.map((n) => (n.id === id ? { ...n, read: true } : n)));
+  };
+
+  const handleMarkAllNotificationsAsRead = () => {
+    saveNotifications(notifications.map((n) => ({ ...n, read: true })));
+  };
+
+  const handleClearNotifications = () => {
+    saveNotifications([]);
+  };
+
+  // PWA Install Prompt State
+  const [deferredInstallPrompt, setDeferredInstallPrompt] = useState<any>(null);
+  const [canInstallPWA, setCanInstallPWA] = useState(false);
+
+  useEffect(() => {
+    const handleBeforeInstallPrompt = (e: Event) => {
+      e.preventDefault();
+      setDeferredInstallPrompt(e);
+      setCanInstallPWA(true);
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    return () => window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+  }, []);
+
+  const handleInstallPWA = async () => {
+    if (!deferredInstallPrompt) {
+      alert('আপনার ব্রাউজারে অ্যাপ ইনস্টল করতে ব্রাউজার মেনু থেকে "Install app" অথবা "Add to Home screen" নির্বাচন করুন।');
+      return;
+    }
+    try {
+      deferredInstallPrompt.prompt();
+      const choiceResult = await deferredInstallPrompt.userChoice;
+      if (choiceResult.outcome === 'accepted') {
+        setCanInstallPWA(false);
+        setDeferredInstallPrompt(null);
+      }
+    } catch (err) {
+      console.error('PWA install prompt error:', err);
+    }
+  };
 
   // Helper to sort orders by date/time/id descending (newest first)
   const sortOrdersByRecency = (ordersList: Order[]) => {
@@ -451,6 +537,11 @@ export default function App() {
       triggerToast(t('toast_order_booked').replace('{{memoNo}}', newOrder.memoNo));
       // Automatically send SMS for booked order
       triggerAutomaticSMS('order_placed', newOrder.customerPhone || '', newOrder);
+      addNotification({
+        title: 'নতুন বুকিং অর্ডার',
+        message: `মেমো #${newOrder.memoNo} - ${newOrder.shopName || newOrder.customerName} (${newOrder.totalPairs} জোড়া, মোট: ৳${newOrder.grandTotal.toLocaleString('bn-BD')})`,
+        type: 'order_booking',
+      });
       // Switch tab to pending list
       setActiveTab('pending');
     } else {
@@ -458,6 +549,11 @@ export default function App() {
       triggerToast(t('toast_memo_created').replace('{{memoNo}}', newOrder.memoNo));
       // Automatically send SMS for direct delivery/sales memo
       triggerAutomaticSMS('order_delivery', newOrder.customerPhone || '', newOrder);
+      addNotification({
+        title: 'নতুন বিক্রয় মেমো তৈরি',
+        message: `মেমো #${newOrder.memoNo} - ${newOrder.shopName || newOrder.customerName} (পরিশোধ: ৳${newOrder.paidAmount.toLocaleString('bn-BD')}, বকেয়া: ৳${newOrder.totalNetDue.toLocaleString('bn-BD')})`,
+        type: 'order_booking',
+      });
     }
   };
 
@@ -533,6 +629,11 @@ export default function App() {
 
     const targetCust = customers.find((c) => c.id === newLog.customerId);
     if (targetCust) {
+      addNotification({
+        title: 'বকেয়া পেমেন্ট জমা',
+        message: `${targetCust.shopName || targetCust.name} থেকে ৳${newLog.amountPaid.toLocaleString('bn-BD')} পেমেন্ট রিসিভ করা হয়েছে (অবশিষ্ট বকেয়া: ৳${newLog.remainingDue.toLocaleString('bn-BD')})`,
+        type: 'payment_received',
+      });
       // Automatically send SMS
       triggerAutomaticSMS('payment_received', targetCust.phone, newLog);
     }
@@ -685,7 +786,7 @@ export default function App() {
     return paymentLogs;
   };
 
-  // Combine dedicated sales reps + Admin (who also acts as a seller), excluding developer/super_admin
+  // Combine dedicated sales reps + Admin & Sellers from userAccounts, excluding developer/super_admin
   const allSellers = useMemo(() => {
     const list: SalesRep[] = [...sellers].filter(
       (s) =>
@@ -694,44 +795,42 @@ export default function App() {
         !s.area?.includes('সুপার এডমিন')
     );
 
-    // Only 'admin' role accounts are Admin+Seller (super_admin is developer-only)
-    const adminAccounts = userAccounts.filter((u) => u.role === 'admin');
+    // Include all admin and seller staff accounts from userAccounts
+    const staffAccounts = userAccounts.filter((u) => u.role === 'admin' || u.role === 'seller');
 
-    adminAccounts.forEach((adminUser) => {
-      const alreadyInList = list.some(
+    staffAccounts.forEach((staffUser) => {
+      const staffPhone = staffUser.phone || staffUser.loginId || '';
+      const staffName = (staffUser.name || '').trim().toLowerCase();
+
+      const existingIndex = list.findIndex(
         (s) =>
-          s.id === adminUser.sellerId ||
-          s.id === adminUser.id ||
-          (adminUser.phone && s.phone === adminUser.phone) ||
-          (s.name || "").trim().toLowerCase() === (adminUser.name || "").trim().toLowerCase()
+          (staffUser.sellerId && s.id === staffUser.sellerId) ||
+          s.id === staffUser.id ||
+          (staffPhone && s.phone && s.phone === staffPhone) ||
+          (s.name && s.name.trim().toLowerCase() === staffName)
       );
 
-      if (!alreadyInList) {
-        list.unshift({
-          id: adminUser.sellerId || adminUser.id,
-          name: adminUser.name,
-          phone: adminUser.phone || adminUser.loginId,
-          area: adminUser.area || 'প্রধান শাখা (এডমিন ও সেলার)',
+      if (existingIndex === -1) {
+        list.push({
+          id: staffUser.sellerId || staffUser.id,
+          name: staffUser.name,
+          phone: staffPhone,
+          area: staffUser.area || (staffUser.role === 'admin' ? 'প্রধান শাখা (এডমিন ও সেলার)' : 'ফিল্ড সেলস'),
           monthlyTargetPairs: 1000,
           monthlyTargetAmount: 0,
           commissionRatePercent: 0,
-          role: 'admin',
-          isAdmin: true,
+          role: staffUser.role,
+          isAdmin: staffUser.role === 'admin',
         });
       } else {
-        const idx = list.findIndex(
-          (s) =>
-            s.id === adminUser.sellerId ||
-            s.id === adminUser.id ||
-            (s.name || "").trim().toLowerCase() === (adminUser.name || "").trim().toLowerCase()
-        );
-        if (idx !== -1) {
-          list[idx] = {
-            ...list[idx],
-            role: 'admin',
-            isAdmin: true,
-          };
-        }
+        // Sync role and admin flag if needed
+        list[existingIndex] = {
+          ...list[existingIndex],
+          role: staffUser.role,
+          isAdmin: staffUser.role === 'admin' || list[existingIndex].isAdmin,
+          phone: list[existingIndex].phone || staffPhone,
+          area: list[existingIndex].area || staffUser.area || '',
+        };
       }
     });
 
@@ -1065,6 +1164,12 @@ export default function App() {
         pendingOrdersCount={pendingOrdersCount}
         currentUserRole={currentUser?.role || 'customer'}
         systemConfig={systemConfig}
+        notifications={notifications}
+        onMarkNotificationAsRead={handleMarkNotificationAsRead}
+        onMarkAllNotificationsAsRead={handleMarkAllNotificationsAsRead}
+        onClearNotifications={handleClearNotifications}
+        onInstallPWA={handleInstallPWA}
+        canInstallPWA={canInstallPWA}
       />
 
       {/* Navigation Bar */}
@@ -1193,6 +1298,16 @@ export default function App() {
           />
         )}
 
+        {activeTab === 'reports' && currentUser && (currentUser.role === 'admin' || currentUser.role === 'super_admin') && (
+          <Reports
+            orders={getVisibleOrders()}
+            products={products}
+            sellers={allSellers}
+            customers={getVisibleCustomers()}
+            activeTheme={activeTheme}
+          />
+        )}
+
         {activeTab === 'users' && currentUser && (
           <div className="space-y-8">
             <UserManagement
@@ -1227,6 +1342,14 @@ export default function App() {
             activeTheme={activeTheme}
             onUpdateSystemConfig={handleUpdateSystemConfig}
             onClearDatabase={handleClearDatabase}
+            onNavigateToReports={() => setActiveTab('reports')}
+            onSendNotification={(title, message) =>
+              addNotification({
+                title,
+                message,
+                type: 'system_broadcast',
+              })
+            }
           />
         )}
 

@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { ShoeProduct, Customer, SalesRep, OrderItem, Order, UserAccount, SystemConfig } from '../types';
-import { formatTaka, toBnDigit } from '../utils/formatters';
+import { formatTaka, toBnDigit, getLocalDateStr } from '../utils/formatters';
 import { ProductImageDisplay } from './Shoe2DPlaceholder';
 import {
   ShoppingBag,
@@ -53,10 +53,40 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
     return null;
   }, []);
 
-  // Customer Selection
+  // Customer Selection by Phone / Name Auto-lookup
   const [selectedCustomerId, setSelectedCustomerId] = useState<string>(
     () => savedDraft?.selectedCustomerId || customers[0]?.id || ''
   );
+  const [customerSearchQuery, setCustomerSearchQuery] = useState<string>('');
+  const [showCustomerDropdown, setShowCustomerDropdown] = useState<boolean>(false);
+
+  // Filtered customer suggestions
+  const customerSuggestions = useMemo(() => {
+    if (!customerSearchQuery.trim()) return [];
+    const q = customerSearchQuery.trim().toLowerCase();
+    const cleanQ = q.replace(/\D/g, '');
+
+    return customers.filter((c) => {
+      const cPhone = (c.phone || '').replace(/\D/g, '');
+      const phoneMatch = cleanQ.length > 0 && cPhone.includes(cleanQ);
+      const nameMatch = (c.name || '').toLowerCase().includes(q);
+      const shopMatch = (c.shopName || '').toLowerCase().includes(q);
+      const addressMatch = (c.address || '').toLowerCase().includes(q);
+      return phoneMatch || nameMatch || shopMatch || addressMatch;
+    }).slice(0, 8);
+  }, [customers, customerSearchQuery]);
+
+  // If user types a full 11-digit phone number, auto-select if exact match exists
+  useEffect(() => {
+    const clean = customerSearchQuery.replace(/\D/g, '');
+    if (clean.length === 11) {
+      const exactMatch = customers.find((c) => (c.phone || '').replace(/\D/g, '') === clean);
+      if (exactMatch && exactMatch.id !== selectedCustomerId) {
+        setSelectedCustomerId(exactMatch.id);
+        setShowCustomerDropdown(false);
+      }
+    }
+  }, [customerSearchQuery, customers, selectedCustomerId]);
 
   // Logged in Seller Resolution
   const currentSellerInfo = useMemo(() => {
@@ -314,7 +344,7 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
       if (!confirmBooking) return;
     }
 
-    const todayStr = new Date().toISOString().split('T')[0];
+    const todayStr = getLocalDateStr(new Date());
     const nowTime = new Date().toLocaleTimeString('bn-BD', { hour: '2-digit', minute: '2-digit' });
     const memoNo = `MEMO-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
 
@@ -472,43 +502,171 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
         </div>
       )}
 
-      {/* Customer Selection Card */}
+      {/* Customer Selection: Smart Phone / Name Search without long dropdown */}
       <div className="bg-slate-900 border border-slate-800 p-4 rounded-2xl space-y-3">
-        <div>
-          <div className="flex items-center justify-between mb-1">
-            <label className="text-xs font-semibold text-slate-300 flex items-center gap-1">
-              <Store className="w-3.5 h-3.5 text-amber-400" />
-              কাস্টমার / দোকান সিলেক্ট করুন:
-            </label>
-            <button
-              type="button"
-              onClick={() => setShowAddCustomerModal(true)}
-              className="text-[11px] text-amber-400 hover:underline flex items-center gap-0.5 font-bold"
-            >
-              <PlusCircle className="w-3 h-3" /> নতুন কাস্টমার
-            </button>
-          </div>
-          <select
-            value={selectedCustomerId}
-            onChange={(e) => setSelectedCustomerId(e.target.value)}
-            className="w-full bg-slate-950 border border-slate-800 text-xs text-amber-300 font-bold rounded-xl px-3 py-2 focus:outline-none"
+        <div className="flex items-center justify-between">
+          <label className="text-xs font-bold text-slate-200 flex items-center gap-1.5">
+            <Store className="w-4 h-4 text-amber-400" />
+            দোকানদার / কাস্টমার নির্বাচন:
+          </label>
+          <button
+            type="button"
+            onClick={() => {
+              setNewPhone(customerSearchQuery.replace(/\D/g, ''));
+              setShowAddCustomerModal(true);
+            }}
+            className="text-[11px] text-amber-400 hover:text-amber-300 flex items-center gap-1 font-bold bg-amber-500/10 border border-amber-500/20 px-2.5 py-1 rounded-lg transition-colors cursor-pointer"
           >
-            {customers.map((c) => (
-              <option key={c.id} value={c.id} className="bg-slate-900 text-slate-100">
-                {c.shopName} ({c.name}) - বাকী: ৳{c.currentDue}
-              </option>
-            ))}
-          </select>
-          {selectedCustomer && (
-            <div className="text-[11px] text-slate-400 mt-1 flex justify-between">
-              <span>ঠিকানা: {selectedCustomer.address}</span>
-              <span className="text-rose-400 font-semibold">
-                পূর্বের বাকী: {formatTaka(selectedCustomer.currentDue)}
-              </span>
+            <PlusCircle className="w-3.5 h-3.5" /> + নতুন কাস্টমার
+          </button>
+        </div>
+
+        {/* Customer Search & Phone Input with live auto-lookup */}
+        <div className="relative">
+          <div className="flex gap-2 items-center">
+            <div className="relative flex-1">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500">
+                <Search className="w-4 h-4 text-amber-400" />
+              </div>
+              <input
+                type="text"
+                value={customerSearchQuery}
+                onChange={(e) => {
+                  setCustomerSearchQuery(e.target.value);
+                  setShowCustomerDropdown(true);
+                }}
+                onFocus={() => setShowCustomerDropdown(true)}
+                placeholder="রেজিস্ট্রারড ফোন নম্বর বা দোকানের নাম লিখুন..."
+                className="w-full bg-slate-950 border border-slate-800 focus:border-amber-500 rounded-xl pl-9 pr-8 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none transition-colors"
+              />
+              {customerSearchQuery && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCustomerSearchQuery('');
+                    setShowCustomerDropdown(false);
+                  }}
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-white"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
+
+            {/* Quick change / reset button */}
+            {selectedCustomer && (
+              <button
+                type="button"
+                onClick={() => {
+                  setCustomerSearchQuery('');
+                  setShowCustomerDropdown(true);
+                }}
+                className="px-3 py-2.5 bg-slate-800 hover:bg-slate-750 text-slate-300 text-xs font-semibold rounded-xl border border-slate-700 whitespace-nowrap transition-colors"
+                title="দোকান খুঁজুন"
+              >
+                খুঁজুন
+              </button>
+            )}
+          </div>
+
+          {/* Autocomplete Suggestions Dropdown */}
+          {showCustomerDropdown && customerSuggestions.length > 0 && (
+            <div className="absolute left-0 right-0 top-full mt-1.5 z-40 bg-slate-950 border border-slate-700 rounded-xl shadow-2xl overflow-hidden max-h-60 overflow-y-auto divide-y divide-slate-800/80">
+              <div className="p-2 bg-slate-900/80 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                ম্যাচিং রেজিস্টার্ড দোকান ({toBnDigit(customerSuggestions.length)}টি):
+              </div>
+              {customerSuggestions.map((c) => (
+                <div
+                  key={c.id}
+                  onClick={() => {
+                    setSelectedCustomerId(c.id);
+                    setCustomerSearchQuery(`${c.shopName} - ${c.phone}`);
+                    setShowCustomerDropdown(false);
+                  }}
+                  className={`p-2.5 hover:bg-amber-500/10 cursor-pointer transition-colors flex items-center justify-between gap-3 text-xs ${
+                    selectedCustomerId === c.id ? 'bg-amber-500/15 border-l-2 border-amber-400' : ''
+                  }`}
+                >
+                  <div className="min-w-0 flex-1">
+                    <div className="font-bold text-white flex items-center gap-1.5">
+                      <Store className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                      <span className="truncate">{c.shopName}</span>
+                      <span className="text-[10px] text-slate-400 font-normal">({c.name})</span>
+                    </div>
+                    <div className="text-[11px] text-slate-400 flex items-center gap-2 mt-0.5 font-mono">
+                      <span>{c.phone}</span>
+                      <span>•</span>
+                      <span className="truncate font-sans">{c.address}</span>
+                    </div>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <div className="text-[10px] text-slate-400">বর্তমান বাকী</div>
+                    <div className={`font-bold ${c.currentDue > 0 ? 'text-rose-400' : 'text-emerald-400'}`}>
+                      {formatTaka(c.currentDue)}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Not found state if user typed phone/name but no match */}
+          {showCustomerDropdown && customerSearchQuery.trim() && customerSuggestions.length === 0 && (
+            <div className="absolute left-0 right-0 top-full mt-1.5 z-40 bg-slate-950 border border-slate-700 rounded-xl p-3.5 shadow-2xl text-center space-y-2">
+              <p className="text-xs text-slate-400">
+                "<span className="text-amber-300 font-semibold">{customerSearchQuery}</span>" নম্বরে কোনো দোকান পাওয়া যায়নি।
+              </p>
+              <button
+                type="button"
+                onClick={() => {
+                  setNewPhone(customerSearchQuery.replace(/\D/g, ''));
+                  setShowAddCustomerModal(true);
+                  setShowCustomerDropdown(false);
+                }}
+                className="px-3.5 py-1.5 bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold rounded-lg shadow transition-colors inline-flex items-center gap-1.5"
+              >
+                <PlusCircle className="w-3.5 h-3.5" />
+                নতুন দোকান হিসেবে যুক্ত করুন
+              </button>
             </div>
           )}
         </div>
+
+        {/* Selected Customer Highlight Card */}
+        {selectedCustomer ? (
+          <div className="p-3 bg-slate-950/70 border border-slate-800 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="font-black text-amber-300 text-sm flex items-center gap-1.5">
+                  <Store className="w-4 h-4 text-amber-400" />
+                  {selectedCustomer.shopName}
+                </span>
+                <span className="text-slate-400 font-medium">({selectedCustomer.name})</span>
+                <span className="px-2 py-0.5 rounded bg-slate-800 text-[10px] font-mono text-slate-300">
+                  {selectedCustomer.phone}
+                </span>
+              </div>
+              <div className="text-[11px] text-slate-400 flex items-center gap-3">
+                <span>ঠিকানা: {selectedCustomer.address}</span>
+                <span>•</span>
+                <span>দায়িত্বপ্রাপ্ত: {selectedCustomer.assignedSellerName || 'প্রধান শাখা'}</span>
+              </div>
+            </div>
+
+            <div className="text-right shrink-0 bg-slate-900/90 px-3 py-1.5 rounded-lg border border-slate-800">
+              <div className="text-[10px] text-slate-400">পূর্বের বকেয়া (Due):</div>
+              <div className={`font-black text-sm ${selectedCustomer.currentDue > 0 ? 'text-rose-400' : 'text-emerald-400'}`}>
+                {formatTaka(selectedCustomer.currentDue)}
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="p-3 bg-slate-950/40 border border-dashed border-slate-800 rounded-xl text-center text-xs text-slate-500">
+            অনুগ্রহ করে উপরে মোবাইল নম্বর বা নাম দিয়ে দোকান সিলেক্ট করুন
+          </div>
+        )}
       </div>
+
 
       {/* QUICK ENTRY BOX (Product Search, Quantity & Price Inputs) */}
       <div className="bg-slate-900 border border-amber-500/30 p-4 rounded-2xl space-y-3 shadow-lg">

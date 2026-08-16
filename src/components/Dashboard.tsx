@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Order, ShoeProduct, Customer, UserAccount, SystemConfig } from '../types';
 import { NavTab } from './Navigation';
-import { formatTaka, toBnDigit, pairsToCartonText } from '../utils/formatters';
+import { formatTaka, toBnDigit, pairsToCartonText, getLocalDateStr } from '../utils/formatters';
 import { useLanguage } from '../contexts/LanguageContext';
 import {
   Banknote,
@@ -47,6 +47,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
     }
     return true;
   });
+  const [dateFilter, setDateFilter] = useState<'today' | '7days' | 'month' | 'year'>('today');
 
   const toggleProfitAmount = () => {
     setShowProfitAmount((prev) => {
@@ -56,15 +57,35 @@ export const Dashboard: React.FC<DashboardProps> = ({
     });
   };
 
-  const todayStr = new Date().toISOString().split('T')[0];
+  const todayDate = new Date();
+  const todayStr = getLocalDateStr(todayDate);
+
+  const weekAgoDate = new Date(todayDate);
+  weekAgoDate.setDate(weekAgoDate.getDate() - 7);
+  const weekAgoStr = getLocalDateStr(weekAgoDate);
 
   // Calculate metrics
-  const todayOrders = orders.filter((o) => o.date === todayStr);
+  const filteredOrders = orders.filter((o) => {
+    if (!o.date) return false;
+    if (dateFilter === 'today') return o.date === todayStr;
+    if (dateFilter === '7days') {
+      return o.date >= weekAgoStr && o.date <= todayStr;
+    }
+    if (dateFilter === 'month') {
+      const oDate = new Date(o.date);
+      return oDate.getMonth() === todayDate.getMonth() && oDate.getFullYear() === todayDate.getFullYear();
+    }
+    if (dateFilter === 'year') {
+      const oDate = new Date(o.date);
+      return oDate.getFullYear() === todayDate.getFullYear();
+    }
+    return true;
+  });
 
-  const todayTotalSales = todayOrders.reduce((sum, o) => sum + o.grandTotal, 0);
-  const todayCollectedCash = todayOrders.reduce((sum, o) => sum + o.paidAmount, 0);
-  const todayNewDue = todayOrders.reduce((sum, o) => sum + o.dueAmount, 0);
-  const todayTotalPairs = todayOrders.reduce((sum, o) => sum + o.totalPairs, 0);
+  const filteredTotalSales = filteredOrders.reduce((sum, o) => sum + o.grandTotal, 0);
+  const filteredCollectedCash = filteredOrders.reduce((sum, o) => sum + o.paidAmount, 0);
+  const filteredNewDue = filteredOrders.reduce((sum, o) => sum + o.dueAmount, 0);
+  const filteredTotalPairs = filteredOrders.reduce((sum, o) => sum + o.totalPairs, 0);
 
   const totalMarketDue = customers.reduce((sum, c) => sum + c.currentDue, 0);
   const totalStockPairs = products.reduce((sum, p) => sum + p.stockPairs, 0);
@@ -78,8 +99,8 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
   const showProfit = !!(!systemConfig || systemConfig.enableProfitCalculation === undefined || (systemConfig.enableProfitCalculation && canSeeProfit));
 
-  const todayGrossProfit = showProfit
-    ? todayOrders.reduce((sum, order) => {
+  const filteredGrossProfit = showProfit
+    ? filteredOrders.reduce((sum, order) => {
         const orderCost = order.items.reduce((itemSum, item) => {
           const prod = products.find((p) => p.id === item.productId || p.articleCode === item.articleCode);
           const buyPrice = prod?.buyPrice || 0;
@@ -122,7 +143,6 @@ export const Dashboard: React.FC<DashboardProps> = ({
           </span>
           <div className="h-0.5 bg-gradient-to-r from-amber-500/50 via-slate-800 to-transparent flex-1" />
         </div>
-
         <button
           onClick={() => onNavigate('pos')}
           className="px-3.5 py-1.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black rounded-xl text-xs sm:text-sm flex items-center gap-1.5 shadow-md shadow-amber-500/10 transition cursor-pointer shrink-0"
@@ -132,18 +152,44 @@ export const Dashboard: React.FC<DashboardProps> = ({
         </button>
       </div>
 
+      {/* Date Filters */}
+      <div className="flex items-center overflow-x-auto pb-1 -mt-2">
+        <div className="flex items-center bg-slate-900 border border-slate-800 rounded-xl p-1 shrink-0">
+          {[
+            { id: 'today', label: 'আজ' },
+            { id: '7days', label: '৭ দিন' },
+            { id: 'month', label: '১ মাস' },
+            { id: 'year', label: '১ বছর' }
+          ].map(f => (
+            <button
+              key={f.id}
+              onClick={() => setDateFilter(f.id as any)}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                dateFilter === f.id 
+                  ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20' 
+                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'
+              }`}
+            >
+              {f.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* Key Metrics Cards */}
       <div className={`grid grid-cols-1 sm:grid-cols-2 ${showProfit ? 'lg:grid-cols-3 xl:grid-cols-6' : 'lg:grid-cols-4'} gap-4`}>
         
         {/* Card 1: Today Sales */}
         <div className="bg-slate-900 border border-slate-800 p-4 rounded-2xl flex items-center justify-between">
           <div>
-            <p className="text-xs font-medium text-slate-400">{t('today_sales')}</p>
+            <p className="text-xs font-medium text-slate-400">
+              {dateFilter === 'today' ? 'আজকের' : dateFilter === '7days' ? 'গত ৭ দিনের' : dateFilter === 'month' ? 'এই মাসের' : 'এই বছরের'} বিক্রি
+            </p>
             <h3 className="text-xl sm:text-2xl font-bold text-amber-400 mt-1">
-              {formatTaka(todayTotalSales)}
+              {formatTaka(filteredTotalSales)}
             </h3>
             <p className="text-[11px] text-slate-400 mt-1">
-              {t('total_memos')}: <span className="text-slate-200 font-semibold">{toBnDigit(todayOrders.length)} টি</span>
+              {t('total_memos')}: <span className="text-slate-200 font-semibold">{toBnDigit(filteredOrders.length)} টি</span>
             </p>
           </div>
           <div className="p-3 bg-amber-500/10 text-amber-400 rounded-xl">
@@ -154,12 +200,12 @@ export const Dashboard: React.FC<DashboardProps> = ({
         {/* Card 2: Today Cash Collected */}
         <div className="bg-slate-900 border border-slate-800 p-4 rounded-2xl flex items-center justify-between">
           <div>
-            <p className="text-xs font-medium text-slate-400">{t('collected_cash')}</p>
+            <p className="text-xs font-medium text-slate-400">জমা</p>
             <h3 className="text-xl sm:text-2xl font-bold text-emerald-400 mt-1">
-              {formatTaka(todayCollectedCash)}
+              {formatTaka(filteredCollectedCash)}
             </h3>
             <p className="text-[11px] text-slate-400 mt-1">
-              {t('today_due')}: <span className="text-rose-400 font-semibold">{formatTaka(todayNewDue)}</span>
+              নতুন বাকী: <span className="text-rose-400 font-semibold">{formatTaka(filteredNewDue)}</span>
             </p>
           </div>
           <div className="p-3 bg-emerald-500/10 text-emerald-400 rounded-xl">
@@ -172,10 +218,10 @@ export const Dashboard: React.FC<DashboardProps> = ({
           <div>
             <p className="text-xs font-medium text-slate-400">{t('sold_pairs')}</p>
             <h3 className="text-xl sm:text-2xl font-bold text-indigo-300 mt-1">
-              {toBnDigit(todayTotalPairs)} <span className="text-xs font-normal text-slate-300">{t('pairs')}</span>
+              {toBnDigit(filteredTotalPairs)} <span className="text-xs font-normal text-slate-300">{t('pairs')}</span>
             </h3>
             <p className="text-[11px] text-slate-400 mt-1">
-              {t('dozen')}: <span className="text-slate-200 font-semibold">{pairsToCartonText(todayTotalPairs, 12)}</span>
+              {t('dozen')}: <span className="text-slate-200 font-semibold">{pairsToCartonText(filteredTotalPairs, 12)}</span>
             </p>
           </div>
           <div className="p-3 bg-indigo-500/10 text-indigo-400 rounded-xl">
@@ -205,7 +251,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
                 <p className="text-xs font-medium text-slate-400 flex items-center gap-1">
-                  আজকের লাভ
+                  {dateFilter === 'today' ? 'আজকের' : dateFilter === '7days' ? 'গত ৭ দিনের' : dateFilter === 'month' ? 'এই মাসের' : 'এই বছরের'} লাভ
                   <Sparkles className="w-3 h-3 text-purple-400 animate-pulse" />
                 </p>
                 <button
@@ -218,7 +264,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                 </button>
               </div>
               <h3 className="text-xl sm:text-2xl font-extrabold text-purple-400 mt-1 truncate">
-                {showProfitAmount ? formatTaka(todayGrossProfit) : '৳ ••••••'}
+                {showProfitAmount ? formatTaka(filteredGrossProfit) : '৳ ••••••'}
               </h3>
               <p className="text-[11px] text-slate-400 mt-1">
                 {t('profit_loss_calc')}
