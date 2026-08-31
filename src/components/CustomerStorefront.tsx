@@ -1354,12 +1354,14 @@ export const CustomerStorefront: React.FC<CustomerStorefrontProps> = ({
                   ) : (
                     <div className="max-h-60 overflow-y-auto space-y-2 pr-1 custom-scrollbar">
                       {customerOrdersHistory.map((ord) => {
-                        const statusBadge =
-                          ord.status === 'delivered' ? (
+                        const isDelivered = ord.deliveryStatus === 'delivered' || (ord.status as string) === 'delivered' || ord.status === 'পরিশোধিত';
+                        const isProcessing = ord.deliveryStatus === 'booked' || (ord.status as string) === 'processing';
+                        const isCancelled = (ord.status as string) === 'cancelled';
+                        const statusBadge = isDelivered ? (
                             <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">ডেলিভার্ড</span>
-                          ) : ord.status === 'processing' ? (
+                          ) : isProcessing ? (
                             <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-500/20 text-blue-300 border border-blue-500/30">প্রসেসিং</span>
-                          ) : ord.status === 'cancelled' ? (
+                          ) : isCancelled ? (
                             <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-500/20 text-rose-300 border border-rose-500/30">বাতিল</span>
                           ) : (
                             <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">নতুন বুকিং</span>

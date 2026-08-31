@@ -176,13 +176,6 @@ export const StockManagement: React.FC<StockManagementProps> = ({
   const totalStockPairs = products.reduce((sum, p) => sum + p.stockPairs, 0);
   const totalStockValueBuy = products.reduce((sum, p) => sum + p.stockPairs * p.buyPrice, 0);
 
-  const presetShoeImages = [
-    'https://images.unsplash.com/photo-1614252235316-8c857d38b5f4?w=600&auto=format&fit=crop&q=80',
-    'https://images.unsplash.com/photo-1533867617858-e7b97e060509?w=600&auto=format&fit=crop&q=80',
-    'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=600&auto=format&fit=crop&q=80',
-    'https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=600&auto=format&fit=crop&q=80',
-  ];
-
   const handleCreateProduct = (e: React.FormEvent) => {
     e.preventDefault();
     if (!articleCode.trim()) {
@@ -935,17 +928,23 @@ export const StockManagement: React.FC<StockManagementProps> = ({
               </div>
 
               {/* Image Upload Section */}
-              <div className="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-2">
+              <div className="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-2.5">
                 <div className="flex items-center justify-between">
                   <label className="text-sky-300 font-semibold flex items-center gap-1.5 text-xs">
                     <ImageIcon className="w-4 h-4" />
-                    পণ্যের ছবি আপলোড
+                    পণ্যের ছবি সংযুক্তকরণ
                   </label>
+                  {imageUrl && (
+                    <span className="text-[11px] text-emerald-400 font-semibold flex items-center gap-1">
+                      <span className="w-2 h-2 rounded-full bg-emerald-400"></span> ছবি যুক্ত হয়েছে
+                    </span>
+                  )}
                 </div>
 
                 <div className="flex items-center gap-2">
-                  <label className="cursor-pointer bg-sky-600 hover:bg-sky-500 text-white px-3 py-2 rounded-xl font-medium text-xs flex items-center gap-1.5 transition-colors">
-                    {isUploading ? 'আপলোড হচ্ছে...' : 'ছবি সিলেক্ট করুন'}
+                  <label className="cursor-pointer bg-sky-600 hover:bg-sky-500 text-white px-3.5 py-2 rounded-xl font-medium text-xs flex items-center gap-1.5 transition-colors shadow-sm">
+                    <ImageIcon className="w-3.5 h-3.5" />
+                    {isUploading ? 'ছবি আপলোড হচ্ছে...' : imageUrl ? 'অন্য ছবি পরিবর্তন করুন' : 'ছবি নির্বাচন করুন'}
                     <input
                       type="file"
                       accept="image/*"
@@ -955,28 +954,38 @@ export const StockManagement: React.FC<StockManagementProps> = ({
                     />
                   </label>
                   {imageUrl && (
-                    <span className="text-xs text-emerald-400 font-medium truncate max-w-[200px]">
-                       ছবি সংযুক্ত হয়েছে
-                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setImageUrl('')}
+                      className="px-2.5 py-2 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 rounded-xl text-xs font-semibold transition cursor-pointer flex items-center gap-1"
+                      title="ছবি মুছে ফেলুন"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                      <span>ছবি সরান</span>
+                    </button>
                   )}
                 </div>
 
                 {imageUrl && (
-                  <div className="mt-2 flex items-center gap-2">
-                    <img 
-                      src={imageUrl} 
-                      alt="Preview" 
+                  <div className="mt-2 flex items-center gap-3 p-2 bg-slate-900/90 rounded-xl border border-slate-800">
+                    <div 
                       onClick={() => setPreviewImage({ url: imageUrl, articleCode: articleCode || 'নতুন প্রোডাক্ট' })}
-                      className="w-10 h-10 object-cover rounded-lg border border-slate-700 cursor-pointer hover:scale-105 transition-transform" 
+                      className="relative w-14 h-14 rounded-lg overflow-hidden border border-slate-700 cursor-pointer group shrink-0 bg-slate-950"
                       title="বড় করে দেখতে ক্লিক করুন"
-                    />
-                    <input
-                      type="text"
-                      value={imageUrl}
-                      onChange={(e) => setImageUrl(e.target.value)}
-                      placeholder="অথবা সরাসরি ইমেজ URL দিন"
-                      className="w-full bg-slate-900 border border-slate-700 text-slate-300 rounded-lg px-2 py-1.5 text-xs focus:outline-none"
-                    />
+                    >
+                      <img 
+                        src={imageUrl} 
+                        alt="Preview" 
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform" 
+                      />
+                      <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                        <ZoomIn className="w-4 h-4 text-white" />
+                      </div>
+                    </div>
+                    <div className="text-xs space-y-0.5 min-w-0">
+                      <p className="text-slate-200 font-bold truncate">ছবি প্রিভিউ</p>
+                      <p className="text-[11px] text-slate-400">ক্লিক করে বড় সাইজে দেখতে পারবেন</p>
+                    </div>
                   </div>
                 )}
               </div>
@@ -1083,17 +1092,23 @@ export const StockManagement: React.FC<StockManagementProps> = ({
               </div>
 
               {/* Edit Image Upload Section */}
-              <div className="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-2">
+              <div className="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-2.5">
                 <div className="flex items-center justify-between">
                   <label className="text-sky-300 font-semibold flex items-center gap-1.5 text-xs">
                     <ImageIcon className="w-4 h-4" />
                     পণ্যের ছবি পরিবর্তন
                   </label>
+                  {editImageUrl && (
+                    <span className="text-[11px] text-emerald-400 font-semibold flex items-center gap-1">
+                      <span className="w-2 h-2 rounded-full bg-emerald-400"></span> ছবি রয়েছে
+                    </span>
+                  )}
                 </div>
 
                 <div className="flex items-center gap-2">
-                  <label className="cursor-pointer bg-sky-600 hover:bg-sky-500 text-white px-3 py-2 rounded-xl font-medium text-xs flex items-center gap-1.5 transition-colors">
-                    {isUploading ? 'আপলোড হচ্ছে...' : 'নতুন ছবি সিলেক্ট করুন'}
+                  <label className="cursor-pointer bg-sky-600 hover:bg-sky-500 text-white px-3.5 py-2 rounded-xl font-medium text-xs flex items-center gap-1.5 transition-colors shadow-sm">
+                    <ImageIcon className="w-3.5 h-3.5" />
+                    {isUploading ? 'ছবি আপলোড হচ্ছে...' : editImageUrl ? 'নতুন ছবি সিলেক্ট করুন' : 'ছবি নির্বাচন করুন'}
                     <input
                       type="file"
                       accept="image/*"
@@ -1102,24 +1117,39 @@ export const StockManagement: React.FC<StockManagementProps> = ({
                       className="hidden"
                     />
                   </label>
+                  {editImageUrl && (
+                    <button
+                      type="button"
+                      onClick={() => setEditImageUrl('')}
+                      className="px-2.5 py-2 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 rounded-xl text-xs font-semibold transition cursor-pointer flex items-center gap-1"
+                      title="ছবি মুছে ফেলুন"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                      <span>ছবি সরান</span>
+                    </button>
+                  )}
                 </div>
 
                 {editImageUrl && (
-                  <div className="mt-2 flex items-center gap-2">
-                    <img 
-                      src={editImageUrl} 
-                      alt="Preview" 
+                  <div className="mt-2 flex items-center gap-3 p-2 bg-slate-900/90 rounded-xl border border-slate-800">
+                    <div 
                       onClick={() => setPreviewImage({ url: editImageUrl, articleCode: editArticleCode })}
-                      className="w-10 h-10 object-cover rounded-lg border border-slate-700 cursor-pointer hover:scale-105 transition-transform" 
+                      className="relative w-14 h-14 rounded-lg overflow-hidden border border-slate-700 cursor-pointer group shrink-0 bg-slate-950"
                       title="বড় করে দেখতে ক্লিক করুন"
-                    />
-                    <input
-                      type="text"
-                      value={editImageUrl}
-                      onChange={(e) => setEditImageUrl(e.target.value)}
-                      placeholder="ইমেজ URL"
-                      className="w-full bg-slate-900 border border-slate-700 text-slate-300 rounded-lg px-2 py-1.5 text-xs focus:outline-none"
-                    />
+                    >
+                      <img 
+                        src={editImageUrl} 
+                        alt="Preview" 
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform" 
+                      />
+                      <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                        <ZoomIn className="w-4 h-4 text-white" />
+                      </div>
+                    </div>
+                    <div className="text-xs space-y-0.5 min-w-0">
+                      <p className="text-slate-200 font-bold truncate">ছবি প্রিভিউ</p>
+                      <p className="text-[11px] text-slate-400">ক্লিক করে বড় সাইজে দেখতে পারবেন</p>
+                    </div>
                   </div>
                 )}
               </div>

@@ -18,7 +18,7 @@ export const db = getFirestore(app);
 try {
   enableIndexedDbPersistence(db).catch((err) => {
     if (err.code == 'failed-precondition') {
-      console.warn('Multiple tabs open, persistence can only be enabled in one tab at a a time.');
+      console.warn('Multiple tabs open, persistence can only be enabled in one tab at a time.');
     } else if (err.code == 'unimplemented') {
       console.warn('The current browser does not support all of the features required to enable persistence');
     }
@@ -31,5 +31,3 @@ export const auth = getAuth(app);
 
 export { collection, getDocs, doc, setDoc, getDoc, updateDoc, deleteDoc, addDoc, writeBatch, query, orderBy, where };
 export { RecaptchaVerifier, signInWithPhoneNumber };
-
-

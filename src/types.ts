@@ -11,6 +11,7 @@ export interface UserAccount {
   email?: string;
   area?: string;
   sellerId?: string;
+  initialDue?: number;
   isActive: boolean;
   createdAt: string;
 }
@@ -27,7 +28,7 @@ export interface ShoeProduct {
   id: string;
   articleCode: string; // e.g., "M-102", "L-88", "S-405"
   name: string; // e.g., "অরিজিনাল লেদার লোফার"
-  category: 'জেন্টস ফর্মাল' | 'জেন্টস ক্যাজুয়াল' | 'স্পোর্টস কেডস' | 'লেডিস হিল/স্যান্ডেল' | 'বাচ্চাদের জুতা';
+  category: 'জেন্টস ফর্মাল' | 'জেন্টস ক্যাজুয়াল' | 'স্পোর্টস কেডস' | 'লেডিস হিল/স্যান্ডেল' | 'বাচ্চাদের জুতা' | string;
   brand: string; // e.g. "জান্নাত সুজ", "বাটা স্টাইল", "পেগাসাস", "এপেক্স স্টাইল"
   sizeRange: string; // e.g., "৩৯-৪৪" (39-44) or "৩৬-৪০"
   buyPrice: number; // ক্রয় মূল্য (প্রতি জোড়া)
@@ -49,6 +50,8 @@ export interface Customer {
   phone: string;
   assignedSellerId: string; // কোন সেলারের আন্ডারে কাস্টমার
   assignedSellerName: string;
+  sellerId?: string;
+  sellerName?: string;
   currentDue: number; // বর্তমান মোট বাকী (টাকা)
   creditLimit: number; // সর্বোচ্চ বাকীর সীমা
   lastDueReminderDate?: string; // YYYY-MM-DD format, tracks the last date a due reminder was sent
@@ -89,6 +92,11 @@ export interface Order {
   shopName: string;
   customerPhone: string;
   customerAddress: string;
+  phone?: string;
+  address?: string;
+  customerShop?: string;
+  transportName?: string;
+  netPayable?: number;
   sellerId: string;
   sellerName: string;
   items: OrderItem[];

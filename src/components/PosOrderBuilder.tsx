@@ -168,6 +168,7 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
   const [newShopName, setNewShopName] = useState('');
   const [newAddress, setNewAddress] = useState('');
   const [newPhone, setNewPhone] = useState('');
+  const [newOpeningDue, setNewOpeningDue] = useState<number | string>('');
 
   // Get selected customer details
   const selectedCustomer = customers.find((c) => c.id === selectedCustomerId) || customers[0];
@@ -416,6 +417,8 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
     const sellerId = currentUser?.sellerId || currentSellerInfo.id || currentUser?.id || '';
     const sellerName = currentSellerInfo.name || currentUser?.name || 'প্রধান শাখা';
 
+    const initialDueVal = Math.max(0, Number(newOpeningDue) || 0);
+
     const newCust: Customer = {
       id: `c-${Date.now()}`,
       name: newCustName.trim(),
@@ -424,7 +427,7 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
       phone: newPhone.trim() || '01700-000000',
       assignedSellerId: sellerId,
       assignedSellerName: sellerName,
-      currentDue: 0,
+      currentDue: initialDueVal,
       creditLimit: 50000,
     };
     onQuickAddCustomer(newCust);
@@ -434,6 +437,7 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
     setNewShopName('');
     setNewAddress('');
     setNewPhone('');
+    setNewOpeningDue('');
   };
 
   return (
@@ -1050,6 +1054,21 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
                   placeholder="জেলা / ঠিকানা"
                   className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-slate-100 focus:outline-none"
                 />
+              </div>
+
+              <div className="bg-amber-500/10 border border-amber-500/20 p-2.5 rounded-xl">
+                <label className="block text-amber-300 font-semibold mb-1">
+                  পূর্বের বকেয়া / প্রারম্ভিক বাকী (৳) (ঐচ্ছিক)
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  value={newOpeningDue}
+                  onChange={(e) => setNewOpeningDue(e.target.value)}
+                  placeholder="0 (যদি আগের কোনো বাকী থাকে)"
+                  className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-amber-400 font-mono focus:outline-none"
+                />
+                <span className="text-[10px] text-slate-400 block mt-1">দোকানের পূর্বের কোনো বকেয়া থাকলে এখানে লিখুন</span>
               </div>
 
               <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-800">

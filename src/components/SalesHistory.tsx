@@ -1,7 +1,27 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Order, UITheme, UserRole } from '../types';
 import { formatTaka, toBnDigit, formatBnDate } from '../utils/formatters';
-import { History, Search, Filter, Printer, CheckCircle, PackageCheck, Truck, List, LayoutGrid, Store, User, Trash2, ChevronDown, ChevronUp, Eye, ShoppingBag } from 'lucide-react';
+import {
+  History,
+  Search,
+  Printer,
+  CheckCircle,
+  List,
+  LayoutGrid,
+  Store,
+  Trash2,
+  ChevronDown,
+  ChevronUp,
+  ShoppingBag,
+  MoreVertical,
+  Download,
+  AlertTriangle,
+  FileText,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight
+} from 'lucide-react';
 
 interface SalesHistoryProps {
   orders: Order[];
@@ -24,13 +44,33 @@ export const SalesHistory: React.FC<SalesHistoryProps> = ({
   const [statusFilter, setStatusFilter] = useState<string>('সব');
   const [deliveryFilter, setDeliveryFilter] = useState<string>('সব');
   const [dateFilter, setDateFilter] = useState<string>('');
-  const [confirmingDeleteId, setConfirmingDeleteId] = useState<string | null>(null);
   const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null);
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  const [orderToDelete, setOrderToDelete] = useState<Order | null>(null);
   const [viewMode, setViewMode] = useState<'table' | 'card'>(
     typeof window !== 'undefined' && window.innerWidth < 768 ? 'card' : 'table'
   );
 
+  // Pagination state for scalable memo handling
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [pageSize, setPageSize] = useState<number>(25);
+
+  const isAdmin = currentUserRole === 'admin' || currentUserRole === 'super_admin';
   const isCustomer = currentUserRole === 'customer';
+
+  // Reset to page 1 whenever filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, statusFilter, deliveryFilter, dateFilter, pageSize]);
+
+  // Click outside to close 3-dot menu
+  useEffect(() => {
+    const handleWindowClick = () => {
+      setOpenMenuId(null);
+    };
+    window.addEventListener('click', handleWindowClick);
+    return () => window.removeEventListener('click', handleWindowClick);
+  }, []);
 
   const getDozenText = (pairs: number) => {
     const dozen = (pairs / 12).toFixed(1).replace(/\.0$/, '');
@@ -65,6 +105,129 @@ export const SalesHistory: React.FC<SalesHistoryProps> = ({
 
   const totalFilteredSales = filteredOrders.reduce((sum, o) => sum + o.grandTotal, 0);
   const totalFilteredPairs = filteredOrders.reduce((sum, o) => sum + o.totalPairs, 0);
+
+  // Pagination calculation
+  const totalItems = filteredOrders.length;
+  const isShowAll = pageSize >= 99999;
+  const totalPages = isShowAll ? 1 : Math.max(1, Math.ceil(totalItems / pageSize));
+  const safeCurrentPage = Math.min(Math.max(1, currentPage), totalPages);
+
+  const startIndex = isShowAll ? 0 : (safeCurrentPage - 1) * pageSize;
+  const endIndex = isShowAll ? totalItems : Math.min(startIndex + pageSize, totalItems);
+  const displayedOrders = filteredOrders.slice(startIndex, endIndex);
+
+  const handlePageChange = (page: number) => {
+    const target = Math.min(Math.max(1, page), totalPages);
+    setCurrentPage(target);
+    window.scrollTo({ top: 120, behavior: 'smooth' });
+  };
+
+  // Generate pagination numbers list (with windowing)
+  const getPageNumbers = () => {
+    if (totalPages <= 5) {
+      return Array.from({ length: totalPages }, (_, i) => i + 1);
+    }
+    if (safeCurrentPage <= 3) {
+      return [1, 2, 3, 4, '...', totalPages];
+    }
+    if (safeCurrentPage >= totalPages - 2) {
+      return [1, '...', totalPages - 3, totalPages - 2, totalPages - 1, totalPages];
+    }
+    return [1, '...', safeCurrentPage - 1, safeCurrentPage, safeCurrentPage + 1, '...', totalPages];
+  };
+
+  // Render 3-Dot Action Dropdown Menu
+  const renderActionMenu = (ord: Order) => {
+    const isBooked = ord.deliveryStatus === 'booked';
+    const isOpen = openMenuId === ord.id;
+
+    return (
+      <div className="relative inline-block text-left" onClick={(e) => e.stopPropagation()}>
+        <button
+          type="button"
+          onClick={() => setOpenMenuId(isOpen ? null : ord.id)}
+          className={`p-1.5 rounded-xl border transition-all cursor-pointer flex items-center justify-center ${
+            isOpen
+              ? 'bg-amber-500 text-slate-950 border-amber-400 shadow-md ring-2 ring-amber-500/40'
+              : 'bg-slate-900/90 hover:bg-slate-800 text-slate-300 hover:text-amber-300 border-slate-700/80 shadow-sm'
+          }`}
+          title="৩-ডট অপশন মেনু"
+        >
+          <MoreVertical className="w-4 h-4" />
+        </button>
+
+        {isOpen && (
+          <div
+            className="absolute right-0 mt-1.5 w-56 bg-slate-900 border border-slate-700/90 rounded-2xl shadow-2xl z-50 py-1.5 divide-y divide-slate-800 text-xs animate-fadeIn"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header info */}
+            <div className="px-3.5 py-1.5 text-[11px] font-semibold text-slate-400 font-mono flex items-center justify-between">
+              <span>মেমো #{ord.memoNo}</span>
+              <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold ${
+                isBooked ? 'bg-amber-500/20 text-amber-300' : 'bg-emerald-500/20 text-emerald-300'
+              }`}>
+                {isBooked ? 'বুকড' : 'ডেলিভার্ড'}
+              </span>
+            </div>
+
+            <div className="py-1">
+              {/* মেমো ডাউনলোড ও দেখুন */}
+              <button
+                type="button"
+                onClick={() => {
+                  onSelectOrderForInvoice(ord);
+                  setOpenMenuId(null);
+                }}
+                className="w-full text-left px-3.5 py-2 text-slate-200 hover:bg-slate-800 hover:text-amber-300 flex items-center gap-2.5 transition-colors cursor-pointer"
+              >
+                <Download className="w-4 h-4 text-amber-400 shrink-0" />
+                <div>
+                  <span className="font-bold block text-slate-100">মেমো ডাউনলোড</span>
+                  <span className="text-[10px] text-slate-400 block">PDF ও ছবি সেভ / প্রিন্ট</span>
+                </div>
+              </button>
+
+              {/* ডেলিভারি দিন যদি বুকিং থাকে */}
+              {isBooked && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    onConfirmDelivery(ord.id);
+                    setOpenMenuId(null);
+                  }}
+                  className="w-full text-left px-3.5 py-2 text-emerald-300 hover:bg-emerald-950/50 flex items-center gap-2.5 transition-colors cursor-pointer"
+                >
+                  <CheckCircle className="w-4 h-4 text-emerald-400 shrink-0" />
+                  <span className="font-bold">ডেলিভারি সম্পন্ন করুন</span>
+                </button>
+              )}
+            </div>
+
+            {/* শুধু এডমিনের জন্য ইনভয়েস/মেমো ডিলেট অপশন */}
+            {isAdmin && onDeleteOrder && (
+              <div className="pt-1">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setOrderToDelete(ord);
+                    setOpenMenuId(null);
+                  }}
+                  className="w-full text-left px-3.5 py-2 text-rose-400 hover:bg-rose-950/60 hover:text-rose-300 flex items-center gap-2.5 transition-colors cursor-pointer"
+                >
+                  <Trash2 className="w-4 h-4 text-rose-400 shrink-0" />
+                  <div>
+                    <span className="font-bold block">মেমো / ইনভয়েস ডিলেট</span>
+                    <span className="text-[10px] text-rose-300/70 block">এডমিন কনফার্মেশন সহ</span>
+                  </div>
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    );
+  };
 
   return (
     <div className="space-y-6">
@@ -112,9 +275,9 @@ export const SalesHistory: React.FC<SalesHistoryProps> = ({
             onChange={(e) => setDeliveryFilter(e.target.value)}
             className="bg-slate-950 border border-slate-700 text-xs text-slate-200 rounded-xl px-3 py-2 focus:outline-none"
           >
-            <option value="সব">সব</option>
+            <option value="সব">সব ডেলিভারি</option>
             <option value="booked">বুকিং (পেন্ডিং)</option>
-            <option value="delivered">ডেলিভারি</option>
+            <option value="delivered">ডেলিভারি সম্পন্ন</option>
           </select>
 
           {/* Status Filter */}
@@ -161,14 +324,43 @@ export const SalesHistory: React.FC<SalesHistoryProps> = ({
 
       {/* Sales Orders Container */}
       <div className={`${activeTheme.cardClass} p-4 sm:p-5 rounded-2xl`}>
+        {/* Pagination & Count Header */}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4 pb-3 border-b border-slate-800/80 text-xs">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="bg-slate-900 border border-slate-800 px-2.5 py-1 rounded-lg text-slate-300 font-medium">
+              মোট মেমো: <strong className="text-amber-400 font-bold">{toBnDigit(totalItems)}</strong> টি
+            </span>
+            {totalItems > 0 && (
+              <span className="text-slate-400 text-[11px]">
+                (দেখাচ্ছে: <strong className="text-slate-200">{toBnDigit(startIndex + 1)} - {toBnDigit(endIndex)}</strong>)
+              </span>
+            )}
+          </div>
+
+          <div className="flex items-center gap-2 self-end sm:self-auto">
+            <span className="text-slate-400 text-[11px]">প্রতি পেজে:</span>
+            <select
+              value={pageSize}
+              onChange={(e) => setPageSize(Number(e.target.value))}
+              className="bg-slate-900 border border-slate-700/90 text-xs text-amber-300 font-semibold rounded-lg px-2.5 py-1 focus:outline-none cursor-pointer"
+            >
+              <option value={15}>১৫ টি</option>
+              <option value={25}>২৫ টি</option>
+              <option value={50}>৫০ টি</option>
+              <option value={100}>১০০ টি</option>
+              <option value={999999}>সব মেমো</option>
+            </select>
+          </div>
+        </div>
+
         {viewMode === 'card' ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filteredOrders.length === 0 ? (
+            {displayedOrders.length === 0 ? (
               <div className="col-span-full py-12 text-center text-slate-500">
                 কোনো বিক্রয় ইতিহাস পাওয়া যায়নি।
               </div>
             ) : (
-              filteredOrders.map((ord) => {
+              displayedOrders.map((ord) => {
                 const isBooked = ord.deliveryStatus === 'booked';
                 const isExpanded = expandedOrderId === ord.id;
 
@@ -179,14 +371,13 @@ export const SalesHistory: React.FC<SalesHistoryProps> = ({
                       isExpanded ? 'border-amber-500/80 ring-1 ring-amber-500/30' : 'border-slate-800 hover:border-slate-700'
                     }`}
                   >
-                    {/* Collapsed Overview Header - Click to Explore */}
-                    <div
-                      onClick={() => setExpandedOrderId(isExpanded ? null : ord.id)}
-                      className="p-4 cursor-pointer hover:bg-slate-900/60 transition-colors space-y-2 select-none"
-                    >
+                    {/* Collapsed Overview Header */}
+                    <div className="p-4 space-y-2 select-none">
                       <div className="flex items-center justify-between">
-                        <span className="font-mono text-sm font-black text-amber-300 flex items-center gap-1.5">
-                          #{ord.memoNo}
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono text-sm font-black text-amber-300">
+                            #{ord.memoNo}
+                          </span>
                           <span
                             className={`px-2 py-0.5 rounded-full text-[10px] font-bold inline-flex items-center gap-1 ${
                               isBooked
@@ -196,28 +387,43 @@ export const SalesHistory: React.FC<SalesHistoryProps> = ({
                           >
                             {isBooked ? 'বুকড' : 'ডেলিভার্ড'}
                           </span>
-                        </span>
-                        <div className="p-1 text-amber-400 flex items-center">
-                          {isExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5 text-slate-400" />}
+                        </div>
+
+                        {/* Action buttons (3-Dot & Expand) */}
+                        <div className="flex items-center gap-1.5">
+                          {renderActionMenu(ord)}
+                          <button
+                            type="button"
+                            onClick={() => setExpandedOrderId(isExpanded ? null : ord.id)}
+                            className="p-1.5 bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-white rounded-xl border border-slate-800 transition cursor-pointer"
+                            title={isExpanded ? 'সংকোচন করুন' : 'বিস্তারিত দেখুন'}
+                          >
+                            {isExpanded ? <ChevronUp className="w-4 h-4 text-amber-400" /> : <ChevronDown className="w-4 h-4" />}
+                          </button>
                         </div>
                       </div>
 
-                      <div className="flex items-center justify-between text-xs pt-0.5">
-                        <div className="font-bold text-white flex items-center gap-1.5 truncate pr-2">
-                          <Store className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-                          <span className="truncate">{ord.shopName}</span>
+                      <div
+                        onClick={() => setExpandedOrderId(isExpanded ? null : ord.id)}
+                        className="cursor-pointer space-y-2"
+                      >
+                        <div className="flex items-center justify-between text-xs pt-0.5">
+                          <div className="font-bold text-white flex items-center gap-1.5 truncate pr-2">
+                            <Store className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                            <span className="truncate">{ord.shopName}</span>
+                          </div>
+                          <span className="text-[11px] text-slate-400 shrink-0 font-mono">
+                            {formatBnDate(ord.date)} {ord.time ? `(${ord.time})` : ''}
+                          </span>
                         </div>
-                        <span className="text-[11px] text-slate-400 shrink-0 font-mono">
-                          {formatBnDate(ord.date)} {ord.time ? `(${ord.time})` : ''}
-                        </span>
-                      </div>
 
-                      <div className="flex items-center justify-between text-[11px] bg-slate-900/80 px-2.5 py-1.5 rounded-xl border border-slate-800/80 text-slate-300">
-                        <span>
-                          <strong className="text-white font-bold">{toBnDigit(ord.totalPairs)} জোড়া</strong>{' '}
-                          <span className="text-amber-300 font-semibold">({getDozenText(ord.totalPairs)})</span>
-                        </span>
-                        <span className="text-amber-300 font-black">{formatTaka(ord.grandTotal)}</span>
+                        <div className="flex items-center justify-between text-[11px] bg-slate-900/80 px-2.5 py-1.5 rounded-xl border border-slate-800/80 text-slate-300">
+                          <span>
+                            <strong className="text-white font-bold">{toBnDigit(ord.totalPairs)} জোড়া</strong>{' '}
+                            <span className="text-amber-300 font-semibold">({getDozenText(ord.totalPairs)})</span>
+                          </span>
+                          <span className="text-amber-300 font-black">{formatTaka(ord.grandTotal)}</span>
+                        </div>
                       </div>
                     </div>
 
@@ -298,55 +504,30 @@ export const SalesHistory: React.FC<SalesHistoryProps> = ({
                           </div>
                         )}
 
-                        {/* Actions */}
-                        <div className="pt-2 border-t border-slate-800 flex items-center justify-end gap-2">
-                          {isBooked && (
-                            <button
-                              onClick={() => onConfirmDelivery(ord.id)}
-                              className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-xs flex items-center gap-1 shadow transition-colors cursor-pointer"
-                            >
-                              <CheckCircle className="w-3.5 h-3.5" />
-                              ডেলিভারি দিন
-                            </button>
-                          )}
-                          <button
-                            onClick={() => onSelectOrderForInvoice(ord)}
-                            className="px-3 py-1.5 bg-indigo-600/30 hover:bg-indigo-600 text-indigo-200 border border-indigo-500/40 rounded-xl text-xs font-semibold flex items-center gap-1 transition-colors cursor-pointer"
-                          >
-                            <Printer className="w-3.5 h-3.5" />
-                            মেমো প্রিন্ট
-                          </button>
-                          {onDeleteOrder && ord.deliveryStatus !== 'delivered' && (
-                            confirmingDeleteId === ord.id ? (
-                              <div className="flex items-center gap-1 bg-rose-950/80 p-1 rounded-xl border border-rose-500/50">
-                                <span className="text-[10px] font-bold text-rose-300 px-1">রিমুভ?</span>
-                                <button
-                                  onClick={() => {
-                                    onDeleteOrder(ord.id);
-                                    setConfirmingDeleteId(null);
-                                  }}
-                                  className="px-2 py-1 bg-rose-600 hover:bg-rose-500 text-white rounded-lg text-xs font-black shadow transition cursor-pointer"
-                                >
-                                  হ্যাঁ
-                                </button>
-                                <button
-                                  onClick={() => setConfirmingDeleteId(null)}
-                                  className="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs font-bold transition cursor-pointer"
-                                >
-                                  না
-                                </button>
-                              </div>
-                            ) : (
+                        {/* Direct Bottom Actions */}
+                        <div className="pt-2 border-t border-slate-800 flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-1.5">
+                            {renderActionMenu(ord)}
+                          </div>
+                          
+                          <div className="flex items-center gap-2">
+                            {isBooked && (
                               <button
-                                onClick={() => setConfirmingDeleteId(ord.id)}
-                                className="px-2.5 py-1.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 rounded-xl text-xs font-bold flex items-center gap-1 transition-colors cursor-pointer"
-                                title="ফেক বা ভুল মেমো/অর্ডার রিমুভ করুন"
+                                onClick={() => onConfirmDelivery(ord.id)}
+                                className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-xs flex items-center gap-1 shadow transition-colors cursor-pointer"
                               >
-                                <Trash2 className="w-3.5 h-3.5" />
-                                <span>রিমুভ</span>
+                                <CheckCircle className="w-3.5 h-3.5" />
+                                ডেলিভারি দিন
                               </button>
-                            )
-                          )}
+                            )}
+                            <button
+                              onClick={() => onSelectOrderForInvoice(ord)}
+                              className="px-3 py-1.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded-xl text-xs flex items-center gap-1.5 shadow transition-colors cursor-pointer"
+                            >
+                              <Download className="w-3.5 h-3.5" />
+                              মেমো ডাউনলোড
+                            </button>
+                          </div>
                         </div>
                       </div>
                     )}
@@ -365,18 +546,18 @@ export const SalesHistory: React.FC<SalesHistoryProps> = ({
                   <th className="pb-3 px-3">দোকানের নাম</th>
                   <th className="pb-3 px-3">পরিমাণ</th>
                   <th className="pb-3 px-3 text-center">স্ট্যাটাস</th>
-                  <th className="pb-3 pl-3 text-right">ডিটেইলস</th>
+                  <th className="pb-3 pl-3 text-right">অ্যাকশন ও অপশন</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-800/80">
-                {filteredOrders.length === 0 ? (
+                {displayedOrders.length === 0 ? (
                   <tr>
                     <td colSpan={6} className="py-12 text-center text-slate-500">
                       কোনো বিক্রয় ইতিহাস পাওয়া যায়নি।
                     </td>
                   </tr>
                 ) : (
-                  filteredOrders.map((ord) => {
+                  displayedOrders.map((ord) => {
                     const isBooked = ord.deliveryStatus === 'booked';
                     const isExpanded = expandedOrderId === ord.id;
 
@@ -416,18 +597,24 @@ export const SalesHistory: React.FC<SalesHistoryProps> = ({
                               {isBooked ? 'বুকড' : 'ডেলিভার্ড'}
                             </span>
                           </td>
-                          <td className="py-3.5 pl-3 text-right">
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setExpandedOrderId(isExpanded ? null : ord.id);
-                              }}
-                              className="p-1.5 bg-slate-800 hover:bg-amber-500 hover:text-slate-950 text-amber-300 border border-slate-700/80 rounded-xl transition-all cursor-pointer inline-flex items-center justify-center"
-                              title={isExpanded ? 'সংকোচন' : 'এক্সপ্লোর'}
-                            >
-                              {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                            </button>
+                          <td className="py-3.5 pl-3 text-right" onClick={(e) => e.stopPropagation()}>
+                            <div className="flex items-center justify-end gap-1.5">
+                              {/* 3-Dot Options Menu */}
+                              {renderActionMenu(ord)}
+
+                              {/* Expand toggle */}
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setExpandedOrderId(isExpanded ? null : ord.id);
+                                }}
+                                className="p-1.5 bg-slate-800 hover:bg-amber-500 hover:text-slate-950 text-amber-300 border border-slate-700/80 rounded-xl transition-all cursor-pointer inline-flex items-center justify-center"
+                                title={isExpanded ? 'সংকোচন' : 'এক্সপ্লোর'}
+                              >
+                                {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                              </button>
+                            </div>
                           </td>
                         </tr>
 
@@ -448,8 +635,9 @@ export const SalesHistory: React.FC<SalesHistoryProps> = ({
                                   </div>
 
                                   <div className="flex items-center gap-2 self-end sm:self-auto">
+                                    {renderActionMenu(ord)}
                                     {isBooked && (
-                                      <button
+                                       <button
                                         onClick={() => onConfirmDelivery(ord.id)}
                                         className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-xs flex items-center gap-1 shadow transition-colors cursor-pointer"
                                       >
@@ -459,41 +647,11 @@ export const SalesHistory: React.FC<SalesHistoryProps> = ({
                                     )}
                                     <button
                                       onClick={() => onSelectOrderForInvoice(ord)}
-                                      className="px-3 py-1.5 bg-indigo-600/30 hover:bg-indigo-600 text-indigo-200 border border-indigo-500/40 rounded-xl text-xs font-semibold flex items-center gap-1 transition-colors cursor-pointer"
+                                      className="px-3.5 py-1.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded-xl text-xs flex items-center gap-1.5 shadow transition-colors cursor-pointer"
                                     >
-                                      <Printer className="w-3.5 h-3.5" />
-                                      মেমো প্রিন্ট
+                                      <Download className="w-3.5 h-3.5" />
+                                      মেমো ডাউনলোড ও প্রিন্ট
                                     </button>
-                                    {onDeleteOrder && ord.deliveryStatus !== 'delivered' && (
-                                      confirmingDeleteId === ord.id ? (
-                                        <div className="flex items-center gap-1 bg-rose-950/80 p-1 rounded-xl border border-rose-500/50">
-                                          <span className="text-[10px] font-bold text-rose-300 px-1">রিমুভ?</span>
-                                          <button
-                                            onClick={() => {
-                                              onDeleteOrder(ord.id);
-                                              setConfirmingDeleteId(null);
-                                            }}
-                                            className="px-2 py-1 bg-rose-600 hover:bg-rose-500 text-white rounded-lg text-xs font-black shadow transition cursor-pointer"
-                                          >
-                                            হ্যাঁ
-                                          </button>
-                                          <button
-                                            onClick={() => setConfirmingDeleteId(null)}
-                                            className="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs font-bold transition cursor-pointer"
-                                          >
-                                            না
-                                          </button>
-                                        </div>
-                                      ) : (
-                                        <button
-                                          onClick={() => setConfirmingDeleteId(ord.id)}
-                                          className="p-1.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 rounded-xl text-xs font-bold transition-colors cursor-pointer"
-                                          title="ফেক বা ভুল মেমো/অর্ডার রিমুভ করুন"
-                                        >
-                                          <Trash2 className="w-3.5 h-3.5" />
-                                        </button>
-                                      )
-                                    )}
                                   </div>
                                 </div>
 
@@ -577,7 +735,163 @@ export const SalesHistory: React.FC<SalesHistoryProps> = ({
             </table>
           </div>
         )}
+
+        {/* Bottom Pagination Controls */}
+        {totalPages > 1 && (
+          <div className="mt-6 pt-4 border-t border-slate-800/90 flex flex-col sm:flex-row items-center justify-between gap-3">
+            <div className="text-xs text-slate-400">
+              পেজ <strong className="text-amber-400 font-mono font-bold">{toBnDigit(safeCurrentPage)}</strong> / <span className="font-mono">{toBnDigit(totalPages)}</span> (মোট {toBnDigit(totalItems)} টি মেমো)
+            </div>
+
+            <div className="flex items-center gap-1.5 select-none flex-wrap justify-center">
+              {/* First Page */}
+              <button
+                type="button"
+                disabled={safeCurrentPage === 1}
+                onClick={() => handlePageChange(1)}
+                className="p-1.5 rounded-lg border border-slate-800 bg-slate-900 text-slate-400 hover:text-amber-400 hover:border-slate-700 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer transition"
+                title="প্রথম পেজ"
+              >
+                <ChevronsLeft className="w-4 h-4" />
+              </button>
+
+              {/* Prev Page */}
+              <button
+                type="button"
+                disabled={safeCurrentPage === 1}
+                onClick={() => handlePageChange(safeCurrentPage - 1)}
+                className="px-2.5 py-1.5 rounded-lg border border-slate-800 bg-slate-900 text-slate-300 text-xs font-semibold hover:text-amber-400 hover:border-slate-700 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer transition flex items-center gap-1"
+              >
+                <ChevronLeft className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">পূর্ববর্তী</span>
+              </button>
+
+              {/* Page Numbers */}
+              <div className="flex items-center gap-1 mx-1">
+                {getPageNumbers().map((pageNum, idx) => {
+                  if (pageNum === '...') {
+                    return (
+                      <span key={`ellipsis-${idx}`} className="px-1 text-slate-600 font-bold text-xs select-none">
+                        ...
+                      </span>
+                    );
+                  }
+                  const isCurrent = pageNum === safeCurrentPage;
+                  return (
+                    <button
+                      key={`page-${pageNum}`}
+                      type="button"
+                      onClick={() => handlePageChange(pageNum as number)}
+                      className={`min-w-[32px] h-8 rounded-lg text-xs font-bold font-mono transition cursor-pointer flex items-center justify-center ${
+                        isCurrent
+                          ? 'bg-amber-500 text-slate-950 shadow-md ring-1 ring-amber-400'
+                          : 'bg-slate-900 border border-slate-800 text-slate-300 hover:bg-slate-800 hover:text-amber-300'
+                      }`}
+                    >
+                      {toBnDigit(pageNum)}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Next Page */}
+              <button
+                type="button"
+                disabled={safeCurrentPage === totalPages}
+                onClick={() => handlePageChange(safeCurrentPage + 1)}
+                className="px-2.5 py-1.5 rounded-lg border border-slate-800 bg-slate-900 text-slate-300 text-xs font-semibold hover:text-amber-400 hover:border-slate-700 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer transition flex items-center gap-1"
+              >
+                <span className="hidden sm:inline">পরবর্তী</span>
+                <ChevronRight className="w-3.5 h-3.5" />
+              </button>
+
+              {/* Last Page */}
+              <button
+                type="button"
+                disabled={safeCurrentPage === totalPages}
+                onClick={() => handlePageChange(totalPages)}
+                className="p-1.5 rounded-lg border border-slate-800 bg-slate-900 text-slate-400 hover:text-amber-400 hover:border-slate-700 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer transition"
+                title="সর্বশেষ পেজ"
+              >
+                <ChevronsRight className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        )}
       </div>
+
+      {/* Admin Delete Confirmation Modal */}
+      {orderToDelete && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fadeIn"
+          onClick={() => setOrderToDelete(null)}
+        >
+          <div
+            className="bg-slate-900 border border-rose-500/50 rounded-2xl max-w-md w-full p-5 sm:p-6 shadow-2xl space-y-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center gap-3">
+              <div className="p-3 bg-rose-500/20 text-rose-400 rounded-2xl border border-rose-500/30">
+                <AlertTriangle className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="text-base sm:text-lg font-bold text-white">ইনভয়েস/মেমো ডিলেট নিশ্চিতকরণ</h3>
+                <p className="text-xs text-rose-400 font-semibold">শুধুমাত্র এডমিন অধিকারভুক্ত অ্যাকশন</p>
+              </div>
+            </div>
+
+            <div className="bg-slate-950 p-3.5 rounded-xl border border-slate-800 space-y-2 text-xs">
+              <div className="flex justify-between items-center">
+                <span className="text-slate-400">মেমো নং:</span>
+                <span className="font-mono font-bold text-amber-300">#{orderToDelete.memoNo}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-slate-400">দোকানের নাম:</span>
+                <span className="font-bold text-white">{orderToDelete.shopName}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-slate-400">কাস্টমার/প্রোপ্রাইটর:</span>
+                <span className="text-slate-300">{orderToDelete.customerName}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-slate-400">তারিখ ও সময়:</span>
+                <span className="text-slate-300">{formatBnDate(orderToDelete.date)} {orderToDelete.time ? `(${orderToDelete.time})` : ''}</span>
+              </div>
+              <div className="flex justify-between items-center border-t border-slate-800 pt-2 font-bold">
+                <span className="text-slate-300">মোট বিক্রয় বিল ({toBnDigit(orderToDelete.totalPairs)} জোড়া):</span>
+                <span className="text-amber-300 font-mono">{formatTaka(orderToDelete.grandTotal)}</span>
+              </div>
+            </div>
+
+            <p className="text-xs text-slate-300 leading-relaxed bg-rose-950/30 border border-rose-500/30 p-3 rounded-xl text-rose-200">
+              ⚠️ আপনি কি নিশ্চিতভাবে মেমো <strong>#{orderToDelete.memoNo}</strong> স্থায়ীভাবে ডিলিট করতে চান? ডিলিট করলে ডেলিভারি হয়ে থাকলে ইনভেন্টরি স্টক ও কাস্টমার বকেয়া স্বয়ংক্রিয়ভাবে সমন্বয় করা হবে।
+            </p>
+
+            <div className="flex items-center justify-end gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setOrderToDelete(null)}
+                className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold rounded-xl text-xs transition cursor-pointer"
+              >
+                বাতিল করুন
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  if (onDeleteOrder && orderToDelete) {
+                    onDeleteOrder(orderToDelete.id);
+                    setOrderToDelete(null);
+                  }
+                }}
+                className="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white font-bold rounded-xl text-xs flex items-center gap-1.5 shadow-lg shadow-rose-900/30 transition cursor-pointer"
+              >
+                <Trash2 className="w-4 h-4" />
+                হ্যাঁ, ডিলিট করুন
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );

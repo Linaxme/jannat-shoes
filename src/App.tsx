@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, lazy, Suspense } from 'react';
 import {
   ShoeProduct,
   Customer,
@@ -22,20 +22,24 @@ import {
 import { LanguageProvider, useLanguage } from './contexts/LanguageContext';
 import { Header } from './components/Header';
 import { Navigation, NavTab } from './components/Navigation';
-import { Dashboard } from './components/Dashboard';
-import { PosOrderBuilder } from './components/PosOrderBuilder';
-import { InvoiceModal } from './components/InvoiceModal';
-import { StockManagement } from './components/StockManagement';
-import { DueManagement } from './components/DueManagement';
-import { SalesHistory } from './components/SalesHistory';
-import { PendingOrders } from './components/PendingOrders';
-import { LoginModal } from './components/LoginModal';
-import { CustomerStorefront } from './components/CustomerStorefront';
-import { UserManagement } from './components/UserManagement';
-import { FeatureManagement } from './components/FeatureManagement';
-import { SellerTracking } from './components/SellerTracking';
-import { SMSPanel } from './components/SMSPanel';
-import { Reports } from './components/Reports';
+import { TabLoadingFallback } from './components/TabLoadingFallback';
+
+// Lazy-loaded components for rapid initial boot & light bundle size
+const Dashboard = lazy(() => import('./components/Dashboard').then(m => ({ default: m.Dashboard })));
+const CustomerStorefront = lazy(() => import('./components/CustomerStorefront').then(m => ({ default: m.CustomerStorefront })));
+const PosOrderBuilder = lazy(() => import('./components/PosOrderBuilder').then(m => ({ default: m.PosOrderBuilder })));
+const InvoiceModal = lazy(() => import('./components/InvoiceModal').then(m => ({ default: m.InvoiceModal })));
+const StockManagement = lazy(() => import('./components/StockManagement').then(m => ({ default: m.StockManagement })));
+const DueManagement = lazy(() => import('./components/DueManagement').then(m => ({ default: m.DueManagement })));
+const SalesHistory = lazy(() => import('./components/SalesHistory').then(m => ({ default: m.SalesHistory })));
+const PendingOrders = lazy(() => import('./components/PendingOrders').then(m => ({ default: m.PendingOrders })));
+const LoginModal = lazy(() => import('./components/LoginModal').then(m => ({ default: m.LoginModal })));
+const UserManagement = lazy(() => import('./components/UserManagement').then(m => ({ default: m.UserManagement })));
+const FeatureManagement = lazy(() => import('./components/FeatureManagement').then(m => ({ default: m.FeatureManagement })));
+const SellerTracking = lazy(() => import('./components/SellerTracking').then(m => ({ default: m.SellerTracking })));
+const SMSPanel = lazy(() => import('./components/SMSPanel').then(m => ({ default: m.SMSPanel })));
+const Reports = lazy(() => import('./components/Reports').then(m => ({ default: m.Reports })));
+
 import { fetchFirestoreData, seedFirestoreData, saveDocumentToFirestore, deleteDocumentFromFirestore, clearAllDatabaseData } from './lib/firestoreService';
 import { generateSMSMessage, sendAutoSMS, SMSType } from './utils/smsService';
 import { OrderItem, AppNotification } from './types';
@@ -411,6 +415,7 @@ export default function App() {
 
     // If adding a shopkeeper (customer role), also create a Customer record so it appears in POS & Due management
     if (newAcc.role === 'customer') {
+      const initialDueVal = Math.max(0, Number(newAcc.initialDue) || 0);
       const newCust: Customer = {
         id: `c_${Date.now()}`,
         name: newAcc.name,
@@ -419,7 +424,7 @@ export default function App() {
         phone: newAcc.phone || newAcc.loginId,
         assignedSellerId: currentUser?.sellerId || currentUser?.id || '',
         assignedSellerName: currentUser?.name || 'প্রধান শাখা',
-        currentDue: 0,
+        currentDue: initialDueVal,
         creditLimit: 50000,
       };
       setCustomers((prev) => [newCust, ...prev]);
@@ -427,6 +432,44 @@ export default function App() {
     }
 
     triggerToast(t('toast_user_added').replace('{{name}}', newAcc.name).replace('{{role}}', newAcc.role));
+  };
+
+  const handleUpdateCustomer = async (updatedCust: Customer, note?: string) => {
+    setCustomers((prev) => prev.map((c) => (c.id === updatedCust.id ? updatedCust : c)));
+    await saveDocumentToFirestore('customers', updatedCust.id, updatedCust);
+
+    // Sync corresponding userAccount if customer is registered
+    const cleanPhone = (updatedCust.phone || '').replace(/\D/g, '');
+    setUserAccounts((prev) =>
+      prev.map((u) => {
+        const uCleanPhone = (u.phone || '').replace(/\D/g, '');
+        const matchesPhone = cleanPhone && uCleanPhone && cleanPhone === uCleanPhone;
+        const matchesShop = u.shopName && u.shopName.trim().toLowerCase() === (updatedCust.shopName || '').trim().toLowerCase();
+        
+        if (u.role === 'customer' && (matchesPhone || matchesShop)) {
+          const updatedU = {
+            ...u,
+            name: updatedCust.name,
+            shopName: updatedCust.shopName,
+            phone: updatedCust.phone,
+            area: updatedCust.address,
+            initialDue: updatedCust.currentDue,
+          };
+          saveDocumentToFirestore('userAccounts', u.id, updatedU);
+          return updatedU;
+        }
+        return u;
+      })
+    );
+
+    if (note) {
+      addNotification({
+        title: 'কাস্টমার বকেয়া / তথ্য সমন্বয়',
+        message: `${updatedCust.shopName || updatedCust.name}: ${note} (বর্তমান বকেয়া: ৳${updatedCust.currentDue.toLocaleString('bn-BD')})`,
+        type: 'system_broadcast',
+      });
+    }
+    triggerToast(`${updatedCust.shopName || updatedCust.name}-এর বকেয়া/তথ্য সফলভাবে সংরক্ষিত হয়েছে`);
   };
 
   const handleToggleUserStatus = async (userId: string, newStatus: boolean) => {
@@ -452,9 +495,37 @@ export default function App() {
   const handleDeleteOrder = async (orderId: string) => {
     const target = orders.find((o) => o.id === orderId);
     if (!target) return;
+
+    // 1. If the order was already delivered, restore product inventory stock
+    if (target.deliveryStatus === 'delivered' && target.items && target.items.length > 0) {
+      const updatedProducts = products.map((p) => {
+        const orderedItem = target.items.find((i) => i.productId === p.id);
+        if (orderedItem) {
+          const restoredStock = p.stockPairs + (orderedItem.totalPairs || 0);
+          const updatedP = { ...p, stockPairs: restoredStock };
+          saveDocumentToFirestore('products', p.id, updatedP);
+          return updatedP;
+        }
+        return p;
+      });
+      setProducts(updatedProducts);
+    }
+
+    // 2. Adjust customer due if this order had unpaid due balance
+    if (target.customerId && target.dueAmount > 0) {
+      const cust = customers.find((c) => c.id === target.customerId);
+      if (cust) {
+        const adjustedDue = Math.max(0, cust.currentDue - target.dueAmount);
+        const updatedC = { ...cust, currentDue: adjustedDue };
+        setCustomers((prev) => prev.map((c) => (c.id === cust.id ? updatedC : c)));
+        saveDocumentToFirestore('customers', cust.id, updatedC);
+      }
+    }
+
+    // 3. Remove order from state and Cloud Firestore
     setOrders((prev) => prev.filter((o) => o.id !== orderId));
     await deleteDocumentFromFirestore('orders', orderId);
-    triggerToast(`মেমো #${target.memoNo} অর্ডারটি সফলভাবে রিমুভ করা হয়েছে`);
+    triggerToast(`মেমো #${target.memoNo} অর্ডারটি সফলভাবে ডিলিট করা হয়েছে`);
   };
 
   const handleResetPassword = async (userId: string, newPass: string) => {
@@ -1123,15 +1194,17 @@ export default function App() {
         
         {/* Login Screen Modal Overlay if requested or not logged in */}
         {(!currentUser && isLoginModalOpen) && (
-          <LoginModal
-            userAccounts={userAccounts}
-            onLoginSuccess={(user) => {
-              handleLoginSuccess(user);
-              setIsLoginModalOpen(false);
-            }}
-            onRegisterShopkeeper={handleRegisterShopkeeper}
-            onClose={() => setIsLoginModalOpen(false)}
-          />
+          <Suspense fallback={null}>
+            <LoginModal
+              userAccounts={userAccounts}
+              onLoginSuccess={(user) => {
+                handleLoginSuccess(user);
+                setIsLoginModalOpen(false);
+              }}
+              onRegisterShopkeeper={handleRegisterShopkeeper}
+              onClose={() => setIsLoginModalOpen(false)}
+            />
+          </Suspense>
         )}
 
       {/* Toast Notification */}
@@ -1146,10 +1219,14 @@ export default function App() {
       )}
 
       {/* Printable Invoice Modal */}
-      <InvoiceModal
-        order={selectedInvoiceOrder}
-        onClose={() => setSelectedInvoiceOrder(null)}
-      />
+      {selectedInvoiceOrder && (
+        <Suspense fallback={null}>
+          <InvoiceModal
+            order={selectedInvoiceOrder}
+            onClose={() => setSelectedInvoiceOrder(null)}
+          />
+        </Suspense>
+      )}
 
       {/* Header Bar */}
       <Header
@@ -1191,6 +1268,7 @@ export default function App() {
 
       {/* Main Content View */}
       <main className="max-w-7xl mx-auto px-3 sm:px-6 pt-6 pb-6 sm:pb-12">
+        <Suspense fallback={<TabLoadingFallback />}>
         
         {activeTab === 'catalog' && (
           <CustomerStorefront
@@ -1265,6 +1343,7 @@ export default function App() {
             activeTheme={activeTheme}
             currentUser={currentUser}
             onRecordPayment={handleRecordPayment}
+            onUpdateCustomer={handleUpdateCustomer}
             onTriggerSMS={async (type, phone, name, shopName, data, customerId) => {
               // Automatically send SMS directly and get success status
               const success = await triggerAutomaticSMS(type, phone, data);
@@ -1295,6 +1374,7 @@ export default function App() {
             onSelectOrderForInvoice={setSelectedInvoiceOrder}
             onConfirmDelivery={handleConfirmDelivery}
             onDeleteOrder={handleDeleteOrder}
+            currentUserRole={currentUser?.role || 'customer'}
           />
         )}
 
@@ -1314,6 +1394,7 @@ export default function App() {
               currentUser={currentUser}
               userAccounts={userAccounts}
               sellers={allSellers}
+              customers={getVisibleCustomers()}
               activeTheme={activeTheme}
               systemConfig={systemConfig}
               onUpdateSystemConfig={handleUpdateSystemConfig}
@@ -1321,6 +1402,7 @@ export default function App() {
               onToggleUserStatus={handleToggleUserStatus}
               onResetPassword={handleResetPassword}
               onUpdateSeller={handleUpdateSeller}
+              onUpdateCustomer={handleUpdateCustomer}
               onDeleteUserAccount={handleDeleteUserAccount}
             />
           </div>
@@ -1371,6 +1453,7 @@ export default function App() {
           )
         )}
 
+        </Suspense>
       </main>
 
     </div>

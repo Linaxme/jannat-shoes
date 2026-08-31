@@ -15,6 +15,11 @@ import {
   Share2,
   List,
   LayoutGrid,
+  Edit,
+  Sliders,
+  Wallet,
+  Coins,
+  ArrowRight,
 } from 'lucide-react';
 
 interface DueManagementProps {
@@ -24,6 +29,7 @@ interface DueManagementProps {
   activeTheme: UITheme;
   currentUser?: UserAccount | null;
   onRecordPayment: (newLog: DuePaymentLog) => void;
+  onUpdateCustomer?: (updatedCust: Customer, note?: string) => void;
   onTriggerSMS?: (
     type: 'order_delivery' | 'payment_received' | 'due_reminder',
     customerPhone: string,
@@ -41,6 +47,7 @@ export const DueManagement: React.FC<DueManagementProps> = ({
   activeTheme,
   currentUser,
   onRecordPayment,
+  onUpdateCustomer,
   onTriggerSMS,
 }) => {
   const { t } = useLanguage();
@@ -54,9 +61,70 @@ export const DueManagement: React.FC<DueManagementProps> = ({
   // State to track manual sending status per customer
   const [sendingStatuses, setSendingStatuses] = useState<Record<string, 'idle' | 'sending' | 'sent' | 'failed'>>({});
 
+  // Adjust / Opening Due Modal State
+  const [showAdjustDueModal, setShowAdjustDueModal] = useState<boolean>(false);
+  const [adjustCustomerId, setAdjustCustomerId] = useState<string>('');
+  const [adjustAmount, setAdjustAmount] = useState<number | string>('');
+  const [adjustType, setAdjustType] = useState<'add' | 'set'>('add');
+  const [adjustNote, setAdjustNote] = useState<string>('পূর্বের খাতার বাকী');
+  const [adjustCustomerSearch, setAdjustCustomerSearch] = useState<string>('');
+
+  const openAdjustDueModal = (targetCust?: Customer) => {
+    if (targetCust) {
+      setAdjustCustomerId(targetCust.id);
+    } else {
+      setAdjustCustomerId(customers[0]?.id || '');
+    }
+    setAdjustAmount('');
+    setAdjustType('add');
+    setAdjustNote('পূর্বের খাতার বাকী');
+    setAdjustCustomerSearch('');
+    setShowAdjustDueModal(true);
+  };
+
+  const handleSaveAdjustDue = (e: React.FormEvent) => {
+    e.preventDefault();
+    const target = customers.find((c) => c.id === adjustCustomerId);
+    if (!target) {
+      alert('অনুগ্রহ করে একজন কাস্টমার বা দোকান নির্বাচন করুন!');
+      return;
+    }
+
+    const val = Number(adjustAmount);
+    if (isNaN(val) || val < 0) {
+      alert('অনুগ্রহ করে সঠিক টাকার পরিমাণ লিখুন!');
+      return;
+    }
+
+    let newDue = target.currentDue;
+    if (adjustType === 'add') {
+      newDue = target.currentDue + val;
+    } else {
+      newDue = val;
+    }
+
+    const updatedCust: Customer = {
+      ...target,
+      currentDue: newDue,
+    };
+
+    if (onUpdateCustomer) {
+      const defaultNote =
+        adjustType === 'add'
+          ? `পূর্বের বকেয়া ৳${val.toLocaleString('bn-BD')} যুক্ত করা হয়েছে`
+          : `বকেয়া সমন্বয় করে ৳${val.toLocaleString('bn-BD')} নির্ধারণ করা হয়েছে`;
+      onUpdateCustomer(updatedCust, adjustNote || defaultNote);
+    }
+
+    setShowAdjustDueModal(false);
+    setAdjustCustomerId('');
+    setAdjustAmount('');
+    setAdjustNote('পূর্বের খাতার বাকী');
+  };
+
   // Payment Entry Modal
   const [selectedCustForPayment, setSelectedCustForPayment] = useState<Customer | null>(null);
-  const [paymentAmount, setPaymentAmount] = useState<number>(0);
+  const [paymentAmount, setPaymentAmount] = useState<number | string>('');
   const [discountAmount, setDiscountAmount] = useState<number>(0);
   const [paymentMethod, setPaymentMethod] = useState<string>('নগদ ক্যাশ');
   const [collectorName, setCollectorName] = useState<string>('');
@@ -64,7 +132,7 @@ export const DueManagement: React.FC<DueManagementProps> = ({
 
   const openPaymentModal = (cust: Customer) => {
     setSelectedCustForPayment(cust);
-    setPaymentAmount(cust.currentDue);
+    setPaymentAmount('');
     setDiscountAmount(0);
     setPaymentNotes('');
     setCollectorName(currentUser?.name || cust.assignedSellerName || 'ক্যাশিয়ার');
@@ -162,20 +230,16 @@ export const DueManagement: React.FC<DueManagementProps> = ({
     e.preventDefault();
     if (!selectedCustForPayment) return;
 
-    if (paymentAmount < 0 || discountAmount < 0) {
-      alert('টাকা বা এডজাস্টের পরিমাণ ঋণাত্মক হতে পারবে না!');
+    const paidVal = Number(paymentAmount) || 0;
+
+    if (paidVal <= 0) {
+      alert('অনুগ্রহ করে সঠিক আদায়কৃত ক্যাশের পরিমাণ লিখুন!');
       return;
     }
 
-    if (paymentAmount === 0 && discountAmount === 0) {
-      alert('সঠিক টাকা বা এডজাস্টের পরিমাণ প্রদান করুন!');
-      return;
-    }
-
-    const totalDeduction = paymentAmount + discountAmount;
-    const todayStr = getLocalDateStr(new Date());
     const prevDue = selectedCustForPayment.currentDue;
-    const remDue = Math.max(0, prevDue - totalDeduction);
+    const remDue = Math.max(0, prevDue - paidVal);
+    const todayStr = getLocalDateStr(new Date());
     const receiptNo = `REC-${new Date().getFullYear()}-${Math.floor(100 + Math.random() * 900)}`;
 
     const newLog: DuePaymentLog = {
@@ -186,8 +250,8 @@ export const DueManagement: React.FC<DueManagementProps> = ({
       shopName: selectedCustForPayment.shopName,
       sellerId: selectedCustForPayment.assignedSellerId,
       sellerName: selectedCustForPayment.assignedSellerName,
-      amountPaid: paymentAmount,
-      discountAmount: discountAmount > 0 ? discountAmount : 0,
+      amountPaid: paidVal,
+      discountAmount: 0,
       previousDue: prevDue,
       remainingDue: remDue,
       paymentMethod,
@@ -198,7 +262,7 @@ export const DueManagement: React.FC<DueManagementProps> = ({
 
     onRecordPayment(newLog);
     setSelectedCustForPayment(null);
-    setPaymentAmount(0);
+    setPaymentAmount('');
     setDiscountAmount(0);
     setPaymentNotes('');
   };
@@ -306,7 +370,17 @@ export const DueManagement: React.FC<DueManagementProps> = ({
           <div className="h-0.5 bg-gradient-to-r from-amber-500/50 via-slate-800 to-transparent flex-1" />
         </div>
 
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex items-center gap-2 shrink-0 flex-wrap">
+          {(currentUser?.role === 'admin' || currentUser?.role === 'super_admin' || !currentUser?.role) && (
+            <button
+              onClick={() => openAdjustDueModal()}
+              className="px-3 py-1.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded-xl text-xs shadow flex items-center gap-1.5 transition-all cursor-pointer"
+            >
+              <PlusCircle className="w-4 h-4" />
+              <span>পূর্বের বাকী যুক্ত করুন</span>
+            </button>
+          )}
+
           <div className="flex items-center gap-1 bg-slate-900 p-1 rounded-xl border border-slate-800 text-xs">
             <button
               onClick={() => setViewMode('customer_wise')}
@@ -492,7 +566,15 @@ export const DueManagement: React.FC<DueManagementProps> = ({
                       </div>
 
                       {/* Actions */}
-                      <div className="pt-3 border-t border-slate-800 flex items-center justify-end gap-2">
+                      <div className="pt-3 border-t border-slate-800 flex items-center justify-end gap-2 flex-wrap">
+                        <button
+                          onClick={() => openAdjustDueModal(cust)}
+                          className="px-2.5 py-1.5 bg-slate-900 hover:bg-slate-800 text-amber-300 border border-slate-700 hover:border-amber-500/40 rounded-xl text-xs font-semibold flex items-center gap-1 transition-all cursor-pointer"
+                          title="পূর্বের বাকী যোগ বা সমন্বয় করুন"
+                        >
+                          <Sliders className="w-3.5 h-3.5 text-amber-400" />
+                          <span>সমন্বয়</span>
+                        </button>
                         <button
                           onClick={() => openPaymentModal(cust)}
                           className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-xs shadow flex items-center gap-1 transition-all cursor-pointer"
@@ -558,8 +640,17 @@ export const DueManagement: React.FC<DueManagementProps> = ({
                         <td className="py-3 pl-3 text-right">
                           <div className="flex items-center justify-end gap-2">
                             <button
+                              onClick={() => openAdjustDueModal(cust)}
+                              className="px-2.5 py-1.5 bg-slate-900 hover:bg-slate-800 text-amber-300 border border-slate-700 hover:border-amber-500/40 rounded-xl text-xs font-semibold flex items-center gap-1 transition-all cursor-pointer"
+                              title="পূর্বের বাকী যোগ বা সমন্বয় করুন"
+                            >
+                              <Sliders className="w-3.5 h-3.5 text-amber-400" />
+                              <span>সমন্বয়</span>
+                            </button>
+
+                            <button
                               onClick={() => openPaymentModal(cust)}
-                              className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-xs shadow flex items-center gap-1 transition-all"
+                              className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-xs shadow flex items-center gap-1 transition-all cursor-pointer"
                             >
                               <DollarSign className="w-3.5 h-3.5" />
                               টাকা আদায়
@@ -724,65 +815,68 @@ export const DueManagement: React.FC<DueManagementProps> = ({
 
             <form onSubmit={handleSavePayment} className="space-y-3 text-xs">
               
-              <div className="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-1">
-                <div className="font-bold text-amber-300 text-sm">{selectedCustForPayment.shopName}</div>
-                <div className="text-slate-400">প্রো: {selectedCustForPayment.name}</div>
-                <div className="text-rose-400 font-bold">বর্তমান মোট বাকী: {formatTaka(selectedCustForPayment.currentDue)}</div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-slate-300 font-semibold mb-1">আদায়কৃত ক্যাশ (৳) *</label>
-                  <input
-                    type="number"
-                    min="0"
-                    value={paymentAmount || ''}
-                    onChange={(e) => setPaymentAmount(parseFloat(e.target.value) || 0)}
-                    placeholder=""
-                    className="w-full bg-slate-950 border border-emerald-500 text-emerald-400 font-black text-base text-center rounded-xl py-2 focus:outline-none"
-                  />
+              <div className="bg-slate-950 p-3.5 sm:p-4 rounded-xl border border-slate-800 space-y-2">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <div className="font-bold text-amber-300 text-sm sm:text-base">{selectedCustForPayment.shopName}</div>
+                    <div className="text-xs text-slate-400">প্রো: {selectedCustForPayment.name}</div>
+                  </div>
+                  {selectedCustForPayment.address && (
+                    <div className="text-[11px] text-slate-500 max-w-[160px] truncate text-right">
+                      {selectedCustForPayment.address}
+                    </div>
+                  )}
                 </div>
 
-                <div>
-                  <label className="block text-amber-300 font-semibold mb-1">এডজাস্ট (৳)</label>
+                <div className="mt-2 pt-2.5 border-t border-slate-900 flex items-center justify-between">
+                  <span className="text-xs sm:text-sm font-bold text-slate-300">বর্তমান মোট বাকী:</span>
+                  <span className="text-rose-400 font-black text-xl sm:text-2xl font-mono">
+                    {formatTaka(selectedCustForPayment.currentDue)}
+                  </span>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-slate-300 font-semibold mb-1 text-xs">আদায়কৃত ক্যাশ (৳) *</label>
+                <div className="relative">
+                  <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-emerald-400 font-bold text-base">৳</span>
                   <input
                     type="number"
-                    min="0"
-                    value={discountAmount || ''}
-                    onChange={(e) => setDiscountAmount(parseFloat(e.target.value) || 0)}
-                    placeholder=""
-                    className="w-full bg-slate-950 border border-amber-500/80 text-amber-300 font-black text-base text-center rounded-xl py-2 focus:outline-none"
+                    min="1"
+                    required
+                    value={paymentAmount}
+                    onChange={(e) => setPaymentAmount(e.target.value)}
+                    placeholder="টাকার পরিমাণ লিখুন"
+                    className="w-full bg-slate-950 border border-emerald-500/80 text-emerald-300 font-black text-lg pl-8 pr-3 py-2.5 rounded-xl focus:outline-none focus:border-emerald-400 font-mono"
                   />
                 </div>
               </div>
 
               {/* Calculated Summary Preview Card */}
-              <div className="bg-slate-950/90 p-3 rounded-xl border border-slate-800 space-y-1.5 text-[11px]">
-                <div className="flex justify-between text-slate-400">
-                  <span>পূর্বের মোট বাকী:</span>
-                  <span className="font-bold text-slate-200">{formatTaka(selectedCustForPayment.currentDue)}</span>
-                </div>
-                <div className="flex justify-between text-emerald-400">
-                  <span>নগদ আদায়:</span>
-                  <span className="font-bold">+{formatTaka(paymentAmount)}</span>
-                </div>
-                {discountAmount > 0 && (
-                  <div className="flex justify-between text-amber-400 font-medium">
-                    <span>এডজাস্টমেন্ট:</span>
-                    <span className="font-bold">+{formatTaka(discountAmount)}</span>
+              {(() => {
+                const paidVal = Number(paymentAmount) || 0;
+                const remDue = Math.max(0, selectedCustForPayment.currentDue - paidVal);
+                return (
+                  <div className="bg-slate-950/90 p-3 rounded-xl border border-slate-800 space-y-1.5 text-[11px]">
+                    <div className="flex justify-between text-slate-400">
+                      <span>পূর্বের মোট বাকী:</span>
+                      <span className="font-bold text-slate-200">{formatTaka(selectedCustForPayment.currentDue)}</span>
+                    </div>
+                    <div className="flex justify-between text-emerald-400">
+                      <span>নগদ আদায়:</span>
+                      <span className="font-bold">+{formatTaka(paidVal)}</span>
+                    </div>
+                    <div className="flex justify-between items-center pt-1.5 border-t border-slate-800 text-xs font-bold">
+                      <span className="text-slate-300">হিসাবের পর অবশিষ্ট বাকী:</span>
+                      <span className={`text-sm font-black ${
+                        remDue === 0 ? 'text-emerald-400' : 'text-rose-400'
+                      }`}>
+                        {formatTaka(remDue)}
+                      </span>
+                    </div>
                   </div>
-                )}
-                <div className="flex justify-between items-center pt-1.5 border-t border-slate-800 text-xs font-bold">
-                  <span className="text-slate-300">হিসাবের পর অবশিষ্ট বাকী:</span>
-                  <span className={`text-sm font-black ${
-                    Math.max(0, selectedCustForPayment.currentDue - (paymentAmount + discountAmount)) === 0
-                      ? 'text-emerald-400'
-                      : 'text-rose-400'
-                  }`}>
-                    {formatTaka(Math.max(0, selectedCustForPayment.currentDue - (paymentAmount + discountAmount)))}
-                  </span>
-                </div>
-              </div>
+                );
+              })()}
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
@@ -836,6 +930,210 @@ export const DueManagement: React.FC<DueManagementProps> = ({
                   className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl shadow"
                 >
                   আদায় নিশ্চিত করুন
+                </button>
+              </div>
+
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Adjust / Opening Due Modal */}
+      {showAdjustDueModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
+          <div className="w-full max-w-lg bg-slate-900 border border-slate-700 rounded-2xl p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+              <h3 className="text-base font-bold text-slate-100 flex items-center gap-2">
+                <Sliders className="w-5 h-5 text-amber-400" />
+                <span>প্রারম্ভিক বকেয়া / বাকী সমন্বয়</span>
+              </h3>
+              <button
+                type="button"
+                onClick={() => setShowAdjustDueModal(false)}
+                className="text-slate-400 hover:text-slate-200 text-lg font-bold px-2 py-1"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveAdjustDue} className="space-y-4 text-xs">
+              
+              {/* Customer Selector */}
+              <div>
+                <label className="block text-slate-300 font-semibold mb-1">
+                  দোকান / কাস্টমার নির্বাচন করুন *
+                </label>
+                
+                {/* Search helper if multiple customers */}
+                {customers.length > 5 && (
+                  <div className="mb-2">
+                    <input
+                      type="text"
+                      placeholder="দোকান বা মালিকের নাম দিয়ে খুঁজুন..."
+                      value={adjustCustomerSearch}
+                      onChange={(e) => setAdjustCustomerSearch(e.target.value)}
+                      className="w-full bg-slate-950 border border-slate-800 text-slate-200 rounded-xl px-3 py-1.5 focus:outline-none focus:border-amber-500 text-xs"
+                    />
+                  </div>
+                )}
+
+                <select
+                  required
+                  value={adjustCustomerId}
+                  onChange={(e) => setAdjustCustomerId(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-700 text-amber-300 font-bold p-3 rounded-xl focus:outline-none focus:border-amber-500"
+                >
+                  <option value="" disabled>-- কাস্টমার নির্বাচন করুন --</option>
+                  {customers
+                    .filter((c) => {
+                      if (!adjustCustomerSearch.trim()) return true;
+                      const q = adjustCustomerSearch.toLowerCase();
+                      return (
+                        c.shopName.toLowerCase().includes(q) ||
+                        c.name.toLowerCase().includes(q) ||
+                        c.phone.includes(q)
+                      );
+                    })
+                    .map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.shopName} (প্রো: {c.name}) - বর্তমান বাকী: ৳{c.currentDue.toLocaleString('bn-BD')} {c.address ? `[${c.address}]` : ''}
+                      </option>
+                    ))}
+                </select>
+              </div>
+
+              {/* Selected Customer Snapshot */}
+              {(() => {
+                const target = customers.find((c) => c.id === adjustCustomerId);
+                if (!target) return null;
+
+                const inputVal = Number(adjustAmount) || 0;
+                const finalDue = adjustType === 'add' ? target.currentDue + inputVal : inputVal;
+
+                return (
+                  <div className="bg-slate-950 border border-slate-800 rounded-xl p-3.5 space-y-2">
+                    <div className="flex items-center justify-between text-slate-300">
+                      <span>নির্বাচিত দোকান:</span>
+                      <span className="font-bold text-amber-400 text-sm">{target.shopName}</span>
+                    </div>
+                    <div className="flex items-center justify-between text-slate-400">
+                      <span>মালিক ও ফোন:</span>
+                      <span>{target.name} ({target.phone})</span>
+                    </div>
+                    <div className="flex items-center justify-between border-t border-slate-900 pt-2">
+                      <span className="text-slate-400">বর্তমান বকেয়া স্থিতি:</span>
+                      <span className="font-black text-rose-400 text-sm">৳ {target.currentDue.toLocaleString('bn-BD')}</span>
+                    </div>
+                  </div>
+                );
+              })()}
+
+              {/* Adjustment Mode Selection */}
+              <div>
+                <label className="block text-slate-300 font-semibold mb-1.5">
+                  সমন্বয়ের ধরণ নির্ধারণ করুন
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setAdjustType('add')}
+                    className={`p-3 rounded-xl border text-left flex flex-col gap-1 transition-all cursor-pointer ${
+                      adjustType === 'add'
+                        ? 'bg-amber-500/20 border-amber-500 text-amber-300'
+                        : 'bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700'
+                    }`}
+                  >
+                    <span className="font-bold text-xs flex items-center gap-1">
+                      <PlusCircle className="w-3.5 h-3.5" />
+                      পূর্বের বকেয়া যোগ করুন (+)
+                    </span>
+                    <span className="text-[10px] text-slate-400">
+                      বর্তমান বাকীর সাথে নতুন উদ্বৃত্ত যোগ হবে
+                    </span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setAdjustType('set')}
+                    className={`p-3 rounded-xl border text-left flex flex-col gap-1 transition-all cursor-pointer ${
+                      adjustType === 'set'
+                        ? 'bg-amber-500/20 border-amber-500 text-amber-300'
+                        : 'bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700'
+                    }`}
+                  >
+                    <span className="font-bold text-xs flex items-center gap-1">
+                      <Edit className="w-3.5 h-3.5" />
+                      মোট বকেয়া নির্ধারণ করুন (=)
+                    </span>
+                    <span className="text-[10px] text-slate-400">
+                      সরাসরি বকেয়ার মোট অংক সেট করবে
+                    </span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Amount Input */}
+              <div>
+                <label className="block text-slate-300 font-semibold mb-1">
+                  {adjustType === 'add' ? 'যোগ করার পরিমাণ (টাকা ৳) *' : 'নতুন মোট বকেয়ার পরিমাণ (টাকা ৳) *'}
+                </label>
+                <div className="relative">
+                  <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-amber-400 font-black text-base">৳</span>
+                  <input
+                    type="number"
+                    min="0"
+                    required
+                    value={adjustAmount}
+                    onChange={(e) => setAdjustAmount(e.target.value)}
+                    placeholder="0"
+                    className="w-full bg-slate-950 border border-slate-700 text-amber-300 font-black text-lg pl-8 pr-3 py-2.5 rounded-xl focus:outline-none focus:border-amber-400 font-mono"
+                  />
+                </div>
+              </div>
+
+              {/* Real-time Calculation Summary */}
+              {(() => {
+                const target = customers.find((c) => c.id === adjustCustomerId);
+                if (!target) return null;
+                const inputVal = Number(adjustAmount) || 0;
+                const finalDue = adjustType === 'add' ? target.currentDue + inputVal : inputVal;
+
+                return (
+                  <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-3 flex items-center justify-between text-xs">
+                    <span className="text-amber-200 font-semibold">আপডেটের পর কাস্টমারের নতুন মোট বাকী হবে:</span>
+                    <span className="text-base font-black text-rose-400 font-mono">৳ {finalDue.toLocaleString('bn-BD')}</span>
+                  </div>
+                );
+              })()}
+
+              {/* Note / Reason */}
+              <div>
+                <label className="block text-slate-300 font-semibold mb-1">
+                  বিবরণ / কারণ (যেমন: পূর্বের খাতার বাকী, হিসাব সমন্বয়)
+                </label>
+                <input
+                  type="text"
+                  value={adjustNote}
+                  onChange={(e) => setAdjustNote(e.target.value)}
+                  placeholder="যেমন: পূর্বের খাতার বাকী হিসাবভুক্ত"
+                  className="w-full bg-slate-950 border border-slate-700 text-slate-200 rounded-xl px-3 py-2 focus:outline-none focus:border-amber-400"
+                />
+              </div>
+
+              {/* Actions */}
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-800">
+                <button
+                  type="button"
+                  onClick={() => setShowAdjustDueModal(false)}
+                  className="px-4 py-2 bg-slate-800 text-slate-300 rounded-xl font-semibold hover:bg-slate-700"
+                >
+                  বাতিল
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded-xl shadow-md transition"
+                >
+                  বকেয়া আপডেট ও সংরক্ষণ করুন
                 </button>
               </div>
 

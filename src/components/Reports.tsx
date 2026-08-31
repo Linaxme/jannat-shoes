@@ -30,7 +30,7 @@ import {
   Legend,
 } from 'recharts';
 import * as XLSX from 'xlsx';
-import html2canvas from 'html2canvas';
+import { toCanvas } from 'html-to-image';
 import jsPDF from 'jspdf';
 
 interface ReportsProps {
@@ -325,11 +325,10 @@ export const Reports: React.FC<ReportsProps> = ({
     try {
       setIsExportingPDF(true);
 
-      const canvas = await html2canvas(reportPrintRef.current, {
-        scale: 2.2,
-        useCORS: true,
-        logging: false,
+      const canvas = await toCanvas(reportPrintRef.current, {
         backgroundColor: '#ffffff',
+        pixelRatio: 2.2,
+        cacheBust: true,
       });
 
       const imgData = canvas.toDataURL('image/jpeg', 0.95);
@@ -690,10 +689,10 @@ export const Reports: React.FC<ReportsProps> = ({
           <div style={{ textAlign: 'center', borderBottom: '2px solid #0f172a', paddingBottom: '16px', marginBottom: '20px' }}>
             <h1 style={{ fontSize: '24px', fontWeight: '900', margin: '0 0 4px 0' }}>মেসার্স জান্নাত সুজ</h1>
             <p style={{ fontSize: '12px', margin: '0 0 6px 0', color: '#475569' }}>
-              সকল প্রকার দেশী ও বিদেশী পুরুষ, মহিলা ও বাচ্চাদের পাইকারি জুতা বিক্রয় কেন্দ্র
+              উন্নতমানের পাদুকা পাইকারী বিক্রয়ের বিশ্বস্ত প্রতিষ্ঠান
             </p>
             <p style={{ fontSize: '11px', margin: '0 0 8px 0', color: '#64748b' }}>
-              ফুলবাড়িয়া পাইকারি জুতা মার্কেট (২য় তলা), ঢাকা | ফোন: ০১৭১১-০০১১৮৮
+              সানানগর মেইল গেইট, দেবিদ্বার, কুমিল্লা | ফোন: ০১৮৭২-২৫৯২৩৭
             </p>
             <div style={{ display: 'inline-block', backgroundColor: '#0f172a', color: '#ffffff', padding: '4px 16px', borderRadius: '9999px', fontSize: '12px', fontWeight: 'bold' }}>
               {getReportPeriodTitle()}

@@ -2,9 +2,8 @@ import React, { useRef, useState } from 'react';
 import { Order } from '../types';
 import { formatTaka, toBnDigit, formatBnDate } from '../utils/formatters';
 import { Printer, X, CheckCircle2, PhoneCall, MapPin, Store, Download, Loader2, Share2, FileText, Image as ImageIcon } from 'lucide-react';
-import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
-import { toBlob, toPng } from 'html-to-image';
+import { toCanvas, toPng } from 'html-to-image';
 
 interface InvoiceModalProps {
   order: Order | null;
@@ -29,11 +28,10 @@ export const InvoiceModal: React.FC<InvoiceModalProps> = ({ order, onClose }) =>
       setIsDownloading(true);
       setDownloadType('pdf');
       
-      const canvas = await html2canvas(memoRef.current, {
-        scale: 2.5,
-        useCORS: true,
-        logging: false,
+      const canvas = await toCanvas(memoRef.current, {
         backgroundColor: '#ffffff',
+        pixelRatio: 2.5,
+        cacheBust: true,
       });
 
       const imgData = canvas.toDataURL('image/jpeg', 0.95);
@@ -63,11 +61,10 @@ export const InvoiceModal: React.FC<InvoiceModalProps> = ({ order, onClose }) =>
       setIsDownloading(true);
       setDownloadType('image');
       
-      const canvas = await html2canvas(memoRef.current, {
-        scale: 2.5,
-        useCORS: true,
-        logging: false,
+      const canvas = await toCanvas(memoRef.current, {
         backgroundColor: '#ffffff',
+        pixelRatio: 2.5,
+        cacheBust: true,
       });
 
       const dataUrl = canvas.toDataURL('image/png');
@@ -110,10 +107,15 @@ export const InvoiceModal: React.FC<InvoiceModalProps> = ({ order, onClose }) =>
     } catch (err) {
       console.error('Failed to download memo image:', err);
       try {
-        const blob = await toBlob(memoRef.current, { backgroundColor: '#ffffff', pixelRatio: 2 });
-        if (blob) {
-          const url = URL.createObjectURL(blob);
-          setImagePreviewUrl(url);
+        const dataUrl = await toPng(memoRef.current, { backgroundColor: '#ffffff', pixelRatio: 2, cacheBust: true });
+        if (dataUrl) {
+          setImagePreviewUrl(dataUrl);
+          const link = document.createElement('a');
+          link.href = dataUrl;
+          link.download = `Jannat_Memo_${order.memoNo}.png`;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
         }
       } catch (e) {
         alert('ছবি ডাউনলোডে সমস্যা হয়েছে। স্ক্রিনশট অথবা প্রিন্ট অপশন ব্যবহার করুন।');
@@ -149,7 +151,9 @@ export const InvoiceModal: React.FC<InvoiceModalProps> = ({ order, onClose }) =>
       `সর্বমোট বকেয়া (Due): *${formatTaka(order.totalNetDue)}*\n` +
       `--------------------------------\n` +
       `_ধন্যবাদ, আবার আসবেন!_\n` +
-      `*মেসার্স জান্নাত সুজ*, ফুলবাড়িয়া, ঢাকা।`;
+      `*মেসার্স জান্নাত সুজ*\n` +
+      `ঠিকানা: সানানগর মেইল গেইট, দেবিদ্বার, কুমিল্লা।\n` +
+      `মোবাইল: ০১৮৭২-২৫৯২৩৭`;
 
     let phoneStr = (order.customerPhone || "").replace(/[^0-9]/g, '');
     if (phoneStr.startsWith('0') && phoneStr.length === 11) {
@@ -234,16 +238,16 @@ export const InvoiceModal: React.FC<InvoiceModalProps> = ({ order, onClose }) =>
               মেসার্স জান্নাত সুজ
             </h1>
             <p className="text-[11px] font-semibold text-slate-700">
-              সকল প্রকার দেশী ও বিদেশী পুরুষ, মহিলা ও বাচ্চাদের পাইকারি জুতা বিক্রয় কেন্দ্র
+              উন্নতমানের পাদুকা পাইকারী বিক্রয়ের বিশ্বস্ত প্রতিষ্ঠান
             </p>
             <div className="text-[10px] text-slate-600 flex flex-wrap items-center justify-center gap-x-3 gap-y-0.5 mt-0.5">
-              <span className="flex items-center gap-1">
-                <MapPin className="w-3 h-3 text-slate-500" />
-                ফুলবাড়িয়া পাইকারি জুতা মার্কেট (২য় তলা), ঢাকা
+              <span className="flex items-center gap-1 font-medium">
+                <MapPin className="w-3 h-3 text-slate-600" />
+                সানানগর মেইল গেইট, দেবিদ্বার, কুমিল্লা।
               </span>
-              <span className="flex items-center gap-1">
-                <PhoneCall className="w-3 h-3 text-slate-500" />
-                ফোন: ০১৭১১-০০১১৮৮, ০১৮২২-৩৩৪৪৫৫
+              <span className="flex items-center gap-1 font-semibold text-slate-800">
+                <PhoneCall className="w-3 h-3 text-slate-600" />
+                ফোন: ০১৮৭২-২৫৯২৩৭
               </span>
             </div>
             <div className="inline-block px-3 py-0.5 bg-slate-900 text-white font-bold text-[11px] rounded-full mt-1 uppercase tracking-widest">

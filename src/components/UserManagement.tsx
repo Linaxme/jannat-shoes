@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
-import { UserAccount, UserRole, SalesRep, UITheme, SystemConfig } from '../types';
-import { toBnDigit } from '../utils/formatters';
-import { UserPlus, Shield, UserCheck, ShieldAlert, ShieldCheck, Key, MapPin, Target, Percent, Lock, UserX, PlusCircle, Sparkles, CheckCircle2, ChevronDown, Edit, Sliders, Settings, Store, Search, Users } from 'lucide-react';
+import { UserAccount, UserRole, SalesRep, UITheme, SystemConfig, Customer } from '../types';
+import { toBnDigit, formatTaka } from '../utils/formatters';
+import { UserPlus, Shield, UserCheck, ShieldAlert, ShieldCheck, Key, MapPin, Target, Percent, Lock, UserX, PlusCircle, Sparkles, CheckCircle2, ChevronDown, Edit, Sliders, Settings, Store, Search, Users, DollarSign } from 'lucide-react';
 
 interface UserManagementProps {
   currentUser: UserAccount;
   userAccounts: UserAccount[];
   sellers: SalesRep[];
+  customers?: Customer[];
   activeTheme: UITheme;
   systemConfig?: SystemConfig;
   onUpdateSystemConfig?: (newConfig: SystemConfig) => void;
@@ -15,6 +16,7 @@ interface UserManagementProps {
   onToggleUserStatus: (userId: string, newStatus: boolean) => void;
   onResetPassword: (userId: string, newPass: string) => void;
   onUpdateSeller?: (updatedSeller: SalesRep) => void;
+  onUpdateCustomer?: (updatedCust: Customer, note?: string) => void;
   onDeleteUserAccount?: (userId: string) => void;
 }
 
@@ -22,6 +24,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({
   currentUser,
   userAccounts,
   sellers,
+  customers = [],
   activeTheme,
   systemConfig,
   onUpdateSystemConfig,
@@ -29,6 +32,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({
   onToggleUserStatus,
   onResetPassword,
   onUpdateSeller,
+  onUpdateCustomer,
   onDeleteUserAccount,
 }) => {
   const { t } = useLanguage();
@@ -53,6 +57,8 @@ export const UserManagement: React.FC<UserManagementProps> = ({
   const [password, setPassword] = useState<string>('seller123');
   const [role, setRole] = useState<UserRole>('seller');
   const [phone, setPhone] = useState<string>('');
+  const [area, setArea] = useState<string>('');
+  const [initialDue, setInitialDue] = useState<number | string>('');
   const [targetPairs, setTargetPairs] = useState<number>(1000);
   const [targetAmount, setTargetAmount] = useState<number>(0);
 
@@ -64,6 +70,83 @@ export const UserManagement: React.FC<UserManagementProps> = ({
   const [editingSeller, setEditingSeller] = useState<SalesRep | null>(null);
   const [editTargetPairs, setEditTargetPairs] = useState<number>(1000);
   const [editTargetAmount, setEditTargetAmount] = useState<number>(0);
+
+  // Customer edit info state
+  const [editingCust, setEditingCust] = useState<Customer | null>(null);
+  const [editCustName, setEditCustName] = useState<string>('');
+  const [editCustShopName, setEditCustShopName] = useState<string>('');
+  const [editCustPhone, setEditCustPhone] = useState<string>('');
+  const [editCustAddress, setEditCustAddress] = useState<string>('');
+
+  // Customer Due adjustment state
+  const [adjustingCust, setAdjustingCust] = useState<Customer | null>(null);
+  const [adjustCustAmount, setAdjustCustAmount] = useState<number | string>('');
+  const [adjustCustType, setAdjustCustType] = useState<'add' | 'set'>('add');
+  const [adjustCustNote, setAdjustCustNote] = useState<string>('পূর্বের খাতার বাকী');
+
+  const openCustomerEditModal = (cust: Customer) => {
+    setEditingCust(cust);
+    setEditCustName(cust.name || '');
+    setEditCustShopName(cust.shopName || '');
+    setEditCustPhone(cust.phone || '');
+    setEditCustAddress(cust.address || '');
+  };
+
+  const handleCustomerEditSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingCust || !onUpdateCustomer) return;
+
+    const updated: Customer = {
+      ...editingCust,
+      name: editCustName.trim(),
+      shopName: editCustShopName.trim(),
+      phone: editCustPhone.trim(),
+      address: editCustAddress.trim(),
+    };
+
+    onUpdateCustomer(updated, 'দোকানের বিবরণ ও প্রোফাইল আপডেট করা হয়েছে');
+    setEditingCust(null);
+  };
+
+  const openAdjustDueModal = (cust: Customer) => {
+    setAdjustingCust(cust);
+    setAdjustCustAmount('');
+    setAdjustCustType('add');
+    setAdjustCustNote('পূর্বের খাতার বাকী');
+  };
+
+  const handleAdjustDueSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!adjustingCust || !onUpdateCustomer) return;
+
+    const val = Number(adjustCustAmount);
+    if (isNaN(val) || val < 0) {
+      alert('সঠিক টাকার অংক লিখুন!');
+      return;
+    }
+
+    let finalDue = adjustingCust.currentDue;
+    if (adjustCustType === 'add') {
+      finalDue = adjustingCust.currentDue + val;
+    } else {
+      finalDue = val;
+    }
+
+    const updated: Customer = {
+      ...adjustingCust,
+      currentDue: finalDue,
+    };
+
+    const note =
+      adjustCustNote ||
+      (adjustCustType === 'add'
+        ? `পূর্বের বকেয়া ৳${val.toLocaleString('bn-BD')} যুক্ত করা হয়েছে`
+        : `বকেয়া সমন্বয় করে ৳${val.toLocaleString('bn-BD')} নির্ধারণ করা হয়েছে`);
+
+    onUpdateCustomer(updated, note);
+    setAdjustingCust(null);
+    setAdjustCustAmount('');
+  };
 
   const handleUpdateSellerSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -92,7 +175,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({
         id: createdSellerId,
         name: name,
         phone: phone || loginId,
-        area: '',
+        area: area || '',
         monthlyTargetPairs: targetPairs,
         monthlyTargetAmount: targetAmount,
         commissionRatePercent: 0,
@@ -107,6 +190,8 @@ export const UserManagement: React.FC<UserManagementProps> = ({
       password: password,
       role: role,
       phone: phone.trim() || loginId.trim(),
+      area: area.trim() || undefined,
+      initialDue: role === 'customer' ? Math.max(0, Number(initialDue) || 0) : undefined,
       sellerId: createdSellerId,
       isActive: true,
       createdAt: new Date().toISOString().split('T')[0],
@@ -120,6 +205,8 @@ export const UserManagement: React.FC<UserManagementProps> = ({
     setLoginId('');
     setPassword('seller123');
     setPhone('');
+    setArea('');
+    setInitialDue('');
     setTargetPairs(1000);
     setTargetAmount(0);
     setShowAddModal(false);
@@ -132,6 +219,41 @@ export const UserManagement: React.FC<UserManagementProps> = ({
       setResetTargetUser(null);
       setNewPasswordInput('');
     }
+  };
+
+  const getCustomerForUser = (usr: UserAccount): Customer | undefined => {
+    if (usr.role !== 'customer') return undefined;
+    const userPhone = (usr.phone || usr.loginId || '').replace(/\D/g, '');
+    const userShop = (usr.shopName || '').toLowerCase().trim();
+    const userName = (usr.name || '').toLowerCase().trim();
+
+    const found = customers.find((c) => {
+      const cPhone = (c.phone || '').replace(/\D/g, '');
+      if (userPhone && cPhone && userPhone.length >= 6 && (userPhone.endsWith(cPhone) || cPhone.endsWith(userPhone))) {
+        return true;
+      }
+      if (userShop && c.shopName && c.shopName.toLowerCase().trim() === userShop) {
+        return true;
+      }
+      if (userName && c.name && c.name.toLowerCase().trim() === userName) {
+        return true;
+      }
+      return false;
+    });
+
+    if (found) return found;
+
+    return {
+      id: usr.id,
+      name: usr.name,
+      shopName: usr.shopName || usr.name,
+      phone: usr.phone || usr.loginId,
+      address: usr.area || '',
+      assignedSellerId: '',
+      assignedSellerName: 'উন্মুক্ত / সরাসরি',
+      currentDue: usr.initialDue || 0,
+      creditLimit: 50000,
+    };
   };
 
   const allNonSuperUsers = userAccounts.filter((u) => u.role !== 'super_admin');
@@ -338,6 +460,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({
         ) : (
           filteredUsers.map((usr) => {
             const sellerData = sellers.find((s) => s.id === usr.sellerId);
+            const custData = getCustomerForUser(usr);
             const isExpanded = expandedUserId === usr.id;
 
             return (
@@ -356,13 +479,25 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                     </div>
                     <div>
                       <div className="font-bold text-slate-100 text-xs sm:text-sm flex items-center gap-1">
-                        <span>{usr.name}</span>
+                        <span>{usr.role === 'customer' ? (usr.shopName || usr.name) : usr.name}</span>
                         <ChevronDown className={`w-3.5 h-3.5 text-slate-500 transition-transform duration-200 ${isExpanded ? 'rotate-180 text-amber-400' : ''}`} />
                       </div>
-                      {usr.role !== 'customer' && usr.shopName && (
-                        <div className="text-[10px] text-emerald-400 font-semibold mt-0.5">
-                          দোকান: {usr.shopName}
+                      {usr.role === 'customer' ? (
+                        <div className="flex flex-wrap items-center gap-2 text-[10px] text-slate-400 mt-0.5">
+                          <span>প্রোপাইটার: {usr.name}</span>
+                          {(usr.area || custData?.address) && (
+                            <span className="text-slate-500 flex items-center gap-0.5">
+                              <MapPin className="w-2.5 h-2.5" />
+                              {usr.area || custData?.address}
+                            </span>
+                          )}
                         </div>
+                      ) : (
+                        usr.shopName && (
+                          <div className="text-[10px] text-emerald-400 font-semibold mt-0.5">
+                            দোকান: {usr.shopName}
+                          </div>
+                        )
                       )}
                       {usr.sellerId && (
                         <div className="text-[9px] text-amber-400/80 font-mono mt-0.5">
@@ -371,7 +506,16 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                       )}
                     </div>
                   </div>
-                  <div>
+                  <div className="flex items-center gap-2">
+                    {usr.role === 'customer' && custData && (
+                      <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold ${
+                        custData.currentDue > 0
+                          ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30'
+                          : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                      }`}>
+                        ৳ {custData.currentDue.toLocaleString('bn-BD')}
+                      </span>
+                    )}
                     {getRoleBadge(usr.role, usr.shopName)}
                   </div>
                 </div>
@@ -381,7 +525,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                   <div className="px-3 pb-3.5 pt-1 border-t border-slate-800/60 bg-slate-950/40 space-y-2.5 text-[11px] animate-fadeIn">
                     <div className="grid grid-cols-1 gap-2">
                       <div className="flex items-center justify-between bg-slate-900 px-2.5 py-2 rounded-lg border border-slate-800">
-                        <span className="text-slate-400">{t('login_id')}:</span>
+                        <span className="text-slate-400">{t('login_id')} / মোবাইল:</span>
                         <span className="font-mono text-amber-300 font-bold">{usr.loginId}</span>
                       </div>
 
@@ -389,6 +533,26 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                         <span className="text-slate-400">{t('password')}:</span>
                         <span className="font-mono text-slate-300">•••••••• ({usr.password})</span>
                       </div>
+
+                      {usr.role === 'customer' && (
+                        <>
+                          <div className="flex items-center justify-between bg-slate-900 px-2.5 py-2 rounded-lg border border-slate-800">
+                            <span className="text-slate-400">বর্তমান বকেয়া (Due):</span>
+                            <span className={`font-mono font-bold ${
+                              (custData?.currentDue || 0) > 0 ? 'text-rose-400 font-black' : 'text-emerald-400'
+                            }`}>
+                              ৳ {(custData?.currentDue || 0).toLocaleString('bn-BD')}
+                            </span>
+                          </div>
+
+                          {(usr.area || custData?.address) && (
+                            <div className="flex items-center justify-between bg-slate-900 px-2.5 py-2 rounded-lg border border-slate-800">
+                              <span className="text-slate-400">ঠিকানা / এলাকা:</span>
+                              <span className="text-slate-200 font-semibold">{usr.area || custData?.address}</span>
+                            </div>
+                          )}
+                        </>
+                      )}
 
                       <div className="flex items-center justify-between bg-slate-900 px-2.5 py-2 rounded-lg border border-slate-800">
                         <span className="text-slate-400">{t('status')}:</span>
@@ -426,6 +590,25 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                     </div>
                     {/* Card Actions */}
                     <div className="pt-2 border-t border-slate-800/40 flex flex-wrap items-center gap-2">
+                      {usr.role === 'customer' && custData && (currentUser.role === 'admin' || currentUser.role === 'super_admin') && (
+                        <>
+                          <button
+                            onClick={() => openAdjustDueModal(custData)}
+                            className="flex-1 min-w-[120px] py-1.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer"
+                          >
+                            <Sliders className="w-3.5 h-3.5" />
+                            <span>বকেয়া সমন্বয়</span>
+                          </button>
+                          <button
+                            onClick={() => openCustomerEditModal(custData)}
+                            className="flex-1 min-w-[100px] py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer"
+                          >
+                            <Edit className="w-3.5 h-3.5" />
+                            <span>তথ্য এডিট</span>
+                          </button>
+                        </>
+                      )}
+
                       {sellerData && (currentUser.role === 'admin' || currentUser.role === 'super_admin') && (!systemConfig || systemConfig.enableTargetSystem !== false) && (
                         <button
                           onClick={() => {
@@ -519,6 +702,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({
           ) : (
             filteredUsers.map((usr) => {
               const sellerData = sellers.find((s) => s.id === usr.sellerId);
+              const custData = getCustomerForUser(usr);
               const isExpanded = expandedUserId === usr.id;
 
               return (
@@ -534,13 +718,25 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                       </div>
                       <div>
                         <div className="font-bold text-slate-100 text-sm flex items-center gap-2 hover:text-amber-400 transition-colors">
-                          <span>{usr.name}</span>
+                          <span>{usr.role === 'customer' ? (usr.shopName || usr.name) : usr.name}</span>
                           <ChevronDown className={`w-4 h-4 text-slate-500 transition-transform duration-200 ${isExpanded ? 'rotate-180 text-amber-400' : ''}`} />
                         </div>
-                        {usr.role !== 'customer' && usr.shopName && (
-                          <div className="text-[11px] text-emerald-400 font-semibold mt-0.5">
-                            দোকান: {usr.shopName}
+                        {usr.role === 'customer' ? (
+                          <div className="flex items-center gap-3 text-xs text-slate-400 mt-0.5">
+                            <span>প্রোপাইটার: <strong className="text-slate-300">{usr.name}</strong></span>
+                            {(usr.area || custData?.address) && (
+                              <span className="text-slate-500 flex items-center gap-1">
+                                <MapPin className="w-3 h-3 text-slate-500" />
+                                {usr.area || custData?.address}
+                              </span>
+                            )}
                           </div>
+                        ) : (
+                          usr.shopName && (
+                            <div className="text-[11px] text-emerald-400 font-semibold mt-0.5">
+                              দোকান: {usr.shopName}
+                            </div>
+                          )
                         )}
                         {usr.sellerId && (
                           <div className="text-[10px] font-mono text-amber-400/80 mt-0.5">
@@ -550,7 +746,18 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-6">
+                    <div className="flex items-center gap-4">
+                      {usr.role === 'customer' && custData && (
+                        <div className="text-right">
+                          <span className={`px-2.5 py-1 rounded-lg text-xs font-bold ${
+                            custData.currentDue > 0
+                              ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30 font-black'
+                              : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                          }`}>
+                            বকেয়া: ৳ {custData.currentDue.toLocaleString('bn-BD')}
+                          </span>
+                        </div>
+                      )}
                       <div>{getRoleBadge(usr.role, usr.shopName)}</div>
                     </div>
                   </div>
@@ -560,7 +767,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                     <div className="px-5 py-4 bg-slate-950/50 border-t border-slate-800/60 animate-fadeIn space-y-4">
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs">
                         <div className="space-y-1">
-                          <div className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">লগইন আইডি / ফোন</div>
+                          <div className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">লগইন আইডি / মোবাইল</div>
                           <div className="font-mono text-amber-300 font-semibold">{usr.loginId}</div>
                         </div>
 
@@ -568,6 +775,26 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                           <div className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">পাসওয়ার্ড</div>
                           <div className="font-mono text-slate-300">•••••••• ({usr.password})</div>
                         </div>
+
+                        {usr.role === 'customer' && (
+                          <>
+                            <div className="space-y-1">
+                              <div className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">বর্তমান বকেয়া (Due)</div>
+                              <div className={`font-mono text-sm font-bold ${
+                                (custData?.currentDue || 0) > 0 ? 'text-rose-400 font-black' : 'text-emerald-400'
+                              }`}>
+                                ৳ {(custData?.currentDue || 0).toLocaleString('bn-BD')}
+                              </div>
+                            </div>
+
+                            {(usr.area || custData?.address) && (
+                              <div className="space-y-1">
+                                <div className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">ঠিকানা / এলাকা</div>
+                                <div className="text-slate-200 font-medium">{usr.area || custData?.address}</div>
+                              </div>
+                            )}
+                          </>
+                        )}
 
                         <div className="space-y-1">
                           <div className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">স্ট্যাটাস</div>
@@ -606,6 +833,25 @@ export const UserManagement: React.FC<UserManagementProps> = ({
 
                       {/* Expandable Action Buttons */}
                       <div className="pt-3 border-t border-slate-800/50 flex items-center justify-end gap-3">
+                        {usr.role === 'customer' && custData && (currentUser.role === 'admin' || currentUser.role === 'super_admin') && (
+                          <>
+                            <button
+                              onClick={() => openAdjustDueModal(custData)}
+                              className="px-3 py-1.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer"
+                            >
+                              <Sliders className="w-3.5 h-3.5" />
+                              <span>বকেয়া সমন্বয় করুন</span>
+                            </button>
+                            <button
+                              onClick={() => openCustomerEditModal(custData)}
+                              className="px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer"
+                            >
+                              <Edit className="w-3.5 h-3.5" />
+                              <span>দোকানের তথ্য এডিট</span>
+                            </button>
+                          </>
+                        )}
+
                         {sellerData && (currentUser.role === 'admin' || currentUser.role === 'super_admin') && (!systemConfig || systemConfig.enableTargetSystem !== false) && (
                           <button
                             onClick={() => {
@@ -793,6 +1039,43 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                 </div>
               </div>
 
+              {/* Address / Area */}
+              <div>
+                <label className="block font-semibold text-slate-300 mb-1">
+                  {role === 'customer' ? 'দোকানের ঠিকানা / বাজার / এলাকা' : 'কর্ম এলাকা (Area)'}
+                </label>
+                <input
+                  type="text"
+                  placeholder={role === 'customer' ? 'যেমন: চকবাজার, ঢাকা' : 'যেমন: সাভার এরিয়া'}
+                  value={area}
+                  onChange={(e) => setArea(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-700 text-slate-100 p-2.5 rounded-xl focus:outline-none focus:border-amber-400"
+                />
+              </div>
+
+              {/* Opening Due if Customer */}
+              {role === 'customer' && (
+                <div>
+                  <label className="block font-semibold text-slate-300 mb-1">
+                    পূর্বের বাকী / প্রারম্ভিক বকেয়া (Opening Due ৳)
+                  </label>
+                  <div className="relative">
+                    <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-amber-400 font-bold">৳</span>
+                    <input
+                      type="number"
+                      min="0"
+                      placeholder="0"
+                      value={initialDue}
+                      onChange={(e) => setInitialDue(e.target.value)}
+                      className="w-full bg-slate-950 border border-slate-700 text-amber-300 font-bold pl-8 pr-3 py-2.5 rounded-xl focus:outline-none focus:border-amber-400"
+                    />
+                  </div>
+                  <p className="text-[10px] text-slate-400 mt-1">
+                    দোকানের পূর্বের কোনো খাতার বাকী থাকলে এখানে লিখুন। পরে যেকোনো সময় এটি বাকী খাতা থেকে সমন্বয় করা যাবে।
+                  </p>
+                </div>
+              )}
+
               {role === 'customer' && (
                 <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-[11px] text-emerald-300">
                   দোকানদার এই মোবাইল নম্বর ও পাসওয়ার্ড ব্যবহার করে অনলাইনে ক্যাটালগ লগইন করতে পারবেন এবং তাদের অর্ডারের তথ্য প্রাক-পূরণ হবে।
@@ -938,6 +1221,208 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                   className="px-4 py-1.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold rounded-lg shadow-md"
                 >
                   সংরক্ষণ করুন
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Customer Profile / Info Modal */}
+      {editingCust && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
+          <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+              <h3 className="text-sm font-bold text-slate-100 flex items-center gap-2">
+                <Edit className="w-4 h-4 text-emerald-400" />
+                <span>দোকান ও কাস্টমার তথ্য এডিট</span>
+              </h3>
+              <button
+                type="button"
+                onClick={() => setEditingCust(null)}
+                className="text-slate-400 hover:text-slate-200"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleCustomerEditSubmit} className="space-y-3 text-xs">
+              <div>
+                <label className="block font-semibold text-slate-300 mb-1">দোকানের নাম (Shop Name) *</label>
+                <input
+                  type="text"
+                  required
+                  value={editCustShopName}
+                  onChange={(e) => setEditCustShopName(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-700 text-slate-100 p-2.5 rounded-xl focus:outline-none focus:border-amber-400"
+                />
+              </div>
+
+              <div>
+                <label className="block font-semibold text-slate-300 mb-1">দোকানদার / প্রোপাইটারের নাম *</label>
+                <input
+                  type="text"
+                  required
+                  value={editCustName}
+                  onChange={(e) => setEditCustName(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-700 text-slate-100 p-2.5 rounded-xl focus:outline-none focus:border-amber-400"
+                />
+              </div>
+
+              <div>
+                <label className="block font-semibold text-slate-300 mb-1">মোবাইল নম্বর *</label>
+                <input
+                  type="tel"
+                  required
+                  value={editCustPhone}
+                  onChange={(e) => setEditCustPhone(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-700 text-amber-300 font-mono p-2.5 rounded-xl focus:outline-none focus:border-amber-400"
+                />
+              </div>
+
+              <div>
+                <label className="block font-semibold text-slate-300 mb-1">ঠিকানা / বাজার / এলাকা</label>
+                <input
+                  type="text"
+                  value={editCustAddress}
+                  onChange={(e) => setEditCustAddress(e.target.value)}
+                  placeholder="যেমন: চকবাজার, ঢাকা"
+                  className="w-full bg-slate-950 border border-slate-700 text-slate-100 p-2.5 rounded-xl focus:outline-none focus:border-amber-400"
+                />
+              </div>
+
+              <div className="flex justify-end gap-2 pt-2 border-t border-slate-800">
+                <button
+                  type="button"
+                  onClick={() => setEditingCust(null)}
+                  className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl font-semibold"
+                >
+                  বাতিল
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold rounded-xl shadow-md"
+                >
+                  তথ্য সংরক্ষণ করুন
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Adjust Customer Due / Opening Due Modal */}
+      {adjustingCust && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
+          <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+              <h3 className="text-sm font-bold text-slate-100 flex items-center gap-2">
+                <Sliders className="w-4 h-4 text-amber-400" />
+                <span>বকেয়া সমন্বয়: {adjustingCust.shopName}</span>
+              </h3>
+              <button
+                type="button"
+                onClick={() => setAdjustingCust(null)}
+                className="text-slate-400 hover:text-slate-200"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleAdjustDueSubmit} className="space-y-4 text-xs">
+              <div className="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-1">
+                <div className="flex justify-between text-slate-400">
+                  <span>দোকানদার:</span>
+                  <span className="text-slate-200 font-bold">{adjustingCust.name}</span>
+                </div>
+                <div className="flex justify-between text-slate-400">
+                  <span>বর্তমান বকেয়া:</span>
+                  <span className="text-rose-400 font-black">{formatTaka(adjustingCust.currentDue)}</span>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-slate-300 font-semibold mb-1.5">সমন্বয়ের ধরণ</label>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setAdjustCustType('add')}
+                    className={`p-2.5 rounded-xl border text-left transition-all ${
+                      adjustCustType === 'add'
+                        ? 'bg-amber-500/20 border-amber-500 text-amber-300 font-bold'
+                        : 'bg-slate-950 border-slate-800 text-slate-400'
+                    }`}
+                  >
+                    ➕ পূর্বের বাকী যোগ করুন
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setAdjustCustType('set')}
+                    className={`p-2.5 rounded-xl border text-left transition-all ${
+                      adjustCustType === 'set'
+                        ? 'bg-amber-500/20 border-amber-500 text-amber-300 font-bold'
+                        : 'bg-slate-950 border-slate-800 text-slate-400'
+                    }`}
+                  >
+                    ✏️ মোট বাকী সেট করুন
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label className="block font-semibold text-slate-300 mb-1">
+                  {adjustCustType === 'add' ? 'যোগ করার পরিমাণ (টাকা ৳) *' : 'মোট বকেয়া নির্ধারণ (টাকা ৳) *'}
+                </label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-amber-400 font-bold">৳</span>
+                  <input
+                    type="number"
+                    min="0"
+                    required
+                    placeholder="0"
+                    value={adjustCustAmount}
+                    onChange={(e) => setAdjustCustAmount(e.target.value)}
+                    className="w-full bg-slate-950 border border-slate-700 text-amber-300 font-black text-base pl-8 pr-3 py-2 rounded-xl focus:outline-none focus:border-amber-400 font-mono"
+                  />
+                </div>
+              </div>
+
+              {/* Calculated Result */}
+              {(() => {
+                const inputVal = Number(adjustCustAmount) || 0;
+                const newDue = adjustCustType === 'add' ? adjustingCust.currentDue + inputVal : inputVal;
+                return (
+                  <div className="bg-amber-500/10 border border-amber-500/30 p-2.5 rounded-xl flex items-center justify-between">
+                    <span className="text-amber-200">আপডেটের পর মোট বাকী:</span>
+                    <span className="font-mono font-black text-rose-400 text-sm">৳ {newDue.toLocaleString('bn-BD')}</span>
+                  </div>
+                );
+              })()}
+
+              <div>
+                <label className="block font-semibold text-slate-300 mb-1">নোট / কারণ</label>
+                <input
+                  type="text"
+                  value={adjustCustNote}
+                  onChange={(e) => setAdjustCustNote(e.target.value)}
+                  placeholder="যেমন: পূর্বের খাতার বাকী"
+                  className="w-full bg-slate-950 border border-slate-700 text-slate-200 p-2 rounded-xl focus:outline-none focus:border-amber-400"
+                />
+              </div>
+
+              <div className="flex justify-end gap-2 pt-2 border-t border-slate-800">
+                <button
+                  type="button"
+                  onClick={() => setAdjustingCust(null)}
+                  className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl font-semibold"
+                >
+                  বাতিল
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded-xl shadow-md"
+                >
+                  বকেয়া সংরক্ষণ করুন
                 </button>
               </div>
             </form>
