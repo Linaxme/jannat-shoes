@@ -74,7 +74,7 @@ export const StockManagement: React.FC<StockManagementProps> = ({
   const [editingProduct, setEditingProduct] = useState<ShoeProduct | null>(null);
   const [deletingProduct, setDeletingProduct] = useState<ShoeProduct | null>(null);
   const [restockProductId, setRestockProductId] = useState<string | null>(null);
-  const [addedPairsInput, setAddedPairsInput] = useState<number>(12);
+  const [addedPairsInput, setAddedPairsInput] = useState<number | string>('');
 
   const defaultCategories = ['জেন্টস ফর্মাল', 'জেন্টস ক্যাজুয়াল', 'স্পোর্টস কেডস', 'লেডিস হিল/স্যান্ডেল', 'বাচ্চাদের জুতা'];
   const categoriesList = systemConfig?.categories && systemConfig.categories.length > 0
@@ -88,18 +88,18 @@ export const StockManagement: React.FC<StockManagementProps> = ({
   const [articleCode, setArticleCode] = useState('');
   const [category, setCategory] = useState<string>(categoriesList[0] || 'জেন্টস ক্যাজুয়াল');
   const [sizeRange, setSizeRange] = useState('৩৯-৪৪');
-  const [buyPrice, setBuyPrice] = useState<number>(450);
-  const [sellPrice, setSellPrice] = useState<number>(550);
-  const [initialStockPairs, setInitialStockPairs] = useState<number>(120);
+  const [buyPrice, setBuyPrice] = useState<number | string>('');
+  const [sellPrice, setSellPrice] = useState<number | string>('');
+  const [initialStockPairs, setInitialStockPairs] = useState<number | string>('');
   const [imageUrl, setImageUrl] = useState('');
 
   // Edit Product Form State
   const [editArticleCode, setEditArticleCode] = useState('');
   const [editCategory, setEditCategory] = useState<string>('জেন্টস ক্যাজুয়াল');
   const [editSizeRange, setEditSizeRange] = useState('');
-  const [editBuyPrice, setEditBuyPrice] = useState<number>(0);
-  const [editSellPrice, setEditSellPrice] = useState<number>(0);
-  const [editStockPairs, setEditStockPairs] = useState<number>(0);
+  const [editBuyPrice, setEditBuyPrice] = useState<number | string>('');
+  const [editSellPrice, setEditSellPrice] = useState<number | string>('');
+  const [editStockPairs, setEditStockPairs] = useState<number | string>('');
   const [editImageUrl, setEditImageUrl] = useState('');
 
   // Image Preview Lightbox State
@@ -184,6 +184,9 @@ export const StockManagement: React.FC<StockManagementProps> = ({
     }
 
     const cleanArticle = articleCode.toUpperCase().trim();
+    const cleanBuyPrice = typeof buyPrice === 'number' ? buyPrice : parseFloat(buyPrice as string) || 0;
+    const cleanSellPrice = typeof sellPrice === 'number' ? sellPrice : parseFloat(sellPrice as string) || cleanBuyPrice;
+    const cleanStock = typeof initialStockPairs === 'number' ? initialStockPairs : parseInt(initialStockPairs as string) || 0;
 
     const newProd: ShoeProduct = {
       id: `p-${Date.now()}`,
@@ -192,11 +195,11 @@ export const StockManagement: React.FC<StockManagementProps> = ({
       category,
       brand: 'জান্নাত সুজ',
       sizeRange,
-      buyPrice,
-      sellPrice: sellPrice > 0 ? sellPrice : buyPrice,
+      buyPrice: cleanBuyPrice,
+      sellPrice: cleanSellPrice > 0 ? cleanSellPrice : cleanBuyPrice,
       retailPrice: 0,
       pairsPerCarton: 12,
-      stockPairs: initialStockPairs,
+      stockPairs: cleanStock,
       minStockAlert: 24,
       imageUrl: imageUrl.trim(),
       updatedAt: new Date().toISOString().split('T')[0]
@@ -205,6 +208,9 @@ export const StockManagement: React.FC<StockManagementProps> = ({
     onAddProduct(newProd);
     setShowAddModal(false);
     setArticleCode('');
+    setBuyPrice('');
+    setSellPrice('');
+    setInitialStockPairs('');
     setImageUrl('');
   };
 
@@ -213,9 +219,9 @@ export const StockManagement: React.FC<StockManagementProps> = ({
     setEditArticleCode(p.articleCode);
     setEditCategory(p.category || 'জেন্টস ক্যাজুয়াল');
     setEditSizeRange(p.sizeRange || '৩৯-৪৪');
-    setEditBuyPrice(p.buyPrice);
-    setEditSellPrice(p.sellPrice || p.buyPrice || 0);
-    setEditStockPairs(p.stockPairs);
+    setEditBuyPrice(p.buyPrice > 0 ? p.buyPrice : '');
+    setEditSellPrice((p.sellPrice || p.buyPrice || 0) > 0 ? (p.sellPrice || p.buyPrice || '') : '');
+    setEditStockPairs(p.stockPairs > 0 ? p.stockPairs : (p.stockPairs === 0 ? 0 : ''));
     setEditImageUrl(p.imageUrl);
     setActiveMenuProductId(null);
   };
@@ -225,15 +231,19 @@ export const StockManagement: React.FC<StockManagementProps> = ({
     if (!editingProduct || !editArticleCode.trim()) return;
 
     const cleanArticle = editArticleCode.toUpperCase().trim();
+    const cleanBuy = typeof editBuyPrice === 'number' ? editBuyPrice : parseFloat(editBuyPrice as string) || 0;
+    const cleanSell = typeof editSellPrice === 'number' ? editSellPrice : parseFloat(editSellPrice as string) || cleanBuy;
+    const cleanStock = typeof editStockPairs === 'number' ? editStockPairs : parseInt(editStockPairs as string) || 0;
+
     const updated: ShoeProduct = {
       ...editingProduct,
       articleCode: cleanArticle,
       name: cleanArticle,
       category: editCategory,
       sizeRange: editSizeRange,
-      buyPrice: editBuyPrice,
-      sellPrice: editSellPrice,
-      stockPairs: editStockPairs,
+      buyPrice: cleanBuy,
+      sellPrice: cleanSell,
+      stockPairs: cleanStock,
       imageUrl: editImageUrl.trim(),
       updatedAt: new Date().toISOString().split('T')[0],
     };
@@ -256,19 +266,21 @@ export const StockManagement: React.FC<StockManagementProps> = ({
   const handleConfirmRestock = () => {
     if (!restockProductId) return;
     
-    if (addedPairsInput === 0) {
+    const parsedAdded = typeof addedPairsInput === 'number' ? addedPairsInput : parseInt(addedPairsInput as string) || 0;
+    if (parsedAdded === 0) {
       alert('অনুগ্রহ করে সঠিক পরিমাণ দিন!');
       return;
     }
     
     const targetProduct = products.find(p => p.id === restockProductId);
-    if (addedPairsInput < 0 && targetProduct && Math.abs(addedPairsInput) > targetProduct.stockPairs) {
+    if (parsedAdded < 0 && targetProduct && Math.abs(parsedAdded) > targetProduct.stockPairs) {
        alert('স্টকের চেয়ে বেশি পরিমাণ বাদ দেওয়া যাবে না!');
        return;
     }
 
-    onRestockProduct(restockProductId, addedPairsInput);
+    onRestockProduct(restockProductId, parsedAdded);
     setRestockProductId(null);
+    setAddedPairsInput('');
   };
 
   return (
@@ -896,10 +908,10 @@ export const StockManagement: React.FC<StockManagementProps> = ({
                   <label className="block text-rose-300 font-semibold mb-1">ক্রয় মূল্য (৳)</label>
                   <input
                     type="number"
-                    required
                     min="0"
                     value={buyPrice}
-                    onChange={(e) => setBuyPrice(parseFloat(e.target.value) || 0)}
+                    onChange={(e) => setBuyPrice(e.target.value === '' ? '' : parseFloat(e.target.value))}
+                    placeholder="০"
                     className="w-full bg-slate-950 border border-slate-700 text-rose-300 font-bold rounded-xl px-3 py-2 focus:outline-none"
                   />
                 </div>
@@ -907,10 +919,10 @@ export const StockManagement: React.FC<StockManagementProps> = ({
                   <label className="block text-emerald-400 font-semibold mb-1">বিক্রয় মূল্য (৳)</label>
                   <input
                     type="number"
-                    required
                     min="0"
                     value={sellPrice}
-                    onChange={(e) => setSellPrice(parseFloat(e.target.value) || 0)}
+                    onChange={(e) => setSellPrice(e.target.value === '' ? '' : parseFloat(e.target.value))}
+                    placeholder="০"
                     className="w-full bg-slate-950 border border-slate-700 text-emerald-400 font-bold rounded-xl px-3 py-2 focus:outline-none"
                   />
                 </div>
@@ -920,9 +932,9 @@ export const StockManagement: React.FC<StockManagementProps> = ({
                 <label className="block text-amber-300 font-semibold mb-1">প্রাথমিক মজুদ (জোড়া)</label>
                 <input
                   type="number"
-                  required
                   value={initialStockPairs}
-                  onChange={(e) => setInitialStockPairs(parseInt(e.target.value) || 0)}
+                  onChange={(e) => setInitialStockPairs(e.target.value === '' ? '' : parseInt(e.target.value))}
+                  placeholder="০"
                   className="w-full bg-slate-950 border border-slate-700 text-amber-300 font-bold rounded-xl px-3 py-2 focus:outline-none"
                 />
               </div>
@@ -1060,10 +1072,10 @@ export const StockManagement: React.FC<StockManagementProps> = ({
                   <label className="block text-rose-300 font-semibold mb-1">ক্রয় মূল্য (৳)</label>
                   <input
                     type="number"
-                    required
                     min="0"
                     value={editBuyPrice}
-                    onChange={(e) => setEditBuyPrice(parseFloat(e.target.value) || 0)}
+                    onChange={(e) => setEditBuyPrice(e.target.value === '' ? '' : parseFloat(e.target.value))}
+                    placeholder="০"
                     className="w-full bg-slate-950 border border-slate-700 text-rose-300 font-bold rounded-xl px-3 py-2 focus:outline-none"
                   />
                 </div>
@@ -1071,10 +1083,10 @@ export const StockManagement: React.FC<StockManagementProps> = ({
                   <label className="block text-emerald-400 font-semibold mb-1">বিক্রয় মূল্য (৳)</label>
                   <input
                     type="number"
-                    required
                     min="0"
                     value={editSellPrice}
-                    onChange={(e) => setEditSellPrice(parseFloat(e.target.value) || 0)}
+                    onChange={(e) => setEditSellPrice(e.target.value === '' ? '' : parseFloat(e.target.value))}
+                    placeholder="০"
                     className="w-full bg-slate-950 border border-slate-700 text-emerald-400 font-bold rounded-xl px-3 py-2 focus:outline-none"
                   />
                 </div>
@@ -1084,9 +1096,9 @@ export const StockManagement: React.FC<StockManagementProps> = ({
                 <label className="block text-amber-300 font-semibold mb-1">বর্তমান মজুদ (জোড়া)</label>
                 <input
                   type="number"
-                  required
                   value={editStockPairs}
-                  onChange={(e) => setEditStockPairs(parseInt(e.target.value) || 0)}
+                  onChange={(e) => setEditStockPairs(e.target.value === '' ? '' : parseInt(e.target.value))}
+                  placeholder="০"
                   className="w-full bg-slate-950 border border-slate-700 text-amber-300 font-bold rounded-xl px-3 py-2 focus:outline-none"
                 />
               </div>
@@ -1232,13 +1244,13 @@ export const StockManagement: React.FC<StockManagementProps> = ({
                 <input
                   type="number"
                   value={addedPairsInput}
-                  onChange={(e) => setAddedPairsInput(parseInt(e.target.value) || 0)}
-                  placeholder="যেমন: 12 (যোগ) অথবা -2 (বাদ)"
+                  onChange={(e) => setAddedPairsInput(e.target.value === '' ? '' : parseInt(e.target.value))}
+                  placeholder="যেমন: ১২ (যোগ) বা -২ (বাদ)"
                   className="w-full bg-slate-950 border border-slate-700 text-emerald-400 font-bold rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-emerald-500"
                 />
                 <p className="text-[10px] text-slate-400 mt-1">
-                  * নতুন স্টক বা রিটার্ন হলে পজিটিভ সংখ্যা দিন (যেমন: 12)<br/>
-                  * ড্যামেজ বা মিসিং হলে নেগেটিভ সংখ্যা দিন (যেমন: -2)
+                  * নতুন স্টক বা রিটার্ন হলে সংখ্যা দিন (যেমন: ১২)<br/>
+                  * ড্যামেজ বা বাদ দিতে মাইনাস দিন (যেমন: -২)
                 </p>
               </div>
 

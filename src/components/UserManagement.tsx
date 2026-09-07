@@ -17,7 +17,7 @@ interface UserManagementProps {
   onResetPassword: (userId: string, newPass: string) => void;
   onUpdateSeller?: (updatedSeller: SalesRep) => void;
   onUpdateCustomer?: (updatedCust: Customer, note?: string) => void;
-  onDeleteUserAccount?: (userId: string) => void;
+  onDeleteUserAccount?: (userId: string, customerId?: string) => void;
 }
 
 export const UserManagement: React.FC<UserManagementProps> = ({
@@ -59,8 +59,8 @@ export const UserManagement: React.FC<UserManagementProps> = ({
   const [phone, setPhone] = useState<string>('');
   const [area, setArea] = useState<string>('');
   const [initialDue, setInitialDue] = useState<number | string>('');
-  const [targetPairs, setTargetPairs] = useState<number>(1000);
-  const [targetAmount, setTargetAmount] = useState<number>(0);
+  const [targetPairs, setTargetPairs] = useState<number | string>('');
+  const [targetAmount, setTargetAmount] = useState<number | string>('');
 
   // Password reset modal state
   const [resetTargetUser, setResetTargetUser] = useState<UserAccount | null>(null);
@@ -68,8 +68,8 @@ export const UserManagement: React.FC<UserManagementProps> = ({
 
   // Seller edit state
   const [editingSeller, setEditingSeller] = useState<SalesRep | null>(null);
-  const [editTargetPairs, setEditTargetPairs] = useState<number>(1000);
-  const [editTargetAmount, setEditTargetAmount] = useState<number>(0);
+  const [editTargetPairs, setEditTargetPairs] = useState<number | string>('');
+  const [editTargetAmount, setEditTargetAmount] = useState<number | string>('');
 
   // Customer edit info state
   const [editingCust, setEditingCust] = useState<Customer | null>(null);
@@ -153,8 +153,8 @@ export const UserManagement: React.FC<UserManagementProps> = ({
     if (editingSeller && onUpdateSeller) {
       onUpdateSeller({
         ...editingSeller,
-        monthlyTargetPairs: editTargetPairs,
-        monthlyTargetAmount: editTargetAmount,
+        monthlyTargetPairs: Number(editTargetPairs) || 0,
+        monthlyTargetAmount: Number(editTargetAmount) || 0,
       });
       setEditingSeller(null);
     }
@@ -176,8 +176,8 @@ export const UserManagement: React.FC<UserManagementProps> = ({
         name: name,
         phone: phone || loginId,
         area: area || '',
-        monthlyTargetPairs: targetPairs,
-        monthlyTargetAmount: targetAmount,
+        monthlyTargetPairs: Number(targetPairs) || 0,
+        monthlyTargetAmount: Number(targetAmount) || 0,
         commissionRatePercent: 0,
       };
     }
@@ -207,8 +207,8 @@ export const UserManagement: React.FC<UserManagementProps> = ({
     setPhone('');
     setArea('');
     setInitialDue('');
-    setTargetPairs(1000);
-    setTargetAmount(0);
+    setTargetPairs('');
+    setTargetAmount('');
     setShowAddModal(false);
   };
 
@@ -648,10 +648,12 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                           {onDeleteUserAccount && (
                             confirmingDeleteUserId === usr.id ? (
                               <div className="flex items-center gap-1 bg-rose-950/80 p-1 rounded-lg border border-rose-500/50">
-                                <span className="text-[10px] font-bold text-rose-300 px-1">রিমুভ?</span>
+                                <span className="text-[10px] font-bold text-rose-300 px-1">
+                                  {usr.role === 'customer' ? 'মুছে ফেলবেন?' : 'রিমুভ?'}
+                                </span>
                                 <button
                                   onClick={() => {
-                                    onDeleteUserAccount(usr.id);
+                                    onDeleteUserAccount(usr.id, custData?.id);
                                     setConfirmingDeleteUserId(null);
                                   }}
                                   className="px-2 py-0.5 bg-rose-600 hover:bg-rose-500 text-white rounded text-xs font-black shadow transition cursor-pointer"
@@ -669,10 +671,10 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                               <button
                                 onClick={() => setConfirmingDeleteUserId(usr.id)}
                                 className="px-2.5 py-1.5 bg-rose-600/20 hover:bg-rose-600/30 text-rose-400 border border-rose-500/40 rounded-lg text-xs font-semibold transition cursor-pointer flex items-center gap-1"
-                                title="ইউজার একাউন্ট রিমুভ করুন"
+                                title={usr.role === 'customer' ? 'দোকান ও একাউন্ট রিমুভ করুন' : 'ইউজার একাউন্ট রিমুভ করুন'}
                               >
                                 <UserX className="w-3.5 h-3.5" />
-                                <span>রিমুভ</span>
+                                <span>{usr.role === 'customer' ? 'দোকান রিমুভ' : 'রিমুভ'}</span>
                               </button>
                             )
                           )}
@@ -891,10 +893,12 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                             {onDeleteUserAccount && (
                               confirmingDeleteUserId === usr.id ? (
                                 <div className="flex items-center gap-1 bg-rose-950/80 p-1 rounded-lg border border-rose-500/50">
-                                  <span className="text-[11px] font-bold text-rose-300 px-1">স্থায়ীভাবে রিমুভ করবেন?</span>
+                                  <span className="text-[11px] font-bold text-rose-300 px-1">
+                                    {usr.role === 'customer' ? 'দোকানটি স্থায়ীভাবে মুছে ফেলবেন?' : 'স্থায়ীভাবে রিমুভ করবেন?'}
+                                  </span>
                                   <button
                                     onClick={() => {
-                                      onDeleteUserAccount(usr.id);
+                                      onDeleteUserAccount(usr.id, custData?.id);
                                       setConfirmingDeleteUserId(null);
                                     }}
                                     className="px-2.5 py-1 bg-rose-600 hover:bg-rose-500 text-white rounded text-xs font-black shadow transition cursor-pointer"
@@ -912,10 +916,10 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                                 <button
                                   onClick={() => setConfirmingDeleteUserId(usr.id)}
                                   className="px-3 py-1.5 bg-rose-600/20 hover:bg-rose-600/30 text-rose-400 border border-rose-500/40 rounded-lg text-xs font-bold transition cursor-pointer flex items-center gap-1"
-                                  title="ইউজার একাউন্ট রিমুভ করুন"
+                                  title={usr.role === 'customer' ? 'দোকান ও একাউন্ট রিমুভ করুন' : 'ইউজার একাউন্ট রিমুভ করুন'}
                                 >
                                   <UserX className="w-3.5 h-3.5" />
-                                  <span>রিমুভ</span>
+                                  <span>{usr.role === 'customer' ? 'দোকান রিমুভ' : 'রিমুভ'}</span>
                                 </button>
                               )
                             )}
@@ -1091,7 +1095,8 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                     <input
                       type="number"
                       value={targetPairs}
-                      onChange={(e) => setTargetPairs(Number(e.target.value))}
+                      onChange={(e) => setTargetPairs(e.target.value === '' ? '' : Number(e.target.value))}
+                      placeholder="যেমন: ১০০০"
                       className="w-full bg-slate-950 border border-slate-700 text-slate-100 font-mono p-2.5 rounded-xl focus:outline-none focus:border-amber-400"
                     />
                   </div>
@@ -1101,8 +1106,9 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                     </label>
                     <input
                       type="number"
-                      value={targetAmount || ''}
-                      onChange={(e) => setTargetAmount(Number(e.target.value))}
+                      value={targetAmount}
+                      onChange={(e) => setTargetAmount(e.target.value === '' ? '' : Number(e.target.value))}
+                      placeholder="যেমন: ৫০০০০"
                       className="w-full bg-slate-950 border border-slate-700 text-slate-100 font-mono p-2.5 rounded-xl focus:outline-none focus:border-emerald-400"
                     />
                   </div>

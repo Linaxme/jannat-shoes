@@ -70,3 +70,18 @@ export function getLocalDateStr(date: Date = new Date()): string {
   return `${year}-${month}-${day}`;
 }
 
+// Clean and normalize phone numbers for consistent comparison
+export function normalizePhoneNumber(phone?: string | null): string {
+  if (!phone) return '';
+  const enPhone = toEnDigit(String(phone));
+  const digits = enPhone.replace(/\D/g, '');
+  if (digits.startsWith('880')) {
+    return digits.slice(2);
+  }
+  if (digits.length === 10 && digits.startsWith('1')) {
+    return '0' + digits;
+  }
+  return digits;
+}
+
+

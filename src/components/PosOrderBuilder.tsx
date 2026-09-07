@@ -112,9 +112,9 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
   // Quick Product Entry States
   const [productSearchInput, setProductSearchInput] = useState('');
   const [selectedProduct, setSelectedProduct] = useState<ShoeProduct | null>(null);
-  const [entryQty, setEntryQty] = useState<number>(12);
+  const [entryQty, setEntryQty] = useState<number | string>('');
   const [entryUnitType, setEntryUnitType] = useState<'pairs' | 'cartons'>('pairs');
-  const [entryPricePerPair, setEntryPricePerPair] = useState<number>(0);
+  const [entryPricePerPair, setEntryPricePerPair] = useState<number | string>('');
   const [showSuggestions, setShowSuggestions] = useState<boolean>(false);
 
   // Cart Items
@@ -123,11 +123,11 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
   );
 
   // Adjustments & Payment
-  const [discount, setDiscount] = useState<number>(
-    () => typeof savedDraft?.discount === 'number' ? savedDraft.discount : 0
+  const [discount, setDiscount] = useState<number | string>(
+    () => typeof savedDraft?.discount === 'number' && savedDraft.discount > 0 ? savedDraft.discount : ''
   );
-  const [paidAmount, setPaidAmount] = useState<number>(
-    () => typeof savedDraft?.paidAmount === 'number' ? savedDraft.paidAmount : 0
+  const [paidAmount, setPaidAmount] = useState<number | string>(
+    () => typeof savedDraft?.paidAmount === 'number' && savedDraft.paidAmount > 0 ? savedDraft.paidAmount : ''
   );
   const [paymentMethod, setPaymentMethod] = useState<'নগদ ক্যাশ' | 'বিকাশ / নগদ' | 'ব্যাংক ট্রান্সফার' | 'বাকী (ডিউ)'>(
     () => savedDraft?.paymentMethod || 'নগদ ক্যাশ'
@@ -141,7 +141,7 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
 
   // Save POS Draft to LocalStorage continuously so data is preserved when navigating tabs or page reloads
   useEffect(() => {
-    if (cartItems.length > 0 || discount > 0 || paidAmount > 0 || notes) {
+    if (cartItems.length > 0 || Number(discount) > 0 || Number(paidAmount) > 0 || notes) {
       localStorage.setItem('lixa_pos_draft', JSON.stringify({
         selectedCustomerId,
         cartItems,
@@ -185,18 +185,21 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
   });
 
   // Cart Calculations
+  const discountNum = typeof discount === 'number' ? discount : parseFloat(discount) || 0;
+  const paidAmountNum = typeof paidAmount === 'number' ? paidAmount : parseFloat(paidAmount) || 0;
+
   const totalPairs = cartItems.reduce((sum, item) => sum + item.totalPairs, 0);
   const subTotal = cartItems.reduce((sum, item) => sum + item.totalAmount, 0);
-  const grandTotal = Math.max(0, subTotal - discount);
+  const grandTotal = Math.max(0, subTotal - discountNum);
   const previousDue = selectedCustomer?.currentDue || 0;
-  const newDueAmount = Math.max(0, grandTotal - paidAmount);
+  const newDueAmount = Math.max(0, grandTotal - paidAmountNum);
   const totalNetDue = previousDue + newDueAmount;
 
   // Handle Select Suggestion
   const handleSelectSuggestion = (p: ShoeProduct) => {
     setSelectedProduct(p);
     setProductSearchInput(`${p.articleCode} - ${p.name}`);
-    setEntryPricePerPair(p.sellPrice || p.buyPrice || 0);
+    setEntryPricePerPair(p.sellPrice || p.buyPrice || '');
     setShowSuggestions(false);
   };
 
@@ -218,13 +221,15 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
       return;
     }
 
-    if (entryQty <= 0) {
-      alert('অনুগ্রহ করে সঠিক পরিমাণ দিন!');
+    const qtyNumber = typeof entryQty === 'number' ? entryQty : parseInt(entryQty as string) || 0;
+    if (qtyNumber <= 0) {
+      alert('অনুগ্রহ করে জোড়ার পরিমাণ লিখুন!');
       return;
     }
 
-    const price = entryPricePerPair > 0 ? entryPricePerPair : (prod.sellPrice || prod.buyPrice);
-    const calculatedPairs = entryUnitType === 'cartons' ? entryQty * prod.pairsPerCarton : entryQty;
+    const parsedPrice = typeof entryPricePerPair === 'number' ? entryPricePerPair : parseFloat(entryPricePerPair as string);
+    const price = !isNaN(parsedPrice) && parsedPrice > 0 ? parsedPrice : (prod.sellPrice || prod.buyPrice || 0);
+    const calculatedPairs = entryUnitType === 'cartons' ? qtyNumber * prod.pairsPerCarton : qtyNumber;
     const itemTotalAmount = calculatedPairs * price;
 
     const existingIndex = cartItems.findIndex(
@@ -243,7 +248,7 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
 
     if (existingIndex > -1) {
       const updated = [...cartItems];
-      const newQty = updated[existingIndex].quantityInput + entryQty;
+      const newQty = updated[existingIndex].quantityInput + qtyNumber;
       const newPairs = entryUnitType === 'cartons' ? newQty * prod.pairsPerCarton : newQty;
       updated[existingIndex] = {
         ...updated[existingIndex],
@@ -260,7 +265,7 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
         productName: prod.name,
         sizeRange: prod.sizeRange,
         unitType: entryUnitType,
-        quantityInput: entryQty,
+        quantityInput: qtyNumber,
         totalPairs: calculatedPairs,
         unitSellPrice: price,
         unitBuyPrice: prod.buyPrice,
@@ -269,11 +274,11 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
       setCartItems([...cartItems, newItem]);
     }
 
-    // Reset entry inputs
+    // Reset entry inputs to empty
     setProductSearchInput('');
     setSelectedProduct(null);
-    setEntryQty(12);
-    setEntryPricePerPair(0);
+    setEntryQty('');
+    setEntryPricePerPair('');
   };
 
   // Update Cart Quantity
@@ -350,9 +355,9 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
     const memoNo = `MEMO-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
 
     let status: 'পরিশোধিত' | 'আংশিক বাকী' | 'সম্পূর্ণ বাকী' = 'পরিশোধিত';
-    if (paidAmount === 0) {
+    if (paidAmountNum === 0) {
       status = 'সম্পূর্ণ বাকী';
-    } else if (paidAmount < grandTotal) {
+    } else if (paidAmountNum < grandTotal) {
       status = 'আংশিক বাকী';
     }
 
@@ -374,10 +379,10 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
       totalPairs,
       totalCartons: approxCartons,
       subTotal,
-      discount,
+      discount: discountNum,
       adjustmentAmount: 0,
       grandTotal,
-      paidAmount,
+      paidAmount: paidAmountNum,
       dueAmount: newDueAmount,
       previousDue,
       totalNetDue,
@@ -390,8 +395,8 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
 
     onCreateOrder(newOrder);
     setCartItems([]);
-    setDiscount(0);
-    setPaidAmount(0);
+    setDiscount('');
+    setPaidAmount('');
     setNotes('');
     localStorage.removeItem('lixa_pos_draft');
   };
@@ -400,8 +405,8 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
   const handleClearDraft = () => {
     if (window.confirm('আপনি কি নিশ্চিত যে বর্তমান খসড়া মেমোর সমস্ত তথ্য মুছে নতুন মেমো শুরু করতে চান?')) {
       setCartItems([]);
-      setDiscount(0);
-      setPaidAmount(0);
+      setDiscount('');
+      setPaidAmount('');
       setNotes('');
       localStorage.removeItem('lixa_pos_draft');
     }
@@ -764,8 +769,9 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
             <input
               type="number"
               min="1"
-              value={entryQty || ''}
-              onChange={(e) => setEntryQty(parseInt(e.target.value) || 0)}
+              value={entryQty}
+              onChange={(e) => setEntryQty(e.target.value === '' ? '' : parseInt(e.target.value))}
+              placeholder="জোড়ার পরিমাণ"
               className="w-full bg-slate-950 border border-slate-800 text-xs sm:text-sm text-amber-300 font-bold rounded-xl px-3 py-2.5 focus:outline-none focus:border-amber-500"
             />
           </div>
@@ -778,9 +784,9 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
             <input
               type="number"
               min="0"
-              value={entryPricePerPair || ''}
-              onChange={(e) => setEntryPricePerPair(parseFloat(e.target.value) || 0)}
-              placeholder="দাম"
+              value={entryPricePerPair}
+              onChange={(e) => setEntryPricePerPair(e.target.value === '' ? '' : parseFloat(e.target.value))}
+              placeholder="দর (৳)"
               className="w-full bg-slate-950 border border-slate-800 text-xs sm:text-sm text-emerald-400 font-bold rounded-xl px-3 py-2.5 focus:outline-none focus:border-amber-500"
             />
           </div>
@@ -921,9 +927,9 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
               <input
                 type="number"
                 min="0"
-                value={discount || ''}
-                onChange={(e) => setDiscount(parseFloat(e.target.value) || 0)}
-                placeholder="0"
+                value={discount}
+                onChange={(e) => setDiscount(e.target.value === '' ? '' : parseFloat(e.target.value))}
+                placeholder="০"
                 className="w-28 bg-slate-900 border border-slate-700 text-amber-300 font-bold text-right text-xs py-1 px-2 rounded-lg focus:outline-none"
               />
             </div>
@@ -942,9 +948,9 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
               <input
                 type="number"
                 min="0"
-                value={paidAmount || ''}
-                onChange={(e) => setPaidAmount(parseFloat(e.target.value) || 0)}
-                placeholder="0"
+                value={paidAmount}
+                onChange={(e) => setPaidAmount(e.target.value === '' ? '' : parseFloat(e.target.value))}
+                placeholder="০"
                 className="w-28 bg-slate-900 border border-emerald-500/80 text-emerald-400 font-bold text-right text-xs py-1 px-2 rounded-lg focus:outline-none"
               />
             </div>

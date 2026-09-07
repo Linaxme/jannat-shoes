@@ -15,8 +15,8 @@ export const EditPendingOrderModal: React.FC<EditPendingOrderModalProps> = ({
   onSave,
 }) => {
   const [items, setItems] = useState<OrderItem[]>([...order.items]);
-  const [discount, setDiscount] = useState<number>(order.discount || 0);
-  const [paidAmount, setPaidAmount] = useState<number>(order.paidAmount || 0);
+  const [discount, setDiscount] = useState<number | string>(order.discount > 0 ? order.discount : '');
+  const [paidAmount, setPaidAmount] = useState<number | string>(order.paidAmount > 0 ? order.paidAmount : '');
   const [paymentMethod, setPaymentMethod] = useState(order.paymentMethod);
   const [notes, setNotes] = useState<string>(order.notes || '');
 
@@ -60,13 +60,16 @@ export const EditPendingOrderModal: React.FC<EditPendingOrderModalProps> = ({
   };
 
   // Calculations
+  const discountNum = typeof discount === 'number' ? discount : parseFloat(discount) || 0;
+  const paidAmountNum = typeof paidAmount === 'number' ? paidAmount : parseFloat(paidAmount) || 0;
+
   const totalPairs = items.reduce((sum, i) => sum + i.totalPairs, 0);
   const subTotal = items.reduce((sum, i) => sum + i.totalAmount, 0);
-  const grandTotal = Math.max(0, subTotal - discount);
-  const dueAmount = Math.max(0, grandTotal - paidAmount);
+  const grandTotal = Math.max(0, subTotal - discountNum);
+  const dueAmount = Math.max(0, grandTotal - paidAmountNum);
   const totalNetDue = order.previousDue + dueAmount - (order.grandTotal - order.dueAmount); // Adjust based on previous due difference or simple calculation
 
-  const status = dueAmount === 0 ? 'পরিশোধিত' : paidAmount > 0 ? 'আংশিক বাকী' : 'সম্পূর্ণ বাকী';
+  const status = dueAmount === 0 ? 'পরিশোধিত' : paidAmountNum > 0 ? 'আংশিক বাকী' : 'সম্পূর্ণ বাকী';
 
   const handleSave = () => {
     const updatedOrder: Order = {
@@ -75,9 +78,9 @@ export const EditPendingOrderModal: React.FC<EditPendingOrderModalProps> = ({
       totalPairs,
       totalCartons: Math.round((totalPairs / 12) * 10) / 10,
       subTotal,
-      discount,
+      discount: discountNum,
       grandTotal,
-      paidAmount,
+      paidAmount: paidAmountNum,
       dueAmount,
       totalNetDue: order.previousDue + dueAmount,
       paymentMethod,
@@ -180,7 +183,8 @@ export const EditPendingOrderModal: React.FC<EditPendingOrderModalProps> = ({
                 type="number"
                 min="0"
                 value={discount}
-                onChange={(e) => setDiscount(parseFloat(e.target.value) || 0)}
+                onChange={(e) => setDiscount(e.target.value === '' ? '' : parseFloat(e.target.value))}
+                placeholder="০"
                 className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-slate-100 font-bold focus:outline-none focus:border-amber-500"
               />
             </div>
@@ -191,7 +195,8 @@ export const EditPendingOrderModal: React.FC<EditPendingOrderModalProps> = ({
                 type="number"
                 min="0"
                 value={paidAmount}
-                onChange={(e) => setPaidAmount(parseFloat(e.target.value) || 0)}
+                onChange={(e) => setPaidAmount(e.target.value === '' ? '' : parseFloat(e.target.value))}
+                placeholder="০"
                 className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-emerald-400 font-bold focus:outline-none focus:border-amber-500"
               />
             </div>

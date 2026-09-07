@@ -43,6 +43,7 @@ const Reports = lazy(() => import('./components/Reports').then(m => ({ default: 
 import { fetchFirestoreData, seedFirestoreData, saveDocumentToFirestore, deleteDocumentFromFirestore, clearAllDatabaseData } from './lib/firestoreService';
 import { generateSMSMessage, sendAutoSMS, SMSType } from './utils/smsService';
 import { OrderItem, AppNotification } from './types';
+import { normalizePhoneNumber } from './utils/formatters';
 
 import { CheckCircle2, X } from 'lucide-react';
 
@@ -229,68 +230,7 @@ export default function App() {
           saveDocumentToFirestore('userAccounts', defaultAdmin.id, defaultAdmin);
         }
 
-        // Bi-directional sync between customers and userAccounts
-        const syncAccs = [...accounts];
-        const syncCusts = [...(res.customers || [])];
-        let accsUpdated = false;
-        let custsUpdated = false;
-
-        syncCusts.forEach((c) => {
-          const cPhone = (c.phone || '').replace(/\D/g, '');
-          const exists = syncAccs.some(
-            (u) =>
-              (u.phone && (u.phone || "").replace(/\D/g, '') === cPhone) ||
-              (u.loginId || "").replace(/\D/g, '') === cPhone ||
-              (u.shopName && (u.shopName || "").trim().toLowerCase() === (c.shopName || "").trim().toLowerCase())
-          );
-          if (!exists) {
-            const newU: UserAccount = {
-              id: `usr_sync_${c.id}`,
-              name: c.name,
-              shopName: c.shopName,
-              loginId: c.phone || `017${Math.floor(10000000 + Math.random() * 90000000)}`,
-              password: '123456',
-              role: 'customer',
-              phone: c.phone,
-              area: c.address,
-              isActive: true,
-              createdAt: new Date().toISOString().split('T')[0],
-            };
-            syncAccs.push(newU);
-            saveDocumentToFirestore('userAccounts', newU.id, newU);
-            accsUpdated = true;
-          }
-        });
-
-        syncAccs.forEach((u) => {
-          if (u.role === 'customer') {
-            const uPhone = (u.phone || u.loginId || '').replace(/\D/g, '');
-            const exists = syncCusts.some(
-              (c) =>
-                (c.phone && (c.phone || "").replace(/\D/g, '') === uPhone) ||
-                (u.shopName && (c.shopName || "").trim().toLowerCase() === (u.shopName || "").trim().toLowerCase())
-            );
-            if (!exists) {
-              const newC: Customer = {
-                id: `c_sync_${u.id}`,
-                name: u.name,
-                shopName: u.shopName || u.name,
-                address: u.area || 'ঢাকা',
-                phone: u.phone || u.loginId,
-                assignedSellerId: u.sellerId || '',
-                assignedSellerName: 'প্রধান শাখা',
-                currentDue: 0,
-                creditLimit: 50000,
-              };
-              syncCusts.push(newC);
-              saveDocumentToFirestore('customers', newC.id, newC);
-              custsUpdated = true;
-            }
-          }
-        });
-
-        if (custsUpdated) setCustomers(syncCusts);
-        setUserAccounts(syncAccs);
+        setUserAccounts(accounts);
       }
       if (res.systemConfig) {
         setSystemConfig(res.systemConfig);
@@ -484,12 +424,73 @@ export default function App() {
     }
   };
 
-  const handleDeleteUserAccount = async (userId: string) => {
+  const handleDeleteUserAccount = async (userId: string, linkedCustomerId?: string) => {
     const target = userAccounts.find((u) => u.id === userId);
-    if (!target) return;
-    setUserAccounts((prev) => prev.filter((u) => u.id !== userId));
-    await deleteDocumentFromFirestore('userAccounts', userId);
-    triggerToast(`${target.name} একাউন্টটি সফলভাবে রিমুভ করা হয়েছে`);
+    const targetCustomer = customers.find((c) => c.id === linkedCustomerId || c.id === userId);
+
+    const targetPhone = normalizePhoneNumber(target?.phone || target?.loginId || targetCustomer?.phone);
+    const targetShop = (target?.shopName || targetCustomer?.shopName || '').trim().toLowerCase();
+    const targetName = (target?.name || targetCustomer?.name || '').trim().toLowerCase();
+
+    // 1. Identify all matching user accounts (including duplicates or synced copies)
+    const usersToDelete = userAccounts.filter((u) => {
+      if (u.id === userId) return true;
+      if (linkedCustomerId && (u.id === linkedCustomerId || u.id === `usr_sync_${linkedCustomerId}` || u.id === `usr_${linkedCustomerId}`)) return true;
+      if (target?.role === 'customer' || targetCustomer) {
+        if (u.role === 'customer') {
+          const uPhone = normalizePhoneNumber(u.phone || u.loginId);
+          const uShop = (u.shopName || '').trim().toLowerCase();
+          if (targetPhone && uPhone && targetPhone === uPhone) return true;
+          if (targetShop && uShop && targetShop === uShop) return true;
+        }
+      }
+      return false;
+    });
+
+    const userIdsSet = new Set(usersToDelete.map((u) => u.id));
+    if (userIdsSet.size === 0 && userId) {
+      userIdsSet.add(userId);
+    }
+
+    // 2. Identify all matching customer records to delete
+    const customersToDelete = customers.filter((c) => {
+      if (linkedCustomerId && c.id === linkedCustomerId) return true;
+      if (c.id === userId || c.id === `c_${userId}` || c.id === `c_sync_${userId}` || userId === `usr_sync_${c.id}`) return true;
+      const cPhone = normalizePhoneNumber(c.phone);
+      const cShop = (c.shopName || '').trim().toLowerCase();
+      const cName = (c.name || '').trim().toLowerCase();
+
+      if (targetPhone && cPhone && targetPhone === cPhone) return true;
+      if (targetShop && cShop && targetShop === cShop) return true;
+      if (targetName && cName && targetName === cName && targetShop && cShop === targetShop) return true;
+      return false;
+    });
+
+    const custIdsSet = new Set(customersToDelete.map((c) => c.id));
+
+    // 3. Delete from userAccounts state and Firestore
+    setUserAccounts((prev) => prev.filter((u) => !userIdsSet.has(u.id)));
+    for (const uId of userIdsSet) {
+      await deleteDocumentFromFirestore('userAccounts', uId);
+    }
+
+    // 4. Delete from customers state and Firestore
+    if (custIdsSet.size > 0) {
+      setCustomers((prev) => prev.filter((c) => !custIdsSet.has(c.id)));
+      for (const cId of custIdsSet) {
+        await deleteDocumentFromFirestore('customers', cId);
+      }
+    }
+
+    // 5. If seller, delete from sellers state and Firestore
+    if (target?.role === 'seller' || target?.sellerId) {
+      const sellerId = target.sellerId || target.id;
+      setSellers((prev) => prev.filter((s) => s.id !== sellerId && normalizePhoneNumber(s.phone) !== targetPhone));
+      await deleteDocumentFromFirestore('sellers', sellerId);
+    }
+
+    const displayName = target?.shopName || targetCustomer?.shopName || target?.name || targetCustomer?.name || 'দোকান/একাউন্ট';
+    triggerToast(`${displayName} সফলভাবে সম্পূর্ণ রিমুভ করা হয়েছে`);
   };
 
   const handleDeleteOrder = async (orderId: string) => {
