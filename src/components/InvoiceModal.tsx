@@ -156,6 +156,10 @@ export const InvoiceModal: React.FC<InvoiceModalProps> = ({ order, onClose }) =>
       `মোবাইল: ০১৮৭২-২৫৯২৩৭`;
 
     let phoneStr = (order.customerPhone || "").replace(/[^0-9]/g, '');
+    if (!phoneStr) {
+      alert('এই কাস্টমারের কোনো মোবাইল নম্বর নেই। সরাসরি লিঙ্ক দিয়ে শেয়ার করা সম্ভব নয়।');
+      return;
+    }
     if (phoneStr.startsWith('0') && phoneStr.length === 11) {
       phoneStr = '88' + phoneStr;
     } else if (phoneStr.length === 10) {
@@ -261,7 +265,7 @@ export const InvoiceModal: React.FC<InvoiceModalProps> = ({ order, onClose }) =>
               <div><span className="font-bold">দোকান:</span> {order.shopName}</div>
               <div><span className="font-bold">প্রোপাইটার:</span> {order.customerName}</div>
               <div><span className="font-bold">ঠিকানা:</span> {order.customerAddress}</div>
-              <div><span className="font-bold">মোবাইল:</span> {order.customerPhone}</div>
+              <div><span className="font-bold">মোবাইল:</span> {order.customerPhone || '—'}</div>
             </div>
             <div className="space-y-0.5 text-right">
               <div><span className="font-bold">মেমো নং:</span> <span className="font-mono font-bold text-indigo-900">{order.memoNo}</span></div>

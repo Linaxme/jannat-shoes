@@ -764,27 +764,31 @@ export default function App() {
     await saveDocumentToFirestore('customers', newCust.id, newCust);
 
     // Also create UserAccount so the shop appears under "নিবন্ধিত দোকান" in User Management
-    const phoneVal = newCust.phone?.trim() || `017${Math.floor(10000000 + Math.random() * 90000000)}`;
+    const phoneVal = newCust.phone?.trim() || '';
     const phoneClean = phoneVal.replace(/\D/g, '');
     const existingUser = userAccounts.find(
       (u) =>
-        (u.phone && (u.phone || "").replace(/\D/g, '') === phoneClean) ||
-        (u.loginId || "").replace(/\D/g, '') === phoneClean ||
+        (phoneClean && (
+          (u.phone && (u.phone || "").replace(/\D/g, '') === phoneClean) ||
+          (u.loginId || "").replace(/\D/g, '') === phoneClean
+        )) ||
         (u.shopName && (u.shopName || "").trim().toLowerCase() === (newCust.shopName || "").trim().toLowerCase())
     );
 
     if (!existingUser) {
+      const isOffline = !phoneVal;
       const newUserAcc: UserAccount = {
         id: `usr_${Date.now()}`,
         name: newCust.name,
         shopName: newCust.shopName,
-        loginId: phoneVal,
-        password: '123456',
+        loginId: isOffline ? '' : phoneVal,
+        password: isOffline ? '—' : '123456',
         role: 'customer',
         phone: phoneVal,
         area: newCust.address,
         isActive: true,
         createdAt: new Date().toISOString().split('T')[0],
+        isOffline: isOffline,
       };
       setUserAccounts((prev) => [newUserAcc, ...prev]);
       await saveDocumentToFirestore('userAccounts', newUserAcc.id, newUserAcc);

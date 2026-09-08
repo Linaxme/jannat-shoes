@@ -14,6 +14,7 @@ export interface UserAccount {
   initialDue?: number;
   isActive: boolean;
   createdAt: string;
+  isOffline?: boolean;
 }
 
 export interface User {

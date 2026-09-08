@@ -429,7 +429,7 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
       name: newCustName.trim(),
       shopName: newShopName.trim(),
       address: newAddress.trim() || 'ঢাকা',
-      phone: newPhone.trim() || '01700-000000',
+      phone: newPhone.trim() || '',
       assignedSellerId: sellerId,
       assignedSellerName: sellerName,
       currentDue: initialDueVal,
@@ -589,7 +589,7 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
                   key={c.id}
                   onClick={() => {
                     setSelectedCustomerId(c.id);
-                    setCustomerSearchQuery(`${c.shopName} - ${c.phone}`);
+                    setCustomerSearchQuery(c.phone ? `${c.shopName} - ${c.phone}` : c.shopName);
                     setShowCustomerDropdown(false);
                   }}
                   className={`p-2.5 hover:bg-amber-500/10 cursor-pointer transition-colors flex items-center justify-between gap-3 text-xs ${
@@ -602,9 +602,9 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
                       <span className="truncate">{c.shopName}</span>
                       <span className="text-[10px] text-slate-400 font-normal">({c.name})</span>
                     </div>
-                    <div className="text-[11px] text-slate-400 flex items-center gap-2 mt-0.5 font-mono">
-                      <span>{c.phone}</span>
-                      <span>•</span>
+                    <div className="text-[11px] text-slate-400 flex items-center gap-2 mt-0.5">
+                      {c.phone && <span className="font-mono">{c.phone}</span>}
+                      {c.phone && <span>•</span>}
                       <span className="truncate font-sans">{c.address}</span>
                     </div>
                   </div>
@@ -623,7 +623,7 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
           {showCustomerDropdown && customerSearchQuery.trim() && customerSuggestions.length === 0 && (
             <div className="absolute left-0 right-0 top-full mt-1.5 z-40 bg-slate-950 border border-slate-700 rounded-xl p-3.5 shadow-2xl text-center space-y-2">
               <p className="text-xs text-slate-400">
-                "<span className="text-amber-300 font-semibold">{customerSearchQuery}</span>" নম্বরে কোনো দোকান পাওয়া যায়নি।
+                "<span className="text-amber-300 font-semibold">{customerSearchQuery}</span>" নামে বা নম্বরে কোনো দোকান পাওয়া যায়নি।
               </p>
               <button
                 type="button"
@@ -651,9 +651,11 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
                   {selectedCustomer.shopName}
                 </span>
                 <span className="text-slate-400 font-medium">({selectedCustomer.name})</span>
-                <span className="px-2 py-0.5 rounded bg-slate-800 text-[10px] font-mono text-slate-300">
-                  {selectedCustomer.phone}
-                </span>
+                {selectedCustomer.phone ? (
+                  <span className="px-2 py-0.5 rounded bg-slate-800 text-[10px] font-mono text-slate-300">
+                    {selectedCustomer.phone}
+                  </span>
+                ) : null}
               </div>
               <div className="text-[11px] text-slate-400 flex items-center gap-3">
                 <span>ঠিকানা: {selectedCustomer.address}</span>
@@ -1041,12 +1043,14 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
               </div>
 
               <div>
-                <label className="block text-slate-300 font-medium mb-1">মোবাইল নম্বর</label>
+                <label className="block text-slate-300 font-medium mb-1">
+                  মোবাইল নম্বর <span className="text-slate-400 font-normal text-[10px]">(ঐচ্ছিক)</span>
+                </label>
                 <input
                   type="text"
                   value={newPhone}
                   onChange={(e) => setNewPhone(e.target.value)}
-                  placeholder="মোবাইল নম্বর"
+                  placeholder="মোবাইল নম্বর (ঐচ্ছিক)"
                   className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-slate-100 focus:outline-none"
                 />
               </div>

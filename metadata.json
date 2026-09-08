@@ -1,5 +1,5 @@
 {
-  "name": "পাইকারি জুতা ম্যানেজমেন্ট",
+  "name": "মেসার্স জান্নাত সুজ - শোরুম ও স্টক ম্যানেজমেন্ট",
   "description": "পাইকারি জুতা বিক্রয়, স্টক হিসাব, বাকী তালিকা, ক্যাশ/ডিউ রিসিট ও সেলস রিপোর্টিং সিস্টেম",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]

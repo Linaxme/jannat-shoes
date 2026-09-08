@@ -168,6 +168,7 @@ export const DueManagement: React.FC<DueManagementProps> = ({
       const matchesSearch =
         (c.shopName || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
         (c.name || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (c.phone || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
         (c.address || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
         (c.assignedSellerName && (c.assignedSellerName || "").toLowerCase().includes(searchTerm.toLowerCase()));
 
@@ -280,6 +281,11 @@ export const DueManagement: React.FC<DueManagementProps> = ({
   };
 
   const handleMessageClick = async (cust: Customer) => {
+    if (!cust.phone || !cust.phone.trim()) {
+      alert('এই কাস্টমারের কোনো মোবাইল নম্বর সংরক্ষিত নেই। মেসেজ পাঠানো সম্ভব নয়।');
+      return;
+    }
+
     const todayStr = new Date().toISOString().split('T')[0];
     if (cust.lastDueReminderDate === todayStr) {
       const confirmed = window.confirm('আজ এই কাস্টমারকে ইতিমধ্যে তাগদা মেসেজ পাঠানো হয়েছে! আপনি কি আবার পাঠাতে চান?');
@@ -552,7 +558,9 @@ export const DueManagement: React.FC<DueManagementProps> = ({
                         <div className="py-2.5 space-y-1.5 text-xs">
                           <div className="flex items-center justify-between">
                             <span className="text-slate-400">মোবাইল:</span>
-                            <span className="font-mono text-slate-200">{cust.phone}</span>
+                            <span className="font-mono text-slate-200">
+                              {cust.phone || '—'}
+                            </span>
                           </div>
                           <div className="flex items-center justify-between">
                             <span className="text-slate-400">ঠিকানা:</span>
@@ -582,20 +590,22 @@ export const DueManagement: React.FC<DueManagementProps> = ({
                           <DollarSign className="w-3.5 h-3.5" />
                           টাকা আদায়
                         </button>
-                        <button
-                          onClick={() => handleMessageClick(cust)}
-                          disabled={sendingStatuses[cust.id] === 'sending'}
-                          className={`px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1 transition-all cursor-pointer ${
-                            sendingStatuses[cust.id] === 'sent' || cust.lastDueReminderDate === new Date().toISOString().split('T')[0]
-                              ? 'bg-emerald-950/40 text-emerald-400 border border-emerald-500/20 opacity-90'
-                              : sendingStatuses[cust.id] === 'sending'
-                              ? 'bg-slate-850 text-slate-400 border border-slate-700'
-                              : 'bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-500/30'
-                          }`}
-                          title={cust.lastDueReminderDate === new Date().toISOString().split('T')[0] ? "আজকে ইতিমধ্যে তাগদা মেসেজ পাঠানো হয়েছে (আবারও পাঠাতে পারেন)" : "এসএমএস তাগদা পাঠান"}
-                        >
-                          {renderMessageButtonContent(cust)}
-                        </button>
+                        {cust.phone ? (
+                          <button
+                            onClick={() => handleMessageClick(cust)}
+                            disabled={sendingStatuses[cust.id] === 'sending'}
+                            className={`px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1 transition-all cursor-pointer ${
+                              sendingStatuses[cust.id] === 'sent' || cust.lastDueReminderDate === new Date().toISOString().split('T')[0]
+                                ? 'bg-emerald-950/40 text-emerald-400 border border-emerald-500/20 opacity-90'
+                                : sendingStatuses[cust.id] === 'sending'
+                                ? 'bg-slate-850 text-slate-400 border border-slate-700'
+                                : 'bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-500/30'
+                            }`}
+                            title={cust.lastDueReminderDate === new Date().toISOString().split('T')[0] ? "আজকে ইতিমধ্যে তাগদা মেসেজ পাঠানো হয়েছে (আবারও পাঠাতে পারেন)" : "এসএমএস তাগদা পাঠান"}
+                          >
+                            {renderMessageButtonContent(cust)}
+                          </button>
+                        ) : null}
                       </div>
                     </div>
                   ))
@@ -625,7 +635,7 @@ export const DueManagement: React.FC<DueManagementProps> = ({
                         </td>
 
                         <td className="py-3 px-3 text-slate-300">
-                          <div>{cust.phone}</div>
+                          <div>{cust.phone || '—'}</div>
                           <div className="text-[10px] text-slate-400">{cust.address}</div>
                         </td>
 
@@ -656,20 +666,22 @@ export const DueManagement: React.FC<DueManagementProps> = ({
                               টাকা আদায়
                             </button>
 
-                            <button
-                              onClick={() => handleMessageClick(cust)}
-                              disabled={sendingStatuses[cust.id] === 'sending'}
-                              className={`px-2.5 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1 transition-all cursor-pointer ${
-                                sendingStatuses[cust.id] === 'sent' || cust.lastDueReminderDate === new Date().toISOString().split('T')[0]
-                                  ? 'bg-emerald-950/40 text-emerald-400 border border-emerald-500/20 opacity-90'
-                                  : sendingStatuses[cust.id] === 'sending'
-                                  ? 'bg-slate-850 text-slate-400 border border-slate-700'
-                                  : 'bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-500/30'
-                              }`}
-                              title={cust.lastDueReminderDate === new Date().toISOString().split('T')[0] ? "আজকে ইতিমধ্যে তাগদা মেসেজ পাঠানো হয়েছে (আবারও পাঠাতে পারেন)" : "এসএমএস তাগদা পাঠান"}
-                            >
-                              {renderMessageButtonContent(cust)}
-                            </button>
+                            {cust.phone ? (
+                              <button
+                                onClick={() => handleMessageClick(cust)}
+                                disabled={sendingStatuses[cust.id] === 'sending'}
+                                className={`px-2.5 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1 transition-all cursor-pointer ${
+                                  sendingStatuses[cust.id] === 'sent' || cust.lastDueReminderDate === new Date().toISOString().split('T')[0]
+                                    ? 'bg-emerald-950/40 text-emerald-400 border border-emerald-500/20 opacity-90'
+                                    : sendingStatuses[cust.id] === 'sending'
+                                    ? 'bg-slate-850 text-slate-400 border border-slate-700'
+                                    : 'bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-500/30'
+                                }`}
+                                title={cust.lastDueReminderDate === new Date().toISOString().split('T')[0] ? "আজকে ইতিমধ্যে তাগদা মেসেজ পাঠানো হয়েছে (আবারও পাঠাতে পারেন)" : "এসএমএস তাগদা পাঠান"}
+                              >
+                                {renderMessageButtonContent(cust)}
+                              </button>
+                            ) : null}
                           </div>
                         </td>
                       </tr>

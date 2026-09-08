@@ -3,13 +3,13 @@ export function formatTaka(amount: number | string | undefined | null): string {
   const val = typeof amount === 'number' ? amount : parseFloat(String(amount || 0));
   const num = isNaN(val) ? 0 : val;
   const numStr = Math.round(num).toLocaleString('bn-BD');
-  return `৳ ${numStr}`;
+  return `৳\u00A0${numStr}`;
 }
 
 export function formatTakaEn(amount: number | string | undefined | null): string {
   const val = typeof amount === 'number' ? amount : parseFloat(String(amount || 0));
   const num = isNaN(val) ? 0 : val;
-  return `৳ ${Math.round(num).toLocaleString('en-IN')}`;
+  return `৳\u00A0${Math.round(num).toLocaleString('en-IN')}`;
 }
 
 // Convert English numbers to Bengali digits

@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { UserAccount, UserRole, SalesRep, UITheme, SystemConfig, Customer } from '../types';
 import { toBnDigit, formatTaka } from '../utils/formatters';
-import { UserPlus, Shield, UserCheck, ShieldAlert, ShieldCheck, Key, MapPin, Target, Percent, Lock, UserX, PlusCircle, Sparkles, CheckCircle2, ChevronDown, Edit, Sliders, Settings, Store, Search, Users, DollarSign } from 'lucide-react';
+import { UserPlus, Shield, UserCheck, ShieldAlert, ShieldCheck, Key, MapPin, Target, Percent, Lock, UserX, PlusCircle, Sparkles, CheckCircle2, ChevronDown, Edit, Sliders, Settings, Store, Search, Users, DollarSign, Info } from 'lucide-react';
 
 interface UserManagementProps {
   currentUser: UserAccount;
@@ -13,6 +13,7 @@ interface UserManagementProps {
   systemConfig?: SystemConfig;
   onUpdateSystemConfig?: (newConfig: SystemConfig) => void;
   onAddUserAccount: (newAcc: UserAccount, newSeller?: SalesRep) => void;
+  onAddCustomer?: (newCust: Customer) => void;
   onToggleUserStatus: (userId: string, newStatus: boolean) => void;
   onResetPassword: (userId: string, newPass: string) => void;
   onUpdateSeller?: (updatedSeller: SalesRep) => void;
@@ -29,6 +30,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({
   systemConfig,
   onUpdateSystemConfig,
   onAddUserAccount,
+  onAddCustomer,
   onToggleUserStatus,
   onResetPassword,
   onUpdateSeller,
@@ -162,7 +164,62 @@ export const UserManagement: React.FC<UserManagementProps> = ({
 
   const handleCreateUser = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name || !loginId || !password) return;
+    if (!name.trim()) return;
+
+    // Handling for Customer registration
+    if (role === 'customer') {
+      if (!shopName.trim()) return;
+      const phoneVal = (phone.trim() || loginId.trim());
+
+      // If phone number is NOT provided, save directly as an offline customer
+      if (!phoneVal) {
+        const initialDueVal = Math.max(0, Number(initialDue) || 0);
+        const newCust: Customer = {
+          id: `c_${Date.now()}`,
+          name: name.trim(),
+          shopName: shopName.trim(),
+          address: area.trim() || 'ঠিকানা দেওয়া নেই',
+          phone: '',
+          assignedSellerId: currentUser?.sellerId || currentUser?.id || '',
+          assignedSellerName: currentUser?.name || 'প্রধান শাখা',
+          currentDue: initialDueVal,
+          creditLimit: 50000,
+        };
+
+        if (onAddCustomer) {
+          onAddCustomer(newCust);
+        } else {
+          onAddUserAccount({
+            id: `usr_${Date.now()}`,
+            name: name.trim(),
+            shopName: shopName.trim(),
+            loginId: '',
+            password: '—',
+            role: 'customer',
+            phone: '',
+            area: area.trim(),
+            initialDue: initialDueVal,
+            isActive: true,
+            createdAt: new Date().toISOString().split('T')[0],
+            isOffline: true,
+          });
+        }
+
+        // Reset Form
+        setName('');
+        setShopName('');
+        setLoginId('');
+        setPassword('123456');
+        setPhone('');
+        setArea('');
+        setInitialDue('');
+        setShowAddModal(false);
+        return;
+      }
+    } else {
+      // For staff (admin/seller), loginId and password are required
+      if (!loginId.trim() || !password) return;
+    }
 
     const newId = `usr_${Date.now()}`;
     let createdSellerId: string | undefined = undefined;
@@ -173,9 +230,9 @@ export const UserManagement: React.FC<UserManagementProps> = ({
       createdSellerId = `sr_${Date.now()}`;
       newSellerObj = {
         id: createdSellerId,
-        name: name,
-        phone: phone || loginId,
-        area: area || '',
+        name: name.trim(),
+        phone: phone.trim() || loginId.trim(),
+        area: area.trim() || '',
         monthlyTargetPairs: Number(targetPairs) || 0,
         monthlyTargetAmount: Number(targetAmount) || 0,
         commissionRatePercent: 0,
@@ -195,6 +252,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({
       sellerId: createdSellerId,
       isActive: true,
       createdAt: new Date().toISOString().split('T')[0],
+      isOffline: false,
     };
 
     onAddUserAccount(newAcc, newSellerObj);
@@ -203,7 +261,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({
     setName('');
     setShopName('');
     setLoginId('');
-    setPassword('seller123');
+    setPassword('123456');
     setPhone('');
     setArea('');
     setInitialDue('');
@@ -260,12 +318,51 @@ export const UserManagement: React.FC<UserManagementProps> = ({
   const staffUsers = allNonSuperUsers.filter((u) => u.role === 'admin' || u.role === 'seller');
   const customerUsers = allNonSuperUsers.filter((u) => u.role === 'customer');
 
-  const customerCount = customerUsers.length;
+  // Unified list of registered shops (both online accounts and offline customers)
+  const unifiedCustomerList = useMemo(() => {
+    const list: (UserAccount & { isOffline?: boolean; linkedCustomer?: Customer })[] = [];
+    const matchedCustomerIds = new Set<string>();
+
+    customerUsers.forEach((u) => {
+      const cust = getCustomerForUser(u);
+      if (cust) matchedCustomerIds.add(cust.id);
+      list.push({
+        ...u,
+        isOffline: false,
+        linkedCustomer: cust,
+      });
+    });
+
+    // Add offline customers who do not have an online UserAccount
+    customers.forEach((c) => {
+      if (!matchedCustomerIds.has(c.id)) {
+        list.push({
+          id: `cust_${c.id}`,
+          name: c.name,
+          shopName: c.shopName,
+          loginId: c.phone || '—',
+          password: '—',
+          role: 'customer',
+          phone: c.phone || '',
+          area: c.address,
+          initialDue: c.currentDue,
+          isActive: true,
+          createdAt: '—',
+          isOffline: true,
+          linkedCustomer: c,
+        });
+      }
+    });
+
+    return list;
+  }, [customerUsers, customers]);
+
+  const customerCount = unifiedCustomerList.length;
   const sellerCount = allNonSuperUsers.filter((u) => u.role === 'seller').length;
   const adminCount = allNonSuperUsers.filter((u) => u.role === 'admin').length;
   const staffCount = sellerCount + adminCount;
 
-  const filteredUsers = (activeMainTab === 'staff' ? staffUsers : customerUsers).filter((u) => {
+  const filteredUsers = (activeMainTab === 'staff' ? staffUsers : unifiedCustomerList).filter((u) => {
     if (activeMainTab === 'staff' && selectedRoleFilter !== 'all' && u.role !== selectedRoleFilter) {
       return false;
     }
@@ -284,27 +381,27 @@ export const UserManagement: React.FC<UserManagementProps> = ({
     switch (r) {
       case 'super_admin':
         return (
-          <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-purple-500/20 text-purple-300 border border-purple-500/30 flex items-center gap-1 w-fit">
-            <ShieldAlert className="w-3.5 h-3.5" /> {t('super_admin')}
+          <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-purple-500/20 text-purple-300 border border-purple-500/30 flex items-center gap-1 w-fit shrink-0 whitespace-nowrap">
+            <ShieldAlert className="w-3.5 h-3.5 shrink-0" /> {t('super_admin')}
           </span>
         );
       case 'admin':
         return (
-          <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30 flex items-center gap-1 w-fit">
-            <Shield className="w-3.5 h-3.5" /> {t('admin')}
+          <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30 flex items-center gap-1 w-fit shrink-0 whitespace-nowrap">
+            <Shield className="w-3.5 h-3.5 shrink-0" /> {t('admin')}
           </span>
         );
       case 'seller':
         return (
-          <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-blue-500/20 text-blue-300 border border-blue-500/30 flex items-center gap-1 w-fit">
-            <UserCheck className="w-3.5 h-3.5" /> {t('seller')}
+          <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-blue-500/20 text-blue-300 border border-blue-500/30 flex items-center gap-1 w-fit shrink-0 whitespace-nowrap">
+            <UserCheck className="w-3.5 h-3.5 shrink-0" /> {t('seller')}
           </span>
         );
       case 'customer':
         return (
-          <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center gap-1 w-fit max-w-[180px] sm:max-w-[220px]" title={shopName || 'দোকানদার'}>
+          <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center gap-1 w-fit max-w-[100px] sm:max-w-[180px] shrink-0 whitespace-nowrap" title={shopName || 'দোকান'}>
             <Store className="w-3.5 h-3.5 shrink-0" />
-            <span className="truncate">{shopName || 'দোকানদার'}</span>
+            <span className="truncate">{shopName || 'দোকান'}</span>
           </span>
         );
     }
@@ -471,52 +568,55 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                 {/* Header: Name & Role (Toggles expansion) */}
                 <div 
                   onClick={() => toggleExpandUser(usr.id)}
-                  className="flex items-center justify-between p-3 cursor-pointer hover:bg-slate-800/40 active:bg-slate-800/60 transition"
+                  className="flex items-center justify-between p-3 cursor-pointer hover:bg-slate-800/40 active:bg-slate-800/60 transition gap-2"
                 >
-                  <div className="flex items-center gap-2.5">
+                  <div className="flex items-center gap-2.5 min-w-0 flex-1">
                     <div className="w-7.5 h-7.5 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center font-bold text-xs shrink-0">
                       {usr.name.charAt(0)}
                     </div>
-                    <div>
+                    <div className="min-w-0 flex-1">
                       <div className="font-bold text-slate-100 text-xs sm:text-sm flex items-center gap-1">
-                        <span>{usr.role === 'customer' ? (usr.shopName || usr.name) : usr.name}</span>
-                        <ChevronDown className={`w-3.5 h-3.5 text-slate-500 transition-transform duration-200 ${isExpanded ? 'rotate-180 text-amber-400' : ''}`} />
+                        <span className="truncate">{usr.role === 'customer' ? (usr.shopName || usr.name) : usr.name}</span>
+                        <ChevronDown className={`w-3.5 h-3.5 shrink-0 text-slate-500 transition-transform duration-200 ${isExpanded ? 'rotate-180 text-amber-400' : ''}`} />
                       </div>
                       {usr.role === 'customer' ? (
-                        <div className="flex flex-wrap items-center gap-2 text-[10px] text-slate-400 mt-0.5">
-                          <span>প্রোপাইটার: {usr.name}</span>
+                        <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[10px] text-slate-400 mt-0.5">
+                          <span className="truncate">প্রোপাইটার: {usr.name}</span>
                           {(usr.area || custData?.address) && (
-                            <span className="text-slate-500 flex items-center gap-0.5">
-                              <MapPin className="w-2.5 h-2.5" />
-                              {usr.area || custData?.address}
+                            <span className="text-slate-500 flex items-center gap-0.5 shrink-0">
+                              <MapPin className="w-2.5 h-2.5 shrink-0" />
+                              <span className="truncate max-w-[90px]">{usr.area || custData?.address}</span>
                             </span>
                           )}
                         </div>
                       ) : (
                         usr.shopName && (
-                          <div className="text-[10px] text-emerald-400 font-semibold mt-0.5">
+                          <div className="text-[10px] text-emerald-400 font-semibold mt-0.5 truncate">
                             দোকান: {usr.shopName}
                           </div>
                         )
                       )}
                       {usr.sellerId && (
-                        <div className="text-[9px] text-amber-400/80 font-mono mt-0.5">
+                        <div className="text-[9px] text-amber-400/80 font-mono mt-0.5 truncate">
                           {t('seller_id')}: {usr.sellerId}
                         </div>
                       )}
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
+
+                  <div className="flex items-center gap-1.5 shrink-0">
                     {usr.role === 'customer' && custData && (
-                      <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold ${
+                      <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold whitespace-nowrap shrink-0 inline-flex items-center justify-center leading-normal ${
                         custData.currentDue > 0
-                          ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30'
+                          ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30 font-black'
                           : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
                       }`}>
-                        ৳ {custData.currentDue.toLocaleString('bn-BD')}
+                        ৳&nbsp;{custData.currentDue.toLocaleString('bn-BD')}
                       </span>
                     )}
-                    {getRoleBadge(usr.role, usr.shopName)}
+                    <div className="shrink-0">
+                      {getRoleBadge(usr.role, usr.shopName)}
+                    </div>
                   </div>
                 </div>
 
@@ -526,22 +626,26 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                     <div className="grid grid-cols-1 gap-2">
                       <div className="flex items-center justify-between bg-slate-900 px-2.5 py-2 rounded-lg border border-slate-800">
                         <span className="text-slate-400">{t('login_id')} / মোবাইল:</span>
-                        <span className="font-mono text-amber-300 font-bold">{usr.loginId}</span>
+                        <span className="font-mono text-amber-300 font-bold">
+                          {usr.phone || usr.loginId || '—'}
+                        </span>
                       </div>
 
                       <div className="flex items-center justify-between bg-slate-900 px-2.5 py-2 rounded-lg border border-slate-800">
                         <span className="text-slate-400">{t('password')}:</span>
-                        <span className="font-mono text-slate-300">•••••••• ({usr.password})</span>
+                        <span className="font-mono text-slate-300">
+                          {usr.password === '—' || usr.isOffline ? '—' : `•••••••• (${usr.password})`}
+                        </span>
                       </div>
 
                       {usr.role === 'customer' && (
                         <>
                           <div className="flex items-center justify-between bg-slate-900 px-2.5 py-2 rounded-lg border border-slate-800">
                             <span className="text-slate-400">বর্তমান বকেয়া (Due):</span>
-                            <span className={`font-mono font-bold ${
+                            <span className={`font-mono font-bold whitespace-nowrap ${
                               (custData?.currentDue || 0) > 0 ? 'text-rose-400 font-black' : 'text-emerald-400'
                             }`}>
-                              ৳ {(custData?.currentDue || 0).toLocaleString('bn-BD')}
+                              ৳&nbsp;{(custData?.currentDue || 0).toLocaleString('bn-BD')}
                             </span>
                           </div>
 
@@ -623,7 +727,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                         </button>
                       )}
 
-                      {(currentUser.role === 'admin' || currentUser.role === 'super_admin' || usr.id === currentUser.id) && (
+                      {!usr.isOffline && (currentUser.role === 'admin' || currentUser.role === 'super_admin' || usr.id === currentUser.id) && (
                         <button
                           onClick={() => setResetTargetUser(usr)}
                           className="flex-1 min-w-[120px] py-1.5 bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-500/30 rounded-lg text-xs font-semibold transition flex items-center justify-center gap-1.5 cursor-pointer"
@@ -633,18 +737,19 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                         </button>
                       )}
 
-                      {(currentUser.role === 'admin' || currentUser.role === 'super_admin') && usr.id !== currentUser.id && (
-                        <>
-                          <button
-                            onClick={() => onToggleUserStatus(usr.id, !usr.isActive)}
-                            className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold border transition cursor-pointer ${
-                              usr.isActive
-                                ? 'bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border-rose-500/30'
-                                : 'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
-                            }`}
-                          >
-                            {usr.isActive ? 'ডিজেবল' : 'এনাবল'}
-                          </button>
+                      {!usr.isOffline && (currentUser.role === 'admin' || currentUser.role === 'super_admin') && usr.id !== currentUser.id && (
+                        <button
+                          onClick={() => onToggleUserStatus(usr.id, !usr.isActive)}
+                          className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold border transition cursor-pointer ${
+                            usr.isActive
+                              ? 'bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border-rose-500/30'
+                              : 'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
+                          }`}
+                        >
+                          {usr.isActive ? 'ডিজেবল' : 'এনাবল'}
+                        </button>
+                      )}
+
                           {onDeleteUserAccount && (
                             confirmingDeleteUserId === usr.id ? (
                               <div className="flex items-center gap-1 bg-rose-950/80 p-1 rounded-lg border border-rose-500/50">
@@ -678,8 +783,6 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                               </button>
                             )
                           )}
-                        </>
-                      )}
                     </div>
                   </div>
                 )}
@@ -748,19 +851,19 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-3 shrink-0">
                       {usr.role === 'customer' && custData && (
-                        <div className="text-right">
-                          <span className={`px-2.5 py-1 rounded-lg text-xs font-bold ${
+                        <div className="text-right shrink-0">
+                          <span className={`px-2.5 py-1 rounded-lg text-xs font-bold whitespace-nowrap shrink-0 inline-flex items-center leading-normal ${
                             custData.currentDue > 0
                               ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30 font-black'
                               : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
                           }`}>
-                            বকেয়া: ৳ {custData.currentDue.toLocaleString('bn-BD')}
+                            বকেয়া:&nbsp;৳&nbsp;{custData.currentDue.toLocaleString('bn-BD')}
                           </span>
                         </div>
                       )}
-                      <div>{getRoleBadge(usr.role, usr.shopName)}</div>
+                      <div className="shrink-0">{getRoleBadge(usr.role, usr.shopName)}</div>
                     </div>
                   </div>
 
@@ -770,22 +873,26 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs">
                         <div className="space-y-1">
                           <div className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">লগইন আইডি / মোবাইল</div>
-                          <div className="font-mono text-amber-300 font-semibold">{usr.loginId}</div>
+                          <div className="font-mono text-amber-300 font-semibold">
+                            {usr.phone || usr.loginId || '—'}
+                          </div>
                         </div>
 
                         <div className="space-y-1">
                           <div className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">পাসওয়ার্ড</div>
-                          <div className="font-mono text-slate-300">•••••••• ({usr.password})</div>
+                          <div className="font-mono text-slate-300">
+                            {usr.password === '—' || usr.isOffline ? '—' : `•••••••• (${usr.password})`}
+                          </div>
                         </div>
 
                         {usr.role === 'customer' && (
                           <>
                             <div className="space-y-1">
                               <div className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">বর্তমান বকেয়া (Due)</div>
-                              <div className={`font-mono text-sm font-bold ${
+                              <div className={`font-mono text-sm font-bold whitespace-nowrap ${
                                 (custData?.currentDue || 0) > 0 ? 'text-rose-400 font-black' : 'text-emerald-400'
                               }`}>
-                                ৳ {(custData?.currentDue || 0).toLocaleString('bn-BD')}
+                                ৳&nbsp;{(custData?.currentDue || 0).toLocaleString('bn-BD')}
                               </div>
                             </div>
 
@@ -868,7 +975,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                           </button>
                         )}
 
-                        {(currentUser.role === 'admin' || currentUser.role === 'super_admin' || usr.id === currentUser.id) && (
+                        {!usr.isOffline && (currentUser.role === 'admin' || currentUser.role === 'super_admin' || usr.id === currentUser.id) && (
                           <button
                             onClick={() => setResetTargetUser(usr)}
                             className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-500/30 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer"
@@ -878,18 +985,19 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                           </button>
                         )}
 
-                        {(currentUser.role === 'admin' || currentUser.role === 'super_admin') && usr.id !== currentUser.id && (
-                          <>
-                            <button
-                              onClick={() => onToggleUserStatus(usr.id, !usr.isActive)}
-                              className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition cursor-pointer ${
-                                usr.isActive
-                                  ? 'bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border-rose-500/30'
-                                  : 'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
-                              }`}
-                            >
-                              {usr.isActive ? 'ডিজেবল করুন' : 'এনাবল করুন'}
-                            </button>
+                        {!usr.isOffline && (currentUser.role === 'admin' || currentUser.role === 'super_admin') && usr.id !== currentUser.id && (
+                          <button
+                            onClick={() => onToggleUserStatus(usr.id, !usr.isActive)}
+                            className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition cursor-pointer ${
+                              usr.isActive
+                                ? 'bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border-rose-500/30'
+                                : 'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
+                            }`}
+                          >
+                            {usr.isActive ? 'ডিজেবল করুন' : 'এনাবল করুন'}
+                          </button>
+                        )}
+
                             {onDeleteUserAccount && (
                               confirmingDeleteUserId === usr.id ? (
                                 <div className="flex items-center gap-1 bg-rose-950/80 p-1 rounded-lg border border-rose-500/50">
@@ -923,8 +1031,6 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                                 </button>
                               )
                             )}
-                          </>
-                        )}
                       </div>
                     </div>
                   )}
@@ -1011,13 +1117,20 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                 {/* Login Mobile Number */}
                 <div>
                   <label className="block font-semibold text-slate-300 mb-1">
-                    {role === 'customer' ? 'দোকানদারের মোবাইল নম্বর (লগইন আইডি)' : 'লগইন মোবাইল নম্বর'}{' '}
-                    <span className="text-amber-400">*</span>
+                    {role === 'customer' ? (
+                      <>
+                        দোকানদারের মোবাইল নম্বর <span className="text-slate-400 font-normal text-[11px]">(ঐচ্ছিক)</span>
+                      </>
+                    ) : (
+                      <>
+                        লগইন মোবাইল নম্বর <span className="text-amber-400">*</span>
+                      </>
+                    )}
                   </label>
                   <input
                     type="tel"
-                    required
-                    placeholder="যেমন: 01700000000"
+                    required={role !== 'customer'}
+                    placeholder={role === 'customer' ? 'যেমন: 01700000000 (ঐচ্ছিক)' : 'যেমন: 01700000000'}
                     value={loginId}
                     onChange={(e) => {
                       setLoginId(e.target.value);
@@ -1030,15 +1143,24 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                 {/* Initial Password */}
                 <div>
                   <label className="block font-semibold text-slate-300 mb-1">
-                    লগইন পাসওয়ার্ড <span className="text-amber-400">*</span>
+                    {role === 'customer' ? (
+                      <>
+                        লগইন পাসওয়ার্ড {loginId.trim() ? <span className="text-amber-400">*</span> : <span className="text-slate-400 font-normal text-[11px]">(মোবাইল দিলে প্রযোজ্য)</span>}
+                      </>
+                    ) : (
+                      <>
+                        লগইন পাসওয়ার্ড <span className="text-amber-400">*</span>
+                      </>
+                    )}
                   </label>
                   <input
                     type="text"
-                    required
-                    placeholder="পাসওয়ার্ড"
+                    required={role !== 'customer' && Boolean(loginId.trim())}
+                    placeholder={role === 'customer' && !loginId.trim() ? 'নম্বর না দিলে প্রযোজ্য নয়' : 'পাসওয়ার্ড (যেমন: 123456)'}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full bg-slate-950 border border-slate-700 text-slate-100 font-mono p-2.5 rounded-xl focus:outline-none focus:border-amber-400"
+                    disabled={role === 'customer' && !loginId.trim()}
+                    className="w-full bg-slate-950 border border-slate-700 text-slate-100 font-mono p-2.5 rounded-xl focus:outline-none focus:border-amber-400 disabled:opacity-50 disabled:cursor-not-allowed"
                   />
                 </div>
               </div>
@@ -1081,8 +1203,16 @@ export const UserManagement: React.FC<UserManagementProps> = ({
               )}
 
               {role === 'customer' && (
-                <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-[11px] text-emerald-300">
-                  দোকানদার এই মোবাইল নম্বর ও পাসওয়ার্ড ব্যবহার করে অনলাইনে ক্যাটালগ লগইন করতে পারবেন এবং তাদের অর্ডারের তথ্য প্রাক-পূরণ হবে।
+                <div className={`p-3 rounded-xl text-[11px] border ${
+                  loginId.trim()
+                    ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-300'
+                    : 'bg-slate-800/80 border-slate-700 text-slate-300'
+                }`}>
+                  {loginId.trim() ? (
+                    <span><strong>অনলাইন অ্যাকাউন্ট:</strong> দোকানদার এই মোবাইল নম্বর ও পাসওয়ার্ড ব্যবহার করে অনলাইনে ক্যাটালগ লগইন করতে পারবেন।</span>
+                  ) : (
+                    <span>মোবাইল নম্বর না দিলেও দোকানটি সফলভাবে সংরক্ষিত হবে এবং সেলস ও বকেয়া খাতায় স্বাভাবিকভাবে ব্যবহার করা যাবে।</span>
+                  )}
                 </div>
               )}
 
