@@ -23,10 +23,10 @@ import { LanguageProvider, useLanguage } from './contexts/LanguageContext';
 import { Header } from './components/Header';
 import { Navigation, NavTab } from './components/Navigation';
 import { TabLoadingFallback } from './components/TabLoadingFallback';
+import CustomerStorefront from './components/CustomerStorefront';
 
 // Lazy-loaded components for rapid initial boot & light bundle size
 const Dashboard = lazy(() => import('./components/Dashboard').then(m => ({ default: m.Dashboard })));
-const CustomerStorefront = lazy(() => import('./components/CustomerStorefront').then(m => ({ default: m.CustomerStorefront })));
 const PosOrderBuilder = lazy(() => import('./components/PosOrderBuilder').then(m => ({ default: m.PosOrderBuilder })));
 const InvoiceModal = lazy(() => import('./components/InvoiceModal').then(m => ({ default: m.InvoiceModal })));
 const StockManagement = lazy(() => import('./components/StockManagement').then(m => ({ default: m.StockManagement })));
@@ -34,11 +34,12 @@ const DueManagement = lazy(() => import('./components/DueManagement').then(m => 
 const SalesHistory = lazy(() => import('./components/SalesHistory').then(m => ({ default: m.SalesHistory })));
 const PendingOrders = lazy(() => import('./components/PendingOrders').then(m => ({ default: m.PendingOrders })));
 const LoginModal = lazy(() => import('./components/LoginModal').then(m => ({ default: m.LoginModal })));
-const UserManagement = lazy(() => import('./components/UserManagement').then(m => ({ default: m.UserManagement })));
+const UserManagement = lazy(() => import('./components/UserManagement').then(m => ({ default: m.UserManagement || m.default })));
 const FeatureManagement = lazy(() => import('./components/FeatureManagement').then(m => ({ default: m.FeatureManagement })));
 const SellerTracking = lazy(() => import('./components/SellerTracking').then(m => ({ default: m.SellerTracking })));
 const SMSPanel = lazy(() => import('./components/SMSPanel').then(m => ({ default: m.SMSPanel })));
 const Reports = lazy(() => import('./components/Reports').then(m => ({ default: m.Reports })));
+const ShopManagement = lazy(() => import('./components/ShopManagement').then(m => ({ default: m.ShopManagement })));
 
 import { fetchFirestoreData, seedFirestoreData, saveDocumentToFirestore, deleteDocumentFromFirestore, clearAllDatabaseData } from './lib/firestoreService';
 import { generateSMSMessage, sendAutoSMS, SMSType } from './utils/smsService';
@@ -797,6 +798,26 @@ export default function App() {
     triggerToast(t('toast_customer_added').replace('{{shopName}}', newCust.shopName));
   };
 
+  const [posPreSelectedCustomerId, setPosPreSelectedCustomerId] = useState<string>('');
+
+  const handleAddShop = async (newCust: Customer, newAcc: UserAccount) => {
+    setCustomers((prev) => [newCust, ...prev]);
+    await saveDocumentToFirestore('customers', newCust.id, newCust);
+
+    setUserAccounts((prev) => [newAcc, ...prev]);
+    await saveDocumentToFirestore('userAccounts', newAcc.id, newAcc);
+
+    triggerToast(`নতুন দোকান "${newCust.shopName}" সফলভাবে নিবন্ধিত হয়েছে!`);
+  };
+
+  const handleUpdateShop = async (updatedCust: Customer, updatedAcc?: UserAccount) => {
+    await handleUpdateCustomer(updatedCust);
+    if (updatedAcc) {
+      setUserAccounts((prev) => prev.map((u) => (u.id === updatedAcc.id ? updatedAcc : u)));
+      await saveDocumentToFirestore('userAccounts', updatedAcc.id, updatedAcc);
+    }
+  };
+
   const activeTheme = UI_THEMES[0];
 
   // Helper functions to filter visible data based on current user role and permissions
@@ -1301,6 +1322,24 @@ export default function App() {
           />
         )}
 
+        {activeTab === 'shops' && currentUser && (
+          <ShopManagement
+            currentUser={currentUser}
+            customers={customers}
+            userAccounts={userAccounts}
+            sellers={allSellers}
+            orders={orders}
+            activeTheme={activeTheme}
+            systemConfig={systemConfig}
+            onAddShop={handleAddShop}
+            onUpdateShop={handleUpdateShop}
+            onNavigateToPos={(customerId) => {
+              setPosPreSelectedCustomerId(customerId);
+              setActiveTab('pos');
+            }}
+          />
+        )}
+
         {activeTab === 'pos' && (
           <PosOrderBuilder
             products={products}
@@ -1309,6 +1348,7 @@ export default function App() {
             currentUser={currentUser}
             activeTheme={activeTheme}
             systemConfig={systemConfig}
+            preSelectedCustomerId={posPreSelectedCustomerId}
             onCreateOrder={handleCreateOrder}
             onQuickAddCustomer={handleQuickAddCustomer}
           />
@@ -1419,6 +1459,8 @@ export default function App() {
             orders={orders}
             customers={customers}
             paymentLogs={paymentLogs}
+            currentUser={currentUser}
+            onUpdateSeller={handleUpdateSeller}
           />
         )}
 

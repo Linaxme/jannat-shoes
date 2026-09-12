@@ -1,9 +1,10 @@
 // PWA Service Worker for M/S Jannat Shoes
-const CACHE_NAME = 'jannat-shoes-pwa-v1';
+const CACHE_NAME = 'jannat-shoes-pwa-v2';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
   '/manifest.json',
+  '/icon-192.svg',
   '/icon-512.svg'
 ];
 

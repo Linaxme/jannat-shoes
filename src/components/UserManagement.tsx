@@ -72,6 +72,26 @@ export const UserManagement: React.FC<UserManagementProps> = ({
   const [editingSeller, setEditingSeller] = useState<SalesRep | null>(null);
   const [editTargetPairs, setEditTargetPairs] = useState<number | string>('');
   const [editTargetAmount, setEditTargetAmount] = useState<number | string>('');
+  const [editCommissionRate, setEditCommissionRate] = useState<number | string>('');
+  const [editCommissionPerPair, setEditCommissionPerPair] = useState<number | string>('');
+  const [editCommissionType, setEditCommissionType] = useState<'percent' | 'per_pair' | 'both'>('percent');
+
+  // New Seller Commission state (Add Modal)
+  const [commissionRate, setCommissionRate] = useState<number | string>('');
+  const [commissionPerPair, setCommissionPerPair] = useState<number | string>('');
+  const [commissionType, setCommissionType] = useState<'percent' | 'per_pair' | 'both'>('percent');
+
+  const openSellerEditModal = (seller: SalesRep) => {
+    setEditingSeller(seller);
+    setEditTargetPairs(seller.monthlyTargetPairs || '');
+    setEditTargetAmount(seller.monthlyTargetAmount || '');
+    setEditCommissionRate(seller.commissionRatePercent ?? '');
+    setEditCommissionPerPair(seller.commissionPerPair ?? '');
+    const cType: 'percent' | 'per_pair' | 'both' = seller.commissionType ||
+      (seller.commissionPerPair && !seller.commissionRatePercent ? 'per_pair' :
+       seller.commissionPerPair && seller.commissionRatePercent ? 'both' : 'percent');
+    setEditCommissionType(cType);
+  };
 
   // Customer edit info state
   const [editingCust, setEditingCust] = useState<Customer | null>(null);
@@ -157,6 +177,9 @@ export const UserManagement: React.FC<UserManagementProps> = ({
         ...editingSeller,
         monthlyTargetPairs: Number(editTargetPairs) || 0,
         monthlyTargetAmount: Number(editTargetAmount) || 0,
+        commissionRatePercent: Number(editCommissionRate) || 0,
+        commissionPerPair: Number(editCommissionPerPair) || 0,
+        commissionType: editCommissionType,
       });
       setEditingSeller(null);
     }
@@ -235,7 +258,9 @@ export const UserManagement: React.FC<UserManagementProps> = ({
         area: area.trim() || '',
         monthlyTargetPairs: Number(targetPairs) || 0,
         monthlyTargetAmount: Number(targetAmount) || 0,
-        commissionRatePercent: 0,
+        commissionRatePercent: Number(commissionRate) || 0,
+        commissionPerPair: Number(commissionPerPair) || 0,
+        commissionType: commissionType,
       };
     }
 
@@ -267,6 +292,9 @@ export const UserManagement: React.FC<UserManagementProps> = ({
     setInitialDue('');
     setTargetPairs('');
     setTargetAmount('');
+    setCommissionRate('');
+    setCommissionPerPair('');
+    setCommissionType('percent');
     setShowAddModal(false);
   };
 
@@ -555,14 +583,21 @@ export const UserManagement: React.FC<UserManagementProps> = ({
             কোনো ইউজার পাওয়া যায়নি।
           </div>
         ) : (
-          filteredUsers.map((usr) => {
-            const sellerData = sellers.find((s) => s.id === usr.sellerId);
+          filteredUsers.map((usr, idx) => {
+            const sellerData = sellers.find(
+              (s) =>
+                s.id === usr.sellerId ||
+                (usr.role === 'seller' &&
+                  ((s.phone && usr.phone && s.phone === usr.phone) ||
+                    (s.name && usr.name && s.name.toLowerCase() === usr.name.toLowerCase())))
+            );
             const custData = getCustomerForUser(usr);
             const isExpanded = expandedUserId === usr.id;
+            const uniqueKey = `user-${usr.isOffline ? 'offline' : 'online'}-${usr.id}-${idx}`;
 
             return (
               <div
-                key={usr.id}
+                key={uniqueKey}
                 className="bg-slate-900 border border-slate-800/80 rounded-xl overflow-hidden transition-all duration-200"
               >
                 {/* Header: Name & Role (Toggles expansion) */}
@@ -673,21 +708,47 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                         </span>
                       </div>
 
-                      {sellerData && (!systemConfig || systemConfig.enableTargetSystem !== false) && (
-                        <div className="space-y-1">
-                          <div className="flex items-center justify-between bg-slate-900 px-2.5 py-2 rounded-lg border border-slate-800">
-                            <span className="text-slate-400 flex items-center gap-1">
-                              <Target className="w-3.5 h-3.5 text-amber-400" />
-                              টার্গেট (জোড়া):
+                      {sellerData && (
+                        <div className="space-y-1.5 pt-1">
+                          {(!systemConfig || systemConfig.enableTargetSystem !== false) && (
+                            <div className="grid grid-cols-2 gap-1.5">
+                              <div className="flex flex-col bg-slate-900 px-2.5 py-1.5 rounded-lg border border-slate-800">
+                                <span className="text-[10px] text-slate-400 flex items-center gap-1">
+                                  <Target className="w-3 h-3 text-amber-400" />
+                                  টার্গেট (জোড়া)
+                                </span>
+                                <span className="text-amber-300 font-bold text-xs">
+                                  {toBnDigit(sellerData.monthlyTargetPairs || 0)} জোড়া
+                                </span>
+                              </div>
+                              <div className="flex flex-col bg-slate-900 px-2.5 py-1.5 rounded-lg border border-slate-800">
+                                <span className="text-[10px] text-slate-400 flex items-center gap-1">
+                                  <Target className="w-3 h-3 text-emerald-400" />
+                                  টার্গেট (টাকা)
+                                </span>
+                                <span className="text-emerald-400 font-bold text-xs">
+                                  ৳ {toBnDigit(sellerData.monthlyTargetAmount || 0)}
+                                </span>
+                              </div>
+                            </div>
+                          )}
+
+                          <div className="flex items-center justify-between bg-amber-500/10 px-2.5 py-1.5 rounded-lg border border-amber-500/20">
+                            <span className="text-slate-300 text-[11px] flex items-center gap-1 font-semibold">
+                              <Percent className="w-3 h-3 text-amber-400" />
+                              কমিশন:
                             </span>
-                            <span className="text-amber-300 font-bold">{toBnDigit(sellerData.monthlyTargetPairs || 0)} জোড়া</span>
-                          </div>
-                          <div className="flex items-center justify-between bg-slate-900 px-2.5 py-2 rounded-lg border border-slate-800">
-                            <span className="text-slate-400 flex items-center gap-1">
-                              <Target className="w-3.5 h-3.5 text-emerald-400" />
-                              টার্গেট (টাকায়):
+                            <span className="text-amber-300 font-bold text-xs">
+                              {(sellerData.commissionRatePercent || 0) > 0 || (sellerData.commissionPerPair || 0) > 0 ? (
+                                <>
+                                  {(sellerData.commissionRatePercent || 0) > 0 && `${toBnDigit(sellerData.commissionRatePercent)}% সেলস `}
+                                  {(sellerData.commissionPerPair || 0) > 0 &&
+                                    `${(sellerData.commissionRatePercent || 0) > 0 ? '+ ' : ''}৳${toBnDigit(sellerData.commissionPerPair)}/জোড়া`}
+                                </>
+                              ) : (
+                                <span className="text-slate-400 text-[11px] font-normal">নির্ধারিত নয়</span>
+                              )}
                             </span>
-                            <span className="text-emerald-400 font-bold">৳ {toBnDigit(sellerData.monthlyTargetAmount || 0)}</span>
                           </div>
                         </div>
                       )}
@@ -715,15 +776,11 @@ export const UserManagement: React.FC<UserManagementProps> = ({
 
                       {sellerData && (currentUser.role === 'admin' || currentUser.role === 'super_admin') && (!systemConfig || systemConfig.enableTargetSystem !== false) && (
                         <button
-                          onClick={() => {
-                            setEditingSeller(sellerData);
-                            setEditTargetPairs(sellerData.monthlyTargetPairs || 1000);
-                            setEditTargetAmount(sellerData.monthlyTargetAmount || 0);
-                          }}
-                          className="flex-1 min-w-[120px] py-1.5 bg-slate-800 hover:bg-slate-700 text-emerald-400 border border-emerald-500/30 rounded-lg text-xs font-semibold transition flex items-center justify-center gap-1.5 cursor-pointer"
+                          onClick={() => openSellerEditModal(sellerData)}
+                          className="flex-1 min-w-[130px] py-1.5 bg-slate-800 hover:bg-slate-700 text-amber-400 border border-amber-500/30 rounded-lg text-xs font-semibold transition flex items-center justify-center gap-1.5 cursor-pointer"
                         >
-                          <Edit className="w-3.5 h-3.5" />
-                          <span>টার্গেট সেট</span>
+                          <Percent className="w-3.5 h-3.5 text-amber-400" />
+                          <span>টার্গেট ও কমিশন সেট</span>
                         </button>
                       )}
 
@@ -805,13 +862,20 @@ export const UserManagement: React.FC<UserManagementProps> = ({
               কোনো ইউজার পাওয়া যায়নি।
             </div>
           ) : (
-            filteredUsers.map((usr) => {
-              const sellerData = sellers.find((s) => s.id === usr.sellerId);
+            filteredUsers.map((usr, idx) => {
+              const sellerData = sellers.find(
+                (s) =>
+                  s.id === usr.sellerId ||
+                  (usr.role === 'seller' &&
+                    ((s.phone && usr.phone && s.phone === usr.phone) ||
+                      (s.name && usr.name && s.name.toLowerCase() === usr.name.toLowerCase())))
+              );
               const custData = getCustomerForUser(usr);
               const isExpanded = expandedUserId === usr.id;
+              const uniqueKey = `desktop-user-${usr.isOffline ? 'offline' : 'online'}-${usr.id}-${idx}`;
 
               return (
-                <div key={usr.id} className="transition-all duration-200">
+                <div key={uniqueKey} className="transition-all duration-200">
                   {/* Row Header */}
                   <div 
                     onClick={() => toggleExpandUser(usr.id)}
@@ -921,21 +985,38 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                         </div>
                       </div>
 
-                      {sellerData && (!systemConfig || systemConfig.enableTargetSystem !== false) && (
-                        <div className="grid grid-cols-2 gap-4 text-xs pt-3 border-t border-slate-800/40">
-                          <div className="space-y-1">
+                      {sellerData && (
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs pt-3 border-t border-slate-800/40">
+                          <div className="space-y-1 bg-slate-900/60 p-2 rounded-lg border border-slate-800">
                             <div className="text-[10px] text-slate-500 uppercase font-bold tracking-wider flex items-center gap-1">
                               <Target className="w-3.5 h-3.5 text-amber-400" />
-                              মাসিক টার্গেট (জোড়া)
+                              টার্গেট (জোড়া)
                             </div>
                             <div className="text-amber-300 font-bold">{toBnDigit(sellerData.monthlyTargetPairs || 0)} জোড়া</div>
                           </div>
-                          <div className="space-y-1">
+                          <div className="space-y-1 bg-slate-900/60 p-2 rounded-lg border border-slate-800">
                             <div className="text-[10px] text-slate-500 uppercase font-bold tracking-wider flex items-center gap-1">
                               <Target className="w-3.5 h-3.5 text-emerald-400" />
-                              মাসিক টার্গেট (টাকায়)
+                              টার্গেট (টাকায়)
                             </div>
                             <div className="text-emerald-400 font-bold">৳ {toBnDigit(sellerData.monthlyTargetAmount || 0)}</div>
+                          </div>
+                          <div className="space-y-1 bg-amber-500/10 p-2 rounded-lg border border-amber-500/20">
+                            <div className="text-[10px] text-amber-400/90 uppercase font-bold tracking-wider flex items-center gap-1">
+                              <Percent className="w-3.5 h-3.5 text-amber-400" />
+                              নির্ধারিত কমিশন
+                            </div>
+                            <div className="text-amber-300 font-bold text-xs">
+                              {(sellerData.commissionRatePercent || 0) > 0 || (sellerData.commissionPerPair || 0) > 0 ? (
+                                <>
+                                  {(sellerData.commissionRatePercent || 0) > 0 && `${toBnDigit(sellerData.commissionRatePercent)}% সেলস `}
+                                  {(sellerData.commissionPerPair || 0) > 0 &&
+                                    `${(sellerData.commissionRatePercent || 0) > 0 ? '+ ' : ''}৳${toBnDigit(sellerData.commissionPerPair)}/জোড়া`}
+                                </>
+                              ) : (
+                                <span className="text-slate-400 font-normal">সেট করা নেই</span>
+                              )}
+                            </div>
                           </div>
                         </div>
                       )}
@@ -963,15 +1044,11 @@ export const UserManagement: React.FC<UserManagementProps> = ({
 
                         {sellerData && (currentUser.role === 'admin' || currentUser.role === 'super_admin') && (!systemConfig || systemConfig.enableTargetSystem !== false) && (
                           <button
-                            onClick={() => {
-                              setEditingSeller(sellerData);
-                              setEditTargetPairs(sellerData.monthlyTargetPairs || 1000);
-                              setEditTargetAmount(sellerData.monthlyTargetAmount || 0);
-                            }}
-                            className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-emerald-400 border border-emerald-500/30 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer"
+                            onClick={() => openSellerEditModal(sellerData)}
+                            className="px-3 py-1.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer"
                           >
-                            <Edit className="w-3.5 h-3.5" />
-                            <span>টার্গেট সেট করুন</span>
+                            <Percent className="w-3.5 h-3.5 text-amber-400" />
+                            <span>টার্গেট ও কমিশন সেট করুন</span>
                           </button>
                         )}
 
@@ -1217,30 +1294,91 @@ export const UserManagement: React.FC<UserManagementProps> = ({
               )}
 
               {role === 'seller' && (!systemConfig || systemConfig.enableTargetSystem !== false) && (
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl space-y-2">
-                    <label className="block font-semibold text-slate-300 mb-1 text-[11px] uppercase tracking-wider">
-                      টার্গেট (জোড়া)
-                    </label>
-                    <input
-                      type="number"
-                      value={targetPairs}
-                      onChange={(e) => setTargetPairs(e.target.value === '' ? '' : Number(e.target.value))}
-                      placeholder="যেমন: ১০০০"
-                      className="w-full bg-slate-950 border border-slate-700 text-slate-100 font-mono p-2.5 rounded-xl focus:outline-none focus:border-amber-400"
-                    />
+                <div className="space-y-3">
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl space-y-2">
+                      <label className="block font-semibold text-slate-300 mb-1 text-[11px] uppercase tracking-wider">
+                        টার্গেট (জোড়া)
+                      </label>
+                      <input
+                        type="number"
+                        value={targetPairs}
+                        onChange={(e) => setTargetPairs(e.target.value === '' ? '' : Number(e.target.value))}
+                        placeholder="যেমন: ১০০০"
+                        className="w-full bg-slate-950 border border-slate-700 text-slate-100 font-mono p-2.5 rounded-xl focus:outline-none focus:border-amber-400"
+                      />
+                    </div>
+                    <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl space-y-2">
+                      <label className="block font-semibold text-slate-300 mb-1 text-[11px] uppercase tracking-wider">
+                        টার্গেট (টাকায়)
+                      </label>
+                      <input
+                        type="number"
+                        value={targetAmount}
+                        onChange={(e) => setTargetAmount(e.target.value === '' ? '' : Number(e.target.value))}
+                        placeholder="যেমন: ৫০০০০"
+                        className="w-full bg-slate-950 border border-slate-700 text-slate-100 font-mono p-2.5 rounded-xl focus:outline-none focus:border-emerald-400"
+                      />
+                    </div>
                   </div>
-                  <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl space-y-2">
-                    <label className="block font-semibold text-slate-300 mb-1 text-[11px] uppercase tracking-wider">
-                      টার্গেট (টাকায়)
-                    </label>
-                    <input
-                      type="number"
-                      value={targetAmount}
-                      onChange={(e) => setTargetAmount(e.target.value === '' ? '' : Number(e.target.value))}
-                      placeholder="যেমন: ৫০০০০"
-                      className="w-full bg-slate-950 border border-slate-700 text-slate-100 font-mono p-2.5 rounded-xl focus:outline-none focus:border-emerald-400"
-                    />
+
+                  {/* Commission Setup Section for New Seller */}
+                  <div className="p-3.5 bg-amber-500/5 border border-amber-500/20 rounded-xl space-y-3">
+                    <div className="flex items-center justify-between">
+                      <label className="font-semibold text-amber-400 text-xs flex items-center gap-1.5">
+                        <Percent className="w-3.5 h-3.5 text-amber-400" />
+                        সেলস কমিশন নির্ধারণ (Commission Rates)
+                      </label>
+                      <span className="text-[10px] text-slate-400 bg-slate-800 px-2 py-0.5 rounded">ঐচ্ছিক</span>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <label className="block text-slate-300 mb-1 text-[11px] font-medium">
+                          কমিশন হার (% সেলসে)
+                        </label>
+                        <div className="relative">
+                          <input
+                            type="number"
+                            step="0.1"
+                            min="0"
+                            max="100"
+                            value={commissionRate}
+                            onChange={(e) => setCommissionRate(e.target.value === '' ? '' : Number(e.target.value))}
+                            placeholder="যেমন: ২.৫"
+                            className="w-full bg-slate-950 border border-slate-700 text-slate-100 font-mono p-2.5 pr-7 rounded-xl focus:outline-none focus:border-amber-400 text-xs"
+                          />
+                          <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-xs">%</span>
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-slate-300 mb-1 text-[11px] font-medium">
+                          প্রতি জোড়ায় কমিশন (৳)
+                        </label>
+                        <div className="relative">
+                          <input
+                            type="number"
+                            step="0.5"
+                            min="0"
+                            value={commissionPerPair}
+                            onChange={(e) => setCommissionPerPair(e.target.value === '' ? '' : Number(e.target.value))}
+                            placeholder="যেমন: ৫"
+                            className="w-full bg-slate-950 border border-slate-700 text-slate-100 font-mono p-2.5 pr-7 rounded-xl focus:outline-none focus:border-emerald-400 text-xs"
+                          />
+                          <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-emerald-400 font-bold text-xs">৳</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {(Number(commissionRate) > 0 || Number(commissionPerPair) > 0) && (
+                      <div className="text-[11px] bg-slate-900/90 text-amber-300 p-2 rounded-lg border border-amber-500/20">
+                        💡 <strong>কমিশন নীতি:</strong>{' '}
+                        {Number(commissionRate) > 0 && `মোট বিক্রিত টাকার ওপর ${toBnDigit(commissionRate)}%`}
+                        {Number(commissionRate) > 0 && Number(commissionPerPair) > 0 && ' এবং '}
+                        {Number(commissionPerPair) > 0 && `প্রতি জোড়ায় ৳${toBnDigit(commissionPerPair)}`}
+                        {' সেলারের অর্জিত কমিশন হিসেবে যুক্ত হবে।'}
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
@@ -1308,54 +1446,175 @@ export const UserManagement: React.FC<UserManagementProps> = ({
         </div>
       )}
 
-      {/* Edit Seller Target Modal */}
+      {/* Edit Seller Target & Commission Modal */}
       {editingSeller && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
-          <div className="w-full max-w-sm bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4">
-            <h3 className="text-sm font-bold text-slate-100 flex items-center gap-2">
-              <Target className="w-4 h-4 text-amber-400" />
-              <span>টার্গেট আপডেট: {editingSeller.name}</span>
-            </h3>
-
-            <form onSubmit={handleUpdateSellerSubmit} className="space-y-4 text-xs">
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block font-semibold text-slate-300 mb-1">টার্গেট (জোড়া)</label>
-                  <input
-                    type="number"
-                    required
-                    min="0"
-                    placeholder="যেমন: ১০০০"
-                    value={editTargetPairs}
-                    onChange={(e) => setEditTargetPairs(Number(e.target.value))}
-                    className="w-full bg-slate-950 border border-slate-700 text-slate-100 p-2.5 rounded-xl focus:outline-none focus:border-amber-400"
-                  />
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4 overflow-y-auto">
+          <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-2xl p-5 sm:p-6 space-y-4 my-auto shadow-2xl">
+            <div className="flex items-center justify-between border-b border-slate-800/80 pb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-amber-500/20 border border-amber-500/30 text-amber-400 flex items-center justify-center font-bold">
+                  <Percent className="w-4 h-4 text-amber-400" />
                 </div>
                 <div>
-                  <label className="block font-semibold text-slate-300 mb-1">টার্গেট (টাকায়)</label>
-                  <input
-                    type="number"
-                    min="0"
-                    placeholder="যেমন: ৫০০০"
-                    value={editTargetAmount || ''}
-                    onChange={(e) => setEditTargetAmount(Number(e.target.value))}
-                    className="w-full bg-slate-950 border border-slate-700 text-slate-100 p-2.5 rounded-xl focus:outline-none focus:border-emerald-400"
-                  />
+                  <h3 className="text-sm sm:text-base font-bold text-slate-100 flex items-center gap-2">
+                    টার্গেট ও কমিশন নির্ধারণ
+                  </h3>
+                  <p className="text-xs text-slate-400 flex items-center gap-1.5 mt-0.5">
+                    <span className="text-amber-400 font-semibold">{editingSeller.name}</span>
+                    {editingSeller.area && (
+                      <>
+                        <span className="text-slate-600">•</span>
+                        <span>{editingSeller.area}</span>
+                      </>
+                    )}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setEditingSeller(null)}
+                className="text-slate-400 hover:text-slate-200 p-1.5 rounded-lg hover:bg-slate-800 transition cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleUpdateSellerSubmit} className="space-y-4 text-xs">
+              {/* Section 1: Monthly Target */}
+              <div className="bg-slate-950/60 p-3.5 rounded-xl border border-slate-800/80 space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-slate-200 flex items-center gap-1.5">
+                    <Target className="w-3.5 h-3.5 text-amber-400" />
+                    মাসিক সেলস টার্গেট (Monthly Targets)
+                  </span>
+                  <span className="text-[10px] text-slate-500">লক্ষ্যমাত্রা</span>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block font-semibold text-slate-300 mb-1 text-[11px]">টার্গেট (জোড়া)</label>
+                    <div className="relative">
+                      <input
+                        type="number"
+                        min="0"
+                        placeholder="যেমন: ১০০০"
+                        value={editTargetPairs}
+                        onChange={(e) => setEditTargetPairs(e.target.value === '' ? '' : Number(e.target.value))}
+                        className="w-full bg-slate-900 border border-slate-700 text-slate-100 p-2.5 pr-10 rounded-xl focus:outline-none focus:border-amber-400 font-mono text-xs"
+                      />
+                      <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-[11px]">জোড়া</span>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block font-semibold text-slate-300 mb-1 text-[11px]">টার্গেট (টাকায়)</label>
+                    <div className="relative">
+                      <input
+                        type="number"
+                        min="0"
+                        placeholder="যেমন: ৩,০০,০০০"
+                        value={editTargetAmount}
+                        onChange={(e) => setEditTargetAmount(e.target.value === '' ? '' : Number(e.target.value))}
+                        className="w-full bg-slate-900 border border-slate-700 text-slate-100 p-2.5 pr-8 rounded-xl focus:outline-none focus:border-emerald-400 font-mono text-xs"
+                      />
+                      <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-[11px]">৳</span>
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              <div className="flex justify-end gap-2 pt-2">
+              {/* Section 2: Commission Setup */}
+              <div className="bg-amber-500/5 p-3.5 rounded-xl border border-amber-500/20 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-amber-400 flex items-center gap-1.5">
+                    <Percent className="w-3.5 h-3.5 text-amber-400" />
+                    কমিশন কনফিগারেশন (Commission Setup)
+                  </span>
+                  <span className="text-[10px] text-amber-300/90 bg-amber-500/10 px-2 py-0.5 rounded-md border border-amber-500/20 font-semibold">
+                    ইনসেন্টিভ
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block font-semibold text-slate-200 mb-1 text-[11px]">
+                      কমিশন হার (% সেলসে)
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="number"
+                        step="0.1"
+                        min="0"
+                        max="100"
+                        placeholder="যেমন: ২.৫"
+                        value={editCommissionRate}
+                        onChange={(e) => setEditCommissionRate(e.target.value === '' ? '' : Number(e.target.value))}
+                        className="w-full bg-slate-900 border border-slate-700 text-amber-300 font-bold p-2.5 pr-7 rounded-xl focus:outline-none focus:border-amber-400 font-mono text-xs"
+                      />
+                      <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-amber-400 font-bold text-xs">%</span>
+                    </div>
+                    <span className="text-[10px] text-slate-500 mt-1 block">মোট বিক্রিত টাকার ওপর</span>
+                  </div>
+
+                  <div>
+                    <label className="block font-semibold text-slate-200 mb-1 text-[11px]">
+                      প্রতি জোড়ায় কমিশন (৳)
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="number"
+                        step="0.5"
+                        min="0"
+                        placeholder="যেমন: ৫"
+                        value={editCommissionPerPair}
+                        onChange={(e) => setEditCommissionPerPair(e.target.value === '' ? '' : Number(e.target.value))}
+                        className="w-full bg-slate-900 border border-slate-700 text-emerald-400 font-bold p-2.5 pr-7 rounded-xl focus:outline-none focus:border-emerald-400 font-mono text-xs"
+                      />
+                      <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-emerald-400 font-bold text-xs">৳</span>
+                    </div>
+                    <span className="text-[10px] text-slate-500 mt-1 block">প্রতি জোড়া বিক্রয়ের জন্য</span>
+                  </div>
+                </div>
+
+                {/* Real-time Calculation Simulator */}
+                {(() => {
+                  const simulatedPairs = Number(editTargetPairs) || 1000;
+                  const simulatedAmount = Number(editTargetAmount) || 200000;
+                  const cRate = Number(editCommissionRate) || 0;
+                  const cPair = Number(editCommissionPerPair) || 0;
+                  const estimatedComm = Math.round((simulatedAmount * cRate / 100) + (simulatedPairs * cPair));
+
+                  return (
+                    <div className="bg-slate-950/80 p-2.5 rounded-xl border border-slate-800 space-y-1 text-[11px]">
+                      <div className="flex items-center justify-between font-semibold">
+                        <span className="text-slate-400 flex items-center gap-1">
+                          <DollarSign className="w-3.5 h-3.5 text-emerald-400" />
+                          টার্গেট পূর্ণ হলে সম্ভাব্য কমিশন:
+                        </span>
+                        <span className="text-emerald-400 font-black text-sm">
+                          {formatTaka(estimatedComm)}
+                        </span>
+                      </div>
+                      <p className="text-[10px] text-slate-500">
+                        * টার্গেট {toBnDigit(simulatedPairs)} জোড়া বা {formatTaka(simulatedAmount)} সেলস সম্পন্ন হলে আনুমানিক এই কমিশন পাবে।
+                      </p>
+                    </div>
+                  );
+                })()}
+              </div>
+
+              <div className="flex justify-end gap-2 pt-2 border-t border-slate-800/80">
                 <button
                   type="button"
                   onClick={() => setEditingSeller(null)}
-                  className="px-3 py-1.5 bg-slate-800 text-slate-300 rounded-lg font-semibold"
+                  className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl font-semibold transition cursor-pointer"
                 >
                   বাতিল
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-1.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold rounded-lg shadow-md"
+                  className="px-5 py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-bold rounded-xl shadow-lg shadow-amber-500/20 transition cursor-pointer flex items-center gap-1.5"
                 >
+                  <CheckCircle2 className="w-4 h-4" />
                   সংরক্ষণ করুন
                 </button>
               </div>
@@ -1570,3 +1829,4 @@ export const UserManagement: React.FC<UserManagementProps> = ({
   );
 };
 
+export default UserManagement;

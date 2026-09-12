@@ -65,7 +65,9 @@ export interface SalesRep {
   area: string; // সেলস এলাকা
   monthlyTargetPairs: number; // মাসিক টার্গেট (জোড়া)
   monthlyTargetAmount?: number; // মাসিক টার্গেট (টাকায়)
-  commissionRatePercent: number; // কমিশন শতাংশ (যেমন 2.5%)
+  commissionRatePercent: number; // সেলসের ওপর কমিশন শতাংশ (যেমন 2.5%)
+  commissionPerPair?: number; // প্রতি জোড়ায় নির্দিষ্ট কমিশন (টাকা)
+  commissionType?: 'percent' | 'per_pair' | 'both'; // কমিশন মডেল
   role?: string;
   isAdmin?: boolean;
 }

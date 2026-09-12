@@ -147,6 +147,7 @@ export const Header: React.FC<HeaderProps> = ({
   };
 
   const allTabs = [
+    { id: 'shops' as NavTab, label: 'দোকান', icon: Store, roles: ['super_admin', 'admin', 'seller'] },
     { id: 'pos' as NavTab, label: 'মেমো', icon: ShoppingCart, roles: ['super_admin', 'admin', 'seller'] },
     { id: 'pending' as NavTab, label: currentUserRole === 'customer' ? 'অর্ডার স্ট্যাটাস' : 'পেন্ডিং অর্ডার', icon: Clock, badgeCount: pendingOrdersCount, badgeColor: 'bg-amber-500', roles: ['super_admin', 'admin', 'seller', 'customer'] },
     { id: 'catalog' as NavTab, label: isStaff ? 'ক্যাটালগ' : 'প্রোডাক্ট ক্যাটালগ', icon: ShoppingBag, roles: ['super_admin', 'admin', 'seller', 'customer'] },

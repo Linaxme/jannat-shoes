@@ -27,6 +27,7 @@ interface PosOrderBuilderProps {
   currentUser?: UserAccount | null;
   activeTheme?: any;
   systemConfig?: SystemConfig;
+  preSelectedCustomerId?: string;
   onCreateOrder: (newOrder: Order) => void;
   onQuickAddCustomer: (newCust: Customer) => void;
 }
@@ -37,6 +38,7 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
   sellers,
   currentUser,
   systemConfig,
+  preSelectedCustomerId,
   onCreateOrder,
   onQuickAddCustomer,
 }) => {
@@ -55,8 +57,14 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
 
   // Customer Selection by Phone / Name Auto-lookup
   const [selectedCustomerId, setSelectedCustomerId] = useState<string>(
-    () => savedDraft?.selectedCustomerId || customers[0]?.id || ''
+    () => preSelectedCustomerId || savedDraft?.selectedCustomerId || customers[0]?.id || ''
   );
+
+  useEffect(() => {
+    if (preSelectedCustomerId) {
+      setSelectedCustomerId(preSelectedCustomerId);
+    }
+  }, [preSelectedCustomerId]);
   const [customerSearchQuery, setCustomerSearchQuery] = useState<string>('');
   const [showCustomerDropdown, setShowCustomerDropdown] = useState<boolean>(false);
 
@@ -584,9 +592,9 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
               <div className="p-2 bg-slate-900/80 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
                 ম্যাচিং রেজিস্টার্ড দোকান ({toBnDigit(customerSuggestions.length)}টি):
               </div>
-              {customerSuggestions.map((c) => (
+              {customerSuggestions.map((c, idx) => (
                 <div
-                  key={c.id}
+                  key={`cust-sugg-${c.id}-${idx}`}
                   onClick={() => {
                     setSelectedCustomerId(c.id);
                     setCustomerSearchQuery(c.phone ? `${c.shopName} - ${c.phone}` : c.shopName);

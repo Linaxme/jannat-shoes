@@ -71,10 +71,10 @@ interface CustomerStorefrontProps {
 }
 
 export const CustomerStorefront: React.FC<CustomerStorefrontProps> = ({
-  products,
-  customers,
+  products = [],
+  customers = [],
   orders = [],
-  userAccounts,
+  userAccounts = [],
   onSubmitOrder,
   currentUser,
   systemConfig,
@@ -1519,3 +1519,5 @@ export const CustomerStorefront: React.FC<CustomerStorefrontProps> = ({
     </div>
   );
 };
+
+export default CustomerStorefront;
