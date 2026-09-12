@@ -147,7 +147,6 @@ export const Header: React.FC<HeaderProps> = ({
   };
 
   const allTabs = [
-    { id: 'shops' as NavTab, label: 'দোকান', icon: Store, roles: ['super_admin', 'admin', 'seller'] },
     { id: 'pos' as NavTab, label: 'মেমো', icon: ShoppingCart, roles: ['super_admin', 'admin', 'seller'] },
     { id: 'pending' as NavTab, label: currentUserRole === 'customer' ? 'অর্ডার স্ট্যাটাস' : 'পেন্ডিং অর্ডার', icon: Clock, badgeCount: pendingOrdersCount, badgeColor: 'bg-amber-500', roles: ['super_admin', 'admin', 'seller', 'customer'] },
     { id: 'catalog' as NavTab, label: isStaff ? 'ক্যাটালগ' : 'প্রোডাক্ট ক্যাটালগ', icon: ShoppingBag, roles: ['super_admin', 'admin', 'seller', 'customer'] },
@@ -157,6 +156,7 @@ export const Header: React.FC<HeaderProps> = ({
     { id: 'users' as NavTab, label: 'ইউজার', icon: UserPlus, roles: ['super_admin', 'admin', ...(systemConfig?.allowSellerToManageUsers ? ['seller'] : [])] },
     { id: 'features' as NavTab, label: 'সেটিং', icon: Sliders, roles: ['super_admin', 'admin'] },
     ...(systemConfig?.enableSMS !== false ? [{ id: 'sms' as NavTab, label: t('sms'), icon: MessageSquare, roles: ['super_admin', 'admin'] }] : []),
+    { id: 'shops' as NavTab, label: 'দোকান', icon: Store, roles: ['super_admin', 'admin', 'seller'] },
   ];
 
   const visibleDrawerTabs = allTabs.filter((t) => t.roles.includes(currentUserRole));
@@ -239,7 +239,7 @@ export const Header: React.FC<HeaderProps> = ({
               
               {/* Desktop User Info (Hidden on mobile) */}
               {currentUser && (
-                <div className="hidden lg:flex items-center gap-2 bg-slate-900 border border-slate-800 p-1 pr-3 rounded-xl">
+                <div className="hidden md:flex items-center gap-2 bg-slate-900 border border-slate-800 p-1 pr-3 rounded-xl">
                   <div className="w-6 h-6 rounded-lg bg-amber-500/20 text-amber-300 font-bold flex items-center justify-center text-xs border border-amber-500/30">
                     {currentUser.name.charAt(0)}
                   </div>
@@ -409,10 +409,10 @@ export const Header: React.FC<HeaderProps> = ({
                 )}
               </div>
 
-              {/* Unified Menu Drawer Button */}
+              {/* Unified Menu Drawer Button (Mobile/Tablet only, as desktop has left sidebar) */}
               <button
                 onClick={() => setIsDrawerOpen(true)}
-                className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-3 py-1.5 rounded-xl font-bold text-[11px] sm:text-xs transition-all duration-150 cursor-pointer relative border ${
+                className={`md:hidden flex items-center gap-1.5 sm:gap-2 px-3 sm:px-3 py-1.5 rounded-xl font-bold text-[11px] sm:text-xs transition-all duration-150 cursor-pointer relative border ${
                   isDrawerTabActive || isDrawerOpen
                     ? 'bg-amber-500 text-slate-950 border-amber-500 shadow-md shadow-amber-500/20'
                     : 'bg-slate-900 hover:bg-slate-850 text-slate-200 border-slate-800 hover:border-slate-700'

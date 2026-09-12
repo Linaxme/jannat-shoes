@@ -127,9 +127,15 @@ export const InvoiceModal: React.FC<InvoiceModalProps> = ({ order, onClose }) =>
   };
 
   const handleShareWhatsApp = () => {
+    const totalOrderCommission = order.totalCommission ?? order.items.reduce(
+      (sum, item) => sum + (item.totalPairs * (item.commissionPerPair || 0)),
+      0
+    );
+
     let itemsText = '';
     order.items.forEach((item, idx) => {
-      itemsText += `${idx + 1}. আর্টিকল: ${item.articleCode} | সাইজ: ${item.sizeRange} | ${toBnDigit(item.totalPairs)} জোড়া | দর: ${item.unitSellPrice}৳ | মোট: ${item.totalAmount}৳\n`;
+      const commText = item.commissionPerPair && item.commissionPerPair > 0 ? ` (-${item.commissionPerPair}৳ কমিশন)` : '';
+      itemsText += `${idx + 1}. আর্টিকল: ${item.articleCode} | সাইজ: ${item.sizeRange} | ${toBnDigit(item.totalPairs)} জোড়া | দর: ${item.unitSellPrice}৳${commText} | মোট: ${item.totalAmount}৳\n`;
     });
 
     const text = `*মেসার্স জান্নাত সুজ - ক্যাশ মেমো*\n` +
@@ -144,7 +150,10 @@ export const InvoiceModal: React.FC<InvoiceModalProps> = ({ order, onClose }) =>
       `${itemsText}` +
       `--------------------------------\n` +
       `মোট জোড়া: *${toBnDigit(order.totalPairs)} জোড়া*\n` +
-      `মোট বিল: *${formatTaka(order.grandTotal)}*\n` +
+      `মোট মূল্য: *${formatTaka(order.subTotal)}*\n` +
+      (totalOrderCommission > 0 ? `জোড়া কমিশন (ছাড়): *- ${formatTaka(totalOrderCommission)}*\n` : '') +
+      (order.discount > 0 ? `অতিরিক্ত ছাড়: *- ${formatTaka(order.discount)}*\n` : '') +
+      `সর্বমোট নিট বিল: *${formatTaka(order.grandTotal)}*\n` +
       `নগদ জমা: *${formatTaka(order.paidAmount)}*\n` +
       `চালানের বাকী: *${formatTaka(order.dueAmount)}*\n` +
       `পূর্বের বাকী: *${formatTaka(order.previousDue)}*\n` +
@@ -277,84 +286,108 @@ export const InvoiceModal: React.FC<InvoiceModalProps> = ({ order, onClose }) =>
 
           {/* Itemized Table (Optimized for Mobile single-page view without horizontal scroll) */}
           <div className="w-full">
-            <table className="w-full text-left border-collapse border border-slate-900 text-[10px] sm:text-[11px]">
-              <thead>
-                <tr className="bg-slate-900 text-white font-bold">
-                  <th className="p-1 border border-slate-900 text-center w-6">ক্র:</th>
-                  <th className="p-1 border border-slate-900">আর্টিকল</th>
-                  <th className="p-1 border border-slate-900 text-center">সাইজ</th>
-                  <th className="p-1 border border-slate-900 text-center">পরিমাণ</th>
-                  <th className="p-1 border border-slate-900 text-center">মোট জোড়া</th>
-                  <th className="p-1 border border-slate-900 text-right">দর (৳)</th>
-                  <th className="p-1 border border-slate-900 text-right">মোট (৳)</th>
-                </tr>
-              </thead>
-              <tbody>
-                {order.items.map((item, idx) => {
-                  const artCode = item.articleCode || (item as any).articleNo || (item as any).article || '-';
-                  const sizes = item.sizeRange || (item as any).size || (item as any).color || '-';
-                  const pairs = item.totalPairs ?? (item as any).pairQty ?? (item as any).quantityInput ?? 0;
-                  const price = item.unitSellPrice ?? (item as any).rate ?? (item as any).price ?? 0;
-                  const itemTotal = item.totalAmount ?? (item as any).itemTotal ?? (pairs * price);
-                  const qtyInput = item.quantityInput || pairs;
-                  const unitLabel = item.unitType === 'cartons' ? 'ডজন' : 'জোড়া';
+            {(() => {
+              const hasCommissionInItems = order.items.some(
+                (item) => item.commissionPerPair && item.commissionPerPair > 0
+              );
+              const totalOrderCommission = order.totalCommission ?? order.items.reduce(
+                (sum, item) => sum + (item.totalPairs * (item.commissionPerPair || 0)),
+                0
+              );
 
-                  return (
-                    <tr key={idx} className="border-b border-slate-300">
-                      <td className="p-1 border border-slate-900 text-center font-mono">{toBnDigit(idx + 1)}</td>
-                      <td className="p-1 border border-slate-900 font-mono font-bold">
-                        {artCode}
-                      </td>
-                      <td className="p-1 border border-slate-900 text-center">{sizes}</td>
-                      <td className="p-1 border border-slate-900 text-center">
-                        {toBnDigit(qtyInput)} {unitLabel}
-                      </td>
-                      <td className="p-1 border border-slate-900 text-center font-semibold">
-                        {toBnDigit(pairs)}
-                      </td>
-                      <td className="p-1 border border-slate-900 text-right font-mono">{formatTaka(price)}</td>
-                      <td className="p-1 border border-slate-900 text-right font-mono font-bold">{formatTaka(itemTotal)}</td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+              return (
+                <>
+                  <table className="w-full text-left border-collapse border border-slate-900 text-[10px] sm:text-[11px]">
+                    <thead>
+                      <tr className="bg-slate-900 text-white font-bold">
+                        <th className="p-1 border border-slate-900 text-center w-6">ক্র:</th>
+                        <th className="p-1 border border-slate-900">আর্টিকল</th>
+                        <th className="p-1 border border-slate-900 text-center">সাইজ</th>
+                        <th className="p-1 border border-slate-900 text-center">পরিমাণ</th>
+                        <th className="p-1 border border-slate-900 text-center">মোট জোড়া</th>
+                        <th className="p-1 border border-slate-900 text-right">দর (৳)</th>
+                        {hasCommissionInItems && (
+                          <th className="p-1 border border-slate-900 text-right">কমিশন</th>
+                        )}
+                        <th className="p-1 border border-slate-900 text-right">মোট (৳)</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {order.items.map((item, idx) => {
+                        const artCode = item.articleCode || (item as any).articleNo || (item as any).article || '-';
+                        const sizes = item.sizeRange || (item as any).size || (item as any).color || '-';
+                        const pairs = item.totalPairs ?? (item as any).pairQty ?? (item as any).quantityInput ?? 0;
+                        const price = item.unitSellPrice ?? (item as any).rate ?? (item as any).price ?? 0;
+                        const itemTotal = item.totalAmount ?? (item as any).itemTotal ?? (pairs * price);
+                        const qtyInput = item.quantityInput || pairs;
+                        const unitLabel = item.unitType === 'cartons' ? 'ডজন' : 'জোড়া';
 
-          {/* Calculations Summary Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-start pt-1">
-            
-            {/* Note & Policy */}
-            <div className="text-[10px] text-slate-600 space-y-0.5 bg-slate-50 p-2 rounded border border-slate-200">
-              <div className="font-bold text-slate-800">শর্তাবলী:</div>
-              <div>১. বিক্রিত মাল ফেরত নেওয়া হয় না, তবে স্টক পরিবর্তন সাপেক্ষ।</div>
-              <div>২. মেমো ছাড়া কোনো অভিযোগ গ্রহণযোগ্য নয়।</div>
-              {order.notes && (
-                <div className="mt-0.5 font-semibold text-slate-800">নোট: {order.notes}</div>
-              )}
-            </div>
+                        return (
+                          <tr key={idx} className="border-b border-slate-300">
+                            <td className="p-1 border border-slate-900 text-center font-mono">{toBnDigit(idx + 1)}</td>
+                            <td className="p-1 border border-slate-900 font-mono font-bold">
+                              {artCode}
+                            </td>
+                            <td className="p-1 border border-slate-900 text-center">{sizes}</td>
+                            <td className="p-1 border border-slate-900 text-center">
+                              {toBnDigit(qtyInput)} {unitLabel}
+                            </td>
+                            <td className="p-1 border border-slate-900 text-center font-semibold">
+                              {toBnDigit(pairs)}
+                            </td>
+                            <td className="p-1 border border-slate-900 text-right font-mono">{formatTaka(price)}</td>
+                            {hasCommissionInItems && (
+                              <td className="p-1 border border-slate-900 text-right font-mono font-semibold text-slate-700">
+                                {item.commissionPerPair && item.commissionPerPair > 0 ? `৳${item.commissionPerPair}` : '-'}
+                              </td>
+                            )}
+                            <td className="p-1 border border-slate-900 text-right font-mono font-bold">{formatTaka(itemTotal)}</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
 
-            {/* Calculations */}
-            <table className="w-full text-[10px] sm:text-[11px]">
-              <tbody>
-                <tr>
-                  <td className="py-0.5 text-slate-600">মোট জোড়া:</td>
-                  <td className="py-0.5 text-right font-bold">{toBnDigit(order.totalPairs)} জোড়া</td>
-                </tr>
-                <tr>
-                  <td className="py-0.5 text-slate-600">মোট মূল্য:</td>
-                  <td className="py-0.5 text-right font-semibold">{formatTaka(order.subTotal)}</td>
-                </tr>
-                {order.discount > 0 && (
-                  <tr>
-                    <td className="py-0.5 text-rose-600 font-medium">ডিসকাউন্ট (ছাড়):</td>
-                    <td className="py-0.5 text-right text-rose-600 font-semibold">- {formatTaka(order.discount)}</td>
-                  </tr>
-                )}
-                <tr className="border-t border-slate-900 font-bold text-xs">
-                  <td className="py-1">সর্বমোট নিট বিল:</td>
-                  <td className="py-1 text-right font-black">{formatTaka(order.grandTotal)}</td>
-                </tr>
+                  {/* Calculations Summary Grid */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-start pt-1">
+                    
+                    {/* Note & Policy */}
+                    <div className="text-[10px] text-slate-600 space-y-0.5 bg-slate-50 p-2 rounded border border-slate-200">
+                      <div className="font-bold text-slate-800">শর্তাবলী:</div>
+                      <div>১. বিক্রিত মাল ফেরত নেওয়া হয় না, তবে স্টক পরিবর্তন সাপেক্ষ।</div>
+                      <div>২. মেমো ছাড়া কোনো অভিযোগ গ্রহণযোগ্য নয়।</div>
+                      {order.notes && (
+                        <div className="mt-0.5 font-semibold text-slate-800">নোট: {order.notes}</div>
+                      )}
+                    </div>
+
+                    {/* Calculations */}
+                    <table className="w-full text-[10px] sm:text-[11px]">
+                      <tbody>
+                        <tr>
+                          <td className="py-0.5 text-slate-600">মোট জোড়া:</td>
+                          <td className="py-0.5 text-right font-bold">{toBnDigit(order.totalPairs)} জোড়া</td>
+                        </tr>
+                        <tr>
+                          <td className="py-0.5 text-slate-600">মোট মূল্য:</td>
+                          <td className="py-0.5 text-right font-semibold">{formatTaka(order.subTotal)}</td>
+                        </tr>
+                        {totalOrderCommission > 0 && (
+                          <tr>
+                            <td className="py-0.5 text-amber-700 font-medium">জোড়া প্রতি কমিশন (ছাড়):</td>
+                            <td className="py-0.5 text-right text-amber-700 font-semibold">- {formatTaka(totalOrderCommission)}</td>
+                          </tr>
+                        )}
+                        {order.discount > 0 && (
+                          <tr>
+                            <td className="py-0.5 text-rose-600 font-medium">অতিরিক্ত ছাড় / ডিসকাউন্ট:</td>
+                            <td className="py-0.5 text-right text-rose-600 font-semibold">- {formatTaka(order.discount)}</td>
+                          </tr>
+                        )}
+                        <tr className="border-t border-slate-900 font-bold text-xs">
+                          <td className="py-1">সর্বমোট নিট বিল:</td>
+                          <td className="py-1 text-right font-black">{formatTaka(order.grandTotal)}</td>
+                        </tr>
                 <tr className="text-emerald-700 font-bold">
                   <td className="py-0.5">জমা/নগদ প্রদান:</td>
                   <td className="py-0.5 text-right font-black">{formatTaka(order.paidAmount)}</td>
@@ -384,6 +417,11 @@ export const InvoiceModal: React.FC<InvoiceModalProps> = ({ order, onClose }) =>
             <div className="border-t border-slate-800 pt-1 text-center w-28 font-bold">
               জান্নাত সুজ পক্ষে
             </div>
+          </div>
+
+                </>
+              );
+            })()}
           </div>
 
         </div>

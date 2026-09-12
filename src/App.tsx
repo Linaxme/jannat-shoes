@@ -22,19 +22,20 @@ import {
 import { LanguageProvider, useLanguage } from './contexts/LanguageContext';
 import { Header } from './components/Header';
 import { Navigation, NavTab } from './components/Navigation';
+import { Sidebar } from './components/Sidebar';
 import { TabLoadingFallback } from './components/TabLoadingFallback';
 import CustomerStorefront from './components/CustomerStorefront';
+import PosOrderBuilder from './components/PosOrderBuilder';
 
 // Lazy-loaded components for rapid initial boot & light bundle size
 const Dashboard = lazy(() => import('./components/Dashboard').then(m => ({ default: m.Dashboard })));
-const PosOrderBuilder = lazy(() => import('./components/PosOrderBuilder').then(m => ({ default: m.PosOrderBuilder })));
 const InvoiceModal = lazy(() => import('./components/InvoiceModal').then(m => ({ default: m.InvoiceModal })));
 const StockManagement = lazy(() => import('./components/StockManagement').then(m => ({ default: m.StockManagement })));
 const DueManagement = lazy(() => import('./components/DueManagement').then(m => ({ default: m.DueManagement })));
 const SalesHistory = lazy(() => import('./components/SalesHistory').then(m => ({ default: m.SalesHistory })));
 const PendingOrders = lazy(() => import('./components/PendingOrders').then(m => ({ default: m.PendingOrders })));
 const LoginModal = lazy(() => import('./components/LoginModal').then(m => ({ default: m.LoginModal })));
-const UserManagement = lazy(() => import('./components/UserManagement').then(m => ({ default: m.UserManagement || m.default })));
+const UserManagement = lazy(() => import('./components/UserManagement').then(m => ({ default: m.UserManagement })));
 const FeatureManagement = lazy(() => import('./components/FeatureManagement').then(m => ({ default: m.FeatureManagement })));
 const SellerTracking = lazy(() => import('./components/SellerTracking').then(m => ({ default: m.SellerTracking })));
 const SMSPanel = lazy(() => import('./components/SMSPanel').then(m => ({ default: m.SMSPanel })));
@@ -628,6 +629,7 @@ export default function App() {
         type: 'order_booking',
       });
     }
+    setPosPreSelectedCustomerId('');
   };
 
   // 1.1 Confirm Delivery & Issue Cash Memo for Booked Sample Orders
@@ -1254,47 +1256,83 @@ export default function App() {
         </Suspense>
       )}
 
-      {/* Header Bar */}
-      <Header
-        currentUser={currentUser}
-        onLogout={handleLogout}
-        onManualSeed={handleManualSeed}
-        isLoadingCloud={isLoadingCloud}
-        activeTab={activeTab}
-        onSelectTab={setActiveTab}
-        dueAlertCount={dueAlertCount}
-        lowStockCount={lowStockCount}
-        pendingOrdersCount={pendingOrdersCount}
-        currentUserRole={currentUser?.role || 'customer'}
-        systemConfig={systemConfig}
-        notifications={notifications}
-        onMarkNotificationAsRead={handleMarkNotificationAsRead}
-        onMarkAllNotificationsAsRead={handleMarkAllNotificationsAsRead}
-        onClearNotifications={handleClearNotifications}
-        onInstallPWA={handleInstallPWA}
-        canInstallPWA={canInstallPWA}
-      />
+      {/* Desktop Sidebar & Main Content Layout */}
+      <div className="flex flex-col md:flex-row min-h-screen w-full">
+        {/* Desktop Left Sidebar Navigation */}
+        <Sidebar
+          activeTab={activeTab}
+          onSelectTab={(tab) => {
+            if (!currentUser && tab !== 'catalog') {
+              setIsLoginModalOpen(true);
+              return;
+            }
+            if (tab === 'pos') {
+              setPosPreSelectedCustomerId('');
+            }
+            setActiveTab(tab);
+          }}
+          currentUser={currentUser}
+          currentUserRole={currentUser?.role || 'customer'}
+          onLogout={handleLogout}
+          dueAlertCount={dueAlertCount}
+          lowStockCount={lowStockCount}
+          pendingOrdersCount={pendingOrdersCount}
+          systemConfig={systemConfig}
+          onInstallPWA={handleInstallPWA}
+          canInstallPWA={canInstallPWA}
+        />
 
-      {/* Navigation Bar */}
-      <Navigation
-        activeTab={activeTab}
-        onSelectTab={(tab) => {
-          if (!currentUser && tab !== 'catalog') {
-            setIsLoginModalOpen(true);
-            return;
-          }
-          setActiveTab(tab);
-        }}
-        activeTheme={activeTheme}
-        dueAlertCount={dueAlertCount}
-        lowStockCount={lowStockCount}
-        pendingOrdersCount={pendingOrdersCount}
-        currentUserRole={currentUser?.role || 'customer'}
-      />
+        {/* Main Content Area (Header + Content) */}
+        <div className="flex-1 flex flex-col min-w-0 min-h-screen">
+          {/* Header Bar */}
+          <Header
+            currentUser={currentUser}
+            onLogout={handleLogout}
+            onManualSeed={handleManualSeed}
+            isLoadingCloud={isLoadingCloud}
+            activeTab={activeTab}
+            onSelectTab={(tab) => {
+              if (tab === 'pos') {
+                setPosPreSelectedCustomerId('');
+              }
+              setActiveTab(tab);
+            }}
+            dueAlertCount={dueAlertCount}
+            lowStockCount={lowStockCount}
+            pendingOrdersCount={pendingOrdersCount}
+            currentUserRole={currentUser?.role || 'customer'}
+            systemConfig={systemConfig}
+            notifications={notifications}
+            onMarkNotificationAsRead={handleMarkNotificationAsRead}
+            onMarkAllNotificationsAsRead={handleMarkAllNotificationsAsRead}
+            onClearNotifications={handleClearNotifications}
+            onInstallPWA={handleInstallPWA}
+            canInstallPWA={canInstallPWA}
+          />
 
-      {/* Main Content View */}
-      <main className="max-w-7xl mx-auto px-3 sm:px-6 pt-6 pb-6 sm:pb-12">
-        <Suspense fallback={<TabLoadingFallback />}>
+          {/* Navigation Bar (Mobile only, hidden on desktop) */}
+          <Navigation
+            activeTab={activeTab}
+            onSelectTab={(tab) => {
+              if (!currentUser && tab !== 'catalog') {
+                setIsLoginModalOpen(true);
+                return;
+              }
+              if (tab === 'pos') {
+                setPosPreSelectedCustomerId('');
+              }
+              setActiveTab(tab);
+            }}
+            activeTheme={activeTheme}
+            dueAlertCount={dueAlertCount}
+            lowStockCount={lowStockCount}
+            pendingOrdersCount={pendingOrdersCount}
+            currentUserRole={currentUser?.role || 'customer'}
+          />
+
+          {/* Main Content View */}
+          <main className="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 pt-4 sm:pt-6 pb-6 sm:pb-12">
+            <Suspense fallback={<TabLoadingFallback />}>
         
         {activeTab === 'catalog' && (
           <CustomerStorefront
@@ -1502,6 +1540,8 @@ export default function App() {
 
         </Suspense>
       </main>
+        </div>
+      </div>
 
     </div>
   );

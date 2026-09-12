@@ -12,15 +12,24 @@
     <link rel="icon" type="image/svg+xml" href="/icon-512.svg" />
     <link rel="apple-touch-icon" href="/icon-512.svg" />
     <script>
-      // Register service worker for PWA support
+      // Register service worker for PWA support only in production standalone mode
       if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/sw.js').then((reg) => {
-            console.log('PWA ServiceWorker registered with scope:', reg.scope);
-          }).catch((err) => {
-            console.log('PWA ServiceWorker registration failed:', err);
+        if (window.location.hostname === 'localhost' || window.location.hostname.includes('run.app') || window.location.hostname.includes('dev')) {
+          navigator.serviceWorker.getRegistrations().then((regs) => {
+            regs.forEach((reg) => reg.unregister());
           });
-        });
+          if (window.caches) {
+            caches.keys().then((keys) => keys.forEach((key) => caches.delete(key)));
+          }
+        } else {
+          window.addEventListener('load', () => {
+            navigator.serviceWorker.register('/sw.js').then((reg) => {
+              console.log('PWA ServiceWorker registered with scope:', reg.scope);
+            }).catch((err) => {
+              console.log('PWA ServiceWorker registration failed:', err);
+            });
+          });
+        }
       }
     </script>
   </head>

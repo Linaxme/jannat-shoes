@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Customer, SalesRep, DuePaymentLog, UITheme, UserAccount } from '../types';
 import { formatTaka, toBnDigit, formatBnDate, getLocalDateStr } from '../utils/formatters';
 import { useLanguage } from '../contexts/LanguageContext';
@@ -189,7 +189,7 @@ export const DueManagement: React.FC<DueManagementProps> = ({
   const totalMarketDue = customers.reduce((sum, c) => sum + c.currentDue, 0);
 
   // Calculate Due Grouped by Seller / Admin (only active due customers)
-  const sellerWiseDue = React.useMemo(() => {
+  const sellerWiseDue = useMemo(() => {
     const list = sellers.map((seller) => {
       const sellerCusts = customers.filter((c) => isCustomerOfSeller(c, seller) && c.currentDue > 0);
       const sellerTotalDue = sellerCusts.reduce((sum, c) => sum + c.currentDue, 0);

@@ -26,11 +26,16 @@ export const EditPendingOrderModal: React.FC<EditPendingOrderModalProps> = ({
     const updated = [...items];
     const item = updated[index];
     const totalPairs = item.unitType === 'cartons' ? qty * 12 : qty;
-    const totalAmount = totalPairs * item.unitSellPrice;
+    const comm = item.commissionPerPair || 0;
+    const netUnitPrice = Math.max(0, item.unitSellPrice - comm);
+    const totalCommission = totalPairs * comm;
+    const totalAmount = totalPairs * netUnitPrice;
     updated[index] = {
       ...item,
       quantityInput: qty,
       totalPairs,
+      netUnitPrice,
+      totalCommission,
       totalAmount,
     };
     setItems(updated);
@@ -41,10 +46,33 @@ export const EditPendingOrderModal: React.FC<EditPendingOrderModalProps> = ({
     const price = Math.max(0, newPrice);
     const updated = [...items];
     const item = updated[index];
-    const totalAmount = item.totalPairs * price;
+    const comm = item.commissionPerPair || 0;
+    const netUnitPrice = Math.max(0, price - comm);
+    const totalCommission = item.totalPairs * comm;
+    const totalAmount = item.totalPairs * netUnitPrice;
     updated[index] = {
       ...item,
       unitSellPrice: price,
+      netUnitPrice,
+      totalCommission,
+      totalAmount,
+    };
+    setItems(updated);
+  };
+
+  // Handle commission change
+  const handleCommissionChange = (index: number, newCommission: number) => {
+    const comm = Math.max(0, newCommission);
+    const updated = [...items];
+    const item = updated[index];
+    const netUnitPrice = Math.max(0, item.unitSellPrice - comm);
+    const totalCommission = item.totalPairs * comm;
+    const totalAmount = item.totalPairs * netUnitPrice;
+    updated[index] = {
+      ...item,
+      commissionPerPair: comm,
+      netUnitPrice,
+      totalCommission,
       totalAmount,
     };
     setItems(updated);
@@ -64,6 +92,8 @@ export const EditPendingOrderModal: React.FC<EditPendingOrderModalProps> = ({
   const paidAmountNum = typeof paidAmount === 'number' ? paidAmount : parseFloat(paidAmount) || 0;
 
   const totalPairs = items.reduce((sum, i) => sum + i.totalPairs, 0);
+  const totalCommission = items.reduce((sum, i) => sum + (i.totalCommission || (i.totalPairs * (i.commissionPerPair || 0))), 0);
+  const grossTotal = items.reduce((sum, i) => sum + (i.totalPairs * i.unitSellPrice), 0);
   const subTotal = items.reduce((sum, i) => sum + i.totalAmount, 0);
   const grandTotal = Math.max(0, subTotal - discountNum);
   const dueAmount = Math.max(0, grandTotal - paidAmountNum);
@@ -77,6 +107,7 @@ export const EditPendingOrderModal: React.FC<EditPendingOrderModalProps> = ({
       items,
       totalPairs,
       totalCartons: Math.round((totalPairs / 12) * 10) / 10,
+      totalCommission,
       subTotal,
       discount: discountNum,
       grandTotal,
@@ -131,15 +162,27 @@ export const EditPendingOrderModal: React.FC<EditPendingOrderModalProps> = ({
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
                     <div>
-                      <label className="text-[9px] text-slate-400 block mb-0.5">মূল্য/জোড়া (৳):</label>
+                      <label className="text-[9px] text-slate-400 block mb-0.5">বিক্রয় দর (৳):</label>
                       <input
                         type="number"
                         min="0"
                         value={item.unitSellPrice}
                         onChange={(e) => handlePriceChange(idx, parseFloat(e.target.value) || 0)}
-                        className="w-20 bg-slate-900 border border-slate-700 text-center font-bold text-emerald-400 rounded-xl px-2 py-1 focus:outline-none focus:border-amber-500"
+                        className="w-18 bg-slate-900 border border-slate-700 text-center font-bold text-emerald-400 rounded-xl px-2 py-1 focus:outline-none focus:border-amber-500"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-[9px] text-amber-300 block mb-0.5">কমিশন/জোড়া (৳):</label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={item.commissionPerPair !== undefined && item.commissionPerPair !== null ? item.commissionPerPair : ''}
+                        onChange={(e) => handleCommissionChange(idx, e.target.value === '' ? 0 : parseFloat(e.target.value) || 0)}
+                        placeholder="০"
+                        className="w-16 bg-slate-900 border border-amber-500/40 text-center font-bold text-amber-300 rounded-xl px-2 py-1 focus:outline-none focus:border-amber-500"
                       />
                     </div>
 
@@ -152,12 +195,12 @@ export const EditPendingOrderModal: React.FC<EditPendingOrderModalProps> = ({
                         min="1"
                         value={item.quantityInput}
                         onChange={(e) => handleQuantityChange(idx, parseInt(e.target.value) || 1)}
-                        className="w-16 bg-slate-900 border border-slate-700 text-center font-bold text-amber-300 rounded-xl px-2 py-1 focus:outline-none focus:border-amber-500"
+                        className="w-14 bg-slate-900 border border-slate-700 text-center font-bold text-slate-200 rounded-xl px-2 py-1 focus:outline-none focus:border-amber-500"
                       />
                     </div>
 
-                    <div className="text-right w-20">
-                      <span className="text-[9px] text-slate-400 block">মোট মূল্য</span>
+                    <div className="text-right min-w-[70px]">
+                      <span className="text-[9px] text-slate-400 block">নিট মূল্য</span>
                       <span className="font-extrabold text-amber-300">{formatTaka(item.totalAmount)}</span>
                     </div>
 
@@ -229,11 +272,17 @@ export const EditPendingOrderModal: React.FC<EditPendingOrderModalProps> = ({
           </div>
 
           {/* Summary Box */}
-          <div className="bg-gradient-to-r from-amber-950/40 to-slate-950 p-4 rounded-2xl border border-amber-500/30 flex items-center justify-between">
+          <div className="bg-gradient-to-r from-amber-950/40 to-slate-950 p-4 rounded-2xl border border-amber-500/30 flex items-center justify-between flex-wrap gap-2">
             <div>
               <span className="text-slate-400 text-[10px] block">সংশোধিত মোট জোড়া:</span>
               <span className="font-extrabold text-white text-sm">{toBnDigit(totalPairs)} জোড়া</span>
             </div>
+            {totalCommission > 0 && (
+              <div>
+                <span className="text-amber-400/80 text-[10px] block">মোট কমিশন ছাড়:</span>
+                <span className="font-extrabold text-amber-400 text-sm">- {formatTaka(totalCommission)}</span>
+              </div>
+            )}
             <div>
               <span className="text-slate-400 text-[10px] block">সংশোধিত নিট বিল:</span>
               <span className="font-black text-amber-300 text-sm">{formatTaka(grandTotal)}</span>

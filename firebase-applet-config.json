@@ -1,12 +1,12 @@
 {
-  "projectId": "vivid-design-p6shk",
-  "appId": "1:168690241691:web:e1ef7050840cdaa26a763e",
-  "apiKey": "AIzaSyDsZAMHVX2GAkEzf8APUky7hft0SYXnM9o",
-  "authDomain": "vivid-design-p6shk.firebaseapp.com",
-  "firestoreDatabaseId": "ai-studio-6f9c7f71-09ef-4c76-b941-94d790a38a13",
-  "storageBucket": "vivid-design-p6shk.firebasestorage.app",
-  "messagingSenderId": "168690241691",
-  "measurementId": "",
-  "oAuthClientId": "168690241691-lm35sfd2pa8gbdsosfhhdo4lf64ohtko.apps.googleusercontent.com",
+  "projectId": "stokm-fe3c1",
+  "appId": "1:987062417795:web:d010f7efafe744165cdeb6",
+  "apiKey": "AIzaSyB9Lfjm9cXUkqHDcP93rn85FFz5dY39gxE",
+  "authDomain": "stokm-fe3c1.firebaseapp.com",
+  "storageBucket": "stokm-fe3c1.firebasestorage.app",
+  "messagingSenderId": "987062417795",
+  "measurementId": "G-R3BVMMTL9H",
+  "firestoreDatabaseId": "(default)",
+  "oAuthClientId": "",
   "recaptchaSiteKey": ""
 }

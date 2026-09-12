@@ -1,0 +1,171 @@
+{
+  "entities": {
+    "ShoeProduct": {
+      "title": "ShoeProduct",
+      "description": "Footwear product stored in inventory",
+      "type": "object",
+      "properties": {
+        "articleCode": { "type": "string", "description": "Unique article code" },
+        "name": { "type": "string", "description": "Product display name" },
+        "category": { "type": "string", "description": "Product category" },
+        "brand": { "type": "string", "description": "Product brand" },
+        "sizeRange": { "type": "string", "description": "Available shoe sizes" },
+        "buyPrice": { "type": "number", "description": "Purchase cost per pair" },
+        "sellPrice": { "type": "number", "description": "Wholesale selling price per pair" },
+        "retailPrice": { "type": "number", "description": "Retail MRP" },
+        "pairsPerCarton": { "type": "number", "description": "Pairs per dozen/carton" },
+        "stockPairs": { "type": "number", "description": "Total stock count in pairs" },
+        "minStockAlert": { "type": "number", "description": "Low stock alert threshold" },
+        "imageUrl": { "type": "string", "description": "Product photo URL" },
+        "description": { "type": "string", "description": "Detailed notes" },
+        "updatedAt": { "type": "string", "description": "ISO timestamp of last update" }
+      },
+      "required": ["articleCode", "name", "buyPrice", "sellPrice", "stockPairs"]
+    },
+    "Customer": {
+      "title": "Customer",
+      "description": "Retail shop or wholesale customer record",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string", "description": "Customer contact person name" },
+        "shopName": { "type": "string", "description": "Shop or retail outlet name" },
+        "address": { "type": "string", "description": "Shop address and region" },
+        "phone": { "type": "string", "description": "Contact phone number" },
+        "assignedSellerId": { "type": "string", "description": "ID of the assigned sales representative" },
+        "assignedSellerName": { "type": "string", "description": "Name of the assigned sales representative" },
+        "currentDue": { "type": "number", "description": "Current outstanding balance" },
+        "creditLimit": { "type": "number", "description": "Maximum credit allowance" },
+        "lastDueReminderDate": { "type": "string", "description": "Date of last SMS reminder" }
+      },
+      "required": ["name", "shopName", "phone", "currentDue"]
+    },
+    "SalesRep": {
+      "title": "SalesRep",
+      "description": "Sales representative profile",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string", "description": "Full name of sales representative" },
+        "phone": { "type": "string", "description": "Phone number" },
+        "area": { "type": "string", "description": "Assigned geographical territory" },
+        "monthlyTargetPairs": { "type": "number", "description": "Monthly pair sales target" },
+        "monthlyTargetAmount": { "type": "number", "description": "Monthly revenue sales target in BDT" },
+        "commissionRatePercent": { "type": "number", "description": "Commission percentage on sales" },
+        "commissionPerPair": { "type": "number", "description": "Flat commission rate per pair" },
+        "commissionType": { "type": "string", "description": "Model of commission calculation" }
+      },
+      "required": ["name", "phone", "area"]
+    },
+    "Order": {
+      "title": "Order",
+      "description": "Sales invoice or booking order",
+      "type": "object",
+      "properties": {
+        "memoNo": { "type": "string", "description": "Sequential memo number" },
+        "date": { "type": "string", "description": "Date of transaction" },
+        "time": { "type": "string", "description": "Time of transaction" },
+        "customerId": { "type": "string", "description": "Customer ID reference" },
+        "customerName": { "type": "string", "description": "Customer or proprietor name" },
+        "shopName": { "type": "string", "description": "Customer shop name" },
+        "customerPhone": { "type": "string", "description": "Customer phone" },
+        "customerAddress": { "type": "string", "description": "Delivery address" },
+        "sellerId": { "type": "string", "description": "Sales rep ID" },
+        "sellerName": { "type": "string", "description": "Sales rep name" },
+        "totalPairs": { "type": "number", "description": "Total quantity in pairs" },
+        "subTotal": { "type": "number", "description": "Gross total amount before discounts" },
+        "totalCommission": { "type": "number", "description": "Sum of per-pair commissions" },
+        "discount": { "type": "number", "description": "Additional order discount" },
+        "grandTotal": { "type": "number", "description": "Final payable bill amount" },
+        "paidAmount": { "type": "number", "description": "Amount deposited / paid" },
+        "dueAmount": { "type": "number", "description": "Net unpaid invoice due" },
+        "previousDue": { "type": "number", "description": "Customer balance prior to invoice" },
+        "totalNetDue": { "type": "number", "description": "Cumulative total balance" },
+        "paymentMethod": { "type": "string", "description": "Payment method" },
+        "status": { "type": "string", "description": "Payment condition status" },
+        "orderType": { "type": "string", "description": "Booking sample or direct sale" },
+        "deliveryStatus": { "type": "string", "description": "Pending delivery or delivered" }
+      },
+      "required": ["memoNo", "date", "customerId", "grandTotal", "paidAmount", "dueAmount"]
+    },
+    "DuePaymentLog": {
+      "title": "DuePaymentLog",
+      "description": "Ledger entry for due payments received",
+      "type": "object",
+      "properties": {
+        "date": { "type": "string", "description": "Date of receipt" },
+        "customerId": { "type": "string", "description": "Customer reference" },
+        "customerName": { "type": "string", "description": "Customer name" },
+        "shopName": { "type": "string", "description": "Shop name" },
+        "sellerId": { "type": "string", "description": "Receiving seller ID" },
+        "sellerName": { "type": "string", "description": "Receiving seller name" },
+        "amountPaid": { "type": "number", "description": "Payment amount deposited" },
+        "discountAmount": { "type": "number", "description": "Discount granted on due" },
+        "previousDue": { "type": "number", "description": "Due prior to payment" },
+        "remainingDue": { "type": "number", "description": "Due remaining after payment" },
+        "paymentMethod": { "type": "string", "description": "Payment channel used" },
+        "notes": { "type": "string", "description": "Receipt notes" }
+      },
+      "required": ["date", "customerId", "amountPaid", "previousDue", "remainingDue"]
+    },
+    "UserAccount": {
+      "title": "UserAccount",
+      "description": "User credential and profile record",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string", "description": "User display name" },
+        "shopName": { "type": "string", "description": "Optional associated shop" },
+        "loginId": { "type": "string", "description": "Unique login identifier / phone" },
+        "password": { "type": "string", "description": "Access password" },
+        "role": { "type": "string", "description": "Role permission level" },
+        "phone": { "type": "string", "description": "Phone number" },
+        "email": { "type": "string", "description": "Email address" },
+        "isActive": { "type": "boolean", "description": "Whether user account is enabled" },
+        "createdAt": { "type": "string", "description": "Account creation timestamp" }
+      },
+      "required": ["name", "loginId", "password", "role", "isActive"]
+    },
+    "SystemConfig": {
+      "title": "SystemConfig",
+      "description": "Global application configuration settings",
+      "type": "object",
+      "properties": {
+        "companyName": { "type": "string", "description": "Business display name" },
+        "proprietor": { "type": "string", "description": "Business owner name" },
+        "address": { "type": "string", "description": "Business address" },
+        "phone": { "type": "string", "description": "Primary phone" },
+        "enableSMS": { "type": "boolean", "description": "Enable SMS notifications" },
+        "invoiceFooterNote": { "type": "string", "description": "Terms and notes printed on invoice" }
+      },
+      "required": ["companyName", "phone"]
+    }
+  },
+  "firestore": {
+    "/products/{productId}": {
+      "schema": "ShoeProduct",
+      "description": "Inventory products collection"
+    },
+    "/customers/{customerId}": {
+      "schema": "Customer",
+      "description": "Customer profiles and credit tracking"
+    },
+    "/sellers/{sellerId}": {
+      "schema": "SalesRep",
+      "description": "Sales representative details"
+    },
+    "/orders/{orderId}": {
+      "schema": "Order",
+      "description": "Sales orders and invoices"
+    },
+    "/paymentLogs/{logId}": {
+      "schema": "DuePaymentLog",
+      "description": "Due collection transactions log"
+    },
+    "/userAccounts/{userId}": {
+      "schema": "UserAccount",
+      "description": "System access accounts"
+    },
+    "/systemConfig/{configId}": {
+      "schema": "SystemConfig",
+      "description": "Application configuration"
+    }
+  }
+}

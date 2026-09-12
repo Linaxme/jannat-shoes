@@ -89,6 +89,7 @@ export const CustomerStorefront: React.FC<CustomerStorefrontProps> = ({
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isCheckoutModalOpen, setIsCheckoutModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [checkoutError, setCheckoutError] = useState<string | null>(null);
   const [completedOrder, setCompletedOrder] = useState<Order | null>(null);
   const [previewProduct, setPreviewProduct] = useState<ShoeProduct | null>(null);
   const [addedToast, setAddedToast] = useState<string | null>(null);
@@ -409,9 +410,14 @@ export const CustomerStorefront: React.FC<CustomerStorefrontProps> = ({
 
   const handleConfirmCheckout = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (cart.length === 0) return;
-    if (!phone || !shopName || !customerName || !address) {
-      alert('দয়া করে আপনার দোকানের নাম, মালিকের নাম, মোবাইল নম্বর ও ঠিকানা পূরণ করুন।');
+    setCheckoutError(null);
+
+    if (cart.length === 0) {
+      setCheckoutError('আপনার কার্ট খালি! অনুগ্রহ করে পণ্য যোগ করুন।');
+      return;
+    }
+    if (!phone.trim() || !shopName.trim() || !customerName.trim() || !address.trim()) {
+      setCheckoutError('দয়া করে আপনার দোকানের নাম, মালিকের নাম, মোবাইল নম্বর ও ঠিকানা পূরণ করুন।');
       return;
     }
 
@@ -432,10 +438,10 @@ export const CustomerStorefront: React.FC<CustomerStorefrontProps> = ({
 
       const created = await onSubmitOrder(
         {
-          shopName,
-          customerName,
-          phone,
-          address,
+          shopName: shopName.trim(),
+          customerName: customerName.trim(),
+          phone: phone.trim(),
+          address: address.trim(),
           password,
         },
         orderItems,
@@ -451,7 +457,7 @@ export const CustomerStorefront: React.FC<CustomerStorefrontProps> = ({
       }
     } catch (err) {
       console.error('Checkout error:', err);
-      alert('অর্ডার সাবমিট করতে সমস্যা হয়েছে। দয়া করে আবার চেষ্টা করুন।');
+      setCheckoutError('অর্ডার সাবমিট করতে সমস্যা হয়েছে। দয়া করে আবার চেষ্টা করুন।');
     } finally {
       setIsSubmitting(false);
     }
@@ -1097,6 +1103,13 @@ export const CustomerStorefront: React.FC<CustomerStorefrontProps> = ({
                   <span>{formatTaka(totalCartAmount)}</span>
                 </div>
               </div>
+
+              {checkoutError && (
+                <div className="p-2.5 bg-rose-500/15 border border-rose-500/30 rounded-xl text-xs text-rose-300 font-bold flex items-center gap-2 animate-bounce">
+                  <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
+                  <span>{checkoutError}</span>
+                </div>
+              )}
 
               <div className="pt-2 flex gap-2">
                 <button

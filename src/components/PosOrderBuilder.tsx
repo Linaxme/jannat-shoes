@@ -18,6 +18,9 @@ import {
   Save,
   ClipboardList,
   Zap,
+  AlertCircle,
+  Clock,
+  X,
 } from 'lucide-react';
 
 interface PosOrderBuilderProps {
@@ -42,8 +45,8 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
   onCreateOrder,
   onQuickAddCustomer,
 }) => {
-  // Read initial draft from localStorage if available
-  const savedDraft = useMemo(() => {
+  // Read initial draft from localStorage safely for state initialization
+  const [initialDraft] = useState(() => {
     try {
       const saved = localStorage.getItem('lixa_pos_draft');
       if (saved) {
@@ -53,11 +56,11 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
       console.error(e);
     }
     return null;
-  }, []);
+  });
 
   // Customer Selection by Phone / Name Auto-lookup
   const [selectedCustomerId, setSelectedCustomerId] = useState<string>(
-    () => preSelectedCustomerId || savedDraft?.selectedCustomerId || customers[0]?.id || ''
+    () => preSelectedCustomerId || (initialDraft?.cartItems?.length > 0 ? (initialDraft?.selectedCustomerId || '') : '')
   );
 
   useEffect(() => {
@@ -123,28 +126,29 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
   const [entryQty, setEntryQty] = useState<number | string>('');
   const [entryUnitType, setEntryUnitType] = useState<'pairs' | 'cartons'>('pairs');
   const [entryPricePerPair, setEntryPricePerPair] = useState<number | string>('');
+  const [entryCommissionPerPair, setEntryCommissionPerPair] = useState<number | string>('');
   const [showSuggestions, setShowSuggestions] = useState<boolean>(false);
 
   // Cart Items
   const [cartItems, setCartItems] = useState<OrderItem[]>(
-    () => savedDraft?.cartItems || []
+    () => initialDraft?.cartItems || []
   );
 
   // Adjustments & Payment
   const [discount, setDiscount] = useState<number | string>(
-    () => typeof savedDraft?.discount === 'number' && savedDraft.discount > 0 ? savedDraft.discount : ''
+    () => typeof initialDraft?.discount === 'number' && initialDraft.discount > 0 ? initialDraft.discount : ''
   );
   const [paidAmount, setPaidAmount] = useState<number | string>(
-    () => typeof savedDraft?.paidAmount === 'number' && savedDraft.paidAmount > 0 ? savedDraft.paidAmount : ''
+    () => typeof initialDraft?.paidAmount === 'number' && initialDraft.paidAmount > 0 ? initialDraft.paidAmount : ''
   );
   const [paymentMethod, setPaymentMethod] = useState<'নগদ ক্যাশ' | 'বিকাশ / নগদ' | 'ব্যাংক ট্রান্সফার' | 'বাকী (ডিউ)'>(
-    () => savedDraft?.paymentMethod || 'নগদ ক্যাশ'
+    () => initialDraft?.paymentMethod || 'নগদ ক্যাশ'
   );
   const [notes, setNotes] = useState<string>(
-    () => savedDraft?.notes || ''
+    () => initialDraft?.notes || ''
   );
   const [orderType, setOrderType] = useState<'sample_booking' | 'direct_sale'>(
-    () => savedDraft?.orderType || 'sample_booking'
+    () => initialDraft?.orderType || 'sample_booking'
   );
 
   // Save POS Draft to LocalStorage continuously so data is preserved when navigating tabs or page reloads
@@ -164,11 +168,15 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
     }
   }, [selectedCustomerId, cartItems, discount, paidAmount, paymentMethod, notes, orderType]);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (systemConfig && systemConfig.enableSampleBooking === false && orderType === 'sample_booking') {
       setOrderType('direct_sale');
     }
   }, [systemConfig, orderType]);
+
+  // Form error and submission state
+  const [formError, setFormError] = useState<string | null>(null);
+  const [isSubmittingOrder, setIsSubmittingOrder] = useState<boolean>(false);
 
   // Quick New Customer Modal
   const [showAddCustomerModal, setShowAddCustomerModal] = useState<boolean>(false);
@@ -178,8 +186,8 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
   const [newPhone, setNewPhone] = useState('');
   const [newOpeningDue, setNewOpeningDue] = useState<number | string>('');
 
-  // Get selected customer details
-  const selectedCustomer = customers.find((c) => c.id === selectedCustomerId) || customers[0];
+  // Get selected customer details - null/undefined if no customer is selected yet
+  const selectedCustomer = customers.find((c) => c.id === selectedCustomerId);
 
   // Suggestions for auto-complete
   const suggestions = products.filter((p) => {
@@ -197,7 +205,9 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
   const paidAmountNum = typeof paidAmount === 'number' ? paidAmount : parseFloat(paidAmount) || 0;
 
   const totalPairs = cartItems.reduce((sum, item) => sum + item.totalPairs, 0);
-  const subTotal = cartItems.reduce((sum, item) => sum + item.totalAmount, 0);
+  const grossTotal = cartItems.reduce((sum, item) => sum + (item.totalPairs * item.unitSellPrice), 0);
+  const totalCommission = cartItems.reduce((sum, item) => sum + (item.totalPairs * (item.commissionPerPair || 0)), 0);
+  const subTotal = grossTotal - totalCommission;
   const grandTotal = Math.max(0, subTotal - discountNum);
   const previousDue = selectedCustomer?.currentDue || 0;
   const newDueAmount = Math.max(0, grandTotal - paidAmountNum);
@@ -208,6 +218,7 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
     setSelectedProduct(p);
     setProductSearchInput(`${p.articleCode} - ${p.name}`);
     setEntryPricePerPair(p.sellPrice || p.buyPrice || '');
+    setEntryCommissionPerPair('');
     setShowSuggestions(false);
   };
 
@@ -237,8 +248,14 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
 
     const parsedPrice = typeof entryPricePerPair === 'number' ? entryPricePerPair : parseFloat(entryPricePerPair as string);
     const price = !isNaN(parsedPrice) && parsedPrice > 0 ? parsedPrice : (prod.sellPrice || prod.buyPrice || 0);
+
+    const parsedCommission = typeof entryCommissionPerPair === 'number' ? entryCommissionPerPair : parseFloat(entryCommissionPerPair as string);
+    const commission = !isNaN(parsedCommission) && parsedCommission > 0 ? parsedCommission : 0;
+    const netUnitPrice = Math.max(0, price - commission);
+
     const calculatedPairs = entryUnitType === 'cartons' ? qtyNumber * prod.pairsPerCarton : qtyNumber;
-    const itemTotalAmount = calculatedPairs * price;
+    const itemTotalCommission = calculatedPairs * commission;
+    const itemTotalAmount = calculatedPairs * netUnitPrice;
 
     const existingIndex = cartItems.findIndex(
       (item) => item.productId === prod!.id && item.unitType === entryUnitType
@@ -258,12 +275,17 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
       const updated = [...cartItems];
       const newQty = updated[existingIndex].quantityInput + qtyNumber;
       const newPairs = entryUnitType === 'cartons' ? newQty * prod.pairsPerCarton : newQty;
+      const effectiveComm = commission > 0 ? commission : (updated[existingIndex].commissionPerPair || 0);
+      const effectiveNet = Math.max(0, price - effectiveComm);
       updated[existingIndex] = {
         ...updated[existingIndex],
         quantityInput: newQty,
         totalPairs: newPairs,
         unitSellPrice: price,
-        totalAmount: newPairs * price,
+        commissionPerPair: effectiveComm,
+        netUnitPrice: effectiveNet,
+        totalCommission: newPairs * effectiveComm,
+        totalAmount: newPairs * effectiveNet,
       };
       setCartItems(updated);
     } else {
@@ -276,6 +298,9 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
         quantityInput: qtyNumber,
         totalPairs: calculatedPairs,
         unitSellPrice: price,
+        commissionPerPair: commission,
+        netUnitPrice,
+        totalCommission: itemTotalCommission,
         unitBuyPrice: prod.buyPrice,
         totalAmount: itemTotalAmount,
       };
@@ -287,6 +312,7 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
     setSelectedProduct(null);
     setEntryQty('');
     setEntryPricePerPair('');
+    setEntryCommissionPerPair('');
   };
 
   // Update Cart Quantity
@@ -315,11 +341,15 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
       return;
     }
 
+    const comm = item.commissionPerPair || 0;
+    const netRate = Math.max(0, item.unitSellPrice - comm);
     updated[index] = {
       ...item,
       quantityInput: newQtyInput,
       totalPairs: newPairs,
-      totalAmount: newPairs * item.unitSellPrice,
+      netUnitPrice: netRate,
+      totalCommission: newPairs * comm,
+      totalAmount: newPairs * netRate,
     };
     setCartItems(updated);
   };
@@ -329,10 +359,30 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
     const updated = [...cartItems];
     const item = updated[index];
     const validPrice = Math.max(0, newPriceInput);
+    const comm = item.commissionPerPair || 0;
+    const netRate = Math.max(0, validPrice - comm);
     updated[index] = {
       ...item,
       unitSellPrice: validPrice,
-      totalAmount: item.totalPairs * validPrice,
+      netUnitPrice: netRate,
+      totalCommission: item.totalPairs * comm,
+      totalAmount: item.totalPairs * netRate,
+    };
+    setCartItems(updated);
+  };
+
+  // Update Cart Item Commission
+  const handleUpdateCommission = (index: number, newCommissionInput: number) => {
+    const updated = [...cartItems];
+    const item = updated[index];
+    const validComm = Math.max(0, newCommissionInput);
+    const netRate = Math.max(0, item.unitSellPrice - validComm);
+    updated[index] = {
+      ...item,
+      commissionPerPair: validComm,
+      netUnitPrice: netRate,
+      totalCommission: item.totalPairs * validComm,
+      totalAmount: item.totalPairs * netRate,
     };
     setCartItems(updated);
   };
@@ -343,88 +393,97 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
   };
 
   // Submit Order
-  const handleSubmitOrder = () => {
+  const handleSubmitOrder = async () => {
+    setFormError(null);
+
     if (cartItems.length === 0) {
-      alert('অনুগ্রহ করে প্রথমে অন্তত একটি প্রোডাক্ট মেমোতে যোগ করুন!');
+      setFormError('অনুগ্রহ করে প্রথমে অন্তত একটি প্রোডাক্ট মেমোতে যোগ করুন!');
       return;
     }
     if (!selectedCustomer) {
-      alert('অনুগ্রহ করে কাস্টমার সিলেক্ট করুন!');
+      setFormError('অনুগ্রহ করে কাস্টমার সিলেক্ট করুন বা নতুন কাস্টমার যোগ করুন!');
       return;
     }
 
-    if (orderType === 'sample_booking') {
-      const confirmBooking = window.confirm(`আপনি কি এই অর্ডারটি বুকিং করতে চান?\n\nমোট জোড়া: ${totalPairs}\nআনুমানিক বিল: ৳ ${grandTotal.toLocaleString('bn-BD')}`);
-      if (!confirmBooking) return;
-    }
+    setIsSubmittingOrder(true);
+    try {
+      const todayStr = getLocalDateStr(new Date());
+      const nowTime = new Date().toLocaleTimeString('bn-BD', { hour: '2-digit', minute: '2-digit' });
+      const memoNo = `MEMO-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
 
-    const todayStr = getLocalDateStr(new Date());
-    const nowTime = new Date().toLocaleTimeString('bn-BD', { hour: '2-digit', minute: '2-digit' });
-    const memoNo = `MEMO-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
+      let status: 'পরিশোধিত' | 'আংশিক বাকী' | 'সম্পূর্ণ বাকী' = 'পরিশোধিত';
+      if (paidAmountNum === 0) {
+        status = 'সম্পূর্ণ বাকী';
+      } else if (paidAmountNum < grandTotal) {
+        status = 'আংশিক বাকী';
+      }
 
-    let status: 'পরিশোধিত' | 'আংশিক বাকী' | 'সম্পূর্ণ বাকী' = 'পরিশোধিত';
-    if (paidAmountNum === 0) {
-      status = 'সম্পূর্ণ বাকী';
-    } else if (paidAmountNum < grandTotal) {
-      status = 'আংশিক বাকী';
-    }
+      const approxCartons = Math.ceil(totalPairs / 12);
 
-    const approxCartons = Math.ceil(totalPairs / 12);
+      const newOrder: Order = {
+        id: `ord-${Date.now()}`,
+        memoNo,
+        date: todayStr,
+        time: nowTime,
+        customerId: selectedCustomer.id,
+        customerName: selectedCustomer.name,
+        shopName: selectedCustomer.shopName,
+        customerPhone: selectedCustomer.phone,
+        customerAddress: selectedCustomer.address,
+        sellerId: currentSellerInfo.id,
+        sellerName: currentSellerInfo.name,
+        items: cartItems,
+        totalPairs,
+        totalCartons: approxCartons,
+        subTotal: grossTotal,
+        totalCommission,
+        discount: discountNum,
+        adjustmentAmount: 0,
+        grandTotal,
+        paidAmount: paidAmountNum,
+        dueAmount: newDueAmount,
+        previousDue,
+        totalNetDue,
+        paymentMethod,
+        status,
+        orderType,
+        deliveryStatus: orderType === 'sample_booking' ? 'booked' : 'delivered',
+        notes,
+      };
 
-    const newOrder: Order = {
-      id: `ord-${Date.now()}`,
-      memoNo,
-      date: todayStr,
-      time: nowTime,
-      customerId: selectedCustomer.id,
-      customerName: selectedCustomer.name,
-      shopName: selectedCustomer.shopName,
-      customerPhone: selectedCustomer.phone,
-      customerAddress: selectedCustomer.address,
-      sellerId: currentSellerInfo.id,
-      sellerName: currentSellerInfo.name,
-      items: cartItems,
-      totalPairs,
-      totalCartons: approxCartons,
-      subTotal,
-      discount: discountNum,
-      adjustmentAmount: 0,
-      grandTotal,
-      paidAmount: paidAmountNum,
-      dueAmount: newDueAmount,
-      previousDue,
-      totalNetDue,
-      paymentMethod,
-      status,
-      orderType,
-      deliveryStatus: orderType === 'sample_booking' ? 'booked' : 'delivered',
-      notes,
-    };
-
-    onCreateOrder(newOrder);
-    setCartItems([]);
-    setDiscount('');
-    setPaidAmount('');
-    setNotes('');
-    localStorage.removeItem('lixa_pos_draft');
-  };
-
-  // Clear draft order manually
-  const handleClearDraft = () => {
-    if (window.confirm('আপনি কি নিশ্চিত যে বর্তমান খসড়া মেমোর সমস্ত তথ্য মুছে নতুন মেমো শুরু করতে চান?')) {
+      await onCreateOrder(newOrder);
       setCartItems([]);
       setDiscount('');
       setPaidAmount('');
       setNotes('');
+      setSelectedCustomerId('');
+      setCustomerSearchQuery('');
       localStorage.removeItem('lixa_pos_draft');
+    } catch (err) {
+      console.error('Submit order error:', err);
+      setFormError('অর্ডার প্রক্রিয়া করার সময় ত্রুটি ঘটেছে। পুনরায় চেষ্টা করুন।');
+    } finally {
+      setIsSubmittingOrder(false);
     }
+  };
+
+  // Clear draft order manually
+  const handleClearDraft = () => {
+    setCartItems([]);
+    setDiscount('');
+    setPaidAmount('');
+    setNotes('');
+    setSelectedCustomerId('');
+    setCustomerSearchQuery('');
+    setFormError(null);
+    localStorage.removeItem('lixa_pos_draft');
   };
 
   // Save Quick Customer
   const handleSaveQuickCustomer = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newShopName.trim() || !newCustName.trim()) {
-      alert('দোকানের নাম ও প্রোপাইটারের নাম পূরণ করা আবশ্যক!');
+      setFormError('দোকানের নাম ও প্রোপাইটারের নাম পূরণ করা আবশ্যক!');
       return;
     }
     const sellerId = currentUser?.sellerId || currentSellerInfo.id || currentUser?.id || '';
@@ -561,9 +620,11 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
                   type="button"
                   onClick={() => {
                     setCustomerSearchQuery('');
+                    setSelectedCustomerId('');
                     setShowCustomerDropdown(false);
                   }}
                   className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-white"
+                  title="মুছে ফেলুন"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
                 </button>
@@ -575,13 +636,15 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
               <button
                 type="button"
                 onClick={() => {
+                  setSelectedCustomerId('');
                   setCustomerSearchQuery('');
                   setShowCustomerDropdown(true);
                 }}
-                className="px-3 py-2.5 bg-slate-800 hover:bg-slate-750 text-slate-300 text-xs font-semibold rounded-xl border border-slate-700 whitespace-nowrap transition-colors"
-                title="দোকান খুঁজুন"
+                className="px-3 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-xs font-semibold rounded-xl border border-slate-700 whitespace-nowrap transition-colors flex items-center gap-1 cursor-pointer"
+                title="দোকান পরিবর্তন করুন"
               >
-                খুঁজুন
+                <X className="w-3.5 h-3.5 text-rose-400" />
+                <span>পরিবর্তন</span>
               </button>
             )}
           </div>
@@ -640,7 +703,7 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
                   setShowAddCustomerModal(true);
                   setShowCustomerDropdown(false);
                 }}
-                className="px-3.5 py-1.5 bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold rounded-lg shadow transition-colors inline-flex items-center gap-1.5"
+                className="px-3.5 py-1.5 bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold rounded-lg shadow transition-colors inline-flex items-center gap-1.5 cursor-pointer"
               >
                 <PlusCircle className="w-3.5 h-3.5" />
                 নতুন দোকান হিসেবে যুক্ত করুন
@@ -651,7 +714,7 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
 
         {/* Selected Customer Highlight Card */}
         {selectedCustomer ? (
-          <div className="p-3 bg-slate-950/70 border border-slate-800 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+          <div className="p-3 bg-slate-950/70 border border-amber-500/30 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
             <div className="space-y-1">
               <div className="flex items-center gap-2 flex-wrap">
                 <span className="font-black text-amber-300 text-sm flex items-center gap-1.5">
@@ -672,16 +735,30 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
               </div>
             </div>
 
-            <div className="text-right shrink-0 bg-slate-900/90 px-3 py-1.5 rounded-lg border border-slate-800">
-              <div className="text-[10px] text-slate-400">পূর্বের বকেয়া (Due):</div>
-              <div className={`font-black text-sm ${selectedCustomer.currentDue > 0 ? 'text-rose-400' : 'text-emerald-400'}`}>
-                {formatTaka(selectedCustomer.currentDue)}
+            <div className="flex items-center gap-3 self-end sm:self-center">
+              <div className="text-right shrink-0 bg-slate-900/90 px-3 py-1.5 rounded-lg border border-slate-800">
+                <div className="text-[10px] text-slate-400">পূর্বের বকেয়া (Due):</div>
+                <div className={`font-black text-sm ${selectedCustomer.currentDue > 0 ? 'text-rose-400' : 'text-emerald-400'}`}>
+                  {formatTaka(selectedCustomer.currentDue)}
+                </div>
               </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedCustomerId('');
+                  setCustomerSearchQuery('');
+                }}
+                className="p-2 rounded-lg bg-slate-800/80 hover:bg-rose-500/20 text-slate-400 hover:text-rose-400 border border-slate-700/60 transition-colors cursor-pointer"
+                title="দোকান নির্বাচন বাতিল করুন"
+              >
+                <X className="w-4 h-4" />
+              </button>
             </div>
           </div>
         ) : (
-          <div className="p-3 bg-slate-950/40 border border-dashed border-slate-800 rounded-xl text-center text-xs text-slate-500">
-            অনুগ্রহ করে উপরে মোবাইল নম্বর বা নাম দিয়ে দোকান সিলেক্ট করুন
+          <div className="p-3 bg-slate-950/40 border border-dashed border-slate-800 rounded-xl text-center text-xs text-slate-400 flex items-center justify-center gap-2">
+            <AlertCircle className="w-4 h-4 text-amber-400/80" />
+            <span>কোনো দোকান নির্বাচন করা হয়নি। উপরে মোবাইল নম্বর বা নাম দিয়ে দোকান সিলেক্ট করুন।</span>
           </div>
         )}
       </div>
@@ -696,8 +773,8 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
 
         <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-end">
           
-          {/* Product Auto-complete Search Box (Span 6 on desktop) */}
-          <div className="sm:col-span-6 relative">
+          {/* Product Auto-complete Search Box (Span 5 on desktop) */}
+          <div className="sm:col-span-5 relative">
             <label className="block text-xs font-semibold text-slate-300 mb-1">
               প্রোডাক্ট নাম বা আর্টিকল কোড:
             </label>
@@ -786,8 +863,8 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
             />
           </div>
 
-          {/* Price per pair Input Box (Span 3) */}
-          <div className="sm:col-span-3">
+          {/* Price per pair Input Box (Span 2) */}
+          <div className="sm:col-span-2">
             <label className="block text-xs font-semibold text-slate-300 mb-1">
               প্রতি জোড়ার দাম (৳):
             </label>
@@ -801,14 +878,45 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
             />
           </div>
 
+          {/* Commission per pair Input Box (Span 2) */}
+          <div className="sm:col-span-2">
+            <label className="block text-xs font-semibold text-amber-300 mb-1">
+              জোড়া প্রতি কমিশন (৳):
+            </label>
+            <input
+              type="number"
+              min="0"
+              value={entryCommissionPerPair}
+              onChange={(e) => setEntryCommissionPerPair(e.target.value === '' ? '' : parseFloat(e.target.value))}
+              placeholder="কমিশন (যেমন: ৪)"
+              className="w-full bg-slate-950 border border-amber-500/40 text-xs sm:text-sm text-amber-300 font-bold rounded-xl px-3 py-2.5 focus:outline-none focus:border-amber-500"
+            />
+          </div>
+
         </div>
+
+        {/* Live Calculation Preview when Price and Commission are present */}
+        {Number(entryPricePerPair) > 0 && Number(entryCommissionPerPair) > 0 && (
+          <div className="flex flex-wrap items-center gap-2 text-xs bg-amber-500/10 border border-amber-500/20 px-3 py-1.5 rounded-xl text-amber-300">
+            <span className="font-semibold text-slate-300">হিসাব প্রিভিউ:</span>
+            <span>বিক্রয় মূল্য ৳{entryPricePerPair} - কমিশন ৳{entryCommissionPerPair} =</span>
+            <span className="font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
+              নিট দর ৳{Math.max(0, Number(entryPricePerPair) - Number(entryCommissionPerPair))}/জোড়া
+            </span>
+            {Number(entryQty) > 0 && (
+              <span className="text-slate-400 text-[11px] ml-auto">
+                (মোট: {entryUnitType === 'cartons' ? Number(entryQty) * (selectedProduct?.pairsPerCarton || 12) : entryQty} জোড়া | নিট বিল: ৳{((entryUnitType === 'cartons' ? Number(entryQty) * (selectedProduct?.pairsPerCarton || 12) : Number(entryQty)) * Math.max(0, Number(entryPricePerPair) - Number(entryCommissionPerPair))).toLocaleString('bn-BD')})
+              </span>
+            )}
+          </div>
+        )}
 
         {/* Add Button */}
         <div className="pt-1 text-right">
           <button
             type="button"
             onClick={handleAddProductToMemo}
-            className="w-full sm:w-auto bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-6 py-2.5 rounded-xl text-xs sm:text-sm flex items-center justify-center gap-2 shadow transition-all"
+            className="w-full sm:w-auto bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-6 py-2.5 rounded-xl text-xs sm:text-sm flex items-center justify-center gap-2 shadow transition-all cursor-pointer"
           >
             <Plus className="w-4 h-4 stroke-[2.5]" />
             মেমোতে যোগ করুন
@@ -835,15 +943,16 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="min-w-[550px] w-full text-left text-xs whitespace-nowrap">
+            <table className="min-w-[620px] w-full text-left text-xs whitespace-nowrap">
               <thead>
                 <tr className="border-b border-slate-800 text-slate-400 font-medium pb-2">
-                  <th className="pb-2.5 pr-3">প্রোডাক্ট ও আর্টিকল</th>
-                  <th className="pb-2.5 px-3">সাইজ</th>
-                  <th className="pb-2.5 px-3 text-center">পরিমাণ</th>
-                  <th className="pb-2.5 px-3 text-right">দর (৳/জোড়া)</th>
-                  <th className="pb-2.5 px-3 text-right">মোট বিল (৳)</th>
-                  <th className="pb-2.5 pl-3 text-right">অ্যাকশন</th>
+                  <th className="pb-2.5 pr-2">প্রোডাক্ট ও আর্টিকল</th>
+                  <th className="pb-2.5 px-2">সাইজ</th>
+                  <th className="pb-2.5 px-2 text-center">পরিমাণ</th>
+                  <th className="pb-2.5 px-2 text-right">বিক্রয় দর (৳)</th>
+                  <th className="pb-2.5 px-2 text-right">কমিশন (৳)</th>
+                  <th className="pb-2.5 px-2 text-right">নিট মোট (৳)</th>
+                  <th className="pb-2.5 pl-2 text-right">অ্যাকশন</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-800/80">
@@ -851,19 +960,19 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
                   <tr key={`${item.productId}-${item.unitType}-${index}`} className="hover:bg-slate-800/40">
                     
                     {/* Article Only */}
-                    <td className="py-3 pr-3">
+                    <td className="py-3 pr-2">
                       <span className="font-mono font-bold text-amber-300 bg-amber-500/10 px-2 py-1 rounded-lg border border-amber-500/20 text-xs">
                         {item.articleCode}
                       </span>
                     </td>
 
                     {/* Size */}
-                    <td className="py-3 px-3 text-slate-300 font-semibold">
+                    <td className="py-3 px-2 text-slate-300 font-semibold">
                       {item.sizeRange ? item.sizeRange.replace(/\(.*?\)/g, '').trim() : '৩৯-৪৪'}
                     </td>
 
                     {/* Quantity Control */}
-                    <td className="py-3 px-3 text-center">
+                    <td className="py-3 px-2 text-center">
                       <div className="inline-flex items-center gap-1">
                         <input
                           type="number"
@@ -879,7 +988,7 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
                     </td>
 
                     {/* Unit Price (Editable) */}
-                    <td className="py-3 px-3 text-right">
+                    <td className="py-3 px-2 text-right">
                       <div className="inline-flex items-center justify-end gap-1">
                         <span className="text-[11px] text-slate-400 font-bold">৳</span>
                         <input
@@ -887,23 +996,49 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
                           min="0"
                           value={item.unitSellPrice}
                           onChange={(e) => handleUpdateUnitPrice(index, parseFloat(e.target.value) || 0)}
-                          className="w-20 bg-slate-950 border border-slate-700 text-emerald-400 font-bold text-right text-xs py-1 px-1.5 rounded-lg focus:outline-none focus:border-amber-500"
+                          className="w-16 bg-slate-950 border border-slate-700 text-emerald-400 font-bold text-right text-xs py-1 px-1.5 rounded-lg focus:outline-none focus:border-amber-500"
                           title="দর পরিবর্তন করুন"
+                        />
+                      </div>
+                      {item.commissionPerPair && item.commissionPerPair > 0 ? (
+                        <div className="text-[10px] text-slate-400 font-normal">
+                          নিট: ৳{item.unitSellPrice - item.commissionPerPair}
+                        </div>
+                      ) : null}
+                    </td>
+
+                    {/* Commission Per Pair (Editable) */}
+                    <td className="py-3 px-2 text-right">
+                      <div className="inline-flex items-center justify-end gap-1">
+                        <span className="text-[11px] text-slate-400 font-bold">৳</span>
+                        <input
+                          type="number"
+                          min="0"
+                          value={item.commissionPerPair !== undefined && item.commissionPerPair !== null ? item.commissionPerPair : ''}
+                          onChange={(e) => handleUpdateCommission(index, e.target.value === '' ? 0 : parseFloat(e.target.value) || 0)}
+                          placeholder="০"
+                          className="w-16 bg-slate-950 border border-amber-500/40 text-amber-300 font-bold text-right text-xs py-1 px-1.5 rounded-lg focus:outline-none focus:border-amber-500"
+                          title="জোড়া প্রতি কমিশন পরিবর্তন করুন"
                         />
                       </div>
                     </td>
 
                     {/* Line Total */}
-                    <td className="py-3 px-3 text-right font-bold text-emerald-400">
-                      {formatTaka(item.totalAmount)}
+                    <td className="py-3 px-2 text-right font-bold text-emerald-400">
+                      <div>{formatTaka(item.totalAmount)}</div>
+                      {item.totalCommission && item.totalCommission > 0 ? (
+                        <div className="text-[10px] text-amber-400/80 font-normal">
+                          ছাড়: -৳{item.totalCommission}
+                        </div>
+                      ) : null}
                     </td>
 
                     {/* Remove Action */}
-                    <td className="py-3 pl-3 text-right">
+                    <td className="py-3 pl-2 text-right">
                       <button
                         type="button"
                         onClick={() => handleRemoveItem(index)}
-                        className="p-1.5 text-rose-400 hover:text-rose-300 bg-rose-500/10 hover:bg-rose-500/20 rounded-lg transition-colors"
+                        className="p-1.5 text-rose-400 hover:text-rose-300 bg-rose-500/10 hover:bg-rose-500/20 rounded-lg transition-colors cursor-pointer"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
@@ -928,12 +1063,24 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
           {/* Left Column: Totals */}
           <div className="space-y-2.5 bg-slate-950 p-3.5 rounded-xl border border-slate-800">
             <div className="flex justify-between text-slate-300">
-              <span>মোট বিল (Subtotal):</span>
+              <span>মোট গায়ের দাম:</span>
+              <span className="font-bold text-slate-100">{formatTaka(grossTotal)}</span>
+            </div>
+
+            {totalCommission > 0 && (
+              <div className="flex justify-between text-amber-400 font-medium">
+                <span>জোড়া প্রতি কমিশন (ছাড়):</span>
+                <span className="font-bold">- {formatTaka(totalCommission)}</span>
+              </div>
+            )}
+
+            <div className="flex justify-between text-slate-300">
+              <span>নিট বিল (Subtotal):</span>
               <span className="font-bold text-slate-100">{formatTaka(subTotal)}</span>
             </div>
 
             <div className="flex items-center justify-between">
-              <span className="text-slate-300">ছাড় / ডিসকাউন্ট (৳):</span>
+              <span className="text-slate-300">অতিরিক্ত ছাড় / ডিসকাউন্ট (৳):</span>
               <input
                 type="number"
                 min="0"
@@ -945,7 +1092,7 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
             </div>
 
             <div className="flex justify-between text-slate-100 font-bold text-sm py-1 border-t border-slate-800">
-              <span>সর্বমোট বিল (Grand Total):</span>
+              <span>সর্বমোট প্রদেয় বিল (Grand Total):</span>
               <span className="text-amber-400 text-base">{formatTaka(grandTotal)}</span>
             </div>
           </div>
@@ -998,21 +1145,40 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
 
         </div>
 
+        {/* Validation error display */}
+        {formError && (
+          <div className="p-3 bg-rose-500/15 border border-rose-500/40 rounded-xl text-xs text-rose-300 font-bold flex items-center gap-2 animate-bounce">
+            <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
+            <span>{formError}</span>
+          </div>
+        )}
+
         {/* Submit Button */}
         <button
           type="button"
           onClick={handleSubmitOrder}
-          disabled={cartItems.length === 0}
+          disabled={isSubmittingOrder}
           className={`w-full py-3.5 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow transition-all ${
-            cartItems.length > 0
-              ? orderType === 'sample_booking'
-                ? 'bg-amber-500 hover:bg-amber-400 text-slate-950 cursor-pointer shadow-amber-500/20'
-                : 'bg-emerald-500 hover:bg-emerald-400 text-slate-950 cursor-pointer shadow-emerald-500/20'
-              : 'bg-slate-800 text-slate-500 cursor-not-allowed'
+            isSubmittingOrder
+              ? 'bg-slate-800 text-slate-400 cursor-wait'
+              : cartItems.length > 0
+                ? orderType === 'sample_booking'
+                  ? 'bg-amber-500 hover:bg-amber-400 text-slate-950 cursor-pointer shadow-amber-500/20 active:scale-[0.99]'
+                  : 'bg-emerald-500 hover:bg-emerald-400 text-slate-950 cursor-pointer shadow-emerald-500/20 active:scale-[0.99]'
+                : 'bg-slate-800 text-slate-400 hover:bg-slate-700/80 cursor-pointer border border-slate-700/50'
           }`}
         >
-          <CheckCircle className="w-5 h-5" />
-          {orderType === 'sample_booking' ? 'অর্ডার বুকিং নিশ্চিত করুন' : 'সরাসরি বিক্রয় মেমো নিশ্চিত করুন'}
+          {isSubmittingOrder ? (
+            <>
+              <Clock className="w-4 h-4 animate-spin" />
+              <span>বুকিং প্রক্রিয়া করা হচ্ছে...</span>
+            </>
+          ) : (
+            <>
+              <CheckCircle className="w-5 h-5" />
+              <span>{orderType === 'sample_booking' ? 'অর্ডার বুকিং নিশ্চিত করুন' : 'সরাসরি বিক্রয় মেমো নিশ্চিত করুন'}</span>
+            </>
+          )}
         </button>
 
       </div>
@@ -1112,4 +1278,6 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
     </div>
   );
 };
+
+export default PosOrderBuilder;
 

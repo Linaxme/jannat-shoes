@@ -82,6 +82,9 @@ export interface OrderItem {
   totalPairs: number; // হিসাব করা মোট জোড়া
   unitSellPrice: number; // প্রতি জোড়ার পাইকারি বিক্রয় মূল্য
   unitBuyPrice: number; // প্রতি জোড়ার ক্রয় মূল্য
+  commissionPerPair?: number; // জোড়া প্রতি কমিশন (যেমন ৪ টাকা)
+  netUnitPrice?: number; // কার্যকরী রেট = unitSellPrice - commissionPerPair
+  totalCommission?: number; // মোট কমিশন = totalPairs * commissionPerPair
   totalAmount: number; // মোট দাম (টাকা)
 }
 
@@ -106,6 +109,7 @@ export interface Order {
   totalPairs: number; // মোট জোড়া
   totalCartons: number; // মোট ডজন (আনুমানিক)
   subTotal: number; // মোট গায়ের দাম
+  totalCommission?: number; // মোট জোড়া প্রতি কমিশন বাবদ ছাড়
   discount: number; // ছাড় (টাকা)
   adjustmentAmount: number; // রাউন্ড অফ / এডজাস্টমেন্ট
   grandTotal: number; // নিট বিল
