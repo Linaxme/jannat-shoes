@@ -666,8 +666,37 @@ export default function App() {
     triggerAutomaticSMS('order_delivery', targetOrder.customerPhone || '', updatedOrder);
   };
 
-  // 1.2 Update Pending Order (e.g. remove items or adjust quantities due to stock issues)
+  // 1.2 Update Pending Order or Sales History Memo (e.g. add/remove items, adjust price or commission)
   const handleUpdateOrder = async (updatedOrder: Order) => {
+    const previousOrder = orders.find((o) => o.id === updatedOrder.id);
+
+    // If order was already delivered, adjust physical inventory differences
+    if (previousOrder && previousOrder.deliveryStatus === 'delivered') {
+      const productPairDiffs: Record<string, number> = {};
+      (previousOrder.items || []).forEach((it) => {
+        productPairDiffs[it.productId] = (productPairDiffs[it.productId] || 0) - (it.totalPairs || 0);
+      });
+      (updatedOrder.items || []).forEach((it) => {
+        productPairDiffs[it.productId] = (productPairDiffs[it.productId] || 0) + (it.totalPairs || 0);
+      });
+
+      let stockModified = false;
+      const updatedProducts = products.map((p) => {
+        const diff = productPairDiffs[p.id];
+        if (diff !== undefined && diff !== 0) {
+          stockModified = true;
+          const newStock = Math.max(0, p.stockPairs - diff);
+          const updatedP = { ...p, stockPairs: newStock };
+          saveDocumentToFirestore('products', p.id, updatedP);
+          return updatedP;
+        }
+        return p;
+      });
+      if (stockModified) {
+        setProducts(updatedProducts);
+      }
+    }
+
     setOrders((prev) => [updatedOrder, ...prev.filter((o) => o.id !== updatedOrder.id)]);
     await saveDocumentToFirestore('orders', updatedOrder.id, updatedOrder);
 
@@ -1395,12 +1424,14 @@ export default function App() {
         {activeTab === 'pending' && (
           <PendingOrders
             orders={getVisibleOrders()}
+            products={products}
             activeTheme={activeTheme}
             onSelectOrderForInvoice={setSelectedInvoiceOrder}
             onConfirmDelivery={handleConfirmDelivery}
             onUpdateOrder={handleUpdateOrder}
             onClaimOrder={handleClaimOrder}
             onDeleteOrder={handleDeleteOrder}
+            currentUserRole={currentUser?.role || 'customer'}
           />
         )}
 
@@ -1453,9 +1484,11 @@ export default function App() {
         {activeTab === 'sales' && (
           <SalesHistory
             orders={getVisibleOrders()}
+            products={products}
             activeTheme={activeTheme}
             onSelectOrderForInvoice={setSelectedInvoiceOrder}
             onConfirmDelivery={handleConfirmDelivery}
+            onUpdateOrder={handleUpdateOrder}
             onDeleteOrder={handleDeleteOrder}
             currentUserRole={currentUser?.role || 'customer'}
           />

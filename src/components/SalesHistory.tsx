@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Order, UITheme, UserRole } from '../types';
+import { Order, UITheme, UserRole, ShoeProduct } from '../types';
 import { formatTaka, toBnDigit, formatBnDate } from '../utils/formatters';
 import {
   History,
@@ -20,23 +20,29 @@ import {
   ChevronLeft,
   ChevronRight,
   ChevronsLeft,
-  ChevronsRight
+  ChevronsRight,
+  Edit3
 } from 'lucide-react';
+import { EditPendingOrderModal } from './EditPendingOrderModal';
 
 interface SalesHistoryProps {
   orders: Order[];
+  products?: ShoeProduct[];
   activeTheme: UITheme;
   onSelectOrderForInvoice: (order: Order) => void;
   onConfirmDelivery: (orderId: string) => void;
+  onUpdateOrder?: (updatedOrder: Order) => void;
   onDeleteOrder?: (orderId: string) => void;
   currentUserRole?: UserRole;
 }
 
 export const SalesHistory: React.FC<SalesHistoryProps> = ({
   orders,
+  products = [],
   activeTheme,
   onSelectOrderForInvoice,
   onConfirmDelivery,
+  onUpdateOrder,
   onDeleteOrder,
   currentUserRole = 'admin',
 }) => {
@@ -46,6 +52,7 @@ export const SalesHistory: React.FC<SalesHistoryProps> = ({
   const [dateFilter, setDateFilter] = useState<string>('');
   const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  const [editingOrder, setEditingOrder] = useState<Order | null>(null);
   const [orderToDelete, setOrderToDelete] = useState<Order | null>(null);
   const [viewMode, setViewMode] = useState<'table' | 'card'>(
     typeof window !== 'undefined' && window.innerWidth < 768 ? 'card' : 'table'
@@ -187,6 +194,24 @@ export const SalesHistory: React.FC<SalesHistoryProps> = ({
                   <span className="text-[10px] text-slate-400 block">PDF ও ছবি সেভ / প্রিন্ট</span>
                 </div>
               </button>
+
+              {/* শুধু এডমিনের জন্য মেমো এডিট অপশন (মাল এড ও ডিলেট) */}
+              {isAdmin && onUpdateOrder && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEditingOrder(ord);
+                    setOpenMenuId(null);
+                  }}
+                  className="w-full text-left px-3.5 py-2 text-amber-300 hover:bg-amber-950/50 flex items-center gap-2.5 transition-colors cursor-pointer"
+                >
+                  <Edit3 className="w-4 h-4 text-amber-400 shrink-0" />
+                  <div>
+                    <span className="font-bold block text-slate-100">মেমো এডিট করুন</span>
+                    <span className="text-[10px] text-amber-400/80 block">মাল এড, বাদ ও দর পরিবর্তন (এডমিন)</span>
+                  </div>
+                </button>
+              )}
 
               {/* ডেলিভারি দিন যদি বুকিং থাকে */}
               {isBooked && (
@@ -510,7 +535,7 @@ export const SalesHistory: React.FC<SalesHistoryProps> = ({
                             {renderActionMenu(ord)}
                           </div>
                           
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2 flex-wrap">
                             {isBooked && (
                               <button
                                 onClick={() => onConfirmDelivery(ord.id)}
@@ -891,6 +916,21 @@ export const SalesHistory: React.FC<SalesHistoryProps> = ({
             </div>
           </div>
         </div>
+      )}
+
+      {/* Admin Edit Memo Modal */}
+      {editingOrder && onUpdateOrder && (
+        <EditPendingOrderModal
+          order={editingOrder}
+          products={products}
+          isSalesHistory={true}
+          title={`বিক্রয় মেমো এডিট (মেমো #${editingOrder.memoNo})`}
+          onClose={() => setEditingOrder(null)}
+          onSave={(updated) => {
+            onUpdateOrder(updated);
+            setEditingOrder(null);
+          }}
+        />
       )}
 
     </div>

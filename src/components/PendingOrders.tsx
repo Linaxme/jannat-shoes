@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Order, UITheme, UserRole } from '../types';
+import { Order, UITheme, UserRole, ShoeProduct } from '../types';
 import { formatTaka, toBnDigit, formatBnDate } from '../utils/formatters';
 import {
   Clock,
@@ -23,6 +23,7 @@ import { useLanguage } from '../contexts/LanguageContext';
 
 interface PendingOrdersProps {
   orders: Order[];
+  products?: ShoeProduct[];
   activeTheme: UITheme;
   onSelectOrderForInvoice: (order: Order) => void;
   onConfirmDelivery: (orderId: string) => void;
@@ -34,6 +35,7 @@ interface PendingOrdersProps {
 
 export const PendingOrders: React.FC<PendingOrdersProps> = ({
   orders,
+  products = [],
   activeTheme,
   onSelectOrderForInvoice,
   onConfirmDelivery,
@@ -601,6 +603,7 @@ export const PendingOrders: React.FC<PendingOrdersProps> = ({
       {editingOrder && (
         <EditPendingOrderModal
           order={editingOrder}
+          products={products}
           onClose={() => setEditingOrder(null)}
           onSave={(updated) => {
             onUpdateOrder(updated);
