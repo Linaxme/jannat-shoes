@@ -371,10 +371,16 @@ export const EditPendingOrderModal: React.FC<EditPendingOrderModalProps> = ({
                           onClick={() => handleSelectProduct(prod)}
                           className="p-2.5 hover:bg-slate-800 cursor-pointer flex items-center justify-between gap-2 transition-colors"
                         >
-                          <div>
-                            <span className="font-bold text-amber-300 font-mono text-xs mr-2">{prod.articleCode}</span>
-                            <span className="text-slate-200">{prod.name}</span>
-                            <span className="text-[10px] text-slate-400 ml-2">({prod.sizeRange})</span>
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <span className="font-bold text-amber-300 font-mono text-xs">{prod.articleCode}</span>
+                              <span className="text-slate-200 font-medium truncate">{prod.name}</span>
+                            </div>
+                            <div className="flex items-center gap-2 mt-0.5 text-[11px]">
+                              <span className="px-1.5 py-0.5 bg-amber-500/15 text-amber-300 border border-amber-500/30 rounded font-semibold text-[10px]">
+                                সাইজ: {prod.sizeRange || '৩৯-৪৪'}
+                              </span>
+                            </div>
                           </div>
                           <div className="text-right shrink-0">
                             <span className="text-emerald-400 font-bold block">{formatTaka(prod.sellPrice)}</span>

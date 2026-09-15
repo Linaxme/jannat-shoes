@@ -196,6 +196,7 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
     return (
       (p.articleCode || "").toLowerCase().includes(q) ||
       (p.name || "").toLowerCase().includes(q) ||
+      (p.sizeRange || "").toLowerCase().includes(q) ||
       (p.brand || "").toLowerCase().includes(q)
     );
   });
@@ -796,15 +797,15 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
 
             {/* Suggestions Overlay Dropdown */}
             {showSuggestions && suggestions.length > 0 && (
-              <div className="absolute z-30 left-0 right-0 mt-1 bg-slate-950 border border-slate-800 rounded-xl shadow-2xl max-h-56 overflow-y-auto divide-y divide-slate-800/80">
+              <div className="absolute z-30 left-0 right-0 mt-1 bg-slate-950 border border-slate-700/90 rounded-xl shadow-2xl max-h-64 overflow-y-auto divide-y divide-slate-800/80">
                 {suggestions.map((p) => (
                   <div
                     key={p.id}
                     onClick={() => handleSelectSuggestion(p)}
-                    className="p-2.5 hover:bg-slate-800 cursor-pointer flex items-center justify-between text-xs transition-colors"
+                    className="p-2.5 hover:bg-slate-800/90 cursor-pointer flex items-center justify-between gap-3 text-xs transition-colors"
                   >
-                    <div className="flex items-center gap-2">
-                      <div className="w-8 h-8 rounded-lg overflow-hidden border border-slate-800 bg-slate-900 flex-shrink-0">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div className="w-9 h-9 rounded-lg overflow-hidden border border-slate-800 bg-slate-900 flex-shrink-0">
                         <ProductImageDisplay
                           src={p.imageUrl}
                           alt={p.articleCode}
@@ -814,14 +815,48 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
                           showLabel={false}
                         />
                       </div>
-                      <div className="font-bold text-amber-300 font-mono text-xs">{p.articleCode}</div>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className="font-bold text-amber-300 font-mono text-xs">{p.articleCode}</span>
+                          <span className="text-slate-200 font-medium truncate">{p.name}</span>
+                        </div>
+                        <div className="flex items-center gap-2 mt-0.5 text-[11px] flex-wrap">
+                          <span className="px-1.5 py-0.5 bg-amber-500/15 text-amber-300 border border-amber-500/30 rounded font-semibold text-[10px]">
+                            সাইজ: {p.sizeRange || '৩৯-৪৪'}
+                          </span>
+                          {p.category && (
+                            <span className="text-slate-400 text-[10px] hidden sm:inline">• {p.category}</span>
+                          )}
+                        </div>
+                      </div>
                     </div>
-                    <div className="text-right">
-                      <div className="font-bold text-emerald-400">৳{p.sellPrice}/জোড়া</div>
-                      <div className="text-[10px] text-slate-400">স্টক: {toBnDigit(p.stockPairs)} জোড়া</div>
+                    <div className="text-right shrink-0">
+                      <div className="font-bold text-emerald-400 text-xs">৳{p.sellPrice}/জোড়া</div>
+                      <div className="text-[11px] text-slate-300">
+                        স্টক: <span className="text-amber-400 font-bold">{toBnDigit(p.stockPairs)}</span> জোড়া
+                      </div>
                     </div>
                   </div>
                 ))}
+              </div>
+            )}
+
+            {/* Selected Product Size & Stock Quick Badge */}
+            {selectedProduct && (
+              <div className="mt-2 px-2.5 py-1.5 bg-slate-950/90 border border-amber-500/30 rounded-xl flex items-center justify-between text-xs">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-slate-400 text-[11px]">সাইজ:</span>
+                  <span className="px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-300 font-bold border border-amber-500/30 text-xs">
+                    {selectedProduct.sizeRange || '৩৯-৪৪'}
+                  </span>
+                  <span className="text-slate-400 text-[11px] ml-1">স্টক:</span>
+                  <span className="text-emerald-400 font-bold text-xs">
+                    {toBnDigit(selectedProduct.stockPairs)} জোড়া
+                  </span>
+                </div>
+                <span className="text-[10px] text-slate-400">
+                  (প্রতি ডজন {toBnDigit(selectedProduct.pairsPerCarton || 12)} জোড়া)
+                </span>
               </div>
             )}
           </div>
