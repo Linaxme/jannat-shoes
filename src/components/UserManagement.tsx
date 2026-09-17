@@ -640,18 +640,25 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                   </div>
 
                   <div className="flex items-center gap-1.5 shrink-0">
-                    {usr.role === 'customer' && custData && (
-                      <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold whitespace-nowrap shrink-0 inline-flex items-center justify-center leading-normal ${
-                        custData.currentDue > 0
-                          ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30 font-black'
-                          : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                      }`}>
-                        ৳&nbsp;{custData.currentDue.toLocaleString('bn-BD')}
-                      </span>
+                    {usr.role === 'customer' ? (
+                      custData ? (
+                        <span className={`px-2.5 py-1 rounded-lg text-xs font-bold whitespace-nowrap shrink-0 inline-flex items-center justify-center leading-normal ${
+                          custData.currentDue > 0
+                            ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30 font-black'
+                            : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-bold'
+                        }`}>
+                          ৳&nbsp;{custData.currentDue.toLocaleString('bn-BD')}
+                        </span>
+                      ) : (
+                        <span className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-slate-800 text-slate-400 border border-slate-700">
+                          ৳ ০
+                        </span>
+                      )
+                    ) : (
+                      <div className="shrink-0">
+                        {getRoleBadge(usr.role, usr.shopName)}
+                      </div>
                     )}
-                    <div className="shrink-0">
-                      {getRoleBadge(usr.role, usr.shopName)}
-                    </div>
                   </div>
                 </div>
 
@@ -916,18 +923,25 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                     </div>
 
                     <div className="flex items-center gap-3 shrink-0">
-                      {usr.role === 'customer' && custData && (
-                        <div className="text-right shrink-0">
-                          <span className={`px-2.5 py-1 rounded-lg text-xs font-bold whitespace-nowrap shrink-0 inline-flex items-center leading-normal ${
-                            custData.currentDue > 0
-                              ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30 font-black'
-                              : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                          }`}>
-                            বকেয়া:&nbsp;৳&nbsp;{custData.currentDue.toLocaleString('bn-BD')}
+                      {usr.role === 'customer' ? (
+                        custData ? (
+                          <div className="text-right shrink-0">
+                            <span className={`px-2.5 py-1 rounded-lg text-xs font-bold whitespace-nowrap shrink-0 inline-flex items-center leading-normal ${
+                              custData.currentDue > 0
+                                ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30 font-black'
+                                : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                            }`}>
+                              ৳&nbsp;{custData.currentDue.toLocaleString('bn-BD')}
+                            </span>
+                          </div>
+                        ) : (
+                          <span className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-800 text-slate-400 border border-slate-700">
+                            ৳ ০
                           </span>
-                        </div>
+                        )
+                      ) : (
+                        <div className="shrink-0">{getRoleBadge(usr.role, usr.shopName)}</div>
                       )}
-                      <div className="shrink-0">{getRoleBadge(usr.role, usr.shopName)}</div>
                     </div>
                   </div>
 

@@ -19,20 +19,14 @@ import {
   Sliders,
   MessageSquare,
   Languages,
-  ShoppingBag,
   User,
   Check,
   Copy,
-  Bell,
   Smartphone,
   Download,
   BarChart3,
-  Trash2,
-  CheckCheck,
-  ChevronDown,
-  ChevronUp,
 } from 'lucide-react';
-import { UserAccount, UserRole, SystemConfig, AppNotification } from '../types';
+import { UserAccount, UserRole, SystemConfig } from '../types';
 import { NavTab } from './Navigation';
 import { useLanguage } from '../contexts/LanguageContext';
 import { toBnDigit } from '../utils/formatters';
@@ -49,10 +43,6 @@ interface HeaderProps {
   pendingOrdersCount?: number;
   currentUserRole?: UserRole;
   systemConfig?: SystemConfig;
-  notifications?: AppNotification[];
-  onMarkNotificationAsRead?: (id: string) => void;
-  onMarkAllNotificationsAsRead?: () => void;
-  onClearNotifications?: () => void;
   onInstallPWA?: () => void;
   canInstallPWA?: boolean;
 }
@@ -69,49 +59,14 @@ export const Header: React.FC<HeaderProps> = ({
   pendingOrdersCount = 0,
   currentUserRole = 'admin',
   systemConfig,
-  notifications = [],
-  onMarkNotificationAsRead,
-  onMarkAllNotificationsAsRead,
-  onClearNotifications,
   onInstallPWA,
   canInstallPWA = false,
 }) => {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const [isNotifOpen, setIsNotifOpen] = useState(false);
   const [copiedPhone, setCopiedPhone] = useState(false);
-  const [expandedNotifIds, setExpandedNotifIds] = useState<Record<string, boolean>>({});
-  const notifRef = useRef<HTMLDivElement>(null);
   const { language, setLanguage, t } = useLanguage();
 
   const isStaff = currentUserRole === 'super_admin' || currentUserRole === 'admin' || currentUserRole === 'seller';
-  const unreadNotifsCount = notifications.filter((n) => !n.read).length;
-
-  const toggleExpandNotification = (id: string, e?: React.MouseEvent) => {
-    if (e) {
-      e.stopPropagation();
-    }
-    setExpandedNotifIds((prev) => ({
-      ...prev,
-      [id]: !prev[id],
-    }));
-  };
-
-  // Close notifications on outside click
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent | TouchEvent) => {
-      if (notifRef.current && !notifRef.current.contains(e.target as Node)) {
-        setIsNotifOpen(false);
-      }
-    };
-    if (isNotifOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-      document.addEventListener('touchstart', handleClickOutside);
-    }
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-      document.removeEventListener('touchstart', handleClickOutside);
-    };
-  }, [isNotifOpen]);
 
   const handleCopyPhone = (e?: React.MouseEvent | React.TouchEvent) => {
     if (e) {
@@ -149,7 +104,6 @@ export const Header: React.FC<HeaderProps> = ({
   const allTabs = [
     { id: 'pos' as NavTab, label: 'মেমো', icon: ShoppingCart, roles: ['super_admin', 'admin', 'seller'] },
     { id: 'pending' as NavTab, label: currentUserRole === 'customer' ? 'অর্ডার স্ট্যাটাস' : 'পেন্ডিং অর্ডার', icon: Clock, badgeCount: pendingOrdersCount, badgeColor: 'bg-amber-500', roles: ['super_admin', 'admin', 'seller', 'customer'] },
-    { id: 'catalog' as NavTab, label: isStaff ? 'ক্যাটালগ' : 'প্রোডাক্ট ক্যাটালগ', icon: ShoppingBag, roles: ['super_admin', 'admin', 'seller', 'customer'] },
     { id: 'sales' as NavTab, label: currentUserRole === 'customer' ? 'অর্ডার হিস্টোরি' : 'বিক্রয় ইতিহাস', icon: History, roles: ['super_admin', 'admin', 'seller', 'customer'] },
     { id: 'reports' as NavTab, label: 'কাস্টম রিপোর্ট', icon: BarChart3, roles: ['super_admin', 'admin'] },
     { id: 'seller-tracking' as NavTab, label: 'সেলস ট্র্যাকিং', icon: TrendingUp, roles: ['super_admin', 'admin'] },
@@ -180,16 +134,16 @@ export const Header: React.FC<HeaderProps> = ({
 
   return (
     <>
-      <header className={`bg-slate-950 border-b border-slate-800 sticky top-0 backdrop-blur-md bg-opacity-95 transition-all duration-150 ${isDrawerOpen ? 'z-50' : 'z-40'}`}>
+      <header className={`bg-slate-950 border-b-2 border-orange-500 sticky top-0 backdrop-blur-md bg-opacity-95 transition-all duration-150 ${isDrawerOpen ? 'z-50' : 'z-40'}`}>
       <div className="max-w-7xl mx-auto px-3 sm:px-6 py-2.5 sm:py-2">
         <div className="flex items-stretch justify-between gap-2 sm:gap-4">
           
           {/* Brand & Store Name */}
-          <div className="flex items-start gap-2.5 sm:gap-3 flex-1 min-w-0">
-            <div className="p-1.5 sm:p-2 bg-amber-500 rounded-lg text-slate-950 font-bold flex items-center justify-center shadow-md shadow-amber-500/10 flex-shrink-0 mt-0.5">
+          <div className="flex items-center gap-2.5 sm:gap-3 flex-1 min-w-0">
+            <div className="p-1.5 sm:p-2 bg-amber-500 rounded-lg text-slate-950 font-bold flex items-center justify-center shadow-md shadow-amber-500/10 flex-shrink-0">
               <Store className="w-5 h-5 sm:w-5 sm:h-5 stroke-[2.5]" />
             </div>
-            <div className="text-left flex-1 min-w-0 flex flex-col justify-between">
+            <div className="text-left flex-1 min-w-0 flex flex-col justify-center">
               <div>
                 <div className="flex items-center gap-1.5 flex-wrap">
                   <h1 className="text-sm sm:text-lg font-bold tracking-tight text-white leading-tight">
@@ -199,15 +153,10 @@ export const Header: React.FC<HeaderProps> = ({
                     {t('wholesale')}
                   </span>
                 </div>
-
-                {/* Tagline / Slogan */}
-                <p className="text-[10px] sm:text-[11px] text-amber-300/90 font-medium leading-none mt-1 sm:mt-0.5">
-                  {t('store_slogan')}
-                </p>
               </div>
 
               {/* Phone & Address */}
-              <div className="text-[10px] sm:text-xs text-slate-300 flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 mt-1.5 sm:mt-0.5">
+              <div className="text-[10px] sm:text-xs text-slate-300 flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 mt-1 sm:mt-0.5">
                 <button
                   type="button"
                   onClick={handleCopyPhone}
@@ -251,163 +200,6 @@ export const Header: React.FC<HeaderProps> = ({
                   </div>
                 </div>
               )}
-
-              {/* Notification Bell with Dropdown */}
-              <div className="relative" ref={notifRef}>
-                <button
-                  type="button"
-                  onClick={() => setIsNotifOpen(!isNotifOpen)}
-                  className={`p-2 sm:px-2.5 sm:py-1.5 rounded-xl text-xs font-bold border transition-colors cursor-pointer relative flex items-center gap-1.5 ${
-                    isNotifOpen
-                      ? 'bg-indigo-600 text-white border-indigo-500 shadow-md shadow-indigo-600/20'
-                      : 'bg-slate-900 hover:bg-slate-800 text-slate-300 border-slate-800'
-                  }`}
-                  title="নোটিফিকেশন ও এলার্ট"
-                >
-                  <Bell className="w-4 h-4 text-amber-400" />
-                  {unreadNotifsCount > 0 && (
-                    <span className="absolute -top-1 -right-1 w-4 h-4 bg-rose-500 text-white font-black text-[9px] rounded-full flex items-center justify-center animate-pulse">
-                      {unreadNotifsCount}
-                    </span>
-                  )}
-                </button>
-
-                {/* Notifications Popup Dropdown / Mobile Modal */}
-                {isNotifOpen && (
-                  <>
-                    {/* Mobile Backdrop */}
-                    <div 
-                      className="fixed inset-0 bg-black/60 backdrop-blur-xs z-40 sm:hidden animate-fadeIn"
-                      onClick={() => setIsNotifOpen(false)}
-                    />
-
-                    <div 
-                      onClick={(e) => e.stopPropagation()}
-                      className="fixed left-2.5 right-2.5 top-16 sm:top-full sm:mt-2 sm:right-0 sm:left-auto w-auto sm:w-96 max-h-[82vh] sm:max-h-[480px] bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl z-50 overflow-hidden flex flex-col animate-fadeIn"
-                    >
-                      {/* Popup Header */}
-                      <div className="p-3 bg-slate-950 border-b border-slate-800 flex items-center justify-between shrink-0">
-                        <div className="flex items-center gap-2">
-                          <div className="p-1 rounded-lg bg-amber-500/10 text-amber-400">
-                            <Bell className="w-4 h-4" />
-                          </div>
-                          <span className="font-bold text-xs text-white">নোটিফিকেশন</span>
-                          {unreadNotifsCount > 0 && (
-                            <span className="px-1.5 py-0.5 bg-rose-500/20 text-rose-300 border border-rose-500/30 text-[10px] rounded font-bold">
-                              {toBnDigit(unreadNotifsCount)}টি নতুন
-                            </span>
-                          )}
-                        </div>
-
-                        <div className="flex items-center gap-2">
-                          {onMarkAllNotificationsAsRead && unreadNotifsCount > 0 && (
-                            <button
-                              type="button"
-                              onClick={onMarkAllNotificationsAsRead}
-                              className="text-[10px] text-amber-400 hover:text-amber-300 flex items-center gap-1 font-bold px-1.5 py-0.5 rounded bg-amber-500/10 border border-amber-500/20 cursor-pointer"
-                              title="সবগুলো পড়া হয়েছে হিসেবে চিহ্নিত করুন"
-                            >
-                              <CheckCheck className="w-3 h-3" /> সব পড়ুন
-                            </button>
-                          )}
-                          {onClearNotifications && notifications.length > 0 && (
-                            <button
-                              type="button"
-                              onClick={onClearNotifications}
-                              className="p-1 text-slate-500 hover:text-rose-400 rounded transition cursor-pointer"
-                              title="সব নোটিফিকেশন মুছুন"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </button>
-                          )}
-                          <button
-                            type="button"
-                            onClick={() => setIsNotifOpen(false)}
-                            className="w-6 h-6 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center sm:hidden cursor-pointer"
-                            title="বন্ধ করুন"
-                          >
-                            <X className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      </div>
-
-                      {/* Notifications List */}
-                      <div className="overflow-y-auto divide-y divide-slate-800/60 no-scrollbar flex-1">
-                        {notifications.length === 0 ? (
-                          <div className="py-10 text-center text-xs text-slate-500 flex flex-col items-center gap-2">
-                            <Bell className="w-8 h-8 text-slate-700" />
-                            <span>বর্তমানে কোনো নোটিফিকেশন নেই</span>
-                          </div>
-                        ) : (
-                          notifications.slice(0, 30).map((n) => {
-                            const isExpanded = !!expandedNotifIds[n.id];
-                            const isLong = (n.message && n.message.length > 70) || (n.message && n.message.includes('\n'));
-
-                            return (
-                              <div
-                                key={n.id}
-                                onClick={() => {
-                                  if (!n.read && onMarkNotificationAsRead) {
-                                    onMarkNotificationAsRead(n.id);
-                                  }
-                                  toggleExpandNotification(n.id);
-                                }}
-                                className={`p-3 text-xs transition cursor-pointer hover:bg-slate-800/80 ${
-                                  !n.read
-                                    ? 'bg-amber-500/5 border-l-2 border-amber-400'
-                                    : 'bg-slate-900/40 hover:bg-slate-800/40'
-                                } ${isExpanded ? 'bg-slate-800/60 ring-1 ring-amber-500/20' : ''}`}
-                              >
-                                <div className="flex items-start justify-between gap-2">
-                                  <div className="flex items-center gap-1.5 flex-1 min-w-0">
-                                    {!n.read && (
-                                      <span className="w-2 h-2 rounded-full bg-amber-400 shrink-0 animate-pulse" />
-                                    )}
-                                    <span className={`font-bold truncate ${!n.read ? 'text-amber-300' : 'text-slate-200'}`}>
-                                      {n.title}
-                                    </span>
-                                  </div>
-                                  <div className="flex items-center gap-1 shrink-0">
-                                    <span className="text-[10px] text-slate-500 font-mono">
-                                      {new Date(n.createdAt).toLocaleTimeString('bn-BD', { hour: '2-digit', minute: '2-digit' })}
-                                    </span>
-                                    {isLong && (
-                                      <span className="text-slate-500 ml-0.5">
-                                        {isExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
-                                      </span>
-                                    )}
-                                  </div>
-                                </div>
-
-                                <div className="mt-1">
-                                  <p
-                                    className={`text-[11px] text-slate-300 leading-relaxed whitespace-pre-line break-words transition-all ${
-                                      isExpanded ? '' : 'line-clamp-2'
-                                    }`}
-                                  >
-                                    {n.message}
-                                  </p>
-
-                                  {isLong && (
-                                    <div className="mt-1.5 flex items-center justify-between pt-1 border-t border-slate-800/40 text-[10px]">
-                                      <span className="text-slate-500">
-                                        {new Date(n.createdAt).toLocaleDateString('bn-BD', { day: 'numeric', month: 'short', year: 'numeric' })}
-                                      </span>
-                                      <span className="text-amber-400 font-semibold flex items-center gap-0.5 hover:underline">
-                                        {isExpanded ? 'সংক্ষেপ করুন' : 'পুরো বার্তা পড়ুন'}
-                                      </span>
-                                    </div>
-                                  )}
-                                </div>
-                              </div>
-                            );
-                          })
-                        )}
-                      </div>
-                    </div>
-                  </>
-                )}
-              </div>
 
               {/* Unified Menu Drawer Button (Mobile/Tablet only, as desktop has left sidebar) */}
               <button

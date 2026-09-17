@@ -24,7 +24,6 @@ import { Header } from './components/Header';
 import { Navigation, NavTab } from './components/Navigation';
 import { Sidebar } from './components/Sidebar';
 import { TabLoadingFallback } from './components/TabLoadingFallback';
-import CustomerStorefront from './components/CustomerStorefront';
 import PosOrderBuilder from './components/PosOrderBuilder';
 
 // Lazy-loaded components for rapid initial boot & light bundle size
@@ -44,8 +43,8 @@ const ShopManagement = lazy(() => import('./components/ShopManagement').then(m =
 
 import { fetchFirestoreData, seedFirestoreData, saveDocumentToFirestore, deleteDocumentFromFirestore, clearAllDatabaseData } from './lib/firestoreService';
 import { generateSMSMessage, sendAutoSMS, SMSType } from './utils/smsService';
-import { OrderItem, AppNotification } from './types';
-import { normalizePhoneNumber } from './utils/formatters';
+import { OrderItem } from './types';
+import { normalizePhoneNumber, compareOrdersNewestFirst } from './utils/formatters';
 
 import { CheckCircle2, X } from 'lucide-react';
 
@@ -65,11 +64,12 @@ export default function App() {
         return null;
       }
     }
-    return null;
+    return INITIAL_USER_ACCOUNTS[1] || INITIAL_USER_ACCOUNTS[0] || null;
   });
 
   const [activeTab, setActiveTab] = useState<NavTab>(() => {
-    if (!currentUser || currentUser.role === 'customer') return 'catalog';
+    if (currentUser?.role === 'customer') return 'pending';
+    if (currentUser?.role === 'seller') return 'pos';
     return 'dashboard';
   });
   const [isLoadingCloud, setIsLoadingCloud] = useState<boolean>(true);
@@ -81,59 +81,6 @@ export default function App() {
   const [paymentLogs, setPaymentLogs] = useState<DuePaymentLog[]>([]);
   const [userAccounts, setUserAccounts] = useState<UserAccount[]>(INITIAL_USER_ACCOUNTS);
   const [systemConfig, setSystemConfig] = useState<SystemConfig>(DEFAULT_SYSTEM_CONFIG);
-
-  // Notification State
-  const [notifications, setNotifications] = useState<AppNotification[]>(() => {
-    const saved = localStorage.getItem('jannat_notifications');
-    if (saved) {
-      try {
-        return JSON.parse(saved);
-      } catch (e) {
-        return [];
-      }
-    }
-    return [
-      {
-        id: 'notif-welcome',
-        title: 'জান্নাত সুজ সিস্টেমে স্বাগতম',
-        message: 'অনলাইন অর্ডার বুকিং, কাস্টম রিপোর্ট ও নোটিফিকেশন সিস্টেম সক্রিয় আছে।',
-        createdAt: new Date().toISOString(),
-        read: false,
-        type: 'broadcast',
-      },
-    ];
-  });
-
-  const saveNotifications = (newNotifs: AppNotification[]) => {
-    setNotifications(newNotifs);
-    try {
-      localStorage.setItem('jannat_notifications', JSON.stringify(newNotifs));
-    } catch (e) {
-      console.error(e);
-    }
-  };
-
-  const addNotification = (notif: Omit<AppNotification, 'id' | 'createdAt' | 'read'>) => {
-    const item: AppNotification = {
-      ...notif,
-      id: `notif-${Date.now()}`,
-      createdAt: new Date().toISOString(),
-      read: false,
-    };
-    saveNotifications([item, ...notifications]);
-  };
-
-  const handleMarkNotificationAsRead = (id: string) => {
-    saveNotifications(notifications.map((n) => (n.id === id ? { ...n, read: true } : n)));
-  };
-
-  const handleMarkAllNotificationsAsRead = () => {
-    saveNotifications(notifications.map((n) => ({ ...n, read: true })));
-  };
-
-  const handleClearNotifications = () => {
-    saveNotifications([]);
-  };
 
   // PWA Install Prompt State
   const [deferredInstallPrompt, setDeferredInstallPrompt] = useState<any>(null);
@@ -169,11 +116,7 @@ export default function App() {
 
   // Helper to sort orders by date/time/id descending (newest first)
   const sortOrdersByRecency = (ordersList: Order[]) => {
-    return [...ordersList].sort((a, b) => {
-      const keyA = `${a.date || ''} ${a.time || ''} ${a.memoNo || a.id}`;
-      const keyB = `${b.date || ''} ${b.time || ''} ${b.memoNo || b.id}`;
-      return keyB.localeCompare(keyA);
-    });
+    return [...ordersList].sort(compareOrdersNewestFirst);
   };
 
   const handleClearDatabase = async () => {
@@ -321,7 +264,7 @@ export default function App() {
     setCurrentUser(user);
     localStorage.setItem('lixa_active_user', JSON.stringify(user));
     if (user.role === 'customer') {
-      setActiveTab('catalog');
+      setActiveTab('pending');
     } else if (user.role === 'seller') {
       setActiveTab('pos');
     } else {
@@ -341,7 +284,8 @@ export default function App() {
   const handleLogout = () => {
     setCurrentUser(null);
     localStorage.removeItem('lixa_active_user');
-    setActiveTab('catalog');
+    setActiveTab('dashboard');
+    setIsLoginModalOpen(true);
     triggerToast(t('toast_logout'));
   };
 
@@ -405,11 +349,7 @@ export default function App() {
     );
 
     if (note) {
-      addNotification({
-        title: 'কাস্টমার বকেয়া / তথ্য সমন্বয়',
-        message: `${updatedCust.shopName || updatedCust.name}: ${note} (বর্তমান বকেয়া: ৳${updatedCust.currentDue.toLocaleString('bn-BD')})`,
-        type: 'system_broadcast',
-      });
+      // Customer Due/info update
     }
     triggerToast(`${updatedCust.shopName || updatedCust.name}-এর বকেয়া/তথ্য সফলভাবে সংরক্ষিত হয়েছে`);
   };
@@ -611,11 +551,6 @@ export default function App() {
       triggerToast(t('toast_order_booked').replace('{{memoNo}}', newOrder.memoNo));
       // Automatically send SMS for booked order
       triggerAutomaticSMS('order_placed', newOrder.customerPhone || '', newOrder);
-      addNotification({
-        title: 'নতুন বুকিং অর্ডার',
-        message: `মেমো #${newOrder.memoNo} - ${newOrder.shopName || newOrder.customerName} (${newOrder.totalPairs} জোড়া, মোট: ৳${newOrder.grandTotal.toLocaleString('bn-BD')})`,
-        type: 'order_booking',
-      });
       // Switch tab to pending list
       setActiveTab('pending');
     } else {
@@ -623,11 +558,6 @@ export default function App() {
       triggerToast(t('toast_memo_created').replace('{{memoNo}}', newOrder.memoNo));
       // Automatically send SMS for direct delivery/sales memo
       triggerAutomaticSMS('order_delivery', newOrder.customerPhone || '', newOrder);
-      addNotification({
-        title: 'নতুন বিক্রয় মেমো তৈরি',
-        message: `মেমো #${newOrder.memoNo} - ${newOrder.shopName || newOrder.customerName} (পরিশোধ: ৳${newOrder.paidAmount.toLocaleString('bn-BD')}, বকেয়া: ৳${newOrder.totalNetDue.toLocaleString('bn-BD')})`,
-        type: 'order_booking',
-      });
     }
     setPosPreSelectedCustomerId('');
   };
@@ -643,7 +573,7 @@ export default function App() {
       time: new Date().toLocaleTimeString('bn-BD', { hour: '2-digit', minute: '2-digit' }),
     };
 
-    setOrders((prev) => [updatedOrder, ...prev.filter((o) => o.id !== orderId)]);
+    setOrders((prev) => sortOrdersByRecency([updatedOrder, ...prev.filter((o) => o.id !== orderId)]));
     await saveDocumentToFirestore('orders', orderId, updatedOrder);
 
     // Deduct physical stock now
@@ -697,7 +627,7 @@ export default function App() {
       }
     }
 
-    setOrders((prev) => [updatedOrder, ...prev.filter((o) => o.id !== updatedOrder.id)]);
+    setOrders((prev) => sortOrdersByRecency([updatedOrder, ...prev.filter((o) => o.id !== updatedOrder.id)]));
     await saveDocumentToFirestore('orders', updatedOrder.id, updatedOrder);
 
     // Update customer due
@@ -733,11 +663,6 @@ export default function App() {
 
     const targetCust = customers.find((c) => c.id === newLog.customerId);
     if (targetCust) {
-      addNotification({
-        title: 'বকেয়া পেমেন্ট জমা',
-        message: `${targetCust.shopName || targetCust.name} থেকে ৳${newLog.amountPaid.toLocaleString('bn-BD')} পেমেন্ট রিসিভ করা হয়েছে (অবশিষ্ট বকেয়া: ৳${newLog.remainingDue.toLocaleString('bn-BD')})`,
-        type: 'payment_received',
-      });
       // Automatically send SMS
       triggerAutomaticSMS('payment_received', targetCust.phone, newLog);
     }
@@ -1004,157 +929,6 @@ export default function App() {
     triggerToast(`বুকিং মেমো #${targetOrder.memoNo} আপনার আন্ডারে গ্রহণ (ক্লেইম) করা হয়েছে`);
   };
 
-  const handleOnlineStorefrontOrder = async (
-    shopkeeperData: {
-      shopName: string;
-      customerName: string;
-      phone: string;
-      address: string;
-      password?: string;
-    },
-    items: OrderItem[],
-    grandTotal: number,
-    totalPairs: number
-  ): Promise<Order | null> => {
-    const cleanPhone = shopkeeperData.phone.trim();
-    const phoneDigits = cleanPhone.replace(/\D/g, '');
-    
-    // Check if customer already exists in database with this phone number or shop name
-    let targetCustomer = customers.find(
-      (c) =>
-        (c.phone && (c.phone || "").replace(/\D/g, '') === phoneDigits) ||
-        (c.shopName && (c.shopName || "").trim().toLowerCase() === (shopkeeperData.shopName || "").trim().toLowerCase())
-    );
-
-    let updatedCustomersList = [...customers];
-
-    if (!targetCustomer) {
-      const newCust: Customer = {
-        id: `CUST-${Date.now().toString().slice(-6)}`,
-        name: shopkeeperData.customerName,
-        shopName: shopkeeperData.shopName,
-        address: shopkeeperData.address,
-        phone: cleanPhone,
-        assignedSellerId: '',
-        assignedSellerName: 'উন্মুক্ত কাস্টমার',
-        currentDue: 0,
-        creditLimit: 50000,
-      };
-      targetCustomer = newCust;
-      updatedCustomersList = [newCust, ...customers];
-      setCustomers(updatedCustomersList);
-      saveDocumentToFirestore('customers', newCust.id, newCust);
-    } else {
-      const updatedCust = {
-        ...targetCustomer,
-        shopName: shopkeeperData.shopName || targetCustomer.shopName,
-        name: shopkeeperData.customerName || targetCustomer.name,
-        address: shopkeeperData.address || targetCustomer.address,
-        phone: cleanPhone || targetCustomer.phone,
-      };
-      targetCustomer = updatedCust;
-      updatedCustomersList = customers.map((c) => (c.id === updatedCust.id ? updatedCust : c));
-      setCustomers(updatedCustomersList);
-      saveDocumentToFirestore('customers', updatedCust.id, updatedCust);
-    }
-
-    // Check/Create/Sync UserAccount
-    let existingUser = userAccounts.find(
-      (u) =>
-        (u.phone && (u.phone || "").replace(/\D/g, '') === phoneDigits) ||
-        (u.loginId || "").replace(/\D/g, '') === phoneDigits ||
-        (u.shopName && (u.shopName || "").trim().toLowerCase() === (shopkeeperData.shopName || "").trim().toLowerCase())
-    );
-
-    if (!existingUser) {
-      const newUserAcc: UserAccount = {
-        id: `USER-${Date.now().toString().slice(-6)}`,
-        name: shopkeeperData.customerName,
-        shopName: shopkeeperData.shopName,
-        loginId: cleanPhone,
-        password: shopkeeperData.password || '123456',
-        role: 'customer',
-        phone: cleanPhone,
-        area: shopkeeperData.address,
-        isActive: true,
-        createdAt: new Date().toISOString().split('T')[0],
-      };
-      const updatedUserAccs = [newUserAcc, ...userAccounts];
-      setUserAccounts(updatedUserAccs);
-      saveDocumentToFirestore('userAccounts', newUserAcc.id, newUserAcc);
-    } else {
-      const updatedUserAcc: UserAccount = {
-        ...existingUser,
-        name: shopkeeperData.customerName || existingUser.name,
-        shopName: shopkeeperData.shopName || existingUser.shopName,
-        phone: cleanPhone || existingUser.phone,
-        area: shopkeeperData.address || existingUser.area,
-        password: shopkeeperData.password || existingUser.password,
-      };
-      const updatedUserAccs = userAccounts.map((u) => (u.id === existingUser.id ? updatedUserAcc : u));
-      setUserAccounts(updatedUserAccs);
-      saveDocumentToFirestore('userAccounts', existingUser.id, updatedUserAcc);
-    }
-
-    const newMemoNo = `MEMO-WEB-${Date.now().toString().slice(-5)}`;
-    const now = new Date();
-    const dateStr = now.toISOString().split('T')[0];
-    const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
-
-    const totalCartons = Math.ceil(totalPairs / 12);
-    const hasAssignedSeller = targetCustomer.assignedSellerId && targetCustomer.assignedSellerId !== 'UNASSIGNED' && targetCustomer.assignedSellerId !== '';
-
-    const newOrder: Order = {
-      id: `ORD-${Date.now()}`,
-      memoNo: newMemoNo,
-      date: dateStr,
-      time: timeStr,
-      customerId: targetCustomer.id,
-      customerName: targetCustomer.name,
-      shopName: targetCustomer.shopName,
-      customerPhone: cleanPhone,
-      customerAddress: targetCustomer.address,
-      sellerId: hasAssignedSeller ? targetCustomer.assignedSellerId : '',
-      sellerName: hasAssignedSeller ? targetCustomer.assignedSellerName : 'উন্মুক্ত বুকিং (ক্লেইম করুন)',
-      isOnlineOrder: true,
-      isClaimed: !!hasAssignedSeller,
-      items,
-      totalPairs,
-      totalCartons,
-      subTotal: grandTotal,
-      discount: 0,
-      adjustmentAmount: 0,
-      grandTotal,
-      paidAmount: 0,
-      dueAmount: grandTotal,
-      previousDue: targetCustomer.currentDue,
-      totalNetDue: targetCustomer.currentDue + grandTotal,
-      paymentMethod: 'বাকী (ডিউ)',
-      status: 'সম্পূর্ণ বাকী',
-      orderType: 'sample_booking',
-      deliveryStatus: 'booked',
-      notes: `অনলাইন ক্যাটালগ বুকিং রিকোয়েস্ট (ফোন: ${cleanPhone})`,
-    };
-
-    const updatedOrders = [newOrder, ...orders];
-    setOrders(updatedOrders);
-    saveDocumentToFirestore('orders', newOrder.id, newOrder);
-
-    // Send SMS notification
-    await triggerAutomaticSMS('order_placed', cleanPhone, {
-      customerName: targetCustomer.name,
-      shopName: targetCustomer.shopName,
-      memoNo: newMemoNo,
-      totalPairs,
-      grandTotal,
-      paidAmount: 0,
-      currentDue: targetCustomer.currentDue + grandTotal,
-    });
-
-    triggerToast(`অনলাইন অর্ডার রিকোয়েস্ট তৈরি হয়েছে! মেমো নং: ${newMemoNo}`);
-    return newOrder;
-  };
-
   const handleRegisterShopkeeper = async (data: {
     shopName: string;
     name: string;
@@ -1291,7 +1065,7 @@ export default function App() {
         <Sidebar
           activeTab={activeTab}
           onSelectTab={(tab) => {
-            if (!currentUser && tab !== 'catalog') {
+            if (!currentUser) {
               setIsLoginModalOpen(true);
               return;
             }
@@ -1331,10 +1105,6 @@ export default function App() {
             pendingOrdersCount={pendingOrdersCount}
             currentUserRole={currentUser?.role || 'customer'}
             systemConfig={systemConfig}
-            notifications={notifications}
-            onMarkNotificationAsRead={handleMarkNotificationAsRead}
-            onMarkAllNotificationsAsRead={handleMarkAllNotificationsAsRead}
-            onClearNotifications={handleClearNotifications}
             onInstallPWA={handleInstallPWA}
             canInstallPWA={canInstallPWA}
           />
@@ -1343,7 +1113,7 @@ export default function App() {
           <Navigation
             activeTab={activeTab}
             onSelectTab={(tab) => {
-              if (!currentUser && tab !== 'catalog') {
+              if (!currentUser) {
                 setIsLoginModalOpen(true);
                 return;
               }
@@ -1363,25 +1133,12 @@ export default function App() {
           <main className="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 pt-4 sm:pt-6 pb-6 sm:pb-12">
             <Suspense fallback={<TabLoadingFallback />}>
         
-        {activeTab === 'catalog' && (
-          <CustomerStorefront
-            products={products}
-            customers={customers}
-            orders={getVisibleOrders()}
-            userAccounts={userAccounts}
-            systemConfig={systemConfig}
-            onSubmitOrder={handleOnlineStorefrontOrder}
-            currentUser={currentUser}
-            onLoginClick={() => setIsLoginModalOpen(true)}
-            onLoginSuccess={handleLoginSuccess}
-          />
-        )}
-        
         {activeTab === 'dashboard' && (
           <Dashboard
             orders={getVisibleOrders()}
             products={products}
             customers={getVisibleCustomers()}
+            paymentLogs={getVisiblePaymentLogs()}
             currentUser={currentUser}
             systemConfig={systemConfig}
             onNavigate={setActiveTab}
@@ -1543,13 +1300,6 @@ export default function App() {
             onUpdateSystemConfig={handleUpdateSystemConfig}
             onClearDatabase={handleClearDatabase}
             onNavigateToReports={() => setActiveTab('reports')}
-            onSendNotification={(title, message) =>
-              addNotification({
-                title,
-                message,
-                type: 'system_broadcast',
-              })
-            }
           />
         )}
 

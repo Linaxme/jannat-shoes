@@ -228,8 +228,8 @@ export const EditPendingOrderModal: React.FC<EditPendingOrderModalProps> = ({
   const totalPairs = items.reduce((sum, i) => sum + i.totalPairs, 0);
   const totalCommission = items.reduce((sum, i) => sum + (i.totalCommission || (i.totalPairs * (i.commissionPerPair || 0))), 0);
   const grossTotal = items.reduce((sum, i) => sum + (i.totalPairs * i.unitSellPrice), 0);
-  const subTotal = items.reduce((sum, i) => sum + i.totalAmount, 0);
-  const grandTotal = Math.max(0, subTotal - discountNum);
+  const netBeforeDiscount = items.reduce((sum, i) => sum + i.totalAmount, 0);
+  const grandTotal = Math.max(0, netBeforeDiscount - discountNum);
   const dueAmount = Math.max(0, grandTotal - paidAmountNum);
   const previousDue = order.previousDue || 0;
   const totalNetDue = previousDue + dueAmount;
@@ -248,7 +248,7 @@ export const EditPendingOrderModal: React.FC<EditPendingOrderModalProps> = ({
       totalPairs,
       totalCartons: Math.round((totalPairs / 12) * 10) / 10,
       totalCommission,
-      subTotal,
+      subTotal: grossTotal,
       discount: discountNum,
       grandTotal,
       paidAmount: paidAmountNum,

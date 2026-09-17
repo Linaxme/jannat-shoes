@@ -93,6 +93,7 @@ export interface Order {
   memoNo: string; // e.g. "MEMO-2026-1001"
   date: string; // YYYY-MM-DD
   time: string; // HH:mm AM/PM
+  createdAt?: number | string;
   customerId: string;
   customerName: string;
   shopName: string;
@@ -191,18 +192,5 @@ export interface SystemConfig {
   totalSentSms?: number;
   categories?: string[];
   apkDownloadUrl?: string;
-}
-
-export interface AppNotification {
-  id: string;
-  title: string;
-  message: string;
-  type: 'order_booking' | 'payment_received' | 'low_stock' | 'system_broadcast';
-  createdAt: string; // ISO string
-  read: boolean;
-  orderId?: string;
-  customerId?: string;
-  sellerId?: string;
-  senderName?: string;
 }
 

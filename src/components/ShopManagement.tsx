@@ -477,7 +477,7 @@ export const ShopManagement: React.FC<ShopManagementProps> = ({
               className="px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 shadow-lg shadow-amber-500/25 flex items-center gap-2 active:scale-95 transition cursor-pointer"
             >
               <Plus className="w-4 h-4" />
-              <span>নতুন দোকান যুক্ত করুন</span>
+              <span>নতুন দোকান</span>
             </button>
           </div>
         </div>
@@ -487,7 +487,7 @@ export const ShopManagement: React.FC<ShopManagementProps> = ({
           <div className="bg-slate-950/60 border border-slate-800 p-3 rounded-xl">
             <div className="text-[11px] text-slate-400 flex items-center gap-1">
               <Building2 className="w-3.5 h-3.5 text-blue-400" />
-              <span>মোট নিবন্ধিত দোকান</span>
+              <span>মোট দোকান</span>
             </div>
             <div className="text-lg sm:text-xl font-black text-slate-100 mt-1">
               {toBnDigit(totalShopsCount)} <span className="text-xs font-normal text-slate-400">টি</span>
@@ -497,7 +497,7 @@ export const ShopManagement: React.FC<ShopManagementProps> = ({
           <div className="bg-slate-950/60 border border-slate-800 p-3 rounded-xl">
             <div className="text-[11px] text-slate-400 flex items-center gap-1">
               <Receipt className="w-3.5 h-3.5 text-rose-400" />
-              <span>মোট বকেয়া এমাউন্ট</span>
+              <span>মোট বকেয়া</span>
             </div>
             <div className="text-lg sm:text-xl font-black text-rose-400 mt-1">
               {formatTaka(totalDueAmount)}
@@ -507,17 +507,17 @@ export const ShopManagement: React.FC<ShopManagementProps> = ({
           <div className="bg-slate-950/60 border border-slate-800 p-3 rounded-xl">
             <div className="text-[11px] text-slate-400 flex items-center gap-1">
               <User className="w-3.5 h-3.5 text-amber-400" />
-              <span>বকেয়া রয়েছে</span>
+              <span>বকেয়া দোকান</span>
             </div>
             <div className="text-lg sm:text-xl font-black text-amber-400 mt-1">
-              {toBnDigit(shopsWithDueCount)} <span className="text-xs font-normal text-slate-400">দোকানে</span>
+              {toBnDigit(shopsWithDueCount)} <span className="text-xs font-normal text-slate-400">টি</span>
             </div>
           </div>
 
           <div className="bg-slate-950/60 border border-slate-800 p-3 rounded-xl">
             <div className="text-[11px] text-slate-400 flex items-center gap-1">
               <TrendingUp className="w-3.5 h-3.5 text-emerald-400" />
-              <span>আমার এলাকার দোকান</span>
+              <span>এলাকার দোকান</span>
             </div>
             <div className="text-lg sm:text-xl font-black text-emerald-400 mt-1">
               {toBnDigit(myShopsCount)} <span className="text-xs font-normal text-slate-400">টি</span>

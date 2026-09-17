@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Order, UITheme, UserRole, ShoeProduct } from '../types';
-import { formatTaka, toBnDigit, formatBnDate } from '../utils/formatters';
+import { formatTaka, toBnDigit, formatBnDate, compareOrdersNewestFirst } from '../utils/formatters';
 import {
   Clock,
   Search,
@@ -70,11 +70,7 @@ export const PendingOrders: React.FC<PendingOrdersProps> = ({
         (ord.sellerName || "").toLowerCase().includes(term)
       );
     })
-    .sort((a, b) => {
-      const keyA = `${a.date || ''} ${a.time || ''} ${a.memoNo || a.id}`;
-      const keyB = `${b.date || ''} ${b.time || ''} ${b.memoNo || b.id}`;
-      return keyB.localeCompare(keyA);
-    });
+    .sort(compareOrdersNewestFirst);
 
   const totalPendingPairs = filteredOrders.reduce((sum, o) => sum + (o.totalPairs || 0), 0);
   const totalPendingAmount = filteredOrders.reduce((sum, o) => sum + (o.grandTotal || 0), 0);
@@ -98,41 +94,34 @@ export const PendingOrders: React.FC<PendingOrdersProps> = ({
 
         <div className="flex items-center gap-3 bg-slate-900 px-3 py-1.5 rounded-xl border border-slate-800 text-xs shrink-0 self-start sm:self-auto">
           <div>
-            <span className="text-slate-400 text-[11px] mr-1">মোট অর্ডার:</span>
             <span className="font-bold text-slate-200">{toBnDigit(filteredOrders.length)} টি</span>
           </div>
           <div className="h-3 w-px bg-slate-700" />
           <div>
-            <span className="text-slate-400 text-[11px] mr-1">মোট জোড়া:</span>
             <span className="font-bold text-amber-300">{toBnDigit(totalPendingPairs)} জোড়া</span>
           </div>
           <div className="h-3 w-px bg-slate-700" />
           <div>
-            <span className="text-slate-400 text-[11px] mr-1">মোট মূল্য:</span>
             <span className="font-bold text-emerald-400">{formatTaka(totalPendingAmount)}</span>
           </div>
         </div>
       </div>
 
       {/* Search & View Switcher Toolbar */}
-      <div className={`${activeTheme.cardClass} p-3.5 sm:p-4 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-3`}>
+      <div className={`${activeTheme.cardClass} p-3 sm:p-3.5 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-3`}>
         <div className="relative w-full sm:w-80 bg-slate-950 border border-slate-700/80 rounded-xl px-3 py-2 flex items-center gap-2">
           <Search className="w-3.5 h-3.5 text-slate-400 shrink-0" />
           <input
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder={isCustomer ? 'মেমো নম্বর বা অর্ডার খুঁজুন...' : t('search_pending_placeholder')}
+            placeholder="মেমো বা দোকান খুঁজুন..."
             className="bg-transparent text-xs text-slate-100 placeholder-slate-500 w-full focus:outline-none"
           />
         </div>
 
         {/* View Mode Switcher */}
-        <div className="flex items-center justify-between w-full sm:w-auto gap-3">
-          <div className="text-xs text-slate-400 hidden md:block">
-            {t('total_displayed_label')} <strong className="text-white">{toBnDigit(filteredOrders.length)}</strong> {t('orders_count_suffix')}
-          </div>
-
+        <div className="flex items-center justify-end w-full sm:w-auto gap-3">
           <div className="flex items-center gap-1 bg-slate-950 p-1 rounded-xl border border-slate-800 ml-auto sm:ml-0">
             <button
               type="button"

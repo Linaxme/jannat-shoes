@@ -84,4 +84,124 @@ export function normalizePhoneNumber(phone?: string | null): string {
   return digits;
 }
 
+// Extract exact timestamp from order (supports createdAt, embedded ID timestamp, or parsed date & time)
+export function getOrderTimestamp(order?: {
+  id?: string;
+  memoNo?: string;
+  date?: string;
+  time?: string;
+  createdAt?: number | string;
+}): number {
+  if (!order) return 0;
+
+  // 1. Direct numeric/string createdAt if available
+  if (order.createdAt) {
+    if (typeof order.createdAt === 'number' && !isNaN(order.createdAt) && order.createdAt > 0) {
+      return order.createdAt;
+    }
+    const num = Number(order.createdAt);
+    if (!isNaN(num) && num > 1000000000000) {
+      return num;
+    }
+    const parsed = new Date(order.createdAt).getTime();
+    if (!isNaN(parsed) && parsed > 0) {
+      return parsed;
+    }
+  }
+
+  // 2. Millisecond timestamp embedded inside order ID (e.g. ord-1773657890000, ORD-1773657890000)
+  if (order.id) {
+    const match = order.id.match(/\d{10,13}/);
+    if (match) {
+      const num = parseInt(match[0], 10);
+      if (num >= 1000000000000 && num <= 3000000000000) {
+        return num;
+      }
+      if (num >= 1000000000 && num < 3000000000) {
+        return num * 1000;
+      }
+    }
+  }
+
+  // 3. Construct precise millisecond timestamp from date and time
+  if (order.date) {
+    const parts = order.date.split('-');
+    if (parts.length === 3) {
+      const year = parseInt(parts[0], 10);
+      const month = parseInt(parts[1], 10) - 1;
+      const day = parseInt(parts[2], 10);
+
+      let hours = 0;
+      let minutes = 0;
+
+      if (order.time) {
+        const cleanTime = toEnDigit(order.time).toLowerCase().trim();
+        const timeMatch = cleanTime.match(/(\d{1,2})[:.](\d{2})/);
+        if (timeMatch) {
+          hours = parseInt(timeMatch[1], 10);
+          minutes = parseInt(timeMatch[2], 10);
+
+          const isPM =
+            cleanTime.includes('pm') ||
+            cleanTime.includes('অপরাহ্ন') ||
+            cleanTime.includes('রাত') ||
+            cleanTime.includes('বিকাল') ||
+            cleanTime.includes('সন্ধ্যা') ||
+            cleanTime.includes('দুপুর');
+          const isAM = cleanTime.includes('am') || cleanTime.includes('পূর্বাহ্ন') || cleanTime.includes('সকাল');
+
+          if (isPM && hours < 12) {
+            hours += 12;
+          } else if (isAM && hours === 12) {
+            hours = 0;
+          }
+        }
+      }
+
+      const d = new Date(year, month, day, hours, minutes, 0, 0);
+      if (!isNaN(d.getTime())) {
+        return d.getTime();
+      }
+    }
+  }
+
+  return 0;
+}
+
+// Compare two orders such that the latest / last memo is placed FIRST (সবচেয়ে নতুন মেমো সবার আগে)
+export function compareOrdersNewestFirst<
+  T extends {
+    id?: string;
+    memoNo?: string;
+    date?: string;
+    time?: string;
+    createdAt?: number | string;
+  }
+>(a: T, b: T): number {
+  const tsA = getOrderTimestamp(a);
+  const tsB = getOrderTimestamp(b);
+
+  if (tsB !== tsA && tsA > 0 && tsB > 0) {
+    return tsB - tsA; // Larger timestamp (newer) first
+  }
+
+  // If timestamps couldn't be determined or are tied, compare date descending
+  if (a.date && b.date && a.date !== b.date) {
+    return b.date.localeCompare(a.date);
+  }
+
+  // Tie-breaker 1: Extract numeric sequence from memoNo (e.g. MEMO-2026-1050 vs MEMO-2026-1049)
+  const numA = a.memoNo ? parseInt(toEnDigit(a.memoNo).replace(/\D/g, ''), 10) : 0;
+  const numB = b.memoNo ? parseInt(toEnDigit(b.memoNo).replace(/\D/g, ''), 10) : 0;
+  if (numA && numB && numB !== numA) {
+    return numB - numA;
+  }
+
+  // Tie-breaker 2: String comparison on memoNo or ID descending
+  const keyA = `${a.memoNo || ''} ${a.id || ''}`;
+  const keyB = `${b.memoNo || ''} ${b.id || ''}`;
+  return keyB.localeCompare(keyA);
+}
+
+
 

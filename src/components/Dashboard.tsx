@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
-import { Order, ShoeProduct, Customer, UserAccount, SystemConfig } from '../types';
+import { Order, ShoeProduct, Customer, UserAccount, SystemConfig, DuePaymentLog } from '../types';
 import { NavTab } from './Navigation';
-import { formatTaka, toBnDigit, pairsToCartonText, getLocalDateStr } from '../utils/formatters';
+import { formatTaka, toBnDigit, pairsToCartonText, getLocalDateStr, compareOrdersNewestFirst } from '../utils/formatters';
 import { useLanguage } from '../contexts/LanguageContext';
+import { CashCollectionsModal } from './CashCollectionsModal';
+import { LowStockModal } from './LowStockModal';
 import {
   Banknote,
   Boxes,
@@ -17,12 +19,14 @@ import {
   Eye,
   EyeOff,
   LayoutDashboard,
+  ChevronRight,
 } from 'lucide-react';
 
 interface DashboardProps {
   orders: Order[];
   products: ShoeProduct[];
   customers: Customer[];
+  paymentLogs?: DuePaymentLog[];
   currentUser?: UserAccount | null;
   systemConfig?: SystemConfig;
   activeTheme?: any;
@@ -34,12 +38,15 @@ export const Dashboard: React.FC<DashboardProps> = ({
   orders,
   products,
   customers,
+  paymentLogs = [],
   currentUser,
   systemConfig,
   onNavigate,
   onSelectOrderForInvoice,
 }) => {
   const { t } = useLanguage();
+  const [isCollectionModalOpen, setIsCollectionModalOpen] = useState(false);
+  const [isLowStockModalOpen, setIsLowStockModalOpen] = useState(false);
   const [showProfitAmount, setShowProfitAmount] = useState(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('show_gross_profit_amount');
@@ -83,7 +90,26 @@ export const Dashboard: React.FC<DashboardProps> = ({
   });
 
   const filteredTotalSales = filteredOrders.reduce((sum, o) => sum + o.grandTotal, 0);
-  const filteredCollectedCash = filteredOrders.reduce((sum, o) => sum + o.paidAmount, 0);
+  const filteredPaymentLogs = (paymentLogs || []).filter((p) => {
+    if (!p.date) return false;
+    if (dateFilter === 'today') return p.date === todayStr;
+    if (dateFilter === '7days') {
+      return p.date >= weekAgoStr && p.date <= todayStr;
+    }
+    if (dateFilter === 'month') {
+      const pDate = new Date(p.date);
+      return pDate.getMonth() === todayDate.getMonth() && pDate.getFullYear() === todayDate.getFullYear();
+    }
+    if (dateFilter === 'year') {
+      const pDate = new Date(p.date);
+      return pDate.getFullYear() === todayDate.getFullYear();
+    }
+    return true;
+  });
+
+  const filteredMemoCash = filteredOrders.reduce((sum, o) => sum + (o.paidAmount || 0), 0);
+  const filteredDueCash = filteredPaymentLogs.reduce((sum, p) => sum + (p.amountPaid || 0), 0);
+  const filteredCollectedCash = filteredMemoCash + filteredDueCash;
   const filteredNewDue = filteredOrders.reduce((sum, o) => sum + o.dueAmount, 0);
   const filteredTotalPairs = filteredOrders.reduce((sum, o) => sum + o.totalPairs, 0);
 
@@ -124,11 +150,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
   const lowStockProducts = products.filter((p) => p.stockPairs <= p.minStockAlert);
 
   const recentOrders = [...orders]
-    .sort((a, b) => {
-      const keyA = `${a.date || ''} ${a.time || ''} ${a.memoNo || a.id}`;
-      const keyB = `${b.date || ''} ${b.time || ''} ${b.memoNo || b.id}`;
-      return keyB.localeCompare(keyA);
-    })
+    .sort(compareOrdersNewestFirst)
     .slice(0, 5);
 
   return (
@@ -197,18 +219,30 @@ export const Dashboard: React.FC<DashboardProps> = ({
           </div>
         </div>
 
-        {/* Card 2: Today Cash Collected */}
-        <div className="bg-slate-900 border border-slate-800 p-4 rounded-2xl flex items-center justify-between">
+        {/* Card 2: Today Cash Collected - Interactive to view details */}
+        <div
+          onClick={() => setIsCollectionModalOpen(true)}
+          className="bg-slate-900 border border-slate-800 hover:border-emerald-500/50 hover:bg-slate-850 p-4 rounded-2xl flex items-center justify-between cursor-pointer transition-all duration-200 group hover:shadow-lg hover:shadow-emerald-500/10"
+          title="জমার বিস্তারিত তালিকা দেখতে ক্লিক করুন"
+        >
           <div>
-            <p className="text-xs font-medium text-slate-400">জমা</p>
+            <div className="flex items-center gap-1.5">
+              <p className="text-xs font-medium text-slate-400">
+                {dateFilter === 'today' ? 'আজকের' : dateFilter === '7days' ? 'গত ৭ দিনের' : dateFilter === 'month' ? 'এই মাসের' : 'এই বছরের'} জমা
+              </p>
+              <ChevronRight className="w-3.5 h-3.5 text-emerald-400/70 group-hover:text-emerald-300 group-hover:translate-x-0.5 transition-all" />
+            </div>
             <h3 className="text-xl sm:text-2xl font-bold text-emerald-400 mt-1">
               {formatTaka(filteredCollectedCash)}
             </h3>
-            <p className="text-[11px] text-slate-400 mt-1">
-              নতুন বাকী: <span className="text-rose-400 font-semibold">{formatTaka(filteredNewDue)}</span>
+            <p className="text-[11px] text-slate-400 mt-1 flex items-center gap-1.5 flex-wrap">
+              <span>মেমো: <strong className="text-emerald-300 font-semibold">{formatTaka(filteredMemoCash)}</strong></span>
+              {filteredDueCash > 0 && (
+                <span>• বাকী জমা: <strong className="text-sky-300 font-semibold">{formatTaka(filteredDueCash)}</strong></span>
+              )}
             </p>
           </div>
-          <div className="p-3 bg-emerald-500/10 text-emerald-400 rounded-xl">
+          <div className="p-3 bg-emerald-500/10 text-emerald-400 rounded-xl group-hover:bg-emerald-500 group-hover:text-slate-950 transition-colors">
             <Banknote className="w-5 h-5" />
           </div>
         </div>
@@ -377,46 +411,53 @@ export const Dashboard: React.FC<DashboardProps> = ({
         {/* Low Stock & Inventory Box */}
         <div className="space-y-6">
           
-          {/* Low Stock Warning Box */}
-          <div className="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-3">
-            <div className="flex items-center justify-between">
-              <h3 className="text-sm font-bold text-rose-300 flex items-center gap-2">
-                <AlertTriangle className="w-4 h-4 text-rose-400" />
-                {t('stock_alert')}
-              </h3>
-              <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-rose-500/20 text-rose-300">
-                {t('items_count', { count: toBnDigit(lowStockProducts.length) })}
-              </span>
-            </div>
-
-            {lowStockProducts.length === 0 ? (
-              <p className="text-xs text-slate-400 py-3 text-center">
-                {t('stock_sufficient')}
-              </p>
-            ) : (
-              <div className="space-y-2 max-h-[260px] overflow-y-auto">
-                {lowStockProducts.map((p) => (
-                  <div
-                    key={p.id}
-                    className="p-2.5 bg-slate-950 border border-slate-800 rounded-xl flex items-center justify-between text-xs"
-                  >
-                    <div>
-                      <div className="font-bold text-slate-200">{p.articleCode} - {p.name}</div>
-                      <div className="text-[10px] text-slate-400">{t('size')}: {p.sizeRange}</div>
-                    </div>
-                    <div className="text-right">
-                      <div className="font-bold text-rose-400">{toBnDigit(p.stockPairs)} {t('pairs')}</div>
-                      <button
-                        onClick={() => onNavigate('stock')}
-                        className="text-[10px] text-amber-400 hover:underline"
-                      >
-                        {t('restock')}
-                      </button>
-                    </div>
+          {/* Low Stock Warning Box (Minimal Clickable Card) */}
+          <div
+            onClick={() => {
+              if (lowStockProducts.length > 0) {
+                setIsLowStockModalOpen(true);
+              }
+            }}
+            className={`p-4 rounded-2xl border transition-all ${
+              lowStockProducts.length > 0
+                ? 'bg-rose-500/10 border-rose-500/30 hover:border-rose-500/50 hover:bg-rose-500/15 cursor-pointer shadow-lg shadow-rose-950/20'
+                : 'bg-slate-900 border-slate-800'
+            }`}
+          >
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
+                  lowStockProducts.length > 0
+                    ? 'bg-rose-500/20 text-rose-400'
+                    : 'bg-emerald-500/15 text-emerald-400'
+                }`}>
+                  <AlertTriangle className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-slate-100 flex items-center gap-2">
+                    {t('stock_alert')}
+                  </h3>
+                  <div className="text-xs text-slate-400 mt-0.5">
+                    {lowStockProducts.length === 0
+                      ? t('stock_sufficient')
+                      : 'কম স্টকের তালিকা দেখতে ক্লিক করুন'}
                   </div>
-                ))}
+                </div>
               </div>
-            )}
+
+              <div className="flex items-center gap-2 shrink-0">
+                <span className={`px-2.5 py-1 rounded-xl text-xs font-black ${
+                  lowStockProducts.length > 0
+                    ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30'
+                    : 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
+                }`}>
+                  {toBnDigit(lowStockProducts.length)} টি আইটেম
+                </span>
+                {lowStockProducts.length > 0 && (
+                  <ChevronRight className="w-4 h-4 text-rose-400" />
+                )}
+              </div>
+            </div>
           </div>
 
           {/* Warehouse Summary */}
@@ -452,6 +493,24 @@ export const Dashboard: React.FC<DashboardProps> = ({
         </div>
 
       </div>
+
+      {/* Cash Collections Detailed List Modal */}
+      <CashCollectionsModal
+        isOpen={isCollectionModalOpen}
+        onClose={() => setIsCollectionModalOpen(false)}
+        orders={orders}
+        paymentLogs={paymentLogs}
+        initialPeriod={dateFilter}
+        onSelectOrderForInvoice={onSelectOrderForInvoice}
+      />
+
+      {/* Low Stock Items Detailed Modal */}
+      <LowStockModal
+        isOpen={isLowStockModalOpen}
+        onClose={() => setIsLowStockModalOpen(false)}
+        products={lowStockProducts}
+        onNavigateToStock={() => onNavigate('stock')}
+      />
 
     </div>
   );

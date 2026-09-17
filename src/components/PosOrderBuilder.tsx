@@ -212,7 +212,8 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
   const grandTotal = Math.max(0, subTotal - discountNum);
   const previousDue = selectedCustomer?.currentDue || 0;
   const newDueAmount = Math.max(0, grandTotal - paidAmountNum);
-  const totalNetDue = previousDue + newDueAmount;
+  const overpaidAmount = Math.max(0, paidAmountNum - grandTotal);
+  const totalNetDue = previousDue + newDueAmount - overpaidAmount;
 
   // Handle Select Suggestion
   const handleSelectSuggestion = (p: ShoeProduct) => {
@@ -423,6 +424,7 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
 
       const newOrder: Order = {
         id: `ord-${Date.now()}`,
+        createdAt: Date.now(),
         memoNo,
         date: todayStr,
         time: nowTime,
@@ -584,7 +586,7 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
         <div className="flex items-center justify-between">
           <label className="text-xs font-bold text-slate-200 flex items-center gap-1.5">
             <Store className="w-4 h-4 text-amber-400" />
-            দোকানদার / কাস্টমার নির্বাচন:
+            দোকানদার / কাস্টমার:
           </label>
           <button
             type="button"
@@ -613,7 +615,7 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
                   setShowCustomerDropdown(true);
                 }}
                 onFocus={() => setShowCustomerDropdown(true)}
-                placeholder="রেজিস্ট্রারড ফোন নম্বর বা দোকানের নাম লিখুন..."
+                placeholder="ফোন নম্বর বা দোকানের নাম..."
                 className="w-full bg-slate-950 border border-slate-800 focus:border-amber-500 rounded-xl pl-9 pr-8 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none transition-colors"
               />
               {customerSearchQuery && (
@@ -715,33 +717,20 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
 
         {/* Selected Customer Highlight Card */}
         {selectedCustomer ? (
-          <div className="p-3 bg-slate-950/70 border border-amber-500/30 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
-            <div className="space-y-1">
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="font-black text-amber-300 text-sm flex items-center gap-1.5">
-                  <Store className="w-4 h-4 text-amber-400" />
-                  {selectedCustomer.shopName}
-                </span>
-                <span className="text-slate-400 font-medium">({selectedCustomer.name})</span>
-                {selectedCustomer.phone ? (
-                  <span className="px-2 py-0.5 rounded bg-slate-800 text-[10px] font-mono text-slate-300">
-                    {selectedCustomer.phone}
-                  </span>
-                ) : null}
-              </div>
-              <div className="text-[11px] text-slate-400 flex items-center gap-3">
-                <span>ঠিকানা: {selectedCustomer.address}</span>
-                <span>•</span>
-                <span>দায়িত্বপ্রাপ্ত: {selectedCustomer.assignedSellerName || 'প্রধান শাখা'}</span>
-              </div>
+          <div className="p-3 bg-slate-950/70 border border-amber-500/30 rounded-xl flex items-center justify-between gap-3 text-xs">
+            <div className="flex items-center gap-2 min-w-0">
+              <Store className="w-4 h-4 text-amber-400 shrink-0" />
+              <span className="font-bold text-amber-300 text-sm truncate">
+                {selectedCustomer.shopName}
+              </span>
             </div>
 
-            <div className="flex items-center gap-3 self-end sm:self-center">
-              <div className="text-right shrink-0 bg-slate-900/90 px-3 py-1.5 rounded-lg border border-slate-800">
-                <div className="text-[10px] text-slate-400">পূর্বের বকেয়া (Due):</div>
-                <div className={`font-black text-sm ${selectedCustomer.currentDue > 0 ? 'text-rose-400' : 'text-emerald-400'}`}>
+            <div className="flex items-center gap-3 shrink-0">
+              <div className="text-right bg-slate-900/90 px-3 py-1.5 rounded-lg border border-slate-800 flex items-center gap-2">
+                <span className="text-[11px] text-slate-400">পূর্বের বকেয়া:</span>
+                <span className={`font-black text-sm ${selectedCustomer.currentDue > 0 ? 'text-rose-400' : 'text-emerald-400'}`}>
                   {formatTaka(selectedCustomer.currentDue)}
-                </div>
+                </span>
               </div>
               <button
                 type="button"
@@ -749,17 +738,17 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
                   setSelectedCustomerId('');
                   setCustomerSearchQuery('');
                 }}
-                className="p-2 rounded-lg bg-slate-800/80 hover:bg-rose-500/20 text-slate-400 hover:text-rose-400 border border-slate-700/60 transition-colors cursor-pointer"
-                title="দোকান নির্বাচন বাতিল করুন"
+                className="p-1.5 rounded-lg bg-slate-800/80 hover:bg-rose-500/20 text-slate-400 hover:text-rose-400 border border-slate-700/60 transition-colors cursor-pointer"
+                title="বাতিল করুন"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
           </div>
         ) : (
-          <div className="p-3 bg-slate-950/40 border border-dashed border-slate-800 rounded-xl text-center text-xs text-slate-400 flex items-center justify-center gap-2">
+          <div className="p-2.5 bg-slate-950/40 border border-dashed border-slate-800 rounded-xl text-center text-xs text-slate-400 flex items-center justify-center gap-2">
             <AlertCircle className="w-4 h-4 text-amber-400/80" />
-            <span>কোনো দোকান নির্বাচন করা হয়নি। উপরে মোবাইল নম্বর বা নাম দিয়ে দোকান সিলেক্ট করুন।</span>
+            <span>দোকান বা কাস্টমার নির্বাচন করুন</span>
           </div>
         )}
       </div>
@@ -769,15 +758,15 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
       <div className="bg-slate-900 border border-amber-500/30 p-4 rounded-2xl space-y-3 shadow-lg">
         <h3 className="text-xs font-bold text-amber-300 flex items-center gap-1.5 uppercase tracking-wider">
           <Sparkles className="w-4 h-4 text-amber-400" />
-          প্রোডাক্ট যোগ করার তথ্য
+          আইটেম এন্ট্রি
         </h3>
 
         <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-end">
           
-          {/* Product Auto-complete Search Box (Span 5 on desktop) */}
-          <div className="sm:col-span-5 relative">
+          {/* Product Auto-complete Search Box */}
+          <div className={`${currentUser?.role === 'admin' ? 'sm:col-span-5' : 'sm:col-span-6'} relative`}>
             <label className="block text-xs font-semibold text-slate-300 mb-1">
-              প্রোডাক্ট নাম বা আর্টিকল কোড:
+              প্রোডাক্ট / আর্টিকল:
             </label>
             <div className="relative">
               <input
@@ -789,7 +778,7 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
                   setShowSuggestions(true);
                 }}
                 onFocus={() => setShowSuggestions(true)}
-                placeholder="আর্টিকল কোড বা নাম..."
+                placeholder="আর্টিকল বা নাম..."
                 className="w-full bg-slate-950 border border-slate-800 text-xs sm:text-sm text-slate-100 placeholder-slate-500 rounded-xl px-3 py-2.5 focus:outline-none focus:border-amber-500 font-medium"
               />
               <Search className="w-4 h-4 text-slate-500 absolute right-3 top-3 pointer-events-none" />
@@ -861,7 +850,7 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
             )}
           </div>
 
-          {/* Quantity Input Box (Span 3) */}
+          {/* Quantity Input Box */}
           <div className="sm:col-span-3">
             <div className="flex items-center justify-between mb-1">
               <label className="text-xs font-semibold text-slate-300">
@@ -893,40 +882,42 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
               min="1"
               value={entryQty}
               onChange={(e) => setEntryQty(e.target.value === '' ? '' : parseInt(e.target.value))}
-              placeholder="জোড়ার পরিমাণ"
+              placeholder="পরিমাণ"
               className="w-full bg-slate-950 border border-slate-800 text-xs sm:text-sm text-amber-300 font-bold rounded-xl px-3 py-2.5 focus:outline-none focus:border-amber-500"
             />
           </div>
 
-          {/* Price per pair Input Box (Span 2) */}
-          <div className="sm:col-span-2">
+          {/* Price per pair Input Box */}
+          <div className={`${currentUser?.role === 'admin' ? 'sm:col-span-2' : 'sm:col-span-3'}`}>
             <label className="block text-xs font-semibold text-slate-300 mb-1">
-              প্রতি জোড়ার দাম (৳):
+              দর (৳):
             </label>
             <input
               type="number"
               min="0"
               value={entryPricePerPair}
               onChange={(e) => setEntryPricePerPair(e.target.value === '' ? '' : parseFloat(e.target.value))}
-              placeholder="দর (৳)"
+              placeholder="দর"
               className="w-full bg-slate-950 border border-slate-800 text-xs sm:text-sm text-emerald-400 font-bold rounded-xl px-3 py-2.5 focus:outline-none focus:border-amber-500"
             />
           </div>
 
-          {/* Commission per pair Input Box (Span 2) */}
-          <div className="sm:col-span-2">
-            <label className="block text-xs font-semibold text-amber-300 mb-1">
-              জোড়া প্রতি কমিশন (৳):
-            </label>
-            <input
-              type="number"
-              min="0"
-              value={entryCommissionPerPair}
-              onChange={(e) => setEntryCommissionPerPair(e.target.value === '' ? '' : parseFloat(e.target.value))}
-              placeholder="কমিশন (যেমন: ৪)"
-              className="w-full bg-slate-950 border border-amber-500/40 text-xs sm:text-sm text-amber-300 font-bold rounded-xl px-3 py-2.5 focus:outline-none focus:border-amber-500"
-            />
-          </div>
+          {/* Commission per pair Input Box (Admin Only) */}
+          {currentUser?.role === 'admin' && (
+            <div className="sm:col-span-2">
+              <label className="block text-xs font-semibold text-amber-300 mb-1">
+                কমিশন (৳):
+              </label>
+              <input
+                type="number"
+                min="0"
+                value={entryCommissionPerPair}
+                onChange={(e) => setEntryCommissionPerPair(e.target.value === '' ? '' : parseFloat(e.target.value))}
+                placeholder="কমিশন"
+                className="w-full bg-slate-950 border border-amber-500/40 text-xs sm:text-sm text-amber-300 font-bold rounded-xl px-3 py-2.5 focus:outline-none focus:border-amber-500"
+              />
+            </div>
+          )}
 
         </div>
 
@@ -1166,13 +1157,19 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
                 <span>এই চালানের নতুন বাকী:</span>
                 <span>{formatTaka(newDueAmount)}</span>
               </div>
+              {overpaidAmount > 0 && (
+                <div className="flex justify-between text-emerald-400 font-semibold">
+                  <span>অতিরিক্ত জমা (অ্যাডভান্স):</span>
+                  <span>{formatTaka(overpaidAmount)}</span>
+                </div>
+              )}
               <div className="flex justify-between text-slate-400">
                 <span>কাস্টমারের পূর্বের বাকী:</span>
                 <span>{formatTaka(previousDue)}</span>
               </div>
               <div className="flex justify-between font-bold text-xs pt-1 border-t border-slate-800 text-rose-400">
-                <span>কাস্টমারের সর্বমোট বাকী:</span>
-                <span className="text-sm">{formatTaka(totalNetDue)}</span>
+                <span>{totalNetDue < 0 ? 'কাস্টমারের বর্তমান অ্যাডভান্স:' : 'কাস্টমারের সর্বমোট বাকী:'}</span>
+                <span className={totalNetDue < 0 ? "text-sm text-emerald-400" : "text-sm text-rose-400"}>{formatTaka(Math.abs(totalNetDue))}</span>
               </div>
             </div>
 

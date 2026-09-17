@@ -310,7 +310,7 @@ export const StockManagement: React.FC<StockManagementProps> = ({
       {/* Overview Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="bg-slate-900 border border-slate-800 p-4 rounded-2xl">
-          <p className="text-xs text-slate-400 font-medium">স্টকে মোট মজুদ জুতা</p>
+          <p className="text-xs text-slate-400 font-medium">মোট মজুদ</p>
           <h3 className="text-xl sm:text-2xl font-bold text-amber-300 mt-1">
             {toBnDigit(totalStockPairs)} <span className="text-xs font-normal text-slate-400">জোড়া</span>
           </h3>
@@ -320,12 +320,12 @@ export const StockManagement: React.FC<StockManagementProps> = ({
         </div>
 
         <div className="bg-slate-900 border border-slate-800 p-4 rounded-2xl">
-          <p className="text-xs text-slate-400 font-medium">মোট ক্রয়ের হিসাব (Stock Cost)</p>
+          <p className="text-xs text-slate-400 font-medium">মোট ক্রয়মূল্য</p>
           <h3 className="text-xl sm:text-2xl font-bold text-rose-400 mt-1">
             {showBuyPrice ? formatTaka(totalStockValueBuy) : '•••• ৳'}
           </h3>
           <p className="text-[11px] text-slate-400 mt-1">
-            {showBuyPrice ? 'মজুদ জুতার ক্রয়মূল্য' : 'ক্রয়মূল্য গোপন রয়েছে (বাটন চাপুন)'}
+            {showBuyPrice ? 'ক্রয়মূল্য উন্মুক্ত' : 'গোপন রয়েছে'}
           </p>
         </div>
       </div>

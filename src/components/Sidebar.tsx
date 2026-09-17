@@ -6,7 +6,6 @@ import {
   Receipt,
   Store,
   Clock,
-  ShoppingBag,
   History,
   TrendingUp,
   BarChart3,
@@ -136,12 +135,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
           icon: History,
           roles: ['super_admin', 'admin', 'seller'],
         },
-        {
-          id: 'catalog',
-          label: 'প্রোডাক্ট ক্যাটালগ',
-          icon: ShoppingBag,
-          roles: ['super_admin', 'admin', 'seller'],
-        },
       ],
     });
 
@@ -229,12 +222,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
     sections.push({
       title: 'দোকানদার মেনু',
       items: [
-        {
-          id: 'catalog',
-          label: 'প্রোডাক্ট ক্যাটালগ',
-          icon: ShoppingBag,
-          roles: ['customer'],
-        },
         {
           id: 'pending',
           label: 'অর্ডার স্ট্যাটাস',
