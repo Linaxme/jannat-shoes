@@ -257,7 +257,7 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
 
     const calculatedPairs = entryUnitType === 'cartons' ? qtyNumber * prod.pairsPerCarton : qtyNumber;
     const itemTotalCommission = calculatedPairs * commission;
-    const itemTotalAmount = calculatedPairs * netUnitPrice;
+    const itemGrossAmount = calculatedPairs * price;
 
     const existingIndex = cartItems.findIndex(
       (item) => item.productId === prod!.id && item.unitType === entryUnitType
@@ -287,7 +287,7 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
         commissionPerPair: effectiveComm,
         netUnitPrice: effectiveNet,
         totalCommission: newPairs * effectiveComm,
-        totalAmount: newPairs * effectiveNet,
+        totalAmount: newPairs * price,
       };
       setCartItems(updated);
     } else {
@@ -304,7 +304,7 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
         netUnitPrice,
         totalCommission: itemTotalCommission,
         unitBuyPrice: prod.buyPrice,
-        totalAmount: itemTotalAmount,
+        totalAmount: itemGrossAmount,
       };
       setCartItems([...cartItems, newItem]);
     }
@@ -351,7 +351,7 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
       totalPairs: newPairs,
       netUnitPrice: netRate,
       totalCommission: newPairs * comm,
-      totalAmount: newPairs * netRate,
+      totalAmount: newPairs * item.unitSellPrice,
     };
     setCartItems(updated);
   };
@@ -368,7 +368,7 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
       unitSellPrice: validPrice,
       netUnitPrice: netRate,
       totalCommission: item.totalPairs * comm,
-      totalAmount: item.totalPairs * netRate,
+      totalAmount: item.totalPairs * validPrice,
     };
     setCartItems(updated);
   };
@@ -384,7 +384,7 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
       commissionPerPair: validComm,
       netUnitPrice: netRate,
       totalCommission: item.totalPairs * validComm,
-      totalAmount: item.totalPairs * netRate,
+      totalAmount: item.totalPairs * item.unitSellPrice,
     };
     setCartItems(updated);
   };
@@ -683,9 +683,11 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
                     </div>
                   </div>
                   <div className="text-right shrink-0">
-                    <div className="text-[10px] text-slate-400">বর্তমান বাকী</div>
-                    <div className={`font-bold ${c.currentDue > 0 ? 'text-rose-400' : 'text-emerald-400'}`}>
-                      {formatTaka(c.currentDue)}
+                    <div className="text-[10px] text-slate-400">
+                      {c.currentDue < 0 ? 'এডভান্স জমা' : 'বর্তমান বাকী'}
+                    </div>
+                    <div className={`font-bold ${c.currentDue > 0 ? 'text-rose-400' : c.currentDue < 0 ? 'text-emerald-400' : 'text-slate-300'}`}>
+                      {c.currentDue < 0 ? `+${formatTaka(Math.abs(c.currentDue))}` : formatTaka(c.currentDue)}
                     </div>
                   </div>
                 </div>
@@ -727,9 +729,19 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
 
             <div className="flex items-center gap-3 shrink-0">
               <div className="text-right bg-slate-900/90 px-3 py-1.5 rounded-lg border border-slate-800 flex items-center gap-2">
-                <span className="text-[11px] text-slate-400">পূর্বের বকেয়া:</span>
-                <span className={`font-black text-sm ${selectedCustomer.currentDue > 0 ? 'text-rose-400' : 'text-emerald-400'}`}>
-                  {formatTaka(selectedCustomer.currentDue)}
+                <span className="text-[11px] text-slate-400">
+                  {selectedCustomer.currentDue < 0 ? 'পূর্বের এডভান্স জমা:' : 'পূর্বের বকেয়া:'}
+                </span>
+                <span className={`font-black text-sm ${
+                  selectedCustomer.currentDue > 0
+                    ? 'text-rose-400'
+                    : selectedCustomer.currentDue < 0
+                    ? 'text-emerald-400'
+                    : 'text-slate-300'
+                }`}>
+                  {selectedCustomer.currentDue < 0
+                    ? `+${formatTaka(Math.abs(selectedCustomer.currentDue))}`
+                    : formatTaka(selectedCustomer.currentDue)}
                 </span>
               </div>
               <button
@@ -977,7 +989,7 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
                   <th className="pb-2.5 px-2 text-center">পরিমাণ</th>
                   <th className="pb-2.5 px-2 text-right">বিক্রয় দর (৳)</th>
                   <th className="pb-2.5 px-2 text-right">কমিশন (৳)</th>
-                  <th className="pb-2.5 px-2 text-right">নিট মোট (৳)</th>
+                  <th className="pb-2.5 px-2 text-right">মোট (৳)</th>
                   <th className="pb-2.5 pl-2 text-right">অ্যাকশন</th>
                 </tr>
               </thead>
@@ -1051,10 +1063,10 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
 
                     {/* Line Total */}
                     <td className="py-3 px-2 text-right font-bold text-emerald-400">
-                      <div>{formatTaka(item.totalAmount)}</div>
+                      <div>{formatTaka(item.totalPairs * item.unitSellPrice)}</div>
                       {item.totalCommission && item.totalCommission > 0 ? (
                         <div className="text-[10px] text-amber-400/80 font-normal">
-                          ছাড়: -৳{item.totalCommission}
+                          (কমিশন: -৳{item.totalCommission})
                         </div>
                       ) : null}
                     </td>
@@ -1164,12 +1176,18 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
                 </div>
               )}
               <div className="flex justify-between text-slate-400">
-                <span>কাস্টমারের পূর্বের বাকী:</span>
-                <span>{formatTaka(previousDue)}</span>
+                <span>{previousDue < 0 ? 'কাস্টমারের পূর্বের এডভান্স জমা:' : 'কাস্টমারের পূর্বের বাকী:'}</span>
+                <span className={previousDue < 0 ? 'text-emerald-400 font-bold' : 'text-slate-300'}>
+                  {previousDue < 0 ? `+${formatTaka(Math.abs(previousDue))}` : formatTaka(previousDue)}
+                </span>
               </div>
-              <div className="flex justify-between font-bold text-xs pt-1 border-t border-slate-800 text-rose-400">
-                <span>{totalNetDue < 0 ? 'কাস্টমারের বর্তমান অ্যাডভান্স:' : 'কাস্টমারের সর্বমোট বাকী:'}</span>
-                <span className={totalNetDue < 0 ? "text-sm text-emerald-400" : "text-sm text-rose-400"}>{formatTaka(Math.abs(totalNetDue))}</span>
+              <div className="flex justify-between font-bold text-xs pt-1 border-t border-slate-800">
+                <span className={totalNetDue < 0 ? 'text-emerald-300' : 'text-rose-400'}>
+                  {totalNetDue < 0 ? 'কাস্টমারের চূড়ান্ত এডভান্স স্থিতি:' : 'কাস্টমারের সর্বমোট বাকী:'}
+                </span>
+                <span className={totalNetDue < 0 ? "text-sm text-emerald-400 font-black font-mono" : "text-sm text-rose-400 font-black font-mono"}>
+                  {totalNetDue < 0 ? `+${formatTaka(Math.abs(totalNetDue))}` : formatTaka(totalNetDue)}
+                </span>
               </div>
             </div>
 

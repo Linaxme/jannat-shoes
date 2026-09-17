@@ -19,6 +19,7 @@ import {
   ExternalLink,
   ChevronRight,
   TrendingUp,
+  Coins,
 } from 'lucide-react';
 import { Customer, UserAccount, SalesRep, Order, UITheme, SystemConfig } from '../types';
 import { formatTaka, toBnDigit } from '../utils/formatters';
@@ -69,7 +70,7 @@ export const ShopManagement: React.FC<ShopManagementProps> = ({
 
   // Search, Filter and Sort States
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeFilter, setActiveFilter] = useState<'all' | 'my' | 'due' | 'paid'>('all');
+  const [activeFilter, setActiveFilter] = useState<'all' | 'my' | 'due' | 'advance' | 'paid'>('all');
   const [sortBy, setSortBy] = useState<'name' | 'due_high' | 'orders_high' | 'recent'>('due_high');
 
   // Modals
@@ -205,7 +206,9 @@ export const ShopManagement: React.FC<ShopManagementProps> = ({
   // Summary Metrics
   const totalShopsCount = unifiedShops.length;
   const totalDueAmount = unifiedShops.reduce((sum, s) => sum + (s.currentDue > 0 ? s.currentDue : 0), 0);
+  const totalAdvanceAmount = unifiedShops.reduce((sum, s) => sum + (s.currentDue < 0 ? Math.abs(s.currentDue) : 0), 0);
   const shopsWithDueCount = unifiedShops.filter((s) => s.currentDue > 0).length;
+  const shopsWithAdvanceCount = unifiedShops.filter((s) => s.currentDue < 0).length;
   const myShopsCount = unifiedShops.filter((s) => {
     if (!currentSellerId) return false;
     return (
@@ -228,8 +231,10 @@ export const ShopManagement: React.FC<ShopManagementProps> = ({
       });
     } else if (activeFilter === 'due') {
       result = result.filter((s) => s.currentDue > 0);
+    } else if (activeFilter === 'advance') {
+      result = result.filter((s) => s.currentDue < 0);
     } else if (activeFilter === 'paid') {
-      result = result.filter((s) => s.currentDue <= 0);
+      result = result.filter((s) => s.currentDue === 0);
     }
 
     // Search Query
@@ -483,7 +488,7 @@ export const ShopManagement: React.FC<ShopManagementProps> = ({
         </div>
 
         {/* Overview Stats Cards */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mt-5 pt-4 border-t border-slate-800/80">
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 mt-5 pt-4 border-t border-slate-800/80">
           <div className="bg-slate-950/60 border border-slate-800 p-3 rounded-xl">
             <div className="text-[11px] text-slate-400 flex items-center gap-1">
               <Building2 className="w-3.5 h-3.5 text-blue-400" />
@@ -501,6 +506,16 @@ export const ShopManagement: React.FC<ShopManagementProps> = ({
             </div>
             <div className="text-lg sm:text-xl font-black text-rose-400 mt-1">
               {formatTaka(totalDueAmount)}
+            </div>
+          </div>
+
+          <div className="bg-slate-950/60 border border-slate-800 p-3 rounded-xl">
+            <div className="text-[11px] text-slate-400 flex items-center gap-1">
+              <Coins className="w-3.5 h-3.5 text-emerald-400" />
+              <span>এডভান্স জমা</span>
+            </div>
+            <div className="text-lg sm:text-xl font-black text-emerald-400 mt-1">
+              +{formatTaka(totalAdvanceAmount)}
             </div>
           </div>
 
@@ -575,11 +590,25 @@ export const ShopManagement: React.FC<ShopManagementProps> = ({
           </button>
 
           <button
+            onClick={() => setActiveFilter('advance')}
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1 cursor-pointer ${
+              activeFilter === 'advance'
+                ? 'bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20'
+                : 'bg-slate-950 text-emerald-400 hover:bg-slate-800 border border-slate-800'
+            }`}
+          >
+            <span>এডভান্স জমা</span>
+            <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-emerald-950/40 text-emerald-200">
+              {toBnDigit(shopsWithAdvanceCount)}
+            </span>
+          </button>
+
+          <button
             onClick={() => setActiveFilter('paid')}
             className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1 cursor-pointer ${
               activeFilter === 'paid'
-                ? 'bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20'
-                : 'bg-slate-950 text-emerald-400 hover:bg-slate-800 border border-slate-800'
+                ? 'bg-blue-500 text-white shadow-md shadow-blue-500/20'
+                : 'bg-slate-950 text-slate-300 hover:bg-slate-800 border border-slate-800'
             }`}
           >
             <span>পরিশোধিত</span>
@@ -646,6 +675,7 @@ export const ShopManagement: React.FC<ShopManagementProps> = ({
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
           {filteredShops.map((shop, idx) => {
             const hasDue = shop.currentDue > 0;
+            const isAdvance = shop.currentDue < 0;
             const isMyAssigned =
               currentSellerId &&
               (shop.assignedSellerId === currentSellerId ||
@@ -686,10 +716,16 @@ export const ShopManagement: React.FC<ShopManagementProps> = ({
                         className={`px-2.5 py-1 rounded-lg text-xs font-bold whitespace-nowrap shrink-0 inline-flex items-center leading-normal ${
                           hasDue
                             ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30 font-black'
-                            : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                            : isAdvance
+                            ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-black'
+                            : 'bg-slate-800 text-slate-400 border border-slate-700'
                         }`}
                       >
-                        {hasDue ? `বকেয়া:\u00A0${formatTaka(shop.currentDue)}` : 'পরিশোধিত'}
+                        {hasDue
+                          ? `বকেয়া:\u00A0${formatTaka(shop.currentDue)}`
+                          : isAdvance
+                          ? `এডভান্স:\u00A0+${formatTaka(Math.abs(shop.currentDue))}`
+                          : 'পরিশোধিত'}
                       </span>
                     </div>
                   </div>
@@ -1103,11 +1139,19 @@ export const ShopManagement: React.FC<ShopManagementProps> = ({
               {/* Top Quick Status Grid */}
               <div className="grid grid-cols-2 gap-3">
                 <div className="bg-slate-950 p-3.5 rounded-xl border border-slate-800">
-                  <span className="text-slate-500 text-[11px]">বর্তমান বকেয়া (Due):</span>
+                  <span className="text-slate-500 text-[11px]">
+                    {selectedShopDetail.currentDue < 0 ? 'এডভান্স জমা (ক্রেডিট):' : 'বর্তমান বকেয়া (Due):'}
+                  </span>
                   <div className={`text-base sm:text-lg font-black mt-0.5 ${
-                    selectedShopDetail.currentDue > 0 ? 'text-rose-400' : 'text-emerald-400'
+                    selectedShopDetail.currentDue > 0
+                      ? 'text-rose-400'
+                      : selectedShopDetail.currentDue < 0
+                      ? 'text-emerald-400'
+                      : 'text-slate-300'
                   }`}>
-                    {formatTaka(selectedShopDetail.currentDue)}
+                    {selectedShopDetail.currentDue < 0
+                      ? `+${formatTaka(Math.abs(selectedShopDetail.currentDue))}`
+                      : formatTaka(selectedShopDetail.currentDue)}
                   </div>
                 </div>
 

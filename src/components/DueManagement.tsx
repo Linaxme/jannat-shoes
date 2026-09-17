@@ -57,6 +57,7 @@ export const DueManagement: React.FC<DueManagementProps> = ({
   const [customerViewMode, setCustomerViewMode] = useState<'table' | 'card'>(
     typeof window !== 'undefined' && window.innerWidth < 768 ? 'card' : 'table'
   );
+  const [activeDueFilter, setActiveDueFilter] = useState<'all' | 'due' | 'advance'>('all');
 
   // State to track manual sending status per customer
   const [sendingStatuses, setSendingStatuses] = useState<Record<string, 'idle' | 'sending' | 'sent' | 'failed'>>({});
@@ -160,10 +161,15 @@ export const DueManagement: React.FC<DueManagementProps> = ({
     return false;
   };
 
-  // Filter customers with due > 0 (newest / highest due first)
+  // Filter customers with active balance (due > 0 OR advance < 0)
   const dueCustomers = customers
     .filter((c) => {
-      if (c.currentDue <= 0) return false;
+      // Must have either Due (> 0) or Advance Credit (< 0)
+      if (c.currentDue === 0) return false;
+
+      // Filter by activeDueFilter: 'all' | 'due' | 'advance'
+      if (activeDueFilter === 'due' && c.currentDue <= 0) return false;
+      if (activeDueFilter === 'advance' && c.currentDue >= 0) return false;
 
       const matchesSearch =
         (c.shopName || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -186,17 +192,23 @@ export const DueManagement: React.FC<DueManagementProps> = ({
     })
     .sort((a, b) => b.id.localeCompare(a.id));
 
-  const totalMarketDue = customers.reduce((sum, c) => sum + c.currentDue, 0);
+  // Financial aggregates
+  const totalMarketDue = customers.reduce((sum, c) => sum + (c.currentDue > 0 ? c.currentDue : 0), 0);
+  const totalAdvanceCredit = customers.reduce((sum, c) => sum + (c.currentDue < 0 ? Math.abs(c.currentDue) : 0), 0);
+  const dueCustomersCount = customers.filter((c) => c.currentDue > 0).length;
+  const advanceCustomersCount = customers.filter((c) => c.currentDue < 0).length;
 
-  // Calculate Due Grouped by Seller / Admin (only active due customers)
+  // Calculate Due Grouped by Seller / Admin (active due and advance balance)
   const sellerWiseDue = useMemo(() => {
     const list = sellers.map((seller) => {
-      const sellerCusts = customers.filter((c) => isCustomerOfSeller(c, seller) && c.currentDue > 0);
-      const sellerTotalDue = sellerCusts.reduce((sum, c) => sum + c.currentDue, 0);
+      const sellerCusts = customers.filter((c) => isCustomerOfSeller(c, seller) && c.currentDue !== 0);
+      const sellerTotalDue = sellerCusts.reduce((sum, c) => sum + (c.currentDue > 0 ? c.currentDue : 0), 0);
+      const sellerTotalAdvance = sellerCusts.reduce((sum, c) => sum + (c.currentDue < 0 ? Math.abs(c.currentDue) : 0), 0);
       return {
         seller,
         customerCount: sellerCusts.length,
         totalDue: sellerTotalDue,
+        totalAdvance: sellerTotalAdvance,
         customers: sellerCusts,
       };
     });
@@ -204,7 +216,7 @@ export const DueManagement: React.FC<DueManagementProps> = ({
     // Check if there are unassigned / open customers with due not matched to any seller/admin
     const unassignedCusts = customers.filter(
       (c) =>
-        c.currentDue > 0 &&
+        c.currentDue !== 0 &&
         !sellers.some((seller) => isCustomerOfSeller(c, seller))
     );
     if (unassignedCusts.length > 0) {
@@ -218,7 +230,8 @@ export const DueManagement: React.FC<DueManagementProps> = ({
           commissionRatePercent: 0,
         },
         customerCount: unassignedCusts.length,
-        totalDue: unassignedCusts.reduce((sum, c) => sum + c.currentDue, 0),
+        totalDue: unassignedCusts.reduce((sum, c) => sum + (c.currentDue > 0 ? c.currentDue : 0), 0),
+        totalAdvance: unassignedCusts.reduce((sum, c) => sum + (c.currentDue < 0 ? Math.abs(c.currentDue) : 0), 0),
         customers: unassignedCusts,
       });
     }
@@ -239,7 +252,7 @@ export const DueManagement: React.FC<DueManagementProps> = ({
     }
 
     const prevDue = selectedCustForPayment.currentDue;
-    const remDue = Math.max(0, prevDue - paidVal);
+    const remDue = prevDue - paidVal; // allows negative value representing advance credit
     const todayStr = getLocalDateStr(new Date());
     const receiptNo = `REC-${new Date().getFullYear()}-${Math.floor(100 + Math.random() * 900)}`;
 
@@ -423,13 +436,14 @@ export const DueManagement: React.FC<DueManagementProps> = ({
       </div>
 
       {/* Metric summary banner */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <div className={`${activeTheme.cardClass} p-4 rounded-2xl flex items-center justify-between`}>
           <div>
             <p className="text-xs text-slate-400 font-medium">{t('total_due')}</p>
             <h3 className="text-xl sm:text-2xl font-black text-rose-400 mt-1">
               {formatTaka(totalMarketDue)}
             </h3>
+            <span className="text-[10px] text-slate-400">{toBnDigit(dueCustomersCount)} জন কাস্টমার</span>
           </div>
           <div className="p-3 bg-rose-500/20 text-rose-400 rounded-2xl border border-rose-500/30">
             <Receipt className="w-6 h-6" />
@@ -438,10 +452,24 @@ export const DueManagement: React.FC<DueManagementProps> = ({
 
         <div className={`${activeTheme.cardClass} p-4 rounded-2xl flex items-center justify-between`}>
           <div>
+            <p className="text-xs text-slate-400 font-medium">অগ্রিম জমা / এডভান্স ক্রেডিট</p>
+            <h3 className="text-xl sm:text-2xl font-black text-emerald-400 mt-1">
+              {formatTaka(totalAdvanceCredit)}
+            </h3>
+            <span className="text-[10px] text-slate-400">{toBnDigit(advanceCustomersCount)} জন কাস্টমার</span>
+          </div>
+          <div className="p-3 bg-emerald-500/20 text-emerald-400 rounded-2xl border border-emerald-500/30">
+            <Coins className="w-6 h-6" />
+          </div>
+        </div>
+
+        <div className={`${activeTheme.cardClass} p-4 rounded-2xl flex items-center justify-between`}>
+          <div>
             <p className="text-xs text-slate-400 font-medium">{t('shopkeeper')}</p>
             <h3 className="text-xl sm:text-2xl font-black text-amber-300 mt-1">
-              {toBnDigit(customers.filter((c) => c.currentDue > 0).length)} <span className="text-sm font-normal text-slate-400">{t('customers')}</span>
+              {toBnDigit(dueCustomersCount + advanceCustomersCount)} <span className="text-sm font-normal text-slate-400">{t('customers')}</span>
             </h3>
+            <span className="text-[10px] text-slate-400">বাকী ও এডভান্স খাতা</span>
           </div>
           <div className="p-3 bg-amber-500/20 text-amber-400 rounded-2xl border border-amber-500/30">
             <Store className="w-6 h-6" />
@@ -451,11 +479,12 @@ export const DueManagement: React.FC<DueManagementProps> = ({
         <div className={`${activeTheme.cardClass} p-4 rounded-2xl flex items-center justify-between`}>
           <div>
             <p className="text-xs text-slate-400 font-medium">{t('total_collection')}</p>
-            <h3 className="text-xl sm:text-2xl font-black text-emerald-400 mt-1">
+            <h3 className="text-xl sm:text-2xl font-black text-indigo-400 mt-1">
               {toBnDigit(paymentLogs.length)} <span className="text-sm font-normal text-slate-400">{t('receipts')}</span>
             </h3>
+            <span className="text-[10px] text-slate-400">মোট আদায় রসিদ</span>
           </div>
-          <div className="p-3 bg-emerald-500/20 text-emerald-400 rounded-2xl border border-emerald-500/30">
+          <div className="p-3 bg-indigo-500/20 text-indigo-400 rounded-2xl border border-indigo-500/30">
             <DollarSign className="w-6 h-6" />
           </div>
         </div>
@@ -466,62 +495,115 @@ export const DueManagement: React.FC<DueManagementProps> = ({
         <div className="space-y-4">
           
           {/* Filters & View Switcher */}
-          <div className={`${activeTheme.cardClass} p-4 rounded-2xl flex flex-col sm:flex-row gap-3 items-center justify-between`}>
-            <div className="flex items-center gap-2 bg-slate-950 border border-slate-700/80 rounded-xl px-3 py-2 w-full sm:w-80">
-              <Search className="w-4 h-4 text-slate-400" />
-              <input
-                type="text"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="খুঁজুন..."
-                className="bg-transparent text-xs text-slate-100 placeholder-slate-500 w-full focus:outline-none"
-              />
+          <div className={`${activeTheme.cardClass} p-4 rounded-2xl flex flex-col gap-3`}>
+            <div className="flex flex-col sm:flex-row gap-3 items-center justify-between">
+              <div className="flex items-center gap-2 bg-slate-950 border border-slate-700/80 rounded-xl px-3 py-2 w-full sm:w-80">
+                <Search className="w-4 h-4 text-slate-400" />
+                <input
+                  type="text"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  placeholder="দোকানের নাম, মালিক বা ফোন..."
+                  className="bg-transparent text-xs text-slate-100 placeholder-slate-500 w-full focus:outline-none"
+                />
+              </div>
+
+              <div className="flex items-center gap-2 w-full sm:w-auto overflow-x-auto justify-between sm:justify-end flex-wrap">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-slate-400 whitespace-nowrap">সেলার:</span>
+                  <select
+                    value={selectedSellerFilter}
+                    onChange={(e) => setSelectedSellerFilter(e.target.value)}
+                    className="bg-slate-950 border border-slate-700 text-xs text-slate-200 rounded-xl px-3 py-2 focus:outline-none cursor-pointer"
+                  >
+                    <option value="সব">সব সেলার ও এডমিন</option>
+                    {sellers.map((s) => (
+                      <option key={s.id} value={s.id}>
+                        {s.name} {s.isAdmin || s.role === 'admin' ? '(এডমিন ও সেলার)' : ''} {s.area ? `(${s.area})` : ''}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* View Mode Switcher */}
+                <div className="flex items-center gap-1 bg-slate-950 p-1 rounded-xl border border-slate-800">
+                  <button
+                    type="button"
+                    onClick={() => setCustomerViewMode('table')}
+                    className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                      customerViewMode === 'table'
+                        ? 'bg-amber-500 text-slate-950 shadow'
+                        : 'text-slate-400 hover:text-slate-200'
+                    }`}
+                  >
+                    <List className="w-3.5 h-3.5" />
+                    টেবিল
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setCustomerViewMode('card')}
+                    className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                      customerViewMode === 'card'
+                        ? 'bg-amber-500 text-slate-950 shadow'
+                        : 'text-slate-400 hover:text-slate-200'
+                    }`}
+                  >
+                    <LayoutGrid className="w-3.5 h-3.5" />
+                    কার্ড
+                  </button>
+                </div>
+              </div>
             </div>
 
-            <div className="flex items-center gap-2 w-full sm:w-auto overflow-x-auto justify-between sm:justify-end flex-wrap">
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-slate-400 whitespace-nowrap">সেলার:</span>
-                <select
-                  value={selectedSellerFilter}
-                  onChange={(e) => setSelectedSellerFilter(e.target.value)}
-                  className="bg-slate-950 border border-slate-700 text-xs text-slate-200 rounded-xl px-3 py-2 focus:outline-none cursor-pointer"
-                >
-                  <option value="সব">সব সেলার ও এডমিন</option>
-                  {sellers.map((s) => (
-                    <option key={s.id} value={s.id}>
-                      {s.name} {s.isAdmin || s.role === 'admin' ? '(এডমিন ও সেলার)' : ''} {s.area ? `(${s.area})` : ''}
-                    </option>
-                  ))}
-                </select>
-              </div>
+            {/* Quick Filter: All vs Due vs Advance */}
+            <div className="flex items-center gap-2 border-t border-slate-800 pt-2.5 flex-wrap text-xs">
+              <span className="text-slate-400 text-[11px] font-medium mr-1">ফিল্টার:</span>
+              <button
+                type="button"
+                onClick={() => setActiveDueFilter('all')}
+                className={`px-3 py-1 rounded-lg font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${
+                  activeDueFilter === 'all'
+                    ? 'bg-amber-500 text-slate-950 shadow'
+                    : 'bg-slate-900 text-slate-300 hover:bg-slate-800 border border-slate-800'
+                }`}
+              >
+                <span>সকল কাস্টমার</span>
+                <span className="px-1.5 py-0.2 text-[10px] rounded-full bg-slate-800 text-amber-300 font-mono">
+                  {toBnDigit(dueCustomersCount + advanceCustomersCount)}
+                </span>
+              </button>
 
-              {/* View Mode Switcher */}
-              <div className="flex items-center gap-1 bg-slate-950 p-1 rounded-xl border border-slate-800">
-                <button
-                  type="button"
-                  onClick={() => setCustomerViewMode('table')}
-                  className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-                    customerViewMode === 'table'
-                      ? 'bg-amber-500 text-slate-950 shadow'
-                      : 'text-slate-400 hover:text-slate-200'
-                  }`}
-                >
-                  <List className="w-3.5 h-3.5" />
-                  টেবিল
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setCustomerViewMode('card')}
-                  className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-                    customerViewMode === 'card'
-                      ? 'bg-amber-500 text-slate-950 shadow'
-                      : 'text-slate-400 hover:text-slate-200'
-                  }`}
-                >
-                  <LayoutGrid className="w-3.5 h-3.5" />
-                  কার্ড
-                </button>
-              </div>
+              <button
+                type="button"
+                onClick={() => setActiveDueFilter('due')}
+                className={`px-3 py-1 rounded-lg font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${
+                  activeDueFilter === 'due'
+                    ? 'bg-rose-500 text-white shadow'
+                    : 'bg-slate-900 text-slate-300 hover:bg-slate-800 border border-slate-800'
+                }`}
+              >
+                <span className="w-2 h-2 rounded-full bg-rose-400"></span>
+                <span>শুধুমাত্র বকেয়া / বাকী</span>
+                <span className="px-1.5 py-0.2 text-[10px] rounded-full bg-slate-800 text-rose-300 font-mono">
+                  {toBnDigit(dueCustomersCount)}
+                </span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveDueFilter('advance')}
+                className={`px-3 py-1 rounded-lg font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${
+                  activeDueFilter === 'advance'
+                    ? 'bg-emerald-500 text-slate-950 font-bold shadow'
+                    : 'bg-slate-900 text-slate-300 hover:bg-slate-800 border border-slate-800'
+                }`}
+              >
+                <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
+                <span>এডভান্স ক্রেডিট / অগ্রিম জমা</span>
+                <span className="px-1.5 py-0.2 text-[10px] rounded-full bg-slate-800 text-emerald-300 font-mono">
+                  {toBnDigit(advanceCustomersCount)}
+                </span>
+              </button>
             </div>
           </div>
 
@@ -531,84 +613,111 @@ export const DueManagement: React.FC<DueManagementProps> = ({
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {dueCustomers.length === 0 ? (
                   <div className="col-span-full py-12 text-center text-slate-500">
-                    কোনো কাস্টমার বা বাকী হিসাব পাওয়া যায়নি।
+                    কোনো কাস্টমার বা হিসাব পাওয়া যায়নি।
                   </div>
                 ) : (
-                  dueCustomers.map((cust) => (
-                    <div
-                      key={cust.id}
-                      className="bg-slate-950 border border-slate-800 rounded-2xl p-4 space-y-3 relative flex flex-col justify-between hover:border-amber-500/40 transition-all shadow-md"
-                    >
-                      <div>
-                        {/* Shop Header */}
-                        <div className="flex items-start justify-between pb-2.5 border-b border-slate-800">
-                          <div>
-                            <h4 className="font-bold text-white text-sm">{cust.shopName}</h4>
-                            <div className="text-[11px] text-slate-400 flex items-center gap-1 mt-0.5">
-                              <User className="w-3 h-3 text-amber-400" />
-                              প্রো: {cust.name}
+                  dueCustomers.map((cust) => {
+                    const isAdvance = cust.currentDue < 0;
+                    return (
+                      <div
+                        key={cust.id}
+                        className={`bg-slate-950 border rounded-2xl p-4 space-y-3 relative flex flex-col justify-between transition-all shadow-md ${
+                          isAdvance
+                            ? 'border-emerald-500/40 hover:border-emerald-400'
+                            : 'border-slate-800 hover:border-amber-500/40'
+                        }`}
+                      >
+                        <div>
+                          {/* Shop Header */}
+                          <div className="flex items-start justify-between pb-2.5 border-b border-slate-800">
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <h4 className="font-bold text-white text-sm">{cust.shopName}</h4>
+                                {isAdvance && (
+                                  <span className="px-1.5 py-0.5 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded text-[10px] font-bold">
+                                    এডভান্স
+                                  </span>
+                                )}
+                              </div>
+                              <div className="text-[11px] text-slate-400 flex items-center gap-1 mt-0.5">
+                                <User className="w-3 h-3 text-amber-400" />
+                                প্রো: {cust.name}
+                              </div>
                             </div>
-                          </div>
-                          <span className="px-2 py-1 bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 rounded-full text-[10px] font-bold">
-                            {cust.assignedSellerName}
-                          </span>
-                        </div>
-
-                        {/* Contact & Due */}
-                        <div className="py-2.5 space-y-1.5 text-xs">
-                          <div className="flex items-center justify-between">
-                            <span className="text-slate-400">মোবাইল:</span>
-                            <span className="font-mono text-slate-200">
-                              {cust.phone || '—'}
+                            <span className="px-2 py-1 bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 rounded-full text-[10px] font-bold">
+                              {cust.assignedSellerName}
                             </span>
                           </div>
-                          <div className="flex items-center justify-between">
-                            <span className="text-slate-400">ঠিকানা:</span>
-                            <span className="text-slate-300 truncate max-w-[180px]">{cust.address}</span>
-                          </div>
-                          <div className="flex items-center justify-between pt-2 border-t border-slate-900">
-                            <span className="text-slate-400 font-bold">বর্তমান বাকী:</span>
-                            <span className="font-black text-rose-400 text-sm">{formatTaka(cust.currentDue)}</span>
+
+                          {/* Contact & Due */}
+                          <div className="py-2.5 space-y-1.5 text-xs">
+                            <div className="flex items-center justify-between">
+                              <span className="text-slate-400">মোবাইল:</span>
+                              <span className="font-mono text-slate-200">
+                                {cust.phone || '—'}
+                              </span>
+                            </div>
+                            <div className="flex items-center justify-between">
+                              <span className="text-slate-400">ঠিকানা:</span>
+                              <span className="text-slate-300 truncate max-w-[180px]">{cust.address}</span>
+                            </div>
+                            <div className="flex items-center justify-between pt-2 border-t border-slate-900">
+                              <span className="text-slate-400 font-bold">
+                                {isAdvance ? 'এডভান্স ক্রেডিট (অগ্রিম জমা):' : 'বর্তমান বাকী:'}
+                              </span>
+                              <div className="text-right">
+                                <span
+                                  className={`font-black text-sm font-mono ${
+                                    isAdvance ? 'text-emerald-400' : 'text-rose-400'
+                                  }`}
+                                >
+                                  {isAdvance ? `+${formatTaka(Math.abs(cust.currentDue))}` : formatTaka(cust.currentDue)}
+                                </span>
+                                {isAdvance && (
+                                  <div className="text-[9px] text-emerald-500 font-medium">পরবর্তী বিল থেকে বাদ যাবে</div>
+                                )}
+                              </div>
+                            </div>
                           </div>
                         </div>
-                      </div>
 
-                      {/* Actions */}
-                      <div className="pt-3 border-t border-slate-800 flex items-center justify-end gap-2 flex-wrap">
-                        <button
-                          onClick={() => openAdjustDueModal(cust)}
-                          className="px-2.5 py-1.5 bg-slate-900 hover:bg-slate-800 text-amber-300 border border-slate-700 hover:border-amber-500/40 rounded-xl text-xs font-semibold flex items-center gap-1 transition-all cursor-pointer"
-                          title="পূর্বের বাকী যোগ বা সমন্বয় করুন"
-                        >
-                          <Sliders className="w-3.5 h-3.5 text-amber-400" />
-                          <span>সমন্বয়</span>
-                        </button>
-                        <button
-                          onClick={() => openPaymentModal(cust)}
-                          className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-xs shadow flex items-center gap-1 transition-all cursor-pointer"
-                        >
-                          <DollarSign className="w-3.5 h-3.5" />
-                          টাকা আদায়
-                        </button>
-                        {cust.phone ? (
+                        {/* Actions */}
+                        <div className="pt-3 border-t border-slate-800 flex items-center justify-end gap-2 flex-wrap">
                           <button
-                            onClick={() => handleMessageClick(cust)}
-                            disabled={sendingStatuses[cust.id] === 'sending'}
-                            className={`px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1 transition-all cursor-pointer ${
-                              sendingStatuses[cust.id] === 'sent' || cust.lastDueReminderDate === new Date().toISOString().split('T')[0]
-                                ? 'bg-emerald-950/40 text-emerald-400 border border-emerald-500/20 opacity-90'
-                                : sendingStatuses[cust.id] === 'sending'
-                                ? 'bg-slate-850 text-slate-400 border border-slate-700'
-                                : 'bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-500/30'
-                            }`}
-                            title={cust.lastDueReminderDate === new Date().toISOString().split('T')[0] ? "আজকে ইতিমধ্যে তাগদা মেসেজ পাঠানো হয়েছে (আবারও পাঠাতে পারেন)" : "এসএমএস তাগদা পাঠান"}
+                            onClick={() => openAdjustDueModal(cust)}
+                            className="px-2.5 py-1.5 bg-slate-900 hover:bg-slate-800 text-amber-300 border border-slate-700 hover:border-amber-500/40 rounded-xl text-xs font-semibold flex items-center gap-1 transition-all cursor-pointer"
+                            title="পূর্বের বাকী যোগ বা সমন্বয় করুন"
                           >
-                            {renderMessageButtonContent(cust)}
+                            <Sliders className="w-3.5 h-3.5 text-amber-400" />
+                            <span>সমন্বয়</span>
                           </button>
-                        ) : null}
+                          <button
+                            onClick={() => openPaymentModal(cust)}
+                            className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-xs shadow flex items-center gap-1 transition-all cursor-pointer"
+                          >
+                            <DollarSign className="w-3.5 h-3.5" />
+                            {isAdvance ? 'আরও জমা' : 'টাকা আদায়'}
+                          </button>
+                          {cust.phone && !isAdvance ? (
+                            <button
+                              onClick={() => handleMessageClick(cust)}
+                              disabled={sendingStatuses[cust.id] === 'sending'}
+                              className={`px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1 transition-all cursor-pointer ${
+                                sendingStatuses[cust.id] === 'sent' || cust.lastDueReminderDate === new Date().toISOString().split('T')[0]
+                                  ? 'bg-emerald-950/40 text-emerald-400 border border-emerald-500/20 opacity-90'
+                                  : sendingStatuses[cust.id] === 'sending'
+                                  ? 'bg-slate-850 text-slate-400 border border-slate-700'
+                                  : 'bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-500/30'
+                              }`}
+                              title={cust.lastDueReminderDate === new Date().toISOString().split('T')[0] ? "আজকে ইতিমধ্যে তাগদা মেসেজ পাঠানো হয়েছে (আবারও পাঠাতে পারেন)" : "এসএমএস তাগদা পাঠান"}
+                            >
+                              {renderMessageButtonContent(cust)}
+                            </button>
+                          ) : null}
+                        </div>
                       </div>
-                    </div>
-                  ))
+                    );
+                  })
                 )}
               </div>
             ) : (
@@ -619,73 +728,92 @@ export const DueManagement: React.FC<DueManagementProps> = ({
                       <th className="pb-3 pr-3">দোকানের নাম ও মালিক</th>
                       <th className="pb-3 px-3">মোবাইল ও ঠিকানা</th>
                       <th className="pb-3 px-3">দায়িত্বপ্রাপ্ত সেলার</th>
-                      <th className="pb-3 px-3 text-right">বর্তমান বাকী (৳)</th>
+                      <th className="pb-3 px-3 text-right">স্থিতি / পরিমাণ (৳)</th>
                       <th className="pb-3 pl-3 text-right">অ্যাকশন / আদায়</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-800">
-                    {dueCustomers.map((cust) => (
-                      <tr key={cust.id} className="hover:bg-slate-800/50 transition-colors">
-                        <td className="py-3 pr-3">
-                          <div className="font-bold text-slate-100 text-sm">{cust.shopName}</div>
-                          <div className="text-[11px] text-slate-400 flex items-center gap-1">
-                            <User className="w-3 h-3 text-amber-400" />
-                            প্রো: {cust.name}
-                          </div>
-                        </td>
+                    {dueCustomers.map((cust) => {
+                      const isAdvance = cust.currentDue < 0;
+                      return (
+                        <tr key={cust.id} className="hover:bg-slate-800/50 transition-colors">
+                          <td className="py-3 pr-3">
+                            <div className="flex items-center gap-2">
+                              <div className="font-bold text-slate-100 text-sm">{cust.shopName}</div>
+                              {isAdvance && (
+                                <span className="px-1.5 py-0.5 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded text-[10px] font-bold">
+                                  এডভান্স
+                                </span>
+                              )}
+                            </div>
+                            <div className="text-[11px] text-slate-400 flex items-center gap-1">
+                              <User className="w-3 h-3 text-amber-400" />
+                              প্রো: {cust.name}
+                            </div>
+                          </td>
 
-                        <td className="py-3 px-3 text-slate-300">
-                          <div>{cust.phone || '—'}</div>
-                          <div className="text-[10px] text-slate-400">{cust.address}</div>
-                        </td>
+                          <td className="py-3 px-3 text-slate-300">
+                            <div>{cust.phone || '—'}</div>
+                            <div className="text-[10px] text-slate-400">{cust.address}</div>
+                          </td>
 
-                        <td className="py-3 px-3 text-indigo-300 font-medium">
-                          {cust.assignedSellerName}
-                        </td>
+                          <td className="py-3 px-3 text-indigo-300 font-medium">
+                            {cust.assignedSellerName}
+                          </td>
 
-                        <td className="py-3 px-3 text-right">
-                          <div className="font-black text-sm text-rose-400">{formatTaka(cust.currentDue)}</div>
-                        </td>
-
-                        <td className="py-3 pl-3 text-right">
-                          <div className="flex items-center justify-end gap-2">
-                            <button
-                              onClick={() => openAdjustDueModal(cust)}
-                              className="px-2.5 py-1.5 bg-slate-900 hover:bg-slate-800 text-amber-300 border border-slate-700 hover:border-amber-500/40 rounded-xl text-xs font-semibold flex items-center gap-1 transition-all cursor-pointer"
-                              title="পূর্বের বাকী যোগ বা সমন্বয় করুন"
+                          <td className="py-3 px-3 text-right">
+                            <div
+                              className={`font-black text-sm font-mono ${
+                                isAdvance ? 'text-emerald-400' : 'text-rose-400'
+                              }`}
                             >
-                              <Sliders className="w-3.5 h-3.5 text-amber-400" />
-                              <span>সমন্বয়</span>
-                            </button>
+                              {isAdvance ? `+${formatTaka(Math.abs(cust.currentDue))}` : formatTaka(cust.currentDue)}
+                            </div>
+                            <div className="text-[10px] text-slate-400">
+                              {isAdvance ? 'এডভান্স ক্রেডিট' : 'বকেয়া'}
+                            </div>
+                          </td>
 
-                            <button
-                              onClick={() => openPaymentModal(cust)}
-                              className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-xs shadow flex items-center gap-1 transition-all cursor-pointer"
-                            >
-                              <DollarSign className="w-3.5 h-3.5" />
-                              টাকা আদায়
-                            </button>
-
-                            {cust.phone ? (
+                          <td className="py-3 pl-3 text-right">
+                            <div className="flex items-center justify-end gap-2">
                               <button
-                                onClick={() => handleMessageClick(cust)}
-                                disabled={sendingStatuses[cust.id] === 'sending'}
-                                className={`px-2.5 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1 transition-all cursor-pointer ${
-                                  sendingStatuses[cust.id] === 'sent' || cust.lastDueReminderDate === new Date().toISOString().split('T')[0]
-                                    ? 'bg-emerald-950/40 text-emerald-400 border border-emerald-500/20 opacity-90'
-                                    : sendingStatuses[cust.id] === 'sending'
-                                    ? 'bg-slate-850 text-slate-400 border border-slate-700'
-                                    : 'bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-500/30'
-                                }`}
-                                title={cust.lastDueReminderDate === new Date().toISOString().split('T')[0] ? "আজকে ইতিমধ্যে তাগদা মেসেজ পাঠানো হয়েছে (আবারও পাঠাতে পারেন)" : "এসএমএস তাগদা পাঠান"}
+                                onClick={() => openAdjustDueModal(cust)}
+                                className="px-2.5 py-1.5 bg-slate-900 hover:bg-slate-800 text-amber-300 border border-slate-700 hover:border-amber-500/40 rounded-xl text-xs font-semibold flex items-center gap-1 transition-all cursor-pointer"
+                                title="পূর্বের বাকী যোগ বা সমন্বয় করুন"
                               >
-                                {renderMessageButtonContent(cust)}
+                                <Sliders className="w-3.5 h-3.5 text-amber-400" />
+                                <span>সমন্বয়</span>
                               </button>
-                            ) : null}
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
+
+                              <button
+                                onClick={() => openPaymentModal(cust)}
+                                className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-xs shadow flex items-center gap-1 transition-all cursor-pointer"
+                              >
+                                <DollarSign className="w-3.5 h-3.5" />
+                                {isAdvance ? 'আরও জমা' : 'টাকা আদায়'}
+                              </button>
+
+                              {cust.phone && !isAdvance ? (
+                                <button
+                                  onClick={() => handleMessageClick(cust)}
+                                  disabled={sendingStatuses[cust.id] === 'sending'}
+                                  className={`px-2.5 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1 transition-all cursor-pointer ${
+                                    sendingStatuses[cust.id] === 'sent' || cust.lastDueReminderDate === new Date().toISOString().split('T')[0]
+                                      ? 'bg-emerald-950/40 text-emerald-400 border border-emerald-500/20 opacity-90'
+                                      : sendingStatuses[cust.id] === 'sending'
+                                      ? 'bg-slate-850 text-slate-400 border border-slate-700'
+                                      : 'bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-500/30'
+                                  }`}
+                                  title={cust.lastDueReminderDate === new Date().toISOString().split('T')[0] ? "আজকে ইতিমধ্যে তাগদা মেসেজ পাঠানো হয়েছে (আবারও পাঠাতে পারেন)" : "এসএমএস তাগদা পাঠান"}
+                                >
+                                  {renderMessageButtonContent(cust)}
+                                </button>
+                              ) : null}
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
@@ -698,7 +826,7 @@ export const DueManagement: React.FC<DueManagementProps> = ({
       {/* VIEW MODE 2: SELLER-WISE DUE BREAKDOWN */}
       {viewMode === 'seller_wise' && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {sellerWiseDue.map(({ seller, customerCount, totalDue, customers: sCusts }) => (
+          {sellerWiseDue.map(({ seller, customerCount, totalDue, totalAdvance, customers: sCusts }) => (
             <div key={seller.id} className={`${activeTheme.cardClass} p-5 rounded-2xl space-y-4`}>
               <div className="flex items-center justify-between border-b border-slate-700 pb-3">
                 <div>
@@ -721,6 +849,11 @@ export const DueManagement: React.FC<DueManagementProps> = ({
                 <div className="text-right">
                   <div className="text-xs text-slate-400">আন্ডারে মোট বাকী</div>
                   <div className="text-lg font-black text-rose-400">{formatTaka(totalDue)}</div>
+                  {totalAdvance > 0 && (
+                    <div className="text-[11px] font-bold text-emerald-400 mt-0.5">
+                      এডভান্স: +{formatTaka(totalAdvance)}
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -729,20 +862,28 @@ export const DueManagement: React.FC<DueManagementProps> = ({
                   কাস্টমার তালিকা ({toBnDigit(customerCount)} জন):
                 </div>
                 {sCusts.length > 0 ? (
-                  sCusts.map((c) => (
-                    <div
-                      key={c.id}
-                      className="p-2.5 bg-slate-950/80 rounded-xl border border-slate-800 flex items-center justify-between text-xs"
-                    >
-                      <div>
-                        <div className="font-bold text-slate-200">{c.shopName}</div>
-                        <div className="text-[10px] text-slate-400">{c.address}</div>
+                  sCusts.map((c) => {
+                    const isAdv = c.currentDue < 0;
+                    return (
+                      <div
+                        key={c.id}
+                        className="p-2.5 bg-slate-950/80 rounded-xl border border-slate-800 flex items-center justify-between text-xs"
+                      >
+                        <div>
+                          <div className="font-bold text-slate-200">{c.shopName}</div>
+                          <div className="text-[10px] text-slate-400">{c.address}</div>
+                        </div>
+                        <div className="text-right">
+                          <div className={`font-bold ${isAdv ? 'text-emerald-400' : 'text-rose-400'}`}>
+                            {isAdv ? `+${formatTaka(Math.abs(c.currentDue))}` : formatTaka(c.currentDue)}
+                          </div>
+                          <div className="text-[9px] text-slate-400">
+                            {isAdv ? 'এডভান্স' : 'বাকী'}
+                          </div>
+                        </div>
                       </div>
-                      <div className="text-right font-bold text-rose-400">
-                        {formatTaka(c.currentDue)}
-                      </div>
-                    </div>
-                  ))
+                    );
+                  })
                 ) : (
                   <div className="p-3 bg-slate-950/40 rounded-xl border border-dashed border-slate-800/80 text-center text-xs text-slate-500 py-3">
                     এই সেলারের আন্ডারে বর্তমানে কোনো কাস্টমারের বাকী নেই (০ ৳ বাকী)
@@ -804,8 +945,13 @@ export const DueManagement: React.FC<DueManagementProps> = ({
                         </div>
                       ) : null}
                     </td>
-                    <td className="py-3 px-3 text-right font-bold text-rose-400">
-                      {formatTaka(log.remainingDue)}
+                    <td className="py-3 px-3 text-right font-bold">
+                      <span className={log.remainingDue < 0 ? 'text-emerald-400' : 'text-rose-400'}>
+                        {log.remainingDue < 0 ? `+${formatTaka(Math.abs(log.remainingDue))}` : formatTaka(log.remainingDue)}
+                      </span>
+                      {log.remainingDue < 0 && (
+                        <div className="text-[9px] text-emerald-500/80 font-normal">এডভান্স</div>
+                      )}
                     </td>
                     <td className="py-3 pl-3 text-slate-300">{log.paymentMethod}</td>
                   </tr>
@@ -841,15 +987,23 @@ export const DueManagement: React.FC<DueManagementProps> = ({
                 </div>
 
                 <div className="mt-2 pt-2.5 border-t border-slate-900 flex items-center justify-between">
-                  <span className="text-xs sm:text-sm font-bold text-slate-300">বর্তমান মোট বাকী:</span>
-                  <span className="text-rose-400 font-black text-xl sm:text-2xl font-mono">
-                    {formatTaka(selectedCustForPayment.currentDue)}
+                  <span className="text-xs sm:text-sm font-bold text-slate-300">
+                    {selectedCustForPayment.currentDue < 0 ? 'বর্তমান এডভান্স ক্রেডিট:' : 'বর্তমান মোট বাকী:'}
+                  </span>
+                  <span className={`font-black text-xl sm:text-2xl font-mono ${
+                    selectedCustForPayment.currentDue < 0 ? 'text-emerald-400' : 'text-rose-400'
+                  }`}>
+                    {selectedCustForPayment.currentDue < 0
+                      ? `+${formatTaka(Math.abs(selectedCustForPayment.currentDue))}`
+                      : formatTaka(selectedCustForPayment.currentDue)}
                   </span>
                 </div>
               </div>
 
               <div>
-                <label className="block text-slate-300 font-semibold mb-1 text-xs">আদায়কৃত ক্যাশ (৳) *</label>
+                <label className="block text-slate-300 font-semibold mb-1 text-xs">
+                  {selectedCustForPayment.currentDue < 0 ? 'অতিরিক্ত জমা / ক্যাশ টাকা (৳) *' : 'আদায়কৃত ক্যাশ (৳) *'}
+                </label>
                 <div className="relative">
                   <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-emerald-400 font-bold text-base">৳</span>
                   <input
@@ -867,23 +1021,33 @@ export const DueManagement: React.FC<DueManagementProps> = ({
               {/* Calculated Summary Preview Card */}
               {(() => {
                 const paidVal = Number(paymentAmount) || 0;
-                const remDue = Math.max(0, selectedCustForPayment.currentDue - paidVal);
+                const remDue = selectedCustForPayment.currentDue - paidVal;
                 return (
                   <div className="bg-slate-950/90 p-3 rounded-xl border border-slate-800 space-y-1.5 text-[11px]">
                     <div className="flex justify-between text-slate-400">
-                      <span>পূর্বের মোট বাকী:</span>
-                      <span className="font-bold text-slate-200">{formatTaka(selectedCustForPayment.currentDue)}</span>
+                      <span>{selectedCustForPayment.currentDue < 0 ? 'পূর্বের এডভান্স জমা:' : 'পূর্বের মোট বাকী:'}</span>
+                      <span className={`font-bold ${selectedCustForPayment.currentDue < 0 ? 'text-emerald-400' : 'text-slate-200'}`}>
+                        {selectedCustForPayment.currentDue < 0
+                          ? `+${formatTaka(Math.abs(selectedCustForPayment.currentDue))}`
+                          : formatTaka(selectedCustForPayment.currentDue)}
+                      </span>
                     </div>
                     <div className="flex justify-between text-emerald-400">
-                      <span>নগদ আদায়:</span>
+                      <span>নগদ জমা / আদায়:</span>
                       <span className="font-bold">+{formatTaka(paidVal)}</span>
                     </div>
                     <div className="flex justify-between items-center pt-1.5 border-t border-slate-800 text-xs font-bold">
-                      <span className="text-slate-300">হিসাবের পর অবশিষ্ট বাকী:</span>
+                      <span className="text-slate-300">
+                        {remDue < 0 ? 'হিসাবের পর নতুন এডভান্স জমা:' : 'হিসাবের পর অবশিষ্ট বাকী:'}
+                      </span>
                       <span className={`text-sm font-black ${
-                        remDue === 0 ? 'text-emerald-400' : 'text-rose-400'
+                        remDue < 0
+                          ? 'text-emerald-400'
+                          : remDue === 0
+                          ? 'text-slate-300'
+                          : 'text-rose-400'
                       }`}>
-                        {formatTaka(remDue)}
+                        {remDue < 0 ? `+${formatTaka(Math.abs(remDue))}` : formatTaka(remDue)}
                       </span>
                     </div>
                   </div>

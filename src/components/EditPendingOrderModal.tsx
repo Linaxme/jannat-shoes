@@ -99,7 +99,7 @@ export const EditPendingOrderModal: React.FC<EditPendingOrderModalProps> = ({
     const totalPairs = newUnitType === 'cartons' ? qtyNum * pairsPerCarton : qtyNum;
     const netRate = Math.max(0, priceNum - commNum);
     const totalCommission = totalPairs * commNum;
-    const totalAmount = totalPairs * netRate;
+    const totalAmount = totalPairs * priceNum;
 
     // Check if already in items with same unit type
     const existingIndex = items.findIndex(
@@ -121,7 +121,7 @@ export const EditPendingOrderModal: React.FC<EditPendingOrderModalProps> = ({
         commissionPerPair: effectiveComm,
         netUnitPrice: effectiveNet,
         totalCommission: combinedPairs * effectiveComm,
-        totalAmount: combinedPairs * effectiveNet,
+        totalAmount: combinedPairs * priceNum,
       };
       setItems(updated);
     } else {
@@ -162,7 +162,7 @@ export const EditPendingOrderModal: React.FC<EditPendingOrderModalProps> = ({
     const comm = item.commissionPerPair || 0;
     const netUnitPrice = Math.max(0, item.unitSellPrice - comm);
     const totalCommission = totalPairs * comm;
-    const totalAmount = totalPairs * netUnitPrice;
+    const totalAmount = totalPairs * item.unitSellPrice;
     updated[index] = {
       ...item,
       quantityInput: qty,
@@ -182,7 +182,7 @@ export const EditPendingOrderModal: React.FC<EditPendingOrderModalProps> = ({
     const comm = item.commissionPerPair || 0;
     const netUnitPrice = Math.max(0, price - comm);
     const totalCommission = item.totalPairs * comm;
-    const totalAmount = item.totalPairs * netUnitPrice;
+    const totalAmount = item.totalPairs * price;
     updated[index] = {
       ...item,
       unitSellPrice: price,
@@ -200,7 +200,7 @@ export const EditPendingOrderModal: React.FC<EditPendingOrderModalProps> = ({
     const item = updated[index];
     const netUnitPrice = Math.max(0, item.unitSellPrice - comm);
     const totalCommission = item.totalPairs * comm;
-    const totalAmount = item.totalPairs * netUnitPrice;
+    const totalAmount = item.totalPairs * item.unitSellPrice;
     updated[index] = {
       ...item,
       commissionPerPair: comm,
@@ -553,8 +553,11 @@ export const EditPendingOrderModal: React.FC<EditPendingOrderModalProps> = ({
                       </div>
 
                       <div className="text-right min-w-[70px]">
-                        <span className="text-[9px] text-slate-400 block">নিট মূল্য</span>
-                        <span className="font-extrabold text-amber-300">{formatTaka(item.totalAmount)}</span>
+                        <span className="text-[9px] text-slate-400 block">মোট মূল্য</span>
+                        <span className="font-extrabold text-amber-300">{formatTaka(item.totalPairs * item.unitSellPrice)}</span>
+                        {item.commissionPerPair && item.commissionPerPair > 0 ? (
+                          <span className="text-[9px] text-amber-400/80 block">(-৳{item.totalPairs * item.commissionPerPair} কমিশন)</span>
+                        ) : null}
                       </div>
 
                       <button

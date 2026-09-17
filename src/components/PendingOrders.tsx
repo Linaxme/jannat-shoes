@@ -555,7 +555,7 @@ export const PendingOrders: React.FC<PendingOrdersProps> = ({
                                       const prodName = item.productName || (item as any).name || '';
                                       const pairs = item.totalPairs ?? (item as any).pairQty ?? (item as any).quantityInput ?? 0;
                                       const price = item.unitSellPrice ?? (item as any).rate ?? 0;
-                                      const itemTotal = item.totalAmount ?? (item as any).itemTotal ?? (pairs * price);
+                                      const itemTotal = pairs * price;
 
                                       return (
                                         <div key={idx} className="flex justify-between items-center py-1 border-b border-slate-800/80 last:border-0">
@@ -567,6 +567,9 @@ export const PendingOrders: React.FC<PendingOrdersProps> = ({
                                             <div className="text-slate-100 font-bold">{toBnDigit(pairs)} জোড়া</div>
                                             <div className="text-slate-400 text-[11px]">
                                               @{formatTaka(price)} = <span className="text-amber-300 font-bold">{formatTaka(itemTotal)}</span>
+                                              {item.commissionPerPair && item.commissionPerPair > 0 ? (
+                                                <span className="text-slate-400 text-[10px] ml-1">(-৳{formatTaka(pairs * item.commissionPerPair)} কমিশন)</span>
+                                              ) : null}
                                             </div>
                                           </div>
                                         </div>

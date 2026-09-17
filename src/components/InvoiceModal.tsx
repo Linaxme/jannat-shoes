@@ -146,8 +146,11 @@ export const InvoiceModal: React.FC<InvoiceModalProps> = ({ order, onClose }) =>
 
     let itemsText = '';
     order.items.forEach((item, idx) => {
-      const commText = item.commissionPerPair && item.commissionPerPair > 0 ? ` (-${item.commissionPerPair}৳ কমিশন)` : '';
-      itemsText += `${idx + 1}. আর্টিকল: ${item.articleCode} | সাইজ: ${item.sizeRange} | ${toBnDigit(item.totalPairs)} জোড়া | দর: ${item.unitSellPrice}৳${commText} | মোট: ${item.totalAmount}৳\n`;
+      const commText = item.commissionPerPair && item.commissionPerPair > 0 ? ` (কমিশন: ৳${item.commissionPerPair}/জোড়া)` : '';
+      const pairs = item.totalPairs ?? (item as any).pairQty ?? (item as any).quantityInput ?? 0;
+      const price = item.unitSellPrice ?? (item as any).rate ?? (item as any).price ?? 0;
+      const grossLine = pairs * price;
+      itemsText += `${idx + 1}. আর্টিকল: ${item.articleCode} | সাইজ: ${item.sizeRange} | ${toBnDigit(pairs)} জোড়া | দর: ${formatTaka(price)}${commText} | মোট: ${formatTaka(grossLine)}\n`;
     });
 
     const text = `*মেসার্স জান্নাত সুজ - ক্যাশ মেমো*\n` +
@@ -168,8 +171,8 @@ export const InvoiceModal: React.FC<InvoiceModalProps> = ({ order, onClose }) =>
       `সর্বমোট নিট বিল: *${formatTaka(order.grandTotal)}*\n` +
       `নগদ জমা: *${formatTaka(order.paidAmount)}*\n` +
       `চালানের বাকী: *${formatTaka(order.dueAmount)}*\n` +
-      `পূর্বের বাকী: *${formatTaka(order.previousDue)}*\n` +
-      `সর্বমোট বকেয়া (Due): *${formatTaka(order.totalNetDue)}*\n` +
+      (order.previousDue < 0 ? `পূর্বের এডভান্স জমা: *+${formatTaka(Math.abs(order.previousDue))}*\n` : `পূর্বের বাকী: *${formatTaka(order.previousDue)}*\n`) +
+      (order.totalNetDue < 0 ? `চূড়ান্ত এডভান্স স্থিতি: *+${formatTaka(Math.abs(order.totalNetDue))}*\n` : `সর্বমোট বকেয়া (Due): *${formatTaka(order.totalNetDue)}*\n`) +
       `--------------------------------\n` +
       `_ধন্যবাদ, আবার আসবেন!_\n` +
       `*মেসার্স জান্নাত সুজ*\n` +
@@ -344,7 +347,8 @@ export const InvoiceModal: React.FC<InvoiceModalProps> = ({ order, onClose }) =>
                         const sizes = item.sizeRange || (item as any).size || (item as any).color || '-';
                         const pairs = item.totalPairs ?? (item as any).pairQty ?? (item as any).quantityInput ?? 0;
                         const price = item.unitSellPrice ?? (item as any).rate ?? (item as any).price ?? 0;
-                        const itemTotal = item.totalAmount ?? (item as any).itemTotal ?? (pairs * price);
+                        // মোট (৳) is always gross total (pairs * price), e.g. 12 * 105 = 1260
+                        const itemGrossTotal = pairs * price;
                         const qtyInput = item.quantityInput || pairs;
                         const unitLabel = item.unitType === 'cartons' ? 'ডজন' : 'জোড়া';
 
@@ -367,7 +371,7 @@ export const InvoiceModal: React.FC<InvoiceModalProps> = ({ order, onClose }) =>
                                 {item.commissionPerPair && item.commissionPerPair > 0 ? `৳${item.commissionPerPair}` : '-'}
                               </td>
                             )}
-                            <td className="p-1 border border-slate-900 text-right font-mono font-bold">{formatTaka(itemTotal)}</td>
+                            <td className="p-1 border border-slate-900 text-right font-mono font-bold">{formatTaka(itemGrossTotal)}</td>
                           </tr>
                         );
                       })}
@@ -431,12 +435,18 @@ export const InvoiceModal: React.FC<InvoiceModalProps> = ({ order, onClose }) =>
                   </tr>
                 )}
                 <tr className="text-slate-600">
-                  <td className="py-0.5">পূর্বের মার্কেট বাকী:</td>
-                  <td className="py-0.5 text-right font-semibold">{formatTaka(order.previousDue)}</td>
+                  <td className="py-0.5">
+                    {order.previousDue < 0 ? 'পূর্বের অ্যাডভান্স জমা:' : 'পূর্বের মার্কেট বাকী:'}
+                  </td>
+                  <td className={`py-0.5 text-right font-semibold ${order.previousDue < 0 ? 'text-emerald-700 font-bold' : ''}`}>
+                    {order.previousDue < 0 ? `+${formatTaka(Math.abs(order.previousDue))}` : formatTaka(order.previousDue)}
+                  </td>
                 </tr>
                 <tr className="bg-slate-900 text-white font-bold border-t border-slate-900">
-                  <td className="p-1">{order.totalNetDue < 0 ? 'বর্তমান অ্যাডভান্স:' : 'বর্তমান মোট বাকী:'}</td>
-                  <td className={`p-1 text-right font-black ${order.totalNetDue < 0 ? 'text-emerald-400' : 'text-amber-300'}`}>{formatTaka(Math.abs(order.totalNetDue))}</td>
+                  <td className="p-1">{order.totalNetDue < 0 ? 'বর্তমান অ্যাডভান্স স্থিতি:' : 'বর্তমান মোট বাকী:'}</td>
+                  <td className={`p-1 text-right font-black ${order.totalNetDue < 0 ? 'text-emerald-400' : 'text-amber-300'}`}>
+                    {order.totalNetDue < 0 ? `+${formatTaka(Math.abs(order.totalNetDue))}` : formatTaka(order.totalNetDue)}
+                  </td>
                 </tr>
               </tbody>
             </table>

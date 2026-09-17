@@ -802,7 +802,7 @@ export const SalesHistory: React.FC<SalesHistoryProps> = ({
                                 const sizes = item.sizeRange || (item as any).size || (item as any).color || '';
                                 const pairs = item.totalPairs ?? (item as any).pairQty ?? (item as any).quantityInput ?? 0;
                                 const price = item.unitSellPrice ?? (item as any).rate ?? 0;
-                                const itemTotal = item.totalAmount ?? (item as any).itemTotal ?? (pairs * price);
+                                const itemTotal = pairs * price;
                                 const qtyInput = item.quantityInput || pairs;
                                 const unitLabel = item.unitType === 'cartons' ? 'ডজন' : 'জোড়া';
 
@@ -820,6 +820,9 @@ export const SalesHistory: React.FC<SalesHistoryProps> = ({
                                       </div>
                                       <div className="text-slate-400 text-[10px]">
                                         @{formatTaka(price)} = <span className="text-emerald-400 font-bold">{formatTaka(itemTotal)}</span>
+                                        {item.commissionPerPair && item.commissionPerPair > 0 ? (
+                                          <span className="text-slate-400 text-[10px] ml-1">(-৳{formatTaka(pairs * item.commissionPerPair)} কমিশন)</span>
+                                        ) : null}
                                       </div>
                                     </div>
                                   </div>
@@ -1035,7 +1038,7 @@ export const SalesHistory: React.FC<SalesHistoryProps> = ({
                                             const sizes = item.sizeRange || (item as any).size || (item as any).color || '-';
                                             const pairs = item.totalPairs ?? (item as any).pairQty ?? (item as any).quantityInput ?? 0;
                                             const price = item.unitSellPrice ?? (item as any).rate ?? (item as any).price ?? 0;
-                                            const itemTotal = item.totalAmount ?? (item as any).itemTotal ?? (pairs * price);
+                                            const itemTotal = pairs * price;
                                             const qtyInput = item.quantityInput || pairs;
                                             const unitLabel = item.unitType === 'cartons' ? 'ডজন' : 'জোড়া';
 
