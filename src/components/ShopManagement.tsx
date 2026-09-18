@@ -20,6 +20,7 @@ import {
   ChevronRight,
   TrendingUp,
   Coins,
+  Trash2,
 } from 'lucide-react';
 import { Customer, UserAccount, SalesRep, Order, UITheme, SystemConfig } from '../types';
 import { formatTaka, toBnDigit } from '../utils/formatters';
@@ -36,6 +37,7 @@ interface ShopManagementProps {
   systemConfig?: SystemConfig;
   onAddShop: (customer: Customer, userAccount: UserAccount) => Promise<void> | void;
   onUpdateShop?: (customer: Customer, userAccount?: UserAccount) => Promise<void> | void;
+  onDeleteShop?: (userId: string, customerId?: string) => Promise<void> | void;
   onNavigateToPos?: (customerId: string) => void;
 }
 
@@ -64,6 +66,7 @@ export const ShopManagement: React.FC<ShopManagementProps> = ({
   orders,
   onAddShop,
   onUpdateShop,
+  onDeleteShop,
   onNavigateToPos,
 }) => {
   const { t } = useLanguage();
@@ -76,6 +79,7 @@ export const ShopManagement: React.FC<ShopManagementProps> = ({
   // Modals
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingShop, setEditingShop] = useState<UnifiedShopItem | null>(null);
+  const [shopToTrash, setShopToTrash] = useState<UnifiedShopItem | null>(null);
   const [selectedShopDetail, setSelectedShopDetail] = useState<UnifiedShopItem | null>(null);
   const [copiedPhoneId, setCopiedPhoneId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -817,6 +821,16 @@ export const ShopManagement: React.FC<ShopManagementProps> = ({
                     >
                       <Edit2 className="w-3.5 h-3.5" />
                     </button>
+
+                    {onDeleteShop && (
+                      <button
+                        onClick={() => setShopToTrash(shop)}
+                        className="p-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-rose-950/40 transition cursor-pointer"
+                        title="দোকান ট্র্যাশে পাঠান"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    )}
                   </div>
 
                   {/* New Memo / POS Button */}
@@ -1219,6 +1233,71 @@ export const ShopManagement: React.FC<ShopManagementProps> = ({
                   বন্ধ করুন
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL: Move Shop to Trash Confirmation */}
+      {shopToTrash && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fadeIn">
+          <div className="bg-slate-900 border border-slate-700 p-5 rounded-2xl max-w-sm w-full space-y-4 shadow-2xl">
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 bg-rose-500/10 text-rose-400 border border-rose-500/20 rounded-xl">
+                <Trash2 className="w-5 h-5" />
+              </div>
+              <div>
+                <h4 className="text-sm font-bold text-white">দোকান ট্র্যাশে পাঠানো</h4>
+                <p className="text-xs text-slate-400">রিসাইকেল বিন থেকে যেকোনো সময় রিস্টোর করা যাবে</p>
+              </div>
+            </div>
+
+            <div className="bg-slate-950 border border-slate-800 p-3 rounded-xl space-y-1.5 text-xs">
+              <div className="flex justify-between items-center">
+                <span className="text-slate-400">দোকানের নাম:</span>
+                <span className="font-bold text-amber-300">{shopToTrash.shopName || shopToTrash.name}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-slate-400">প্রোপাইটার:</span>
+                <span className="font-semibold text-white">{shopToTrash.name}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-slate-400">মোবাইল:</span>
+                <span className="font-mono text-slate-300">{shopToTrash.phone || '-'}</span>
+              </div>
+              <div className="flex justify-between items-center border-t border-slate-800 pt-1.5">
+                <span className="text-slate-400">বর্তমান বকেয়া:</span>
+                <span className="font-bold text-rose-400">{formatTaka(shopToTrash.currentDue)}</span>
+              </div>
+            </div>
+
+            <div className="text-xs text-slate-300 leading-relaxed bg-rose-950/30 border border-rose-500/20 p-2.5 rounded-xl text-rose-200">
+              ⚠️ আপনি কি নিশ্চিতভাবে <strong>{shopToTrash.shopName || shopToTrash.name}</strong> দোকানটি ট্র্যাশে পাঠাতে চান? এটি সরাসরি ডাটাবেজ থেকে মুছে যাবে না, ট্র্যাশ থেকে যেকোনো সময় সম্পূর্ণ রিস্টোর করা যাবে।
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-1">
+              <button
+                type="button"
+                onClick={() => setShopToTrash(null)}
+                className="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold transition cursor-pointer"
+              >
+                বাতিল
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  if (onDeleteShop && shopToTrash) {
+                    const uId = shopToTrash.linkedUserAccount?.id || shopToTrash.id;
+                    const cId = shopToTrash.linkedCustomer?.id || shopToTrash.id;
+                    onDeleteShop(uId, cId);
+                    setShopToTrash(null);
+                  }
+                }}
+                className="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-lg shadow-rose-600/30 cursor-pointer"
+              >
+                <Trash2 className="w-4 h-4" />
+                <span>ট্র্যাশে পাঠান</span>
+              </button>
             </div>
           </div>
         </div>

@@ -46,7 +46,7 @@ export const PendingOrders: React.FC<PendingOrdersProps> = ({
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [editingOrder, setEditingOrder] = useState<Order | null>(null);
-  const [confirmingDeleteId, setConfirmingDeleteId] = useState<string | null>(null);
+  const [orderToTrash, setOrderToTrash] = useState<Order | null>(null);
   const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'card' | 'table'>(
     typeof window !== 'undefined' && window.innerWidth < 768 ? 'card' : 'table'
@@ -333,38 +333,15 @@ export const PendingOrders: React.FC<PendingOrdersProps> = ({
                         </button>
 
                         {onDeleteOrder && (
-                          confirmingDeleteId === ord.id ? (
-                            <div className="flex items-center gap-1 bg-rose-950/80 p-1 rounded-xl border border-rose-500/50">
-                              <span className="text-[10px] font-bold text-rose-300 px-1">রিমুভ?</span>
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  onDeleteOrder(ord.id);
-                                  setConfirmingDeleteId(null);
-                                }}
-                                className="px-2 py-1 bg-rose-600 hover:bg-rose-500 text-white rounded-lg text-xs font-black shadow transition cursor-pointer"
-                              >
-                                হ্যাঁ
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => setConfirmingDeleteId(null)}
-                                className="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs font-bold transition cursor-pointer"
-                              >
-                                না
-                              </button>
-                            </div>
-                          ) : (
-                            <button
-                              type="button"
-                              onClick={() => setConfirmingDeleteId(ord.id)}
-                              className="px-2.5 py-1.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 rounded-xl text-xs font-bold flex items-center gap-1 transition-colors cursor-pointer"
-                              title="বাতিল বা ফেক অর্ডার রিমুভ করুন"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                              <span>বাতিল</span>
-                            </button>
-                          )
+                          <button
+                            type="button"
+                            onClick={() => setOrderToTrash(ord)}
+                            className="px-2.5 py-1.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 rounded-xl text-xs font-bold flex items-center gap-1 transition-colors cursor-pointer"
+                            title="মেমো ট্র্যাশে পাঠান"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                            <span>বাতিল/ট্র্যাশ</span>
+                          </button>
                         )}
                       </div>
                     </div>
@@ -508,37 +485,15 @@ export const PendingOrders: React.FC<PendingOrdersProps> = ({
                                   </button>
 
                                   {onDeleteOrder && (
-                                    confirmingDeleteId === ord.id ? (
-                                      <div className="flex items-center gap-1 bg-rose-950/80 p-1 rounded-xl border border-rose-500/50">
-                                        <span className="text-[10px] font-bold text-rose-300 px-1">রিমুভ?</span>
-                                        <button
-                                          type="button"
-                                          onClick={() => {
-                                            onDeleteOrder(ord.id);
-                                            setConfirmingDeleteId(null);
-                                          }}
-                                          className="px-2 py-1 bg-rose-600 hover:bg-rose-500 text-white rounded-lg text-xs font-black shadow transition cursor-pointer"
-                                        >
-                                          হ্যাঁ
-                                        </button>
-                                        <button
-                                          type="button"
-                                          onClick={() => setConfirmingDeleteId(null)}
-                                          className="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs font-bold transition cursor-pointer"
-                                        >
-                                          না
-                                        </button>
-                                      </div>
-                                    ) : (
-                                      <button
-                                        type="button"
-                                        onClick={() => setConfirmingDeleteId(ord.id)}
-                                        className="px-2.5 py-1.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 rounded-xl text-xs font-bold flex items-center gap-1 transition cursor-pointer"
-                                      >
-                                        <Trash2 className="w-3.5 h-3.5" />
-                                        <span>রিমুভ</span>
-                                      </button>
-                                    )
+                                    <button
+                                      type="button"
+                                      onClick={() => setOrderToTrash(ord)}
+                                      className="px-2.5 py-1.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 rounded-xl text-xs font-bold flex items-center gap-1 transition cursor-pointer"
+                                      title="মেমো ট্র্যাশে পাঠান"
+                                    >
+                                      <Trash2 className="w-3.5 h-3.5" />
+                                      <span>ট্র্যাশ</span>
+                                    </button>
                                   )}
                                 </div>
                               </div>
@@ -602,6 +557,65 @@ export const PendingOrders: React.FC<PendingOrdersProps> = ({
             setEditingOrder(null);
           }}
         />
+      )}
+
+      {/* Trash / Delete Confirmation Modal Popup */}
+      {orderToTrash && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fade-in">
+          <div className="bg-slate-900 border border-slate-700 p-5 rounded-2xl max-w-sm w-full space-y-4 shadow-2xl">
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 bg-rose-500/10 text-rose-400 border border-rose-500/20 rounded-xl">
+                <Trash2 className="w-5 h-5" />
+              </div>
+              <div>
+                <h4 className="text-sm font-bold text-white">পেন্ডিং মেমো ট্র্যাশে পাঠানো</h4>
+                <p className="text-xs text-slate-400">ট্র্যাশ থেকে যেকোনো সময় রিস্টোর করা যাবে</p>
+              </div>
+            </div>
+
+            <div className="bg-slate-950 border border-slate-800 p-3.5 rounded-xl space-y-1.5 text-xs">
+              <div className="flex justify-between items-center">
+                <span className="text-slate-400">মেমো নং:</span>
+                <span className="font-mono font-bold text-amber-300">#{orderToTrash.memoNo}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-slate-400">দোকান / কাস্টমার:</span>
+                <span className="font-bold text-white">{orderToTrash.shopName || orderToTrash.customerName}</span>
+              </div>
+              <div className="flex justify-between items-center border-t border-slate-800 pt-1.5 font-bold">
+                <span className="text-slate-300">মোট মূল্য:</span>
+                <span className="text-emerald-400 font-mono">৳{orderToTrash.grandTotal}</span>
+              </div>
+            </div>
+
+            <p className="text-xs text-slate-300 leading-relaxed bg-rose-950/30 border border-rose-500/20 p-2.5 rounded-xl text-rose-200">
+              ⚠️ আপনি কি নিশ্চিতভাবে মেমো <strong>#{orderToTrash.memoNo}</strong> ট্র্যাশে পাঠাতে চান? এটি সরাসরি মুছে যাবে না, রিসাইকেল বিন এ সংরক্ষিত থাকবে।
+            </p>
+
+            <div className="flex items-center justify-end gap-2 pt-1">
+              <button
+                type="button"
+                onClick={() => setOrderToTrash(null)}
+                className="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold transition cursor-pointer"
+              >
+                বাতিল
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  if (onDeleteOrder && orderToTrash) {
+                    onDeleteOrder(orderToTrash.id);
+                    setOrderToTrash(null);
+                  }
+                }}
+                className="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-lg shadow-rose-600/30 cursor-pointer"
+              >
+                <Trash2 className="w-4 h-4" />
+                <span>ট্র্যাশে পাঠান</span>
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

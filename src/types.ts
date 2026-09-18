@@ -194,3 +194,17 @@ export interface SystemConfig {
   apkDownloadUrl?: string;
 }
 
+export type TrashItemType = 'order' | 'customer' | 'user' | 'product';
+
+export interface TrashItem {
+  id: string; // unique ID in trash collection
+  itemType: TrashItemType;
+  itemId: string; // original entity ID
+  title: string;
+  subtitle?: string;
+  details?: string;
+  trashedAt: string; // ISO string
+  trashedBy?: string; // name or role
+  originalData: any; // complete snapshot to allow exact restoration
+}
+

@@ -1171,8 +1171,8 @@ export const SalesHistory: React.FC<SalesHistoryProps> = ({
                 <AlertTriangle className="w-6 h-6" />
               </div>
               <div>
-                <h3 className="text-base sm:text-lg font-bold text-white">ইনভয়েস/মেমো ডিলেট নিশ্চিতকরণ</h3>
-                <p className="text-xs text-rose-400 font-semibold">শুধুমাত্র এডমিন অধিকারভুক্ত অ্যাকশন</p>
+                <h3 className="text-base sm:text-lg font-bold text-white">ইনভয়েস/মেমো ট্র্যাশে পাঠানো</h3>
+                <p className="text-xs text-rose-400 font-semibold">ট্র্যাশ থেকে যেকোনো সময় রিস্টোর করা যাবে</p>
               </div>
             </div>
 
@@ -1200,7 +1200,7 @@ export const SalesHistory: React.FC<SalesHistoryProps> = ({
             </div>
 
             <p className="text-xs text-slate-300 leading-relaxed bg-rose-950/30 border border-rose-500/30 p-3 rounded-xl text-rose-200">
-              ⚠️ আপনি কি নিশ্চিতভাবে মেমো <strong>#{orderToDelete.memoNo}</strong> স্থায়ীভাবে ডিলিট করতে চান? ডিলিট করলে ডেলিভারি হয়ে থাকলে ইনভেন্টরি স্টক ও কাস্টমার বকেয়া স্বয়ংক্রিয়ভাবে সমন্বয় করা হবে।
+              ⚠️ আপনি কি নিশ্চিতভাবে মেমো <strong>#{orderToDelete.memoNo}</strong> ট্র্যাশে পাঠাতে চান? এটি ভুলবশত ডিলিট হলেও ট্র্যাশ থেকে সহজে রিস্টোর করা যাবে।
             </p>
 
             <div className="flex items-center justify-end gap-3 pt-2">
@@ -1222,7 +1222,7 @@ export const SalesHistory: React.FC<SalesHistoryProps> = ({
                 className="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white font-bold rounded-xl text-xs flex items-center gap-1.5 shadow-lg shadow-rose-900/30 transition cursor-pointer"
               >
                 <Trash2 className="w-4 h-4" />
-                হ্যাঁ, ডিলিট করুন
+                ট্র্যাশে পাঠান
               </button>
             </div>
           </div>

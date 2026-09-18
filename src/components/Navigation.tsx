@@ -10,7 +10,7 @@ import {
 } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 
-export type NavTab = 'dashboard' | 'pos' | 'stock' | 'due' | 'sales' | 'pending' | 'reports' | 'users' | 'features' | 'sms' | 'seller-tracking' | 'shops';
+export type NavTab = 'dashboard' | 'pos' | 'stock' | 'due' | 'sales' | 'pending' | 'reports' | 'users' | 'features' | 'sms' | 'seller-tracking' | 'shops' | 'trash';
 
 interface NavigationProps {
   activeTab: NavTab;

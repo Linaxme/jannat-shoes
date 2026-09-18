@@ -25,6 +25,7 @@ import {
   Smartphone,
   Download,
   BarChart3,
+  Trash2,
 } from 'lucide-react';
 import { UserAccount, UserRole, SystemConfig } from '../types';
 import { NavTab } from './Navigation';
@@ -41,6 +42,7 @@ interface HeaderProps {
   dueAlertCount?: number;
   lowStockCount?: number;
   pendingOrdersCount?: number;
+  trashCount?: number;
   currentUserRole?: UserRole;
   systemConfig?: SystemConfig;
   onInstallPWA?: () => void;
@@ -57,6 +59,7 @@ export const Header: React.FC<HeaderProps> = ({
   dueAlertCount = 0,
   lowStockCount = 0,
   pendingOrdersCount = 0,
+  trashCount = 0,
   currentUserRole = 'admin',
   systemConfig,
   onInstallPWA,
@@ -111,6 +114,7 @@ export const Header: React.FC<HeaderProps> = ({
     { id: 'features' as NavTab, label: 'সেটিং', icon: Sliders, roles: ['super_admin', 'admin'] },
     ...(systemConfig?.enableSMS !== false ? [{ id: 'sms' as NavTab, label: t('sms'), icon: MessageSquare, roles: ['super_admin', 'admin'] }] : []),
     { id: 'shops' as NavTab, label: 'দোকান', icon: Store, roles: ['super_admin', 'admin', 'seller'] },
+    { id: 'trash' as NavTab, label: 'রিসাইকেল বিন', icon: Trash2, badgeCount: trashCount, badgeColor: 'bg-rose-500', roles: ['super_admin', 'admin', ...(systemConfig?.allowSellerToManageUsers ? ['seller'] : [])] },
   ];
 
   const visibleDrawerTabs = allTabs.filter((t) => t.roles.includes(currentUserRole));

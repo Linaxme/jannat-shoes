@@ -7,6 +7,7 @@ import {
   DuePaymentLog,
   UserAccount,
   SystemConfig,
+  TrashItem,
 } from './types';
 import {
   INITIAL_PRODUCTS,
@@ -40,6 +41,7 @@ const SellerTracking = lazy(() => import('./components/SellerTracking').then(m =
 const SMSPanel = lazy(() => import('./components/SMSPanel').then(m => ({ default: m.SMSPanel })));
 const Reports = lazy(() => import('./components/Reports').then(m => ({ default: m.Reports })));
 const ShopManagement = lazy(() => import('./components/ShopManagement').then(m => ({ default: m.ShopManagement })));
+const TrashManagement = lazy(() => import('./components/TrashManagement').then(m => ({ default: m.TrashManagement })));
 
 import { fetchFirestoreData, seedFirestoreData, saveDocumentToFirestore, deleteDocumentFromFirestore, clearAllDatabaseData } from './lib/firestoreService';
 import { generateSMSMessage, sendAutoSMS, SMSType } from './utils/smsService';
@@ -81,6 +83,7 @@ export default function App() {
   const [paymentLogs, setPaymentLogs] = useState<DuePaymentLog[]>([]);
   const [userAccounts, setUserAccounts] = useState<UserAccount[]>(INITIAL_USER_ACCOUNTS);
   const [systemConfig, setSystemConfig] = useState<SystemConfig>(DEFAULT_SYSTEM_CONFIG);
+  const [trashItems, setTrashItems] = useState<TrashItem[]>([]);
 
   // PWA Install Prompt State
   const [deferredInstallPrompt, setDeferredInstallPrompt] = useState<any>(null);
@@ -141,6 +144,7 @@ export default function App() {
       setSellers(res.sellers || []);
       setOrders(sortOrdersByRecency(res.orders || []));
       setPaymentLogs(res.paymentLogs || []);
+      setTrashItems(res.trashItems || []);
 
       if (res.userAccounts && res.userAccounts.length > 0) {
         let hasAdmin = res.userAccounts.some((u) => u.role === 'admin');
@@ -409,14 +413,35 @@ export default function App() {
     });
 
     const custIdsSet = new Set(customersToDelete.map((c) => c.id));
+    const displayName = target?.shopName || targetCustomer?.shopName || target?.name || targetCustomer?.name || 'দোকান/একাউন্ট';
 
-    // 3. Delete from userAccounts state and Firestore
+    // 3. Create snapshot and save to trash collection
+    const trashEntry: TrashItem = {
+      id: `trash_${target?.role === 'customer' || targetCustomer ? 'customer' : 'user'}_${userId}_${Date.now()}`,
+      itemType: (target?.role === 'customer' || targetCustomer) ? 'customer' : 'user',
+      itemId: userId,
+      title: displayName,
+      subtitle: `মোবাইল: ${targetPhone || '-'} | ভূমিকা: ${target?.role === 'customer' ? 'দোকান' : target?.role === 'seller' ? 'বিক্রয় প্রতিনিধি' : 'এডমিন'}`,
+      details: targetCustomer ? `ঠিকানা: ${targetCustomer.address || '-'}, বকেয়া: ৳${targetCustomer.currentDue}` : `ইউজার আইডি: ${target?.loginId || '-'}`,
+      trashedAt: new Date().toISOString(),
+      trashedBy: currentUser?.name || 'Admin',
+      originalData: {
+        userAccounts: usersToDelete,
+        customers: customersToDelete,
+        seller: (target?.role === 'seller' || target?.sellerId) ? sellers.find(s => s.id === (target.sellerId || target.id)) : undefined,
+      },
+    };
+
+    await saveDocumentToFirestore('trash', trashEntry.id, trashEntry);
+    setTrashItems((prev) => [trashEntry, ...prev]);
+
+    // 4. Delete from userAccounts state and Firestore
     setUserAccounts((prev) => prev.filter((u) => !userIdsSet.has(u.id)));
     for (const uId of userIdsSet) {
       await deleteDocumentFromFirestore('userAccounts', uId);
     }
 
-    // 4. Delete from customers state and Firestore
+    // 5. Delete from customers state and Firestore
     if (custIdsSet.size > 0) {
       setCustomers((prev) => prev.filter((c) => !custIdsSet.has(c.id)));
       for (const cId of custIdsSet) {
@@ -424,20 +449,35 @@ export default function App() {
       }
     }
 
-    // 5. If seller, delete from sellers state and Firestore
+    // 6. If seller, delete from sellers state and Firestore
     if (target?.role === 'seller' || target?.sellerId) {
       const sellerId = target.sellerId || target.id;
       setSellers((prev) => prev.filter((s) => s.id !== sellerId && normalizePhoneNumber(s.phone) !== targetPhone));
       await deleteDocumentFromFirestore('sellers', sellerId);
     }
 
-    const displayName = target?.shopName || targetCustomer?.shopName || target?.name || targetCustomer?.name || 'দোকান/একাউন্ট';
-    triggerToast(`${displayName} সফলভাবে সম্পূর্ণ রিমুভ করা হয়েছে`);
+    triggerToast(`${displayName} ট্র্যাশে পাঠানো হয়েছে (রিস্টোর করা যাবে)`);
   };
 
   const handleDeleteOrder = async (orderId: string) => {
     const target = orders.find((o) => o.id === orderId);
     if (!target) return;
+
+    // Create snapshot and save to trash collection
+    const trashEntry: TrashItem = {
+      id: `trash_order_${target.id}_${Date.now()}`,
+      itemType: 'order',
+      itemId: target.id,
+      title: `মেমো #${target.memoNo} - ${target.shopName || target.customerName}`,
+      subtitle: `${target.date} | ${target.totalPairs} জোড়া`,
+      details: `মোট বিল: ৳${target.grandTotal}, জমা: ৳${target.paidAmount}, বাকি: ৳${target.dueAmount}`,
+      trashedAt: new Date().toISOString(),
+      trashedBy: currentUser?.name || 'Admin',
+      originalData: target,
+    };
+
+    await saveDocumentToFirestore('trash', trashEntry.id, trashEntry);
+    setTrashItems((prev) => [trashEntry, ...prev]);
 
     // 1. If the order was already delivered, restore product inventory stock
     if (target.deliveryStatus === 'delivered' && target.items && target.items.length > 0) {
@@ -468,7 +508,7 @@ export default function App() {
     // 3. Remove order from state and Cloud Firestore
     setOrders((prev) => prev.filter((o) => o.id !== orderId));
     await deleteDocumentFromFirestore('orders', orderId);
-    triggerToast(`মেমো #${target.memoNo} অর্ডারটি সফলভাবে ডিলিট করা হয়েছে`);
+    triggerToast(`মেমো #${target.memoNo} অর্ডারটি ট্র্যাশে পাঠানো হয়েছে (রিস্টোর করা যাবে)`);
   };
 
   const handleResetPassword = async (userId: string, newPass: string) => {
@@ -707,12 +747,111 @@ export default function App() {
     triggerToast(t('toast_product_updated').replace('{{articleCode}}', updatedProduct.articleCode));
   };
 
-  // 6. Delete Product Handler
+  // 6. Delete Product Handler (Soft delete to trash)
   const handleDeleteProduct = async (productId: string) => {
     const target = products.find((p) => p.id === productId);
+    if (!target) return;
+
+    const trashEntry: TrashItem = {
+      id: `trash_product_${target.id}_${Date.now()}`,
+      itemType: 'product',
+      itemId: target.id,
+      title: `${target.articleCode} - ${target.name}`,
+      subtitle: `স্টক: ${target.stockPairs} জোড়া | বিক্রয় মূল্য: ৳${target.sellPrice}`,
+      details: `ক্যাটাগরি: ${target.category}, ক্রয় মূল্য: ৳${target.buyPrice}`,
+      trashedAt: new Date().toISOString(),
+      trashedBy: currentUser?.name || 'Admin',
+      originalData: target,
+    };
+
+    await saveDocumentToFirestore('trash', trashEntry.id, trashEntry);
+    setTrashItems((prev) => [trashEntry, ...prev]);
+
     setProducts((prev) => prev.filter((p) => p.id !== productId));
     await deleteDocumentFromFirestore('products', productId);
-    triggerToast(t('toast_product_deleted').replace('{{articleCode}}', target?.articleCode || ''));
+    triggerToast(`পণ্য ${target.articleCode} ট্র্যাশে পাঠানো হয়েছে (রিস্টোর করা যাবে)`);
+  };
+
+  // Trash restoration & permanent delete handlers
+  const handleRestoreItem = async (item: TrashItem) => {
+    try {
+      if (item.itemType === 'order') {
+        const orderData: Order = item.originalData;
+        await saveDocumentToFirestore('orders', orderData.id, orderData);
+        setOrders((prev) => sortOrdersByRecency([orderData, ...prev.filter((o) => o.id !== orderData.id)]));
+      } else if (item.itemType === 'product') {
+        const productData: ShoeProduct = item.originalData;
+        await saveDocumentToFirestore('products', productData.id, productData);
+        setProducts((prev) => [productData, ...prev.filter((p) => p.id !== productData.id)]);
+      } else if (item.itemType === 'customer' || item.itemType === 'user') {
+        const snap = item.originalData;
+        if (snap.userAccounts && Array.isArray(snap.userAccounts)) {
+          for (const u of snap.userAccounts) {
+            await saveDocumentToFirestore('userAccounts', u.id, u);
+          }
+          setUserAccounts((prev) => [
+            ...prev.filter((u) => !snap.userAccounts.some((su: any) => su.id === u.id)),
+            ...snap.userAccounts,
+          ]);
+        }
+        if (snap.customers && Array.isArray(snap.customers)) {
+          for (const c of snap.customers) {
+            await saveDocumentToFirestore('customers', c.id, c);
+          }
+          setCustomers((prev) => [
+            ...prev.filter((c) => !snap.customers.some((sc: any) => sc.id === c.id)),
+            ...snap.customers,
+          ]);
+        }
+        if (snap.seller) {
+          await saveDocumentToFirestore('sellers', snap.seller.id, snap.seller);
+          setSellers((prev) => [...prev.filter((s) => s.id !== snap.seller.id), snap.seller]);
+        }
+      }
+
+      // Remove from trash
+      await deleteDocumentFromFirestore('trash', item.id);
+      setTrashItems((prev) => prev.filter((t) => t.id !== item.id));
+      triggerToast(`${item.title} সফলভাবে রিস্টোর করা হয়েছে!`);
+    } catch (err) {
+      console.error('Error restoring item:', err);
+      triggerToast('রিস্টোর করতে সমস্যা হয়েছে। আবার চেষ্টা করুন।');
+    }
+  };
+
+  const handlePermanentDeleteItem = async (trashId: string) => {
+    try {
+      await deleteDocumentFromFirestore('trash', trashId);
+      setTrashItems((prev) => prev.filter((t) => t.id !== trashId));
+      triggerToast('ট্র্যাশ থেকে স্থায়ীভাবে ডিলিট করা হয়েছে');
+    } catch (err) {
+      console.error('Error permanently deleting:', err);
+      triggerToast('মুছে ফেলতে সমস্যা হয়েছে');
+    }
+  };
+
+  const handleEmptyTrash = async () => {
+    try {
+      for (const item of trashItems) {
+        await deleteDocumentFromFirestore('trash', item.id);
+      }
+      setTrashItems([]);
+      triggerToast('ট্র্যাশ সফলভাবে সম্পূর্ণ খালি করা হয়েছে');
+    } catch (err) {
+      console.error('Error emptying trash:', err);
+    }
+  };
+
+  const handleRestoreAll = async () => {
+    try {
+      for (const item of trashItems) {
+        await handleRestoreItem(item);
+      }
+      setTrashItems([]);
+      triggerToast('ট্র্যাশের সমস্ত আইটেম সফলভাবে রিস্টোর করা হয়েছে!');
+    } catch (err) {
+      console.error('Error restoring all:', err);
+    }
   };
 
   // 7. Quick Add Customer Handler
@@ -1080,6 +1219,7 @@ export default function App() {
           dueAlertCount={dueAlertCount}
           lowStockCount={lowStockCount}
           pendingOrdersCount={pendingOrdersCount}
+          trashCount={trashItems.length}
           systemConfig={systemConfig}
           onInstallPWA={handleInstallPWA}
           canInstallPWA={canInstallPWA}
@@ -1103,6 +1243,7 @@ export default function App() {
             dueAlertCount={dueAlertCount}
             lowStockCount={lowStockCount}
             pendingOrdersCount={pendingOrdersCount}
+            trashCount={trashItems.length}
             currentUserRole={currentUser?.role || 'customer'}
             systemConfig={systemConfig}
             onInstallPWA={handleInstallPWA}
@@ -1157,6 +1298,7 @@ export default function App() {
             systemConfig={systemConfig}
             onAddShop={handleAddShop}
             onUpdateShop={handleUpdateShop}
+            onDeleteShop={handleDeleteUserAccount}
             onNavigateToPos={(customerId) => {
               setPosPreSelectedCustomerId(customerId);
               setActiveTab('pos');
@@ -1319,6 +1461,17 @@ export default function App() {
               onUpdateSystemConfig={handleUpdateSystemConfig}
             />
           )
+        )}
+
+        {activeTab === 'trash' && currentUser && (currentUser.role === 'admin' || currentUser.role === 'super_admin' || systemConfig?.allowSellerToManageUsers) && (
+          <TrashManagement
+            trashItems={trashItems}
+            currentUser={currentUser}
+            onRestoreItem={handleRestoreItem}
+            onPermanentDeleteItem={handlePermanentDeleteItem}
+            onRestoreAll={handleRestoreAll}
+            onEmptyTrash={handleEmptyTrash}
+          />
         )}
 
         </Suspense>

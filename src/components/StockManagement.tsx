@@ -1193,15 +1193,15 @@ export const StockManagement: React.FC<StockManagementProps> = ({
           <div className="bg-slate-900 border border-slate-700 rounded-2xl max-w-sm w-full p-5 space-y-4 shadow-2xl">
             <h3 className="text-base font-bold text-rose-400 flex items-center gap-2">
               <Trash2 className="w-5 h-5" />
-              স্টক ডিলেট কনফার্মেশন
+              পণ্য ট্র্যাশে পাঠানো
             </h3>
 
             <div className="space-y-3 text-xs">
               <p className="text-slate-300 leading-relaxed">
-                আপনি কি নিশ্চিত যে আর্টিকল <span className="font-bold text-amber-300 font-mono px-1.5 py-0.5 bg-amber-500/10 rounded border border-amber-500/20">{deletingProduct.articleCode}</span> ডিলেট করতে চান?
+                আপনি কি নিশ্চিত যে আর্টিকল <span className="font-bold text-amber-300 font-mono px-1.5 py-0.5 bg-amber-500/10 rounded border border-amber-500/20">{deletingProduct.articleCode}</span> ({deletingProduct.name}) ট্র্যাশে পাঠাতে চান?
               </p>
-              <p className="text-[11px] text-slate-400">
-                এই স্টকটি মুছে ফেললে ডাটাবেজ থেকেও মুছে যাবে।
+              <p className="text-[11px] text-emerald-400/90 bg-emerald-500/10 border border-emerald-500/20 p-2 rounded-xl">
+                ✓ এটি সরাসরি নষ্ট হবে না। রিসাইকেল বিন (ট্র্যাশ) থেকে যেকোনো সময় পুনরায় সক্রিয় স্টকে রিস্টোর করতে পারবেন।
               </p>
 
               <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-800">
@@ -1217,7 +1217,7 @@ export const StockManagement: React.FC<StockManagementProps> = ({
                   onClick={handleConfirmDelete}
                   className="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white font-bold rounded-xl shadow cursor-pointer transition-colors"
                 >
-                  ডিলেট করুন
+                  ট্র্যাশে পাঠান
                 </button>
               </div>
             </div>

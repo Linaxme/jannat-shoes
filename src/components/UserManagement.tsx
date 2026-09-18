@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { UserAccount, UserRole, SalesRep, UITheme, SystemConfig, Customer } from '../types';
 import { toBnDigit, formatTaka } from '../utils/formatters';
-import { UserPlus, Shield, UserCheck, ShieldAlert, ShieldCheck, Key, MapPin, Target, Percent, Lock, UserX, PlusCircle, Sparkles, CheckCircle2, ChevronDown, Edit, Sliders, Settings, Store, Search, Users, DollarSign, Info } from 'lucide-react';
+import { UserPlus, Shield, UserCheck, ShieldAlert, ShieldCheck, Key, MapPin, Target, Percent, Lock, UserX, PlusCircle, Sparkles, CheckCircle2, ChevronDown, Edit, Sliders, Settings, Store, Search, Users, DollarSign, Info, Trash2 } from 'lucide-react';
 
 interface UserManagementProps {
   currentUser: UserAccount;
@@ -40,7 +40,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({
   const { t } = useLanguage();
   const [showAddModal, setShowAddModal] = useState<boolean>(false);
   const [expandedUserId, setExpandedUserId] = useState<string | null>(null);
-  const [confirmingDeleteUserId, setConfirmingDeleteUserId] = useState<string | null>(null);
+  const [userToTrash, setUserToTrash] = useState<{ user: UserAccount; customerId?: string; custData?: any } | null>(null);
 
   const [activeMainTab, setActiveMainTab] = useState<'staff' | 'customers'>('staff');
 
@@ -815,37 +815,15 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                       )}
 
                           {onDeleteUserAccount && (
-                            confirmingDeleteUserId === usr.id ? (
-                              <div className="flex items-center gap-1 bg-rose-950/80 p-1 rounded-lg border border-rose-500/50">
-                                <span className="text-[10px] font-bold text-rose-300 px-1">
-                                  {usr.role === 'customer' ? 'মুছে ফেলবেন?' : 'রিমুভ?'}
-                                </span>
-                                <button
-                                  onClick={() => {
-                                    onDeleteUserAccount(usr.id, custData?.id);
-                                    setConfirmingDeleteUserId(null);
-                                  }}
-                                  className="px-2 py-0.5 bg-rose-600 hover:bg-rose-500 text-white rounded text-xs font-black shadow transition cursor-pointer"
-                                >
-                                  হ্যাঁ
-                                </button>
-                                <button
-                                  onClick={() => setConfirmingDeleteUserId(null)}
-                                  className="px-2 py-0.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded text-xs font-bold transition cursor-pointer"
-                                >
-                                  না
-                                </button>
-                              </div>
-                            ) : (
-                              <button
-                                onClick={() => setConfirmingDeleteUserId(usr.id)}
-                                className="px-2.5 py-1.5 bg-rose-600/20 hover:bg-rose-600/30 text-rose-400 border border-rose-500/40 rounded-lg text-xs font-semibold transition cursor-pointer flex items-center gap-1"
-                                title={usr.role === 'customer' ? 'দোকান ও একাউন্ট রিমুভ করুন' : 'ইউজার একাউন্ট রিমুভ করুন'}
-                              >
-                                <UserX className="w-3.5 h-3.5" />
-                                <span>{usr.role === 'customer' ? 'দোকান রিমুভ' : 'রিমুভ'}</span>
-                              </button>
-                            )
+                            <button
+                              type="button"
+                              onClick={() => setUserToTrash({ user: usr, customerId: custData?.id, custData })}
+                              className="px-2.5 py-1.5 bg-rose-600/20 hover:bg-rose-600/30 text-rose-400 border border-rose-500/40 rounded-lg text-xs font-semibold transition cursor-pointer flex items-center gap-1"
+                              title={usr.role === 'customer' ? 'দোকান ও একাউন্ট ট্র্যাশে পাঠান' : 'ইউজার একাউন্ট ট্র্যাশে পাঠান'}
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                              <span>{usr.role === 'customer' ? 'দোকান ট্র্যাশ' : 'ট্র্যাশ'}</span>
+                            </button>
                           )}
                     </div>
                   </div>
@@ -1090,37 +1068,15 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                         )}
 
                             {onDeleteUserAccount && (
-                              confirmingDeleteUserId === usr.id ? (
-                                <div className="flex items-center gap-1 bg-rose-950/80 p-1 rounded-lg border border-rose-500/50">
-                                  <span className="text-[11px] font-bold text-rose-300 px-1">
-                                    {usr.role === 'customer' ? 'দোকানটি স্থায়ীভাবে মুছে ফেলবেন?' : 'স্থায়ীভাবে রিমুভ করবেন?'}
-                                  </span>
-                                  <button
-                                    onClick={() => {
-                                      onDeleteUserAccount(usr.id, custData?.id);
-                                      setConfirmingDeleteUserId(null);
-                                    }}
-                                    className="px-2.5 py-1 bg-rose-600 hover:bg-rose-500 text-white rounded text-xs font-black shadow transition cursor-pointer"
-                                  >
-                                    হ্যাঁ
-                                  </button>
-                                  <button
-                                    onClick={() => setConfirmingDeleteUserId(null)}
-                                    className="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded text-xs font-bold transition cursor-pointer"
-                                  >
-                                    না
-                                  </button>
-                                </div>
-                              ) : (
-                                <button
-                                  onClick={() => setConfirmingDeleteUserId(usr.id)}
-                                  className="px-3 py-1.5 bg-rose-600/20 hover:bg-rose-600/30 text-rose-400 border border-rose-500/40 rounded-lg text-xs font-bold transition cursor-pointer flex items-center gap-1"
-                                  title={usr.role === 'customer' ? 'দোকান ও একাউন্ট রিমুভ করুন' : 'ইউজার একাউন্ট রিমুভ করুন'}
-                                >
-                                  <UserX className="w-3.5 h-3.5" />
-                                  <span>{usr.role === 'customer' ? 'দোকান রিমুভ' : 'রিমুভ'}</span>
-                                </button>
-                              )
+                              <button
+                                type="button"
+                                onClick={() => setUserToTrash({ user: usr, customerId: custData?.id, custData })}
+                                className="px-3 py-1.5 bg-rose-600/20 hover:bg-rose-600/30 text-rose-400 border border-rose-500/40 rounded-lg text-xs font-bold transition cursor-pointer flex items-center gap-1"
+                                title={usr.role === 'customer' ? 'দোকান ও একাউন্ট ট্র্যাশে পাঠান' : 'ইউজার একাউন্ট ট্র্যাশে পাঠান'}
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                                <span>{usr.role === 'customer' ? 'দোকান ট্র্যাশ' : 'ট্র্যাশ'}</span>
+                              </button>
                             )}
                       </div>
                     </div>
@@ -1835,6 +1791,75 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL: Move User/Customer to Trash Confirmation */}
+      {userToTrash && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fadeIn">
+          <div className="bg-slate-900 border border-slate-700 p-5 rounded-2xl max-w-sm w-full space-y-4 shadow-2xl">
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 bg-rose-500/10 text-rose-400 border border-rose-500/20 rounded-xl">
+                <Trash2 className="w-5 h-5" />
+              </div>
+              <div>
+                <h4 className="text-sm font-bold text-white">
+                  {userToTrash.user.role === 'customer' ? 'দোকান ট্র্যাশে পাঠানো' : 'ইউজার ট্র্যাশে পাঠানো'}
+                </h4>
+                <p className="text-xs text-slate-400">ট্র্যাশ থেকে যেকোনো সময় রিস্টোর করা যাবে</p>
+              </div>
+            </div>
+
+            <div className="bg-slate-950 border border-slate-800 p-3 rounded-xl space-y-1.5 text-xs">
+              <div className="flex justify-between items-center">
+                <span className="text-slate-400">নাম:</span>
+                <span className="font-bold text-white">{userToTrash.user.name}</span>
+              </div>
+              {userToTrash.user.shopName && (
+                <div className="flex justify-between items-center">
+                  <span className="text-slate-400">দোকান:</span>
+                  <span className="font-bold text-amber-300">{userToTrash.user.shopName}</span>
+                </div>
+              )}
+              <div className="flex justify-between items-center">
+                <span className="text-slate-400">মোবাইল:</span>
+                <span className="font-mono text-slate-300">{userToTrash.user.phone || userToTrash.user.loginId}</span>
+              </div>
+              <div className="flex justify-between items-center border-t border-slate-800 pt-1.5">
+                <span className="text-slate-400">ভূমিকা:</span>
+                <span className="font-bold text-indigo-400">
+                  {userToTrash.user.role === 'customer' ? 'দোকানদার/কাস্টমার' : userToTrash.user.role === 'seller' ? 'বিক্রয় প্রতিনিধি' : 'এডমিন'}
+                </span>
+              </div>
+            </div>
+
+            <div className="text-xs text-slate-300 leading-relaxed bg-rose-950/30 border border-rose-500/20 p-2.5 rounded-xl text-rose-200">
+              ⚠️ আপনি কি নিশ্চিতভাবে <strong>{userToTrash.user.shopName || userToTrash.user.name}</strong> ট্র্যাশে পাঠাতে চান? এটি সরাসরি ডিলিট হবে না, ট্র্যাশ (রিসাইকেল বিন) থেকে যেকোনো সময় রিস্টোর করা যাবে।
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-1">
+              <button
+                type="button"
+                onClick={() => setUserToTrash(null)}
+                className="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold transition cursor-pointer"
+              >
+                বাতিল
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  if (onDeleteUserAccount && userToTrash) {
+                    onDeleteUserAccount(userToTrash.user.id, userToTrash.customerId);
+                    setUserToTrash(null);
+                  }
+                }}
+                className="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-lg shadow-rose-600/30 cursor-pointer"
+              >
+                <Trash2 className="w-4 h-4" />
+                <span>ট্র্যাশে পাঠান</span>
+              </button>
+            </div>
           </div>
         </div>
       )}

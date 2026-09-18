@@ -22,6 +22,7 @@ import {
   Download,
   Languages,
   Sparkles,
+  Trash2,
 } from 'lucide-react';
 import { UserAccount, UserRole, SystemConfig } from '../types';
 import { NavTab } from './Navigation';
@@ -37,6 +38,7 @@ interface SidebarProps {
   dueAlertCount?: number;
   lowStockCount?: number;
   pendingOrdersCount?: number;
+  trashCount?: number;
   systemConfig?: SystemConfig;
   onInstallPWA?: () => void;
   canInstallPWA?: boolean;
@@ -65,6 +67,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   dueAlertCount = 0,
   lowStockCount = 0,
   pendingOrdersCount = 0,
+  trashCount = 0,
   systemConfig,
   onInstallPWA,
   canInstallPWA,
@@ -209,6 +212,18 @@ export const Sidebar: React.FC<SidebarProps> = ({
           roles: ['super_admin', 'admin'],
         });
       }
+    }
+
+    // Recycle bin / Trash management
+    if (isOwnerAdmin || systemConfig?.allowSellerToManageUsers) {
+      adminItems.push({
+        id: 'trash',
+        label: 'রিসাইকেল বিন / ট্র্যাশ',
+        icon: Trash2,
+        badgeCount: trashCount,
+        badgeColor: 'bg-rose-500',
+        roles: ['super_admin', 'admin', 'seller'],
+      });
     }
 
     if (adminItems.length > 0) {

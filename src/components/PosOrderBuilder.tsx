@@ -128,6 +128,7 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
   const [entryPricePerPair, setEntryPricePerPair] = useState<number | string>('');
   const [entryCommissionPerPair, setEntryCommissionPerPair] = useState<number | string>('');
   const [showSuggestions, setShowSuggestions] = useState<boolean>(false);
+  const [itemToRemoveIndex, setItemToRemoveIndex] = useState<number | null>(null);
 
   // Cart Items
   const [cartItems, setCartItems] = useState<OrderItem[]>(
@@ -1075,8 +1076,9 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
                     <td className="py-3 pl-2 text-right">
                       <button
                         type="button"
-                        onClick={() => handleRemoveItem(index)}
+                        onClick={() => setItemToRemoveIndex(index)}
                         className="p-1.5 text-rose-400 hover:text-rose-300 bg-rose-500/10 hover:bg-rose-500/20 rounded-lg transition-colors cursor-pointer"
+                        title="আইটেম বাদ দিন"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
@@ -1321,6 +1323,58 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Remove Item Confirmation Modal */}
+      {itemToRemoveIndex !== null && cartItems[itemToRemoveIndex] && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fade-in">
+          <div className="bg-slate-900 border border-slate-700 p-5 rounded-2xl max-w-sm w-full space-y-4 shadow-2xl">
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 bg-rose-500/10 text-rose-400 border border-rose-500/20 rounded-xl">
+                <Trash2 className="w-5 h-5" />
+              </div>
+              <div>
+                <h4 className="text-sm font-bold text-white">আইটেম রিমুভ নিশ্চিতকরণ</h4>
+                <p className="text-xs text-slate-400">মেমো তালিকা থেকে বাদ দিতে চান?</p>
+              </div>
+            </div>
+
+            <div className="bg-slate-950 border border-slate-800 p-3 rounded-xl space-y-1">
+              <div className="text-xs font-bold text-amber-300">
+                {cartItems[itemToRemoveIndex].articleCode} - {cartItems[itemToRemoveIndex].productName}
+              </div>
+              <div className="text-[11px] text-slate-300 flex items-center justify-between">
+                <span>পরিমাণ: {toBnDigit(cartItems[itemToRemoveIndex].totalPairs)} জোড়া</span>
+                <span className="font-bold text-emerald-400">{formatTaka(cartItems[itemToRemoveIndex].totalPairs * cartItems[itemToRemoveIndex].unitSellPrice)}</span>
+              </div>
+            </div>
+
+            <p className="text-xs text-slate-300">
+              আপনি কি নিশ্চিত যে এই আইটেমটি মেমো তালিকা থেকে বাদ দিতে চান?
+            </p>
+
+            <div className="flex justify-end gap-2 pt-1">
+              <button
+                type="button"
+                onClick={() => setItemToRemoveIndex(null)}
+                className="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold transition cursor-pointer"
+              >
+                বাতিল
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  handleRemoveItem(itemToRemoveIndex);
+                  setItemToRemoveIndex(null);
+                }}
+                className="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-lg shadow-rose-600/30 cursor-pointer"
+              >
+                <Trash2 className="w-4 h-4" />
+                <span>হ্যাঁ, বাদ দিন</span>
+              </button>
+            </div>
           </div>
         </div>
       )}

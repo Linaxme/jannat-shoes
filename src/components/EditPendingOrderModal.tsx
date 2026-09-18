@@ -63,6 +63,7 @@ export const EditPendingOrderModal: React.FC<EditPendingOrderModalProps> = ({
   const [newQuantity, setNewQuantity] = useState<number | string>(1);
   const [newPrice, setNewPrice] = useState<number | string>('');
   const [newCommission, setNewCommission] = useState<number | string>('');
+  const [itemToRemoveIndex, setItemToRemoveIndex] = useState<number | null>(null);
 
   // Filter products for search
   const filteredProducts = useMemo(() => {
@@ -228,11 +229,12 @@ export const EditPendingOrderModal: React.FC<EditPendingOrderModalProps> = ({
   const totalPairs = items.reduce((sum, i) => sum + i.totalPairs, 0);
   const totalCommission = items.reduce((sum, i) => sum + (i.totalCommission || (i.totalPairs * (i.commissionPerPair || 0))), 0);
   const grossTotal = items.reduce((sum, i) => sum + (i.totalPairs * i.unitSellPrice), 0);
-  const netBeforeDiscount = items.reduce((sum, i) => sum + i.totalAmount, 0);
+  const netBeforeDiscount = Math.max(0, grossTotal - totalCommission);
   const grandTotal = Math.max(0, netBeforeDiscount - discountNum);
   const dueAmount = Math.max(0, grandTotal - paidAmountNum);
+  const overpaidAmount = Math.max(0, paidAmountNum - grandTotal);
   const previousDue = order.previousDue || 0;
-  const totalNetDue = previousDue + dueAmount;
+  const totalNetDue = previousDue + dueAmount - overpaidAmount;
 
   const status = dueAmount === 0 ? 'পরিশোধিত' : paidAmountNum > 0 ? 'আংশিক বাকী' : 'সম্পূর্ণ বাকী';
 
@@ -562,7 +564,7 @@ export const EditPendingOrderModal: React.FC<EditPendingOrderModalProps> = ({
 
                       <button
                         type="button"
-                        onClick={() => handleRemoveItem(idx)}
+                        onClick={() => setItemToRemoveIndex(idx)}
                         className="w-8 h-8 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 flex items-center justify-center transition-colors cursor-pointer shrink-0"
                         title="এই পণ্যটি মেমো থেকে ডিলেট করুন"
                       >
@@ -672,6 +674,67 @@ export const EditPendingOrderModal: React.FC<EditPendingOrderModalProps> = ({
         </div>
 
       </div>
+
+      {/* Item Remove Confirmation Modal Popup */}
+      {itemToRemoveIndex !== null && items[itemToRemoveIndex] && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fade-in">
+          <div className="bg-slate-900 border border-slate-700 p-5 rounded-2xl max-w-sm w-full space-y-4 shadow-2xl">
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 bg-rose-500/10 text-rose-400 border border-rose-500/20 rounded-xl">
+                <Trash2 className="w-5 h-5" />
+              </div>
+              <div>
+                <h4 className="text-sm font-bold text-white">পণ্য রিমুভ নিশ্চিতকরণ</h4>
+                <p className="text-xs text-slate-400">মেমো তালিকা থেকে পণ্য বাদ দেওয়া</p>
+              </div>
+            </div>
+
+            <div className="bg-slate-950 border border-slate-800 p-3 rounded-xl space-y-1">
+              <div className="text-xs font-bold text-amber-300">
+                {items[itemToRemoveIndex].articleCode} - {items[itemToRemoveIndex].productName}
+              </div>
+              <div className="text-[11px] text-slate-300 flex items-center justify-between">
+                <span>পরিমাণ: {toBnDigit(items[itemToRemoveIndex].totalPairs)} জোড়া</span>
+                <span className="font-bold text-emerald-400">
+                  {formatTaka(items[itemToRemoveIndex].totalPairs * items[itemToRemoveIndex].unitSellPrice)}
+                </span>
+              </div>
+            </div>
+
+            {items.length <= 1 ? (
+              <p className="text-xs text-amber-400 bg-amber-500/10 border border-amber-500/20 p-2.5 rounded-xl">
+                ⚠️ এটি এই মেমোর একমাত্র পণ্য। মেমোটি কার্যকর রাখতে অন্তত ১টি পণ্য থাকতে হবে।
+              </p>
+            ) : (
+              <p className="text-xs text-slate-300">
+                আপনি কি নিশ্চিত যে এই পণ্যটি মেমো থেকে বাদ দিতে চান?
+              </p>
+            )}
+
+            <div className="flex justify-end gap-2 pt-1">
+              <button
+                type="button"
+                onClick={() => setItemToRemoveIndex(null)}
+                className="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold transition cursor-pointer"
+              >
+                বাতিল
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setItems(items.filter((_, idx) => idx !== itemToRemoveIndex));
+                  setItemToRemoveIndex(null);
+                }}
+                className="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-lg shadow-rose-600/30 cursor-pointer"
+              >
+                <Trash2 className="w-4 h-4" />
+                <span>হ্যাঁ, বাদ দিন</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };

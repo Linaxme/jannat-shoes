@@ -144,6 +144,17 @@ export const InvoiceModal: React.FC<InvoiceModalProps> = ({ order, onClose }) =>
           ? order.subTotal + totalOrderCommission
           : (order.subTotal || 0));
 
+    // Ensure Net Bill (সর্বমোট নিট বিল) always has commission subtracted
+    const finalGrandTotal = (displayGrossTotal > 0 && totalOrderCommission > 0 && Math.abs(order.grandTotal - displayGrossTotal) < 1)
+      ? Math.max(0, displayGrossTotal - totalOrderCommission - (order.discount || 0))
+      : (order.grandTotal ?? Math.max(0, displayGrossTotal - totalOrderCommission - (order.discount || 0)));
+
+    const paidAmount = order.paidAmount || 0;
+    const finalDueAmount = Math.max(0, finalGrandTotal - paidAmount);
+    const finalOverpaid = Math.max(0, paidAmount - finalGrandTotal);
+    const previousDue = order.previousDue || 0;
+    const finalTotalNetDue = previousDue + finalDueAmount - finalOverpaid;
+
     let itemsText = '';
     order.items.forEach((item, idx) => {
       const commText = item.commissionPerPair && item.commissionPerPair > 0 ? ` (কমিশন: ৳${item.commissionPerPair}/জোড়া)` : '';
@@ -168,11 +179,13 @@ export const InvoiceModal: React.FC<InvoiceModalProps> = ({ order, onClose }) =>
       `মোট মূল্য: *${formatTaka(displayGrossTotal)}*\n` +
       (totalOrderCommission > 0 ? `জোড়া কমিশন (ছাড়): *- ${formatTaka(totalOrderCommission)}*\n` : '') +
       (order.discount > 0 ? `অতিরিক্ত ছাড়: *- ${formatTaka(order.discount)}*\n` : '') +
-      `সর্বমোট নিট বিল: *${formatTaka(order.grandTotal)}*\n` +
-      `নগদ জমা: *${formatTaka(order.paidAmount)}*\n` +
-      `চালানের বাকী: *${formatTaka(order.dueAmount)}*\n` +
-      (order.previousDue < 0 ? `পূর্বের এডভান্স জমা: *+${formatTaka(Math.abs(order.previousDue))}*\n` : `পূর্বের বাকী: *${formatTaka(order.previousDue)}*\n`) +
-      (order.totalNetDue < 0 ? `চূড়ান্ত এডভান্স স্থিতি: *+${formatTaka(Math.abs(order.totalNetDue))}*\n` : `সর্বমোট বকেয়া (Due): *${formatTaka(order.totalNetDue)}*\n`) +
+      `সর্বমোট নিট বিল: *${formatTaka(finalGrandTotal)}*\n` +
+      `নগদ জমা: *${formatTaka(paidAmount)}*\n` +
+      (paidAmount > finalGrandTotal
+        ? `অতিরিক্ত জমা (অ্যাডভান্স): *+${formatTaka(finalOverpaid)}*\n`
+        : `চালানের বাকী: *${formatTaka(finalDueAmount)}*\n`) +
+      (previousDue < 0 ? `পূর্বের এডভান্স জমা: *+${formatTaka(Math.abs(previousDue))}*\n` : `পূর্বের বাকী: *${formatTaka(previousDue)}*\n`) +
+      (finalTotalNetDue < 0 ? `চূড়ান্ত এডভান্স স্থিতি: *+${formatTaka(Math.abs(finalTotalNetDue))}*\n` : `সর্বমোট বকেয়া (Due): *${formatTaka(finalTotalNetDue)}*\n`) +
       `--------------------------------\n` +
       `_ধন্যবাদ, আবার আসবেন!_\n` +
       `*মেসার্স জান্নাত সুজ*\n` +
@@ -324,6 +337,17 @@ export const InvoiceModal: React.FC<InvoiceModalProps> = ({ order, onClose }) =>
                     ? order.subTotal + totalOrderCommission
                     : (order.subTotal || 0));
 
+              // Ensure Net Bill (সর্বমোট নিট বিল) always has commission subtracted even if older data was stored incorrectly
+              const finalGrandTotal = (displayGrossTotal > 0 && totalOrderCommission > 0 && Math.abs(order.grandTotal - displayGrossTotal) < 1)
+                ? Math.max(0, displayGrossTotal - totalOrderCommission - (order.discount || 0))
+                : (order.grandTotal ?? Math.max(0, displayGrossTotal - totalOrderCommission - (order.discount || 0)));
+
+              const paidAmount = order.paidAmount || 0;
+              const finalDueAmount = Math.max(0, finalGrandTotal - paidAmount);
+              const finalOverpaid = Math.max(0, paidAmount - finalGrandTotal);
+              const previousDue = order.previousDue || 0;
+              const finalTotalNetDue = previousDue + finalDueAmount - finalOverpaid;
+
               return (
                 <>
                   <table className="w-full text-left border-collapse border border-slate-900 text-[10px] sm:text-[11px]">
@@ -416,36 +440,36 @@ export const InvoiceModal: React.FC<InvoiceModalProps> = ({ order, onClose }) =>
                         )}
                         <tr className="border-t border-slate-900 font-bold text-xs">
                           <td className="py-1">সর্বমোট নিট বিল:</td>
-                          <td className="py-1 text-right font-black">{formatTaka(order.grandTotal)}</td>
+                          <td className="py-1 text-right font-black">{formatTaka(finalGrandTotal)}</td>
                         </tr>
                 <tr className="text-emerald-700 font-bold">
                   <td className="py-0.5">জমা/নগদ প্রদান:</td>
-                  <td className="py-0.5 text-right font-black">{formatTaka(order.paidAmount)}</td>
+                  <td className="py-0.5 text-right font-black">{formatTaka(paidAmount)}</td>
                 </tr>
-                {order.paidAmount > order.grandTotal && (
+                {paidAmount > finalGrandTotal && (
                   <tr className="text-emerald-600 font-bold border-t border-slate-300">
                     <td className="py-0.5">অতিরিক্ত জমা (অ্যাডভান্স):</td>
-                    <td className="py-0.5 text-right font-black">{formatTaka(order.paidAmount - order.grandTotal)}</td>
+                    <td className="py-0.5 text-right font-black">{formatTaka(finalOverpaid)}</td>
                   </tr>
                 )}
-                {order.paidAmount <= order.grandTotal && (
+                {paidAmount <= finalGrandTotal && (
                   <tr className="text-rose-700 font-bold border-t border-slate-300">
                     <td className="py-0.5">চালানের বাকী:</td>
-                    <td className="py-0.5 text-right font-black">{formatTaka(order.dueAmount)}</td>
+                    <td className="py-0.5 text-right font-black">{formatTaka(finalDueAmount)}</td>
                   </tr>
                 )}
                 <tr className="text-slate-600">
                   <td className="py-0.5">
-                    {order.previousDue < 0 ? 'পূর্বের অ্যাডভান্স জমা:' : 'পূর্বের মার্কেট বাকী:'}
+                    {previousDue < 0 ? 'পূর্বের অ্যাডভান্স জমা:' : 'পূর্বের মার্কেট বাকী:'}
                   </td>
-                  <td className={`py-0.5 text-right font-semibold ${order.previousDue < 0 ? 'text-emerald-700 font-bold' : ''}`}>
-                    {order.previousDue < 0 ? `+${formatTaka(Math.abs(order.previousDue))}` : formatTaka(order.previousDue)}
+                  <td className={`py-0.5 text-right font-semibold ${previousDue < 0 ? 'text-emerald-700 font-bold' : ''}`}>
+                    {previousDue < 0 ? `+${formatTaka(Math.abs(previousDue))}` : formatTaka(previousDue)}
                   </td>
                 </tr>
                 <tr className="bg-slate-900 text-white font-bold border-t border-slate-900">
-                  <td className="p-1">{order.totalNetDue < 0 ? 'বর্তমান অ্যাডভান্স স্থিতি:' : 'বর্তমান মোট বাকী:'}</td>
-                  <td className={`p-1 text-right font-black ${order.totalNetDue < 0 ? 'text-emerald-400' : 'text-amber-300'}`}>
-                    {order.totalNetDue < 0 ? `+${formatTaka(Math.abs(order.totalNetDue))}` : formatTaka(order.totalNetDue)}
+                  <td className="p-1">{finalTotalNetDue < 0 ? 'বর্তমান অ্যাডভান্স স্থিতি:' : 'বর্তমান মোট বাকী:'}</td>
+                  <td className={`p-1 text-right font-black ${finalTotalNetDue < 0 ? 'text-emerald-400' : 'text-amber-300'}`}>
+                    {finalTotalNetDue < 0 ? `+${formatTaka(Math.abs(finalTotalNetDue))}` : formatTaka(finalTotalNetDue)}
                   </td>
                 </tr>
               </tbody>
