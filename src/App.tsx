@@ -8,6 +8,7 @@ import {
   UserAccount,
   SystemConfig,
   TrashItem,
+  ConfirmDeliveryData,
 } from './types';
 import {
   INITIAL_PRODUCTS,
@@ -46,7 +47,7 @@ const TrashManagement = lazy(() => import('./components/TrashManagement').then(m
 import { fetchFirestoreData, seedFirestoreData, saveDocumentToFirestore, deleteDocumentFromFirestore, clearAllDatabaseData } from './lib/firestoreService';
 import { generateSMSMessage, sendAutoSMS, SMSType } from './utils/smsService';
 import { OrderItem } from './types';
-import { normalizePhoneNumber, compareOrdersNewestFirst } from './utils/formatters';
+import { normalizePhoneNumber, compareOrdersNewestFirst, getLocalDateStr } from './utils/formatters';
 
 import { CheckCircle2, X } from 'lucide-react';
 
@@ -66,7 +67,7 @@ export default function App() {
         return null;
       }
     }
-    return INITIAL_USER_ACCOUNTS[1] || INITIAL_USER_ACCOUNTS[0] || null;
+    return null;
   });
 
   const [activeTab, setActiveTab] = useState<NavTab>(() => {
@@ -120,16 +121,6 @@ export default function App() {
   // Helper to sort orders by date/time/id descending (newest first)
   const sortOrdersByRecency = (ordersList: Order[]) => {
     return [...ordersList].sort(compareOrdersNewestFirst);
-  };
-
-  const handleClearDatabase = async () => {
-    await clearAllDatabaseData();
-    setProducts([]);
-    setCustomers([]);
-    setSellers([]);
-    setOrders([]);
-    setPaymentLogs([]);
-    triggerToast('ডাটাবেজের সকল ডেমো ডাটা সফলভাবে ক্লিয়ার করা হয়েছে!');
   };
 
   // Load from Firestore on mount
@@ -191,7 +182,7 @@ export default function App() {
 
   // Modal Invoice Viewer State
   const [selectedInvoiceOrder, setSelectedInvoiceOrder] = useState<Order | null>(null);
-  const [isLoginModalOpen, setIsLoginModalOpen] = useState<boolean>(false);
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState<boolean>(() => !localStorage.getItem('lixa_active_user'));
 
   // Notification Toast State
   const [toast, setToast] = useState<string | null>(null);
@@ -494,8 +485,8 @@ export default function App() {
       setProducts(updatedProducts);
     }
 
-    // 2. Adjust customer due if this order had unpaid due balance
-    if (target.customerId && target.dueAmount > 0) {
+    // 2. Adjust customer due ONLY if this order was already delivered and has unpaid balance
+    if (target.customerId && target.dueAmount > 0 && target.deliveryStatus === 'delivered') {
       const cust = customers.find((c) => c.id === target.customerId);
       if (cust) {
         const adjustedDue = Math.max(0, cust.currentDue - target.dueAmount);
@@ -576,16 +567,18 @@ export default function App() {
       setProducts(updatedProducts);
     }
 
-    // Update customer due
-    const updatedCustomers = customers.map((c) => {
-      if (c.id === newOrder.customerId) {
-        const updatedC = { ...c, currentDue: newOrder.totalNetDue };
-        saveDocumentToFirestore('customers', c.id, updatedC);
-        return updatedC;
-      }
-      return c;
-    });
-    setCustomers(updatedCustomers);
+    // Update customer due ONLY if the order is delivered immediately (direct sales memo)
+    if (newOrder.deliveryStatus === 'delivered') {
+      const updatedCustomers = customers.map((c) => {
+        if (c.id === newOrder.customerId) {
+          const updatedC = { ...c, currentDue: newOrder.totalNetDue };
+          saveDocumentToFirestore('customers', c.id, updatedC);
+          return updatedC;
+        }
+        return c;
+      });
+      setCustomers(updatedCustomers);
+    }
 
     if (newOrder.deliveryStatus === 'booked') {
       triggerToast(t('toast_order_booked').replace('{{memoNo}}', newOrder.memoNo));
@@ -603,13 +596,35 @@ export default function App() {
   };
 
   // 1.1 Confirm Delivery & Issue Cash Memo for Booked Sample Orders
-  const handleConfirmDelivery = async (orderId: string) => {
+  const handleConfirmDelivery = async (orderId: string, deliveryData?: ConfirmDeliveryData) => {
     const targetOrder = orders.find((o) => o.id === orderId);
     if (!targetOrder) return;
+
+    const todayStr = getLocalDateStr(new Date());
+    const deliveryDate = deliveryData?.deliveryDate || todayStr;
+    const collectedCash = deliveryData ? Math.max(0, deliveryData.collectedAtDelivery) : 0;
+
+    const previousPaid = targetOrder.paidAmount || 0;
+    const newTotalPaid = Math.min(targetOrder.grandTotal, previousPaid + collectedCash);
+    const newDueAmount = Math.max(0, targetOrder.grandTotal - newTotalPaid);
+
+    let newStatus: 'পরিশোধিত' | 'আংশিক বাকী' | 'সম্পূর্ণ বাকী' = 'পরিশোধিত';
+    if (newTotalPaid === 0) {
+      newStatus = 'সম্পূর্ণ বাকী';
+    } else if (newTotalPaid < targetOrder.grandTotal) {
+      newStatus = 'আংশিক বাকী';
+    }
 
     const updatedOrder: Order = {
       ...targetOrder,
       deliveryStatus: 'delivered',
+      deliveryDate,
+      deliveryPaidAmount: collectedCash,
+      deliveryPaymentMethod: deliveryData?.paymentMethod || 'নগদ ক্যাশ',
+      deliveryNotes: deliveryData?.notes,
+      paidAmount: newTotalPaid,
+      dueAmount: newDueAmount,
+      status: newStatus,
       time: new Date().toLocaleTimeString('bn-BD', { hour: '2-digit', minute: '2-digit' }),
     };
 
@@ -628,6 +643,22 @@ export default function App() {
       return p;
     });
     setProducts(updatedProducts);
+
+    // Reconcile Customer Due
+    // Since the order was not delivered before, its due amount was NOT added to currentDue.
+    // We now add the NEW remaining due amount to the customer's total balance.
+    if (targetOrder.customerId) {
+      const updatedCustomers = customers.map((c) => {
+        if (c.id === targetOrder.customerId) {
+          const updatedCurrentDue = Math.max(0, (c.currentDue || 0) + newDueAmount);
+          const updatedC = { ...c, currentDue: updatedCurrentDue };
+          saveDocumentToFirestore('customers', c.id, updatedC);
+          return updatedC;
+        }
+        return c;
+      });
+      setCustomers(updatedCustomers);
+    }
 
     setSelectedInvoiceOrder(updatedOrder);
     triggerToast(t('toast_delivery_confirmed').replace('{{memoNo}}', updatedOrder.memoNo));
@@ -670,16 +701,18 @@ export default function App() {
     setOrders((prev) => sortOrdersByRecency([updatedOrder, ...prev.filter((o) => o.id !== updatedOrder.id)]));
     await saveDocumentToFirestore('orders', updatedOrder.id, updatedOrder);
 
-    // Update customer due
-    const updatedCustomers = customers.map((c) => {
-      if (c.id === updatedOrder.customerId) {
-        const updatedC = { ...c, currentDue: updatedOrder.totalNetDue };
-        saveDocumentToFirestore('customers', c.id, updatedC);
-        return updatedC;
-      }
-      return c;
-    });
-    setCustomers(updatedCustomers);
+    // Update customer due ONLY if the order is delivered
+    if (updatedOrder.deliveryStatus === 'delivered') {
+      const updatedCustomers = customers.map((c) => {
+        if (c.id === updatedOrder.customerId) {
+          const updatedC = { ...c, currentDue: updatedOrder.totalNetDue };
+          saveDocumentToFirestore('customers', c.id, updatedC);
+          return updatedC;
+        }
+        return c;
+      });
+      setCustomers(updatedCustomers);
+    }
 
     triggerToast(t('toast_order_updated').replace('{{memoNo}}', updatedOrder.memoNo));
   };
@@ -1216,6 +1249,7 @@ export default function App() {
           currentUser={currentUser}
           currentUserRole={currentUser?.role || 'customer'}
           onLogout={handleLogout}
+          onOpenLogin={() => setIsLoginModalOpen(true)}
           dueAlertCount={dueAlertCount}
           lowStockCount={lowStockCount}
           pendingOrdersCount={pendingOrdersCount}
@@ -1231,6 +1265,7 @@ export default function App() {
           <Header
             currentUser={currentUser}
             onLogout={handleLogout}
+            onOpenLogin={() => setIsLoginModalOpen(true)}
             onManualSeed={handleManualSeed}
             isLoadingCloud={isLoadingCloud}
             activeTab={activeTab}
@@ -1271,7 +1306,7 @@ export default function App() {
           />
 
           {/* Main Content View */}
-          <main className="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 pt-4 sm:pt-6 pb-6 sm:pb-12">
+          <main className="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 pt-3 sm:pt-6 pb-24 md:pb-12">
             <Suspense fallback={<TabLoadingFallback />}>
         
         {activeTab === 'dashboard' && (
@@ -1390,6 +1425,7 @@ export default function App() {
             onUpdateOrder={handleUpdateOrder}
             onDeleteOrder={handleDeleteOrder}
             currentUserRole={currentUser?.role || 'customer'}
+            onNavigate={(tab) => setActiveTab(tab as any)}
           />
         )}
 
@@ -1440,7 +1476,6 @@ export default function App() {
             systemConfig={systemConfig}
             activeTheme={activeTheme}
             onUpdateSystemConfig={handleUpdateSystemConfig}
-            onClearDatabase={handleClearDatabase}
             onNavigateToReports={() => setActiveTab('reports')}
           />
         )}

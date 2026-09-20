@@ -8,7 +8,6 @@ interface FeatureManagementProps {
   systemConfig?: SystemConfig;
   activeTheme: UITheme;
   onUpdateSystemConfig: (newConfig: SystemConfig) => void;
-  onClearDatabase?: () => Promise<void>;
   onNavigateToReports?: () => void;
 }
 
@@ -16,15 +15,12 @@ export const FeatureManagement: React.FC<FeatureManagementProps> = ({
   currentUser,
   systemConfig,
   onUpdateSystemConfig,
-  onClearDatabase,
   onNavigateToReports,
 }) => {
   const [newCategoryInput, setNewCategoryInput] = useState('');
   const [catError, setCatError] = useState<string | null>(null);
   const [deletingCategory, setDeletingCategory] = useState<string | null>(null);
   const [isCategoryExpanded, setIsCategoryExpanded] = useState<boolean>(false);
-  const [showClearDbConfirm, setShowClearDbConfirm] = useState<boolean>(false);
-  const [isClearing, setIsClearing] = useState<boolean>(false);
 
   // APK Download Link State
   const [apkUrlInput, setApkUrlInput] = useState<string>(systemConfig?.apkDownloadUrl || '');
@@ -117,51 +113,6 @@ export const FeatureManagement: React.FC<FeatureManagementProps> = ({
         </div>
       )}
 
-      {/* Clear Database Confirmation Modal */}
-      {showClearDbConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fade-in">
-          <div className="bg-slate-900 border border-rose-500/50 p-5 rounded-2xl max-w-sm w-full space-y-4 shadow-2xl">
-            <div className="flex items-center gap-3">
-              <div className="p-2.5 bg-rose-500/10 text-rose-400 rounded-xl">
-                <Trash2 className="w-5 h-5" />
-              </div>
-              <div>
-                <h4 className="text-sm font-bold text-white">সকল ডাটা ক্লিয়ার করুন</h4>
-                <p className="text-xs text-slate-400">সাবধান! এটি একটি স্থায়ী পদক্ষেপ</p>
-              </div>
-            </div>
-            <p className="text-xs text-slate-300 leading-relaxed">
-              আপনি কি ডাটাবেজের সকল প্রোডাক্ট, মেমো/অর্ডার, কাস্টমার, বাকী তালিকা ও সেলস রিপোর্ট মুছে ফেলতে চান?
-            </p>
-            <div className="flex justify-end gap-2 pt-2">
-              <button
-                type="button"
-                disabled={isClearing}
-                onClick={() => setShowClearDbConfirm(false)}
-                className="px-3.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold transition cursor-pointer"
-              >
-                বাতিল
-              </button>
-              <button
-                type="button"
-                disabled={isClearing}
-                onClick={async () => {
-                  if (onClearDatabase) {
-                    setIsClearing(true);
-                    await onClearDatabase();
-                    setIsClearing(false);
-                  }
-                  setShowClearDbConfirm(false);
-                }}
-                className="px-3.5 py-1.5 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-xs font-bold transition shadow-lg shadow-rose-600/20 cursor-pointer flex items-center gap-1.5"
-              >
-                {isClearing ? 'ক্লিয়ার হচ্ছে...' : 'হ্যাঁ, ক্লিয়ার করুন'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Minimal Header like Dashboard */}
       <div className="flex items-center justify-between gap-3 pt-1 pb-1">
         <div className="flex items-center gap-3 flex-1 min-w-0">
@@ -171,32 +122,6 @@ export const FeatureManagement: React.FC<FeatureManagementProps> = ({
           </span>
           <div className="h-0.5 bg-gradient-to-r from-amber-500/50 via-slate-800 to-transparent flex-1" />
         </div>
-      </div>
-
-      {/* Clear Demo Data Card */}
-      <div className="bg-slate-900 border border-rose-500/30 p-5 sm:p-6 rounded-2xl shadow-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <div className="p-3 bg-rose-500/10 text-rose-400 rounded-xl shrink-0">
-            <Trash2 className="w-5 h-5" />
-          </div>
-          <div>
-            <h3 className="text-sm sm:text-base font-bold text-white">
-              ডাটাবেজ ক্লিয়ার ও ডেমো ডাটা রিমুভ (Clear All Data)
-            </h3>
-            <p className="text-[11px] sm:text-xs text-slate-400 mt-0.5">
-              ডাটাবেজ থেকে সমস্ত প্রোডাক্ট, মেমো/অর্ডার, কাস্টমার, বকেয়া ও সেলস রিপোর্ট ফাঁকা করুন।
-            </p>
-          </div>
-        </div>
-
-        <button
-          type="button"
-          onClick={() => setShowClearDbConfirm(true)}
-          className="px-4 py-2.5 bg-rose-600/90 hover:bg-rose-500 text-white font-bold rounded-xl text-xs flex items-center gap-2 cursor-pointer transition shadow-lg shadow-rose-600/20 shrink-0"
-        >
-          <Trash2 className="w-4 h-4" />
-          <span>সকল ডাটা ক্লিয়ার করুন</span>
-        </button>
       </div>
 
       {/* Set Category Expandable Card */}

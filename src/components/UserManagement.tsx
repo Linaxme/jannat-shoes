@@ -1113,18 +1113,33 @@ export const UserManagement: React.FC<UserManagementProps> = ({
               
               {/* Role Selection */}
               <div>
-                <label className="block font-semibold text-slate-300 mb-1">
+                <label className="block font-semibold text-slate-300 mb-1.5">
                   একাউন্ট এর রোল (Role) <span className="text-amber-400">*</span>
                 </label>
-                <select
-                  value={role}
-                  onChange={(e) => setRole(e.target.value as UserRole)}
-                  className="w-full bg-slate-950 border border-slate-700 text-amber-300 p-2.5 rounded-xl font-bold focus:outline-none focus:border-amber-400"
-                >
-                  <option value="customer">দোকানদার / কাস্টমার (Registered Shopkeeper)</option>
-                  <option value="seller">সেলার (Sales Representative)</option>
-                  <option value="admin">এডমিন (Store Admin)</option>
-                </select>
+                <div className="grid grid-cols-3 gap-2">
+                  {[
+                    { key: 'customer', title: 'দোকানদার', desc: 'Shopkeeper' },
+                    { key: 'seller', title: 'সেলার', desc: 'Sales Rep' },
+                    { key: 'admin', title: 'এডমিন', desc: 'Admin' },
+                  ].map((r) => {
+                    const isSelected = role === r.key;
+                    return (
+                      <button
+                        type="button"
+                        key={r.key}
+                        onClick={() => setRole(r.key as UserRole)}
+                        className={`p-2.5 rounded-xl border text-center transition cursor-pointer ${
+                          isSelected
+                            ? 'bg-amber-500/20 border-amber-500 text-amber-300 font-bold shadow-sm'
+                            : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-slate-200 hover:border-slate-700'
+                        }`}
+                      >
+                        <div className="text-xs">{r.title}</div>
+                        <div className="text-[10px] opacity-70 font-normal">{r.desc}</div>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
 
               {/* User Name */}

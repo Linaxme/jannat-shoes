@@ -400,14 +400,30 @@ export const EditPendingOrderModal: React.FC<EditPendingOrderModalProps> = ({
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-1">
                   <div>
                     <label className="block text-slate-400 text-[10px] mb-1">একক:</label>
-                    <select
-                      value={newUnitType}
-                      onChange={(e) => setNewUnitType(e.target.value as any)}
-                      className="w-full bg-slate-900 border border-slate-700 rounded-xl px-2.5 py-1.5 text-slate-100 font-medium focus:outline-none focus:border-amber-500"
-                    >
-                      <option value="cartons">ডজন ({selectedProduct.pairsPerCarton || 12} জোড়া)</option>
-                      <option value="pairs">জোড়া</option>
-                    </select>
+                    <div className="grid grid-cols-2 gap-1 bg-slate-900 p-0.5 rounded-xl border border-slate-700">
+                      <button
+                        type="button"
+                        onClick={() => setNewUnitType('cartons')}
+                        className={`py-1 text-[11px] font-bold rounded-lg transition-all cursor-pointer ${
+                          newUnitType === 'cartons'
+                            ? 'bg-amber-500 text-slate-950 shadow-xs'
+                            : 'text-slate-400 hover:text-slate-200'
+                        }`}
+                      >
+                        ডজন
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setNewUnitType('pairs')}
+                        className={`py-1 text-[11px] font-bold rounded-lg transition-all cursor-pointer ${
+                          newUnitType === 'pairs'
+                            ? 'bg-amber-500 text-slate-950 shadow-xs'
+                            : 'text-slate-400 hover:text-slate-200'
+                        }`}
+                      >
+                        জোড়া
+                      </button>
+                    </div>
                   </div>
 
                   <div>
@@ -605,16 +621,26 @@ export const EditPendingOrderModal: React.FC<EditPendingOrderModalProps> = ({
 
             <div>
               <label className="block text-slate-400 text-[11px] mb-1">পেমেন্ট মাধ্যম:</label>
-              <select
-                value={paymentMethod}
-                onChange={(e) => setPaymentMethod(e.target.value as any)}
-                className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-slate-100 font-semibold focus:outline-none"
-              >
-                <option value="নগদ ক্যাশ">নগদ ক্যাশ</option>
-                <option value="বিকাশ / নগদ">বিকাশ / নগদ</option>
-                <option value="ব্যাংক ট্রান্সফার">ব্যাংক ট্রান্সফার</option>
-                <option value="বাকী (ডিউ)">বাকী (ডিউ)</option>
-              </select>
+              <div className="grid grid-cols-2 gap-1.5">
+                {(['নগদ ক্যাশ', 'বিকাশ / নগদ', 'ব্যাংক ট্রান্সফার', 'বাকী (ডিউ)'] as const).map((method) => {
+                  const isSelected = paymentMethod === method;
+                  return (
+                    <button
+                      key={method}
+                      type="button"
+                      onClick={() => setPaymentMethod(method)}
+                      className={`px-2 py-1.5 rounded-xl border text-[11px] font-semibold flex items-center justify-between transition-all cursor-pointer ${
+                        isSelected
+                          ? 'bg-amber-500/20 border-amber-500 text-amber-300 shadow-xs'
+                          : 'bg-slate-900 border-slate-700/80 text-slate-400 hover:text-slate-200 hover:border-slate-600'
+                      }`}
+                    >
+                      <span className="truncate">{method}</span>
+                      {isSelected && <Check className="w-3 h-3 text-amber-400 shrink-0" />}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           </div>
 

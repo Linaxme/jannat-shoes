@@ -18,6 +18,8 @@ import {
   Loader2,
   Boxes,
   Percent,
+  ChevronDown,
+  Check,
 } from 'lucide-react';
 import {
   BarChart,
@@ -66,6 +68,10 @@ export const Reports: React.FC<ReportsProps> = ({
   const [selectedSellerId, setSelectedSellerId] = useState<string>('all');
   const [selectedCustomerId, setSelectedCustomerId] = useState<string>('all');
   const [selectedOrderType, setSelectedOrderType] = useState<'all' | 'direct_sale' | 'sample_booking'>('all');
+
+  const [isMonthDropdownOpen, setIsMonthDropdownOpen] = useState<boolean>(false);
+  const [isYearDropdownOpen, setIsYearDropdownOpen] = useState<boolean>(false);
+  const [isSellerDropdownOpen, setIsSellerDropdownOpen] = useState<boolean>(false);
 
   const monthsList = [
     { num: '01', name: 'জানুয়ারি (January)' },
@@ -117,6 +123,9 @@ export const Reports: React.FC<ReportsProps> = ({
         if (o.orderType !== selectedOrderType) return false;
       }
 
+      // Delivery Status: Only delivered orders count as realized sales & profit
+      if (o.deliveryStatus === 'booked') return false;
+
       return true;
     });
   }, [orders, reportType, selectedYear, selectedMonth, startDate, endDate, selectedSellerId, selectedCustomerId, selectedOrderType]);
@@ -133,7 +142,16 @@ export const Reports: React.FC<ReportsProps> = ({
   let totalCostOfGoods = 0;
   filteredOrders.forEach((o) => {
     o.items?.forEach((item) => {
-      totalCostOfGoods += (item.totalPairs || 0) * (item.unitBuyPrice || 0);
+      let buyPrice = item.unitBuyPrice || 0;
+      if (buyPrice <= 0) {
+        const prod = products.find(
+          (p) =>
+            (item.productId && p.id === item.productId) ||
+            (item.articleCode && p.articleCode && p.articleCode.trim().toLowerCase() === item.articleCode.trim().toLowerCase())
+        );
+        buyPrice = prod?.buyPrice || 0;
+      }
+      totalCostOfGoods += (item.totalPairs || 0) * buyPrice;
     });
   });
   const grossProfit = totalSalesRevenue - totalCostOfGoods;
@@ -434,44 +452,127 @@ export const Reports: React.FC<ReportsProps> = ({
           <div className="md:col-span-8 flex items-center gap-2 flex-wrap">
             {reportType === 'monthly' && (
               <>
-                <select
-                  value={selectedMonth}
-                  onChange={(e) => setSelectedMonth(e.target.value)}
-                  className="bg-slate-950 border border-slate-700 text-xs text-amber-300 font-bold rounded-xl px-3 py-2 focus:outline-none"
-                >
-                  {monthsList.map((m) => (
-                    <option key={m.num} value={m.num} className="bg-slate-900 text-slate-100">
-                      {m.name}
-                    </option>
-                  ))}
-                </select>
+                {/* Month Dropdown */}
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsMonthDropdownOpen((prev) => !prev);
+                      setIsYearDropdownOpen(false);
+                      setIsSellerDropdownOpen(false);
+                    }}
+                    className="bg-slate-950 border border-slate-700 hover:border-slate-600 text-xs text-amber-300 font-bold rounded-xl px-3 py-2 flex items-center gap-1.5 focus:outline-none cursor-pointer transition-colors"
+                  >
+                    <span>{monthsList.find((m) => m.num === selectedMonth)?.name || selectedMonth}</span>
+                    <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform ${isMonthDropdownOpen ? 'rotate-180 text-amber-400' : ''}`} />
+                  </button>
 
-                <select
-                  value={selectedYear}
-                  onChange={(e) => setSelectedYear(e.target.value)}
-                  className="bg-slate-950 border border-slate-700 text-xs text-amber-300 font-bold rounded-xl px-3 py-2 focus:outline-none"
-                >
-                  {yearsList.map((y) => (
-                    <option key={y} value={y} className="bg-slate-900 text-slate-100">
-                      {y} সাল
-                    </option>
-                  ))}
-                </select>
+                  {isMonthDropdownOpen && (
+                    <div className="absolute left-0 top-full mt-1 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl py-1 z-50 min-w-[170px] max-h-60 overflow-y-auto">
+                      {monthsList.map((m) => {
+                        const isSelected = selectedMonth === m.num;
+                        return (
+                          <button
+                            key={m.num}
+                            type="button"
+                            onClick={() => {
+                              setSelectedMonth(m.num);
+                              setIsMonthDropdownOpen(false);
+                            }}
+                            className={`w-full px-3 py-1.5 text-left text-xs flex items-center justify-between cursor-pointer transition-colors ${
+                              isSelected ? 'bg-amber-500/20 text-amber-300 font-bold' : 'text-slate-300 hover:bg-slate-800'
+                            }`}
+                          >
+                            <span>{m.name}</span>
+                            {isSelected && <Check className="w-3.5 h-3.5 text-amber-400 shrink-0" />}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+
+                {/* Year Dropdown */}
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsYearDropdownOpen((prev) => !prev);
+                      setIsMonthDropdownOpen(false);
+                      setIsSellerDropdownOpen(false);
+                    }}
+                    className="bg-slate-950 border border-slate-700 hover:border-slate-600 text-xs text-amber-300 font-bold rounded-xl px-3 py-2 flex items-center gap-1.5 focus:outline-none cursor-pointer transition-colors"
+                  >
+                    <span>{selectedYear} সাল</span>
+                    <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform ${isYearDropdownOpen ? 'rotate-180 text-amber-400' : ''}`} />
+                  </button>
+
+                  {isYearDropdownOpen && (
+                    <div className="absolute left-0 top-full mt-1 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl py-1 z-50 min-w-[110px]">
+                      {yearsList.map((y) => {
+                        const isSelected = selectedYear === y;
+                        return (
+                          <button
+                            key={y}
+                            type="button"
+                            onClick={() => {
+                              setSelectedYear(y);
+                              setIsYearDropdownOpen(false);
+                            }}
+                            className={`w-full px-3 py-1.5 text-left text-xs flex items-center justify-between cursor-pointer transition-colors ${
+                              isSelected ? 'bg-amber-500/20 text-amber-300 font-bold' : 'text-slate-300 hover:bg-slate-800'
+                            }`}
+                          >
+                            <span>{y} সাল</span>
+                            {isSelected && <Check className="w-3.5 h-3.5 text-amber-400 shrink-0" />}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
               </>
             )}
 
             {reportType === 'annual' && (
-              <select
-                value={selectedYear}
-                onChange={(e) => setSelectedYear(e.target.value)}
-                className="bg-slate-950 border border-slate-700 text-xs text-amber-300 font-bold rounded-xl px-4 py-2 focus:outline-none"
-              >
-                {yearsList.map((y) => (
-                  <option key={y} value={y} className="bg-slate-900 text-slate-100">
-                    {y} সাল
-                  </option>
-                ))}
-              </select>
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsYearDropdownOpen((prev) => !prev);
+                    setIsMonthDropdownOpen(false);
+                    setIsSellerDropdownOpen(false);
+                  }}
+                  className="bg-slate-950 border border-slate-700 hover:border-slate-600 text-xs text-amber-300 font-bold rounded-xl px-4 py-2 flex items-center gap-1.5 focus:outline-none cursor-pointer transition-colors"
+                >
+                  <span>{selectedYear} সাল</span>
+                  <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform ${isYearDropdownOpen ? 'rotate-180 text-amber-400' : ''}`} />
+                </button>
+
+                {isYearDropdownOpen && (
+                  <div className="absolute left-0 top-full mt-1 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl py-1 z-50 min-w-[110px]">
+                    {yearsList.map((y) => {
+                      const isSelected = selectedYear === y;
+                      return (
+                        <button
+                          key={y}
+                          type="button"
+                          onClick={() => {
+                            setSelectedYear(y);
+                            setIsYearDropdownOpen(false);
+                          }}
+                          className={`w-full px-3 py-1.5 text-left text-xs flex items-center justify-between cursor-pointer transition-colors ${
+                            isSelected ? 'bg-amber-500/20 text-amber-300 font-bold' : 'text-slate-300 hover:bg-slate-800'
+                          }`}
+                        >
+                          <span>{y} সাল</span>
+                          {isSelected && <Check className="w-3.5 h-3.5 text-amber-400 shrink-0" />}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
             )}
 
             {reportType === 'custom' && (
@@ -494,18 +595,62 @@ export const Reports: React.FC<ReportsProps> = ({
 
             {/* Seller Filter */}
             {sellers.length > 0 && (
-              <select
-                value={selectedSellerId}
-                onChange={(e) => setSelectedSellerId(e.target.value)}
-                className="bg-slate-950 border border-slate-700 text-xs text-slate-300 rounded-xl px-3 py-2 focus:outline-none"
-              >
-                <option value="all">সকল সেলার</option>
-                {sellers.map((s) => (
-                  <option key={s.id} value={s.name} className="bg-slate-900 text-slate-100">
-                    {s.name} ({s.area})
-                  </option>
-                ))}
-              </select>
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsSellerDropdownOpen((prev) => !prev);
+                    setIsMonthDropdownOpen(false);
+                    setIsYearDropdownOpen(false);
+                  }}
+                  className="bg-slate-950 border border-slate-700 hover:border-slate-600 text-xs text-slate-200 font-medium rounded-xl px-3 py-2 flex items-center gap-1.5 focus:outline-none cursor-pointer transition-colors"
+                >
+                  <Users className="w-3.5 h-3.5 text-amber-400" />
+                  <span>
+                    {selectedSellerId === 'all'
+                      ? 'সকল সেলার'
+                      : sellers.find((s) => s.name === selectedSellerId)?.name || selectedSellerId}
+                  </span>
+                  <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform ${isSellerDropdownOpen ? 'rotate-180 text-amber-400' : ''}`} />
+                </button>
+
+                {isSellerDropdownOpen && (
+                  <div className="absolute left-0 top-full mt-1 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl py-1 z-50 min-w-[180px] max-h-60 overflow-y-auto">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSelectedSellerId('all');
+                        setIsSellerDropdownOpen(false);
+                      }}
+                      className={`w-full px-3 py-1.5 text-left text-xs flex items-center justify-between cursor-pointer transition-colors ${
+                        selectedSellerId === 'all' ? 'bg-amber-500/20 text-amber-300 font-bold' : 'text-slate-300 hover:bg-slate-800'
+                      }`}
+                    >
+                      <span>সকল সেলার</span>
+                      {selectedSellerId === 'all' && <Check className="w-3.5 h-3.5 text-amber-400 shrink-0" />}
+                    </button>
+                    {sellers.map((s) => {
+                      const isSelected = selectedSellerId === s.name;
+                      return (
+                        <button
+                          key={s.id}
+                          type="button"
+                          onClick={() => {
+                            setSelectedSellerId(s.name);
+                            setIsSellerDropdownOpen(false);
+                          }}
+                          className={`w-full px-3 py-1.5 text-left text-xs flex items-center justify-between cursor-pointer transition-colors ${
+                            isSelected ? 'bg-amber-500/20 text-amber-300 font-bold' : 'text-slate-300 hover:bg-slate-800'
+                          }`}
+                        >
+                          <span>{s.name} ({s.area})</span>
+                          {isSelected && <Check className="w-3.5 h-3.5 text-amber-400 shrink-0" />}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
             )}
 
             {/* Reset Button */}
@@ -527,50 +672,78 @@ export const Reports: React.FC<ReportsProps> = ({
       </div>
 
       {/* KPI Overview Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
         
-        <div className="bg-slate-900 border border-slate-800 p-4 rounded-2xl">
-          <div className="flex items-center justify-between text-xs text-slate-400 font-medium">
-            <span>মোট বিক্রয়</span>
-            <TrendingUp className="w-4 h-4 text-amber-400" />
+        <div className="bg-slate-900/80 border border-slate-800/90 rounded-2xl p-4 sm:p-5 shadow-sm hover:border-slate-700/80 transition relative overflow-hidden group">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <span className="text-xs font-bold text-slate-400">মোট বিক্রয়</span>
+              <div className="text-xl sm:text-2xl font-black text-amber-300 font-mono tracking-tight mt-1">
+                {formatTaka(totalSalesRevenue)}
+              </div>
+            </div>
+            <div className="w-10 h-10 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400 shrink-0 shadow-inner">
+              <TrendingUp className="w-5 h-5" />
+            </div>
           </div>
-          <h3 className="text-2xl font-black text-amber-300 mt-1">{formatTaka(totalSalesRevenue)}</h3>
-          <p className="text-[11px] text-slate-400 mt-1">
-            মোট বিক্রীত জুতো: <span className="font-bold text-slate-200">{toBnDigit(totalPairsSold)} জোড়া</span>
-          </p>
+          <div className="mt-3 pt-3 border-t border-slate-800/70 flex items-center justify-between text-xs text-slate-400">
+            <span>বিক্রীত জুতো</span>
+            <span className="font-bold text-slate-200">{toBnDigit(totalPairsSold)} জোড়া</span>
+          </div>
         </div>
 
-        <div className="bg-slate-900 border border-slate-800 p-4 rounded-2xl">
-          <div className="flex items-center justify-between text-xs text-slate-400 font-medium">
-            <span>নগদ আদায় ও কালেকশন</span>
-            <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+        <div className="bg-slate-900/80 border border-slate-800/90 rounded-2xl p-4 sm:p-5 shadow-sm hover:border-slate-700/80 transition relative overflow-hidden group">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <span className="text-xs font-bold text-slate-400">নগদ আদায় ও কালেকশন</span>
+              <div className="text-xl sm:text-2xl font-black text-emerald-400 font-mono tracking-tight mt-1">
+                {formatTaka(totalCashCollected)}
+              </div>
+            </div>
+            <div className="w-10 h-10 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400 shrink-0 shadow-inner">
+              <CheckCircle2 className="w-5 h-5" />
+            </div>
           </div>
-          <h3 className="text-2xl font-black text-emerald-400 mt-1">{formatTaka(totalCashCollected)}</h3>
-          <p className="text-[11px] text-slate-400 mt-1">
-            মেমো সংখ্যা: <span className="font-bold text-slate-200">{toBnDigit(totalOrdersCount)}টি</span>
-          </p>
+          <div className="mt-3 pt-3 border-t border-slate-800/70 flex items-center justify-between text-xs text-slate-400">
+            <span>মোট মেমো</span>
+            <span className="font-bold text-slate-200">{toBnDigit(totalOrdersCount)} টি</span>
+          </div>
         </div>
 
-        <div className="bg-slate-900 border border-slate-800 p-4 rounded-2xl">
-          <div className="flex items-center justify-between text-xs text-slate-400 font-medium">
-            <span>নতুন সৃষ্ট বাকী (Due)</span>
-            <Users className="w-4 h-4 text-rose-400" />
+        <div className="bg-slate-900/80 border border-slate-800/90 rounded-2xl p-4 sm:p-5 shadow-sm hover:border-slate-700/80 transition relative overflow-hidden group">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <span className="text-xs font-bold text-slate-400">নতুন সৃষ্ট বাকী (Due)</span>
+              <div className="text-xl sm:text-2xl font-black text-rose-400 font-mono tracking-tight mt-1">
+                {formatTaka(totalNewDue)}
+              </div>
+            </div>
+            <div className="w-10 h-10 rounded-xl bg-rose-500/15 border border-rose-500/30 flex items-center justify-center text-rose-400 shrink-0 shadow-inner">
+              <Users className="w-5 h-5" />
+            </div>
           </div>
-          <h3 className="text-2xl font-black text-rose-400 mt-1">{formatTaka(totalNewDue)}</h3>
-          <p className="text-[11px] text-slate-400 mt-1">
-            ডিসকাউন্ট: <span className="font-bold text-slate-200">{formatTaka(totalDiscounts)}</span>
-          </p>
+          <div className="mt-3 pt-3 border-t border-slate-800/70 flex items-center justify-between text-xs text-slate-400">
+            <span>ডিসকাউন্ট</span>
+            <span className="font-bold text-slate-200">{formatTaka(totalDiscounts)}</span>
+          </div>
         </div>
 
-        <div className="bg-slate-900 border border-slate-800 p-4 rounded-2xl">
-          <div className="flex items-center justify-between text-xs text-slate-400 font-medium">
-            <span>মোট লাভ ও মার্জিন</span>
-            <Percent className="w-4 h-4 text-indigo-400" />
+        <div className="bg-slate-900/80 border border-slate-800/90 rounded-2xl p-4 sm:p-5 shadow-sm hover:border-slate-700/80 transition relative overflow-hidden group">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <span className="text-xs font-bold text-slate-400">মোট লাভ ও মার্জিন</span>
+              <div className="text-xl sm:text-2xl font-black text-indigo-300 font-mono tracking-tight mt-1">
+                {formatTaka(grossProfit)}
+              </div>
+            </div>
+            <div className="w-10 h-10 rounded-xl bg-indigo-500/15 border border-indigo-500/30 flex items-center justify-center text-indigo-400 shrink-0 shadow-inner">
+              <Percent className="w-5 h-5" />
+            </div>
           </div>
-          <h3 className="text-2xl font-black text-indigo-300 mt-1">{formatTaka(grossProfit)}</h3>
-          <p className="text-[11px] text-slate-400 mt-1">
-            মুনাফার হার: <span className="font-bold text-amber-300">{toBnDigit(profitMarginPercent)}%</span>
-          </p>
+          <div className="mt-3 pt-3 border-t border-slate-800/70 flex items-center justify-between text-xs text-slate-400">
+            <span>মুনাফার হার</span>
+            <span className="font-bold text-amber-300">{toBnDigit(profitMarginPercent)}%</span>
+          </div>
         </div>
 
       </div>

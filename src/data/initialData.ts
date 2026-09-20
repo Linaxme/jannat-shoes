@@ -13,7 +13,7 @@ export const UI_THEMES: UITheme[] = [
     nameEn: 'Royal Navy & Golden Amber',
     descBn: 'পাইকারি শো-রুমের জন্য আভিজাত্যপূর্ণ ও ক্লিয়ার কন্ট্রাস্ট থিম',
     bgClass: 'bg-slate-900 text-slate-100',
-    cardClass: 'bg-slate-800/90 border border-slate-700/80 shadow-lg text-slate-100',
+    cardClass: 'bg-slate-900/80 border border-slate-800/90 shadow-sm text-slate-100',
     headerClass: 'bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 border-b border-indigo-800/50',
     primaryBtnClass: 'bg-indigo-600 hover:bg-indigo-500 text-white font-medium shadow-md shadow-indigo-900/40 active:scale-[0.98]',
     accentBadgeClass: 'bg-amber-500/20 text-amber-300 border border-amber-500/40',

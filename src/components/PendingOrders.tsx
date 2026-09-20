@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Order, UITheme, UserRole, ShoeProduct } from '../types';
+import { Order, UITheme, UserRole, ShoeProduct, ConfirmDeliveryData } from '../types';
 import { formatTaka, toBnDigit, formatBnDate, compareOrdersNewestFirst } from '../utils/formatters';
 import {
   Clock,
@@ -19,6 +19,7 @@ import {
   LayoutGrid,
 } from 'lucide-react';
 import { EditPendingOrderModal } from './EditPendingOrderModal';
+import { DeliveryConfirmModal } from './DeliveryConfirmModal';
 import { useLanguage } from '../contexts/LanguageContext';
 
 interface PendingOrdersProps {
@@ -26,7 +27,7 @@ interface PendingOrdersProps {
   products?: ShoeProduct[];
   activeTheme: UITheme;
   onSelectOrderForInvoice: (order: Order) => void;
-  onConfirmDelivery: (orderId: string) => void;
+  onConfirmDelivery: (orderId: string, deliveryData?: ConfirmDeliveryData) => void;
   onUpdateOrder: (updatedOrder: Order) => void;
   onClaimOrder?: (orderId: string) => void;
   onDeleteOrder?: (orderId: string) => void;
@@ -46,6 +47,7 @@ export const PendingOrders: React.FC<PendingOrdersProps> = ({
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [editingOrder, setEditingOrder] = useState<Order | null>(null);
+  const [deliveringOrder, setDeliveringOrder] = useState<Order | null>(null);
   const [orderToTrash, setOrderToTrash] = useState<Order | null>(null);
   const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'card' | 'table'>(
@@ -92,15 +94,15 @@ export const PendingOrders: React.FC<PendingOrdersProps> = ({
           <div className="h-0.5 bg-gradient-to-r from-amber-500/50 via-slate-800 to-transparent flex-1" />
         </div>
 
-        <div className="flex items-center gap-3 bg-slate-900 px-3 py-1.5 rounded-xl border border-slate-800 text-xs shrink-0 self-start sm:self-auto">
+        <div className="flex items-center gap-3 bg-slate-950/80 px-3.5 py-1.5 rounded-xl border border-slate-800/90 text-xs shrink-0 self-start sm:self-auto shadow-inner">
           <div>
             <span className="font-bold text-slate-200">{toBnDigit(filteredOrders.length)} টি</span>
           </div>
-          <div className="h-3 w-px bg-slate-700" />
+          <div className="h-3.5 w-px bg-slate-800" />
           <div>
             <span className="font-bold text-amber-300">{toBnDigit(totalPendingPairs)} জোড়া</span>
           </div>
-          <div className="h-3 w-px bg-slate-700" />
+          <div className="h-3.5 w-px bg-slate-800" />
           <div>
             <span className="font-bold text-emerald-400">{formatTaka(totalPendingAmount)}</span>
           </div>
@@ -325,7 +327,7 @@ export const PendingOrders: React.FC<PendingOrdersProps> = ({
 
                         <button
                           type="button"
-                          onClick={() => onConfirmDelivery(ord.id)}
+                          onClick={() => setDeliveringOrder(ord)}
                           className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-xs flex items-center gap-1 shadow transition-colors cursor-pointer"
                         >
                           <CheckCircle className="w-3.5 h-3.5" />
@@ -477,7 +479,7 @@ export const PendingOrders: React.FC<PendingOrdersProps> = ({
 
                                   <button
                                     type="button"
-                                    onClick={() => onConfirmDelivery(ord.id)}
+                                    onClick={() => setDeliveringOrder(ord)}
                                     className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-xs flex items-center gap-1 shadow transition cursor-pointer"
                                   >
                                     <CheckCircle className="w-3.5 h-3.5" />
@@ -617,6 +619,17 @@ export const PendingOrders: React.FC<PendingOrdersProps> = ({
           </div>
         </div>
       )}
+
+      {/* Delivery Confirmation & Payment Modal */}
+      <DeliveryConfirmModal
+        isOpen={!!deliveringOrder}
+        order={deliveringOrder}
+        onClose={() => setDeliveringOrder(null)}
+        onConfirm={(orderId, deliveryData) => {
+          onConfirmDelivery(orderId, deliveryData);
+          setDeliveringOrder(null);
+        }}
+      />
     </div>
   );
 };

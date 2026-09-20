@@ -91,23 +91,71 @@ export const CashCollectionsModal: React.FC<CashCollectionsModalProps> = ({
 
   // Convert Orders (with paidAmount > 0) to unified format
   const memoCollections = useMemo<UnifiedCollectionItem[]>(() => {
-    return orders
-      .filter((o) => (o.paidAmount || 0) > 0 && isDateInPeriod(o.date))
-      .map((o) => ({
-        id: `memo-${o.id}`,
-        sourceType: 'memo',
-        date: o.date || '',
-        time: o.time || '',
-        refNo: `মেমো #${o.memoNo || o.id.slice(-5)}`,
-        shopName: o.shopName || o.customerName || 'খুচরা কাস্টমার',
-        customerName: o.customerName || '',
-        collectorName: o.sellerName || 'কাউন্টার',
-        paymentMethod: o.paymentMethod || 'নগদ ক্যাশ',
-        amount: o.paidAmount || 0,
-        dueRemaining: o.dueAmount || 0,
-        totalBill: o.grandTotal || 0,
-        rawOrder: o,
-      }));
+    const items: UnifiedCollectionItem[] = [];
+
+    orders.forEach((o) => {
+      // If order was delivered on a different date than booked
+      if (o.deliveryStatus === 'delivered' && o.deliveryDate && o.deliveryDate !== o.date) {
+        // Payment collected upon delivery
+        if ((o.deliveryPaidAmount || 0) > 0 && isDateInPeriod(o.deliveryDate)) {
+          items.push({
+            id: `delivery-${o.id}`,
+            sourceType: 'memo',
+            date: o.deliveryDate,
+            time: o.time || '',
+            refNo: `মেমো #${o.memoNo || o.id.slice(-5)} (ডেলিভারি)`,
+            shopName: o.shopName || o.customerName || 'খুচরা কাস্টমার',
+            customerName: o.customerName || '',
+            collectorName: o.sellerName || 'কাউন্টার',
+            paymentMethod: o.deliveryPaymentMethod || o.paymentMethod || 'নগদ ক্যাশ',
+            amount: o.deliveryPaidAmount || 0,
+            dueRemaining: o.dueAmount || 0,
+            totalBill: o.grandTotal || 0,
+            rawOrder: o,
+          });
+        }
+        // Advance paid when booked
+        const advanceAmount = Math.max(0, (o.paidAmount || 0) - (o.deliveryPaidAmount || 0));
+        if (advanceAmount > 0 && isDateInPeriod(o.date)) {
+          items.push({
+            id: `booking-${o.id}`,
+            sourceType: 'memo',
+            date: o.date,
+            time: o.time || '',
+            refNo: `মেমো #${o.memoNo || o.id.slice(-5)} (বুকিং অগ্রিম)`,
+            shopName: o.shopName || o.customerName || 'খুচরা কাস্টমার',
+            customerName: o.customerName || '',
+            collectorName: o.sellerName || 'কাউন্টার',
+            paymentMethod: o.paymentMethod || 'নগদ ক্যাশ',
+            amount: advanceAmount,
+            dueRemaining: (o.grandTotal || 0) - advanceAmount,
+            totalBill: o.grandTotal || 0,
+            rawOrder: o,
+          });
+        }
+      } else {
+        // Standard same-day sale or direct delivery
+        if ((o.paidAmount || 0) > 0 && isDateInPeriod(o.date)) {
+          items.push({
+            id: `memo-${o.id}`,
+            sourceType: 'memo',
+            date: o.date || '',
+            time: o.time || '',
+            refNo: `মেমো #${o.memoNo || o.id.slice(-5)}`,
+            shopName: o.shopName || o.customerName || 'খুচরা কাস্টমার',
+            customerName: o.customerName || '',
+            collectorName: o.sellerName || 'কাউন্টার',
+            paymentMethod: o.paymentMethod || 'নগদ ক্যাশ',
+            amount: o.paidAmount || 0,
+            dueRemaining: o.dueAmount || 0,
+            totalBill: o.grandTotal || 0,
+            rawOrder: o,
+          });
+        }
+      }
+    });
+
+    return items;
   }, [orders, period, todayStr, weekAgoStr, currentMonth, currentYear]);
 
   // Convert DuePaymentLogs (with amountPaid > 0) to unified format

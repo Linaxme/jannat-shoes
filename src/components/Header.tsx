@@ -5,6 +5,7 @@ import {
   MapPin,
   RefreshCw,
   LogOut,
+  LogIn,
   UserCheck,
   ShieldAlert,
   Shield,
@@ -35,6 +36,7 @@ import { toBnDigit } from '../utils/formatters';
 interface HeaderProps {
   currentUser?: UserAccount | null;
   onLogout?: () => void;
+  onOpenLogin?: () => void;
   onManualSeed?: () => void;
   isLoadingCloud?: boolean;
   activeTab: NavTab;
@@ -52,6 +54,7 @@ interface HeaderProps {
 export const Header: React.FC<HeaderProps> = ({
   currentUser,
   onLogout,
+  onOpenLogin,
   onManualSeed,
   isLoadingCloud,
   activeTab,
@@ -138,47 +141,47 @@ export const Header: React.FC<HeaderProps> = ({
 
   return (
     <>
-      <header className={`bg-slate-950 border-b-2 border-orange-500 sticky top-0 backdrop-blur-md bg-opacity-95 transition-all duration-150 ${isDrawerOpen ? 'z-50' : 'z-40'}`}>
-      <div className="max-w-7xl mx-auto px-3 sm:px-6 py-2.5 sm:py-2">
-        <div className="flex items-stretch justify-between gap-2 sm:gap-4">
+      <header className={`bg-slate-950/95 border-b border-slate-800/80 sticky top-0 backdrop-blur-xl transition-all duration-150 ${isDrawerOpen ? 'z-50' : 'z-30'}`}>
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 py-2 sm:py-2.5">
+        <div className="flex items-center justify-between gap-2 sm:gap-4">
           
           {/* Brand & Store Name */}
-          <div className="flex items-center gap-2.5 sm:gap-3 flex-1 min-w-0">
-            <div className="p-1.5 sm:p-2 bg-amber-500 rounded-lg text-slate-950 font-bold flex items-center justify-center shadow-md shadow-amber-500/10 flex-shrink-0">
-              <Store className="w-5 h-5 sm:w-5 sm:h-5 stroke-[2.5]" />
+          <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
+            <div className="p-1.5 sm:p-2 bg-gradient-to-tr from-amber-500 to-amber-400 rounded-xl text-slate-950 font-bold flex items-center justify-center shadow-md shadow-amber-500/20 flex-shrink-0">
+              <Store className="w-4 h-4 sm:w-5 sm:h-5 stroke-[2.3]" />
             </div>
             <div className="text-left flex-1 min-w-0 flex flex-col justify-center">
               <div>
                 <div className="flex items-center gap-1.5 flex-wrap">
-                  <h1 className="text-sm sm:text-lg font-bold tracking-tight text-white leading-tight">
+                  <h1 className="text-sm sm:text-base md:text-lg font-bold tracking-tight text-white leading-tight">
                     {t('store_name')}
                   </h1>
-                  <span className="text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded font-extrabold bg-amber-500/20 text-amber-300 border border-amber-500/30 whitespace-nowrap">
+                  <span className="text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded font-extrabold bg-amber-500/15 text-amber-300 border border-amber-500/30 whitespace-nowrap">
                     {t('wholesale')}
                   </span>
                 </div>
               </div>
 
               {/* Phone & Address */}
-              <div className="text-[10px] sm:text-xs text-slate-300 flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 mt-1 sm:mt-0.5">
+              <div className="text-[10px] sm:text-xs text-slate-300 flex flex-wrap items-center gap-1 sm:gap-2.5 mt-0.5">
                 <button
                   type="button"
                   onClick={handleCopyPhone}
                   onTouchStart={handleCopyPhone}
-                  className="flex items-center gap-1 font-semibold text-amber-400 hover:text-amber-300 active:text-amber-200 transition-colors cursor-pointer select-none text-[11px] sm:text-xs w-fit"
+                  className="flex items-center gap-1 font-semibold text-amber-400 hover:text-amber-300 active:text-amber-200 transition-colors cursor-pointer select-none text-[10px] sm:text-xs w-fit bg-slate-900/90 hover:bg-slate-800 border border-slate-800 px-1.5 py-0.5 rounded-md"
                   title="ফোন নম্বর কপি করতে ক্লিক বা স্পর্শ করুন"
                 >
-                  <PhoneCall className="w-3 h-3 text-amber-400 shrink-0" />
+                  <PhoneCall className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-amber-400 shrink-0" />
                   <span className="font-mono tracking-wide">{t('phone')}</span>
                   {copiedPhone && (
-                    <span className="ml-1.5 text-[10px] font-bold text-emerald-400 animate-fadeIn flex items-center gap-0.5">
-                      <Check className="w-3 h-3" /> কপি হয়েছে!
+                    <span className="ml-1 text-[9px] font-bold text-emerald-400 animate-fadeIn flex items-center gap-0.5">
+                      <Check className="w-2.5 h-2.5" /> কপি!
                     </span>
                   )}
                 </button>
 
                 <span className="hidden sm:inline text-slate-700">•</span>
-                <span className="flex items-center gap-1 text-slate-400 leading-none">
+                <span className="hidden sm:flex items-center gap-1 text-slate-400 leading-none">
                   <MapPin className="w-3 h-3 text-slate-400 shrink-0" />
                   <span>{t('address')}</span>
                 </span>
@@ -186,51 +189,58 @@ export const Header: React.FC<HeaderProps> = ({
             </div>
           </div>
 
-          {/* Right Side Actions: Notification Bell, APK Button, Menu Button & Date */}
-          <div className="flex flex-col items-end justify-between flex-shrink-0">
-            <div className="flex items-center gap-1.5 sm:gap-2">
-              
-              {/* Desktop User Info (Hidden on mobile) */}
-              {currentUser && (
-                <div className="hidden md:flex items-center gap-2 bg-slate-900 border border-slate-800 p-1 pr-3 rounded-xl">
-                  <div className="w-6 h-6 rounded-lg bg-amber-500/20 text-amber-300 font-bold flex items-center justify-center text-xs border border-amber-500/30">
-                    {currentUser.name.charAt(0)}
-                  </div>
-                  <div className="text-left leading-tight">
-                    <div className="text-[11px] font-bold text-slate-100 flex items-center gap-1.5">
-                      <span>{currentUser.name}</span>
-                      {getRoleBadge(currentUser.role)}
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Unified Menu Drawer Button (Mobile/Tablet only, as desktop has left sidebar) */}
-              <button
-                onClick={() => setIsDrawerOpen(true)}
-                className={`md:hidden flex items-center gap-1.5 sm:gap-2 px-3 sm:px-3 py-1.5 rounded-xl font-bold text-[11px] sm:text-xs transition-all duration-150 cursor-pointer relative border ${
-                  isDrawerTabActive || isDrawerOpen
-                    ? 'bg-amber-500 text-slate-950 border-amber-500 shadow-md shadow-amber-500/20'
-                    : 'bg-slate-900 hover:bg-slate-850 text-slate-200 border-slate-800 hover:border-slate-700'
-                }`}
-                title={t('menu_desc')}
-              >
-                <Menu className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${isDrawerTabActive || isDrawerOpen ? 'text-slate-950' : 'text-amber-400'}`} />
-                <span>{t('menu')}</span>
-                
-                {totalDrawerBadges > 0 && (
-                  <span className={`absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full font-black text-[9px] flex items-center justify-center shadow-lg animate-pulse ${
-                    isDrawerTabActive || isDrawerOpen ? 'bg-slate-950 text-amber-400' : 'bg-amber-500 text-slate-950'
-                  }`}>
-                    {totalDrawerBadges}
-                  </span>
-                )}
-              </button>
-            </div>
-            {/* Today's Date */}
-            <div className="text-[11px] sm:text-xs text-slate-300 font-semibold px-1 pr-1.5">
+          {/* Right Side Actions: Notification Bell, Desktop User, Mobile Menu Button & Date */}
+          <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+            {/* Today's Date (Desktop / Tablet) */}
+            <div className="hidden lg:block text-xs text-slate-400 font-medium px-2 py-1 bg-slate-900/60 border border-slate-800/80 rounded-lg">
               {new Date().toLocaleDateString('bn-BD', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
             </div>
+
+            {/* Desktop User Info / Login */}
+            {currentUser ? (
+              <div className="hidden md:flex items-center gap-2 bg-slate-900/90 border border-slate-800 px-2 py-1 rounded-xl">
+                <div className="w-6 h-6 rounded-lg bg-amber-500/20 text-amber-300 font-bold flex items-center justify-center text-xs border border-amber-500/30">
+                  {currentUser.name.charAt(0)}
+                </div>
+                <div className="text-left leading-tight">
+                  <div className="text-[11px] font-bold text-slate-100 flex items-center gap-1.5">
+                    <span>{currentUser.name}</span>
+                    {getRoleBadge(currentUser.role)}
+                  </div>
+                </div>
+              </div>
+            ) : onOpenLogin ? (
+              <button
+                type="button"
+                onClick={onOpenLogin}
+                className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-bold text-xs bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-md shadow-amber-500/20 transition-all cursor-pointer"
+              >
+                <LogIn className="w-3.5 h-3.5" />
+                <span>লগইন</span>
+              </button>
+            ) : null}
+
+            {/* Unified Menu Drawer Button (Mobile/Tablet only) */}
+            <button
+              onClick={() => setIsDrawerOpen(true)}
+              className={`md:hidden flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl font-bold text-xs transition-all duration-150 cursor-pointer relative border ${
+                isDrawerTabActive || isDrawerOpen
+                  ? 'bg-amber-500 text-slate-950 border-amber-500 shadow-md shadow-amber-500/20'
+                  : 'bg-slate-900 hover:bg-slate-850 text-slate-200 border-slate-800 hover:border-slate-700'
+              }`}
+              title={t('menu_desc')}
+            >
+              <Menu className={`w-4 h-4 ${isDrawerTabActive || isDrawerOpen ? 'text-slate-950' : 'text-amber-400'}`} />
+              <span>{t('menu')}</span>
+              
+              {totalDrawerBadges > 0 && (
+                <span className={`absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full font-black text-[9px] flex items-center justify-center shadow-lg animate-pulse ${
+                  isDrawerTabActive || isDrawerOpen ? 'bg-slate-950 text-amber-400' : 'bg-amber-500 text-slate-950'
+                }`}>
+                  {totalDrawerBadges}
+                </span>
+              )}
+            </button>
           </div>
 
         </div>
@@ -413,7 +423,7 @@ export const Header: React.FC<HeaderProps> = ({
                 </button>
               )}
 
-              {currentUser && onLogout && (
+              {currentUser && onLogout ? (
                 <div className="pt-3 mt-3 border-t border-slate-800">
                   <button
                     onClick={() => {
@@ -426,7 +436,20 @@ export const Header: React.FC<HeaderProps> = ({
                     <span>{t('logout')}</span>
                   </button>
                 </div>
-              )}
+              ) : !currentUser && onOpenLogin ? (
+                <div className="pt-3 mt-3 border-t border-slate-800">
+                  <button
+                    onClick={() => {
+                      setIsDrawerOpen(false);
+                      onOpenLogin();
+                    }}
+                    className="w-full py-2 px-3 bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer shadow-md shadow-amber-500/20"
+                  >
+                    <LogIn className="w-3.5 h-3.5" />
+                    <span>লগইন করুন</span>
+                  </button>
+                </div>
+              ) : null}
             </div>
 
             {/* Drawer Footer */}

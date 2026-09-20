@@ -26,6 +26,8 @@ import {
   X,
   Clock,
   Filter,
+  ArrowRight,
+  Check,
 } from 'lucide-react';
 import { EditPendingOrderModal } from './EditPendingOrderModal';
 
@@ -38,6 +40,7 @@ interface SalesHistoryProps {
   onUpdateOrder?: (updatedOrder: Order) => void;
   onDeleteOrder?: (orderId: string) => void;
   currentUserRole?: UserRole;
+  onNavigate?: (tab: string) => void;
 }
 
 export const SalesHistory: React.FC<SalesHistoryProps> = ({
@@ -49,10 +52,10 @@ export const SalesHistory: React.FC<SalesHistoryProps> = ({
   onUpdateOrder,
   onDeleteOrder,
   currentUserRole = 'admin',
+  onNavigate,
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('সব');
-  const [deliveryFilter, setDeliveryFilter] = useState<string>('সব');
   
   // Date filter states
   type DatePreset = 'all' | 'today' | 'yesterday' | '7days' | 'month' | 'custom';
@@ -63,6 +66,8 @@ export const SalesHistory: React.FC<SalesHistoryProps> = ({
 
   const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  const [isDateDropdownOpen, setIsDateDropdownOpen] = useState<boolean>(false);
+  const [isStatusDropdownOpen, setIsStatusDropdownOpen] = useState<boolean>(false);
   const [editingOrder, setEditingOrder] = useState<Order | null>(null);
   const [orderToDelete, setOrderToDelete] = useState<Order | null>(null);
   const [viewMode, setViewMode] = useState<'table' | 'card'>(
@@ -72,6 +77,7 @@ export const SalesHistory: React.FC<SalesHistoryProps> = ({
   // Pagination state for scalable memo handling
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [pageSize, setPageSize] = useState<number>(25);
+  const [isPageSizeDropdownOpen, setIsPageSizeDropdownOpen] = useState<boolean>(false);
 
   const isAdmin = currentUserRole === 'admin' || currentUserRole === 'super_admin';
   const isCustomer = currentUserRole === 'customer';
@@ -145,15 +151,20 @@ export const SalesHistory: React.FC<SalesHistoryProps> = ({
     return null;
   };
 
+  // Pending booked count for optional quick navigation
+  const pendingBookedCount = orders.filter((ord) => ord.deliveryStatus === 'booked').length;
+
   // Reset to page 1 whenever filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm, statusFilter, deliveryFilter, startDate, endDate, datePreset, pageSize]);
+  }, [searchTerm, statusFilter, startDate, endDate, datePreset, pageSize]);
 
-  // Click outside to close 3-dot menu
+  // Click outside to close 3-dot menu and dropdowns
   useEffect(() => {
     const handleWindowClick = () => {
       setOpenMenuId(null);
+      setIsDateDropdownOpen(false);
+      setIsStatusDropdownOpen(false);
     };
     window.addEventListener('click', handleWindowClick);
     return () => window.removeEventListener('click', handleWindowClick);
@@ -165,6 +176,10 @@ export const SalesHistory: React.FC<SalesHistoryProps> = ({
   };
 
   const filteredOrders = orders.filter((ord) => {
+    // Option 1: Strictly show delivered/completed sales in Sales History
+    const isDelivered = ord.deliveryStatus === 'delivered' || !ord.deliveryStatus;
+    if (!isDelivered) return false;
+
     const matchesSearch =
       (ord.memoNo || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
       (ord.shopName || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -172,28 +187,25 @@ export const SalesHistory: React.FC<SalesHistoryProps> = ({
       (ord.sellerName || "").toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesStatus = statusFilter === 'সব' || ord.status === statusFilter;
-    const matchesDelivery =
-      deliveryFilter === 'সব' ||
-      (deliveryFilter === 'booked' && ord.deliveryStatus === 'booked') ||
-      (deliveryFilter === 'delivered' && (ord.deliveryStatus === 'delivered' || !ord.deliveryStatus));
     
-    // Date matching
+    // Date matching (use deliveryDate for delivered orders, fallback to ord.date)
+    const effectiveOrderDate = ord.deliveryDate || ord.date;
     const matchesDate = (() => {
       if (!startDate && !endDate) return true;
-      if (!ord.date) return false;
+      if (!effectiveOrderDate) return false;
       if (startDate && endDate) {
-        return ord.date >= startDate && ord.date <= endDate;
+        return effectiveOrderDate >= startDate && effectiveOrderDate <= endDate;
       }
       if (startDate) {
-        return ord.date >= startDate;
+        return effectiveOrderDate >= startDate;
       }
       if (endDate) {
-        return ord.date <= endDate;
+        return effectiveOrderDate <= endDate;
       }
       return true;
     })();
 
-    return matchesSearch && matchesStatus && matchesDelivery && matchesDate;
+    return matchesSearch && matchesStatus && matchesDate;
   }).sort(compareOrdersNewestFirst);
 
   const totalFilteredSales = filteredOrders.reduce((sum, o) => sum + o.grandTotal, 0);
@@ -233,7 +245,6 @@ export const SalesHistory: React.FC<SalesHistoryProps> = ({
 
   // Render 3-Dot Action Dropdown Menu
   const renderActionMenu = (ord: Order) => {
-    const isBooked = ord.deliveryStatus === 'booked';
     const isOpen = openMenuId === ord.id;
 
     return (
@@ -259,10 +270,8 @@ export const SalesHistory: React.FC<SalesHistoryProps> = ({
             {/* Header info */}
             <div className="px-3.5 py-1.5 text-[11px] font-semibold text-slate-400 font-mono flex items-center justify-between">
               <span>মেমো #{ord.memoNo}</span>
-              <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold ${
-                isBooked ? 'bg-amber-500/20 text-amber-300' : 'bg-emerald-500/20 text-emerald-300'
-              }`}>
-                {isBooked ? 'বুকড' : 'ডেলিভার্ড'}
+              <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
+                ডেলিভার্ড
               </span>
             </div>
 
@@ -298,21 +307,6 @@ export const SalesHistory: React.FC<SalesHistoryProps> = ({
                     <span className="font-bold block text-slate-100">মেমো এডিট করুন</span>
                     <span className="text-[10px] text-amber-400/80 block">মাল এড, বাদ ও দর পরিবর্তন (এডমিন)</span>
                   </div>
-                </button>
-              )}
-
-              {/* ডেলিভারি দিন যদি বুকিং থাকে */}
-              {isBooked && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    onConfirmDelivery(ord.id);
-                    setOpenMenuId(null);
-                  }}
-                  className="w-full text-left px-3.5 py-2 text-emerald-300 hover:bg-emerald-950/50 flex items-center gap-2.5 transition-colors cursor-pointer"
-                >
-                  <CheckCircle className="w-4 h-4 text-emerald-400 shrink-0" />
-                  <span className="font-bold">ডেলিভারি সম্পন্ন করুন</span>
                 </button>
               )}
             </div>
@@ -368,12 +362,13 @@ export const SalesHistory: React.FC<SalesHistoryProps> = ({
         </div>
       </div>
 
-      {/* Filters Bar & View Switcher */}
-      <div className={`${activeTheme.cardClass} p-4 rounded-2xl space-y-3.5`}>
-        {/* Top Controls: Search, Status, Delivery, View Switcher */}
-        <div className="flex flex-col sm:flex-row gap-3 items-center justify-between">
-          <div className="flex items-center gap-2 bg-slate-950 border border-slate-700/80 rounded-xl px-3 py-2 w-full sm:w-72">
-            <Search className="w-4 h-4 text-slate-400" />
+      {/* Clean & Minimal Filters Bar */}
+      <div className={`${activeTheme.cardClass} p-3 sm:p-3.5 rounded-2xl space-y-2.5`}>
+        {/* Top Controls: Search, Compact Date Dropdown, Payment Status, View Switcher */}
+        <div className="flex flex-col sm:flex-row gap-2.5 items-stretch sm:items-center justify-between">
+          {/* Search input */}
+          <div className="flex items-center gap-2 bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 flex-1 max-w-md focus-within:border-amber-500/60 transition-colors">
+            <Search className="w-4 h-4 text-slate-400 shrink-0" />
             <input
               type="text"
               value={searchTerm}
@@ -381,174 +376,210 @@ export const SalesHistory: React.FC<SalesHistoryProps> = ({
               placeholder="মেমো বা কাস্টমার খুঁজুন..."
               className="bg-transparent text-xs text-slate-100 placeholder-slate-500 w-full focus:outline-none"
             />
-          </div>
-
-          <div className="flex items-center gap-2 w-full sm:w-auto overflow-x-auto flex-wrap justify-between sm:justify-end">
-            {/* Delivery Status Filter */}
-            <select
-              value={deliveryFilter}
-              onChange={(e) => setDeliveryFilter(e.target.value)}
-              className="bg-slate-950 border border-slate-700 text-xs text-slate-200 rounded-xl px-3 py-2 focus:outline-none"
-            >
-              <option value="সব">সব ডেলিভারি</option>
-              <option value="booked">বুকিং (পেন্ডিং)</option>
-              <option value="delivered">ডেলিভারি সম্পন্ন</option>
-            </select>
-
-            {/* Status Filter */}
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="bg-slate-950 border border-slate-700 text-xs text-slate-200 rounded-xl px-3 py-2 focus:outline-none"
-            >
-              <option value="সব">পেমেন্ট স্ট্যাটাস</option>
-              <option value="পরিশোধিত">পরিশোধিত</option>
-              <option value="আংশিক বাকী">আংশিক বাকী</option>
-              <option value="সম্পূর্ণ বাকী">সম্পূর্ণ বাকী</option>
-            </select>
-
-            {/* View Mode Switcher */}
-            <div className="flex items-center gap-1 bg-slate-950 p-1 rounded-xl border border-slate-800">
+            {searchTerm && (
               <button
                 type="button"
-                onClick={() => setViewMode('table')}
-                className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-                  viewMode === 'table'
-                    ? 'bg-amber-500 text-slate-950 shadow'
-                    : 'text-slate-400 hover:text-slate-200'
-                }`}
+                onClick={() => setSearchTerm('')}
+                className="text-slate-500 hover:text-slate-300 cursor-pointer"
               >
-                <List className="w-3.5 h-3.5" />
-                টেবিল
-              </button>
-              <button
-                type="button"
-                onClick={() => setViewMode('card')}
-                className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-                  viewMode === 'card'
-                    ? 'bg-amber-500 text-slate-950 shadow'
-                    : 'text-slate-400 hover:text-slate-200'
-                }`}
-              >
-                <LayoutGrid className="w-3.5 h-3.5" />
-                কার্ড
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Date Filter Toolbar: Quick Presets & Calendar */}
-        <div className="pt-2 border-t border-slate-800/80 flex flex-col md:flex-row md:items-center justify-between gap-3">
-          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-1 sm:pb-0 flex-wrap">
-            <span className="text-xs font-bold text-slate-400 flex items-center gap-1 mr-1 shrink-0">
-              <Calendar className="w-3.5 h-3.5 text-amber-400" />
-              তারিখ:
-            </span>
-
-            <button
-              type="button"
-              onClick={() => handleSelectDatePreset('all')}
-              className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all shrink-0 cursor-pointer ${
-                datePreset === 'all' && !startDate && !endDate
-                  ? 'bg-amber-500 text-slate-950 font-bold shadow'
-                  : 'bg-slate-950 text-slate-300 hover:bg-slate-800 border border-slate-800'
-              }`}
-            >
-              সব সময়
-            </button>
-
-            <button
-              type="button"
-              onClick={() => handleSelectDatePreset('today')}
-              className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all shrink-0 cursor-pointer ${
-                datePreset === 'today'
-                  ? 'bg-amber-500 text-slate-950 font-bold shadow'
-                  : 'bg-slate-950 text-slate-300 hover:bg-slate-800 border border-slate-800'
-              }`}
-            >
-              আজকের
-            </button>
-
-            <button
-              type="button"
-              onClick={() => handleSelectDatePreset('yesterday')}
-              className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all shrink-0 cursor-pointer ${
-                datePreset === 'yesterday'
-                  ? 'bg-amber-500 text-slate-950 font-bold shadow'
-                  : 'bg-slate-950 text-slate-300 hover:bg-slate-800 border border-slate-800'
-              }`}
-            >
-              গতকাল
-            </button>
-
-            <button
-              type="button"
-              onClick={() => handleSelectDatePreset('7days')}
-              className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all shrink-0 cursor-pointer ${
-                datePreset === '7days'
-                  ? 'bg-amber-500 text-slate-950 font-bold shadow'
-                  : 'bg-slate-950 text-slate-300 hover:bg-slate-800 border border-slate-800'
-              }`}
-            >
-              গত ৭ দিন
-            </button>
-
-            <button
-              type="button"
-              onClick={() => handleSelectDatePreset('month')}
-              className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all shrink-0 cursor-pointer ${
-                datePreset === 'month'
-                  ? 'bg-amber-500 text-slate-950 font-bold shadow'
-                  : 'bg-slate-950 text-slate-300 hover:bg-slate-800 border border-slate-800'
-              }`}
-            >
-              চলতি মাস
-            </button>
-
-            <button
-              type="button"
-              onClick={() => {
-                setShowCustomPicker(!showCustomPicker);
-                if (!showCustomPicker) setDatePreset('custom');
-              }}
-              className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all shrink-0 flex items-center gap-1 cursor-pointer ${
-                showCustomPicker || datePreset === 'custom'
-                  ? 'bg-amber-500/20 text-amber-300 border border-amber-500/50'
-                  : 'bg-slate-950 text-slate-400 hover:bg-slate-800 border border-slate-800'
-              }`}
-            >
-              <Calendar className="w-3 h-3" />
-              ক্যালেন্ডার নির্বাচন
-              {showCustomPicker ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
-            </button>
-
-            {(startDate || endDate) && (
-              <button
-                type="button"
-                onClick={handleClearDateFilter}
-                className="px-2 py-1 rounded-lg text-xs font-semibold bg-rose-500/15 text-rose-300 hover:bg-rose-500/25 border border-rose-500/30 transition-all flex items-center gap-1 shrink-0 cursor-pointer"
-                title="তারিখ ফিল্টার মুছুন"
-              >
-                <X className="w-3 h-3" />
-                রিসেট
+                <X className="w-3.5 h-3.5" />
               </button>
             )}
           </div>
 
-          {/* Quick Active Date Label if filtered */}
-          {getDateRangeLabel() && (
-            <div className="text-xs text-amber-300 font-semibold bg-amber-500/10 border border-amber-500/20 px-2.5 py-1 rounded-xl flex items-center gap-1.5 self-start md:self-auto shrink-0">
-              <Clock className="w-3.5 h-3.5 text-amber-400" />
-              <span>{getDateRangeLabel()}</span>
+          {/* Right Group: Filters & Toggle */}
+          <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap justify-between sm:justify-end">
+            {/* Date Preset Custom Dropdown */}
+            <div className="relative">
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsDateDropdownOpen((prev) => !prev);
+                  setIsStatusDropdownOpen(false);
+                  setOpenMenuId(null);
+                }}
+                className={`bg-slate-950 border text-xs rounded-xl px-3 py-2 font-medium flex items-center gap-1.5 transition-all cursor-pointer ${
+                  datePreset !== 'all' || startDate || endDate
+                    ? 'border-amber-500/80 text-amber-300 bg-amber-500/10 shadow-sm shadow-amber-500/10'
+                    : 'border-slate-800 hover:border-slate-700 text-slate-200'
+                }`}
+              >
+                <Calendar className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                <span className="truncate max-w-[85px] sm:max-w-none">
+                  {datePreset === 'all'
+                    ? 'সব সময়'
+                    : datePreset === 'today'
+                    ? 'আজকের'
+                    : datePreset === 'yesterday'
+                    ? 'গতকাল'
+                    : datePreset === '7days'
+                    ? 'গত ৭ দিন'
+                    : datePreset === 'month'
+                    ? 'চলতি মাস'
+                    : 'ক্যালেন্ডার'}
+                </span>
+                <ChevronDown
+                  className={`w-3.5 h-3.5 text-slate-400 shrink-0 transition-transform duration-200 ${
+                    isDateDropdownOpen ? 'rotate-180 text-amber-400' : ''
+                  }`}
+                />
+              </button>
+
+              {/* Custom Date Dropdown Menu */}
+              {isDateDropdownOpen && (
+                <div
+                  onClick={(e) => e.stopPropagation()}
+                  className="absolute left-0 sm:left-auto sm:right-0 top-full mt-1.5 w-48 bg-slate-900 border border-slate-700/90 rounded-2xl shadow-2xl py-1.5 z-50 animate-in fade-in zoom-in-95 duration-150"
+                >
+                  <div className="px-3 py-1.5 text-[10px] font-bold tracking-wider text-slate-400 border-b border-slate-800 flex items-center justify-between">
+                    <span>তারিখ ফিল্টার</span>
+                    {datePreset !== 'all' && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          handleClearDateFilter();
+                          setIsDateDropdownOpen(false);
+                        }}
+                        className="text-rose-400 hover:text-rose-300 cursor-pointer text-[10px]"
+                      >
+                        রিসেট
+                      </button>
+                    )}
+                  </div>
+                  {[
+                    { id: 'all', label: 'সব সময়' },
+                    { id: 'today', label: 'আজকের বিক্রি' },
+                    { id: 'yesterday', label: 'গতকালের বিক্রি' },
+                    { id: '7days', label: 'গত ৭ দিন' },
+                    { id: 'month', label: 'চলতি মাস' },
+                    { id: 'custom', label: 'ক্যালেন্ডার নির্বাচন 📅' },
+                  ].map((preset) => {
+                    const isSelected = datePreset === preset.id;
+                    return (
+                      <button
+                        key={preset.id}
+                        type="button"
+                        onClick={() => {
+                          handleSelectDatePreset(preset.id as DatePreset);
+                          setIsDateDropdownOpen(false);
+                        }}
+                        className={`w-full text-left px-3 py-2 text-xs flex items-center justify-between transition-colors cursor-pointer ${
+                          isSelected
+                            ? 'bg-amber-500/15 text-amber-300 font-bold border-l-2 border-amber-500'
+                            : 'text-slate-300 hover:bg-slate-800/80 hover:text-white'
+                        }`}
+                      >
+                        <span>{preset.label}</span>
+                        {isSelected && <Check className="w-3.5 h-3.5 text-amber-400 shrink-0" />}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
             </div>
-          )}
+
+            {/* Status Filter Custom Dropdown */}
+            <div className="relative">
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsStatusDropdownOpen((prev) => !prev);
+                  setIsDateDropdownOpen(false);
+                  setOpenMenuId(null);
+                }}
+                className={`bg-slate-950 border text-xs rounded-xl px-3 py-2 font-medium flex items-center gap-1.5 transition-all cursor-pointer ${
+                  statusFilter !== 'সব'
+                    ? 'border-amber-500/80 text-amber-300 bg-amber-500/10 shadow-sm shadow-amber-500/10'
+                    : 'border-slate-800 hover:border-slate-700 text-slate-200'
+                }`}
+              >
+                <Filter className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                <span className="truncate max-w-[85px] sm:max-w-none">
+                  {statusFilter === 'সব' ? 'সব অবস্থা' : statusFilter}
+                </span>
+                <ChevronDown
+                  className={`w-3.5 h-3.5 text-slate-400 shrink-0 transition-transform duration-200 ${
+                    isStatusDropdownOpen ? 'rotate-180 text-amber-400' : ''
+                  }`}
+                />
+              </button>
+
+              {/* Custom Status Dropdown Menu */}
+              {isStatusDropdownOpen && (
+                <div
+                  onClick={(e) => e.stopPropagation()}
+                  className="absolute right-0 top-full mt-1.5 w-44 bg-slate-900 border border-slate-700/90 rounded-2xl shadow-2xl py-1.5 z-50 animate-in fade-in zoom-in-95 duration-150"
+                >
+                  <div className="px-3 py-1.5 text-[10px] font-bold tracking-wider text-slate-400 border-b border-slate-800">
+                    পেমেন্ট অবস্থা
+                  </div>
+                  {[
+                    { value: 'সব', label: 'সব পেমেন্ট অবস্থা' },
+                    { value: 'পরিশোধিত', label: 'পরিশোধিত' },
+                    { value: 'আংশিক বাকী', label: 'আংশিক বাকী' },
+                    { value: 'সম্পূর্ণ বাকী', label: 'সম্পূর্ণ বাকী' },
+                  ].map((opt) => {
+                    const isSelected = statusFilter === opt.value;
+                    return (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        onClick={() => {
+                          setStatusFilter(opt.value);
+                          setIsStatusDropdownOpen(false);
+                        }}
+                        className={`w-full text-left px-3 py-2 text-xs flex items-center justify-between transition-colors cursor-pointer ${
+                          isSelected
+                            ? 'bg-amber-500/15 text-amber-300 font-bold border-l-2 border-amber-500'
+                            : 'text-slate-300 hover:bg-slate-800/80 hover:text-white'
+                        }`}
+                      >
+                        <span>{opt.label}</span>
+                        {isSelected && <Check className="w-3.5 h-3.5 text-amber-400 shrink-0" />}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* View Mode Switcher */}
+            <div className="flex items-center gap-0.5 bg-slate-950 p-1 rounded-xl border border-slate-800 shrink-0">
+              <button
+                type="button"
+                onClick={() => setViewMode('table')}
+                className={`p-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                  viewMode === 'table'
+                    ? 'bg-amber-500 text-slate-950 shadow'
+                    : 'text-slate-400 hover:text-slate-200'
+                }`}
+                title="টেবিল ভিউ"
+              >
+                <List className="w-3.5 h-3.5" />
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewMode('card')}
+                className={`p-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                  viewMode === 'card'
+                    ? 'bg-amber-500 text-slate-950 shadow'
+                    : 'text-slate-400 hover:text-slate-200'
+                }`}
+                title="কার্ড ভিউ"
+              >
+                <LayoutGrid className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </div>
         </div>
 
-        {/* Expandable Custom Date Range Inputs */}
+        {/* Expandable Custom Date Range Inputs (Only when calendar/custom is selected) */}
         {showCustomPicker && (
-          <div className="pt-3 border-t border-slate-800/60 flex flex-wrap items-center gap-3 bg-slate-950/60 p-3 rounded-xl border border-slate-800">
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-slate-400">শুরু তারিখ:</span>
+          <div className="pt-2 border-t border-slate-800/80 flex flex-wrap items-center gap-2.5 bg-slate-950/80 p-2.5 rounded-xl border border-slate-800 text-xs">
+            <div className="flex items-center gap-1.5">
+              <span className="text-slate-400 text-[11px]">শুরু:</span>
               <input
                 type="date"
                 value={startDate}
@@ -556,12 +587,12 @@ export const SalesHistory: React.FC<SalesHistoryProps> = ({
                   setStartDate(e.target.value);
                   setDatePreset('custom');
                 }}
-                className="bg-slate-900 border border-slate-700 text-xs text-slate-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-amber-500"
+                className="bg-slate-900 border border-slate-700 text-xs text-slate-200 rounded-lg px-2 py-1 focus:outline-none focus:border-amber-500"
               />
             </div>
 
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-slate-400">শেষ তারিখ:</span>
+            <div className="flex items-center gap-1.5">
+              <span className="text-slate-400 text-[11px]">শেষ:</span>
               <input
                 type="date"
                 value={endDate}
@@ -569,11 +600,11 @@ export const SalesHistory: React.FC<SalesHistoryProps> = ({
                   setEndDate(e.target.value);
                   setDatePreset('custom');
                 }}
-                className="bg-slate-900 border border-slate-700 text-xs text-slate-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-amber-500"
+                className="bg-slate-900 border border-slate-700 text-xs text-slate-200 rounded-lg px-2 py-1 focus:outline-none focus:border-amber-500"
               />
             </div>
 
-            <div className="flex items-center gap-2 ml-auto">
+            <div className="flex items-center gap-1.5 ml-auto">
               <button
                 type="button"
                 onClick={() => {
@@ -581,49 +612,101 @@ export const SalesHistory: React.FC<SalesHistoryProps> = ({
                   setStartDate(today);
                   setEndDate(today);
                   setDatePreset('today');
+                  setShowCustomPicker(false);
                 }}
-                className="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-xs text-slate-300 rounded-lg transition-colors cursor-pointer"
+                className="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg transition-colors cursor-pointer"
               >
-                আজকে সেট করুন
+                আজকে
               </button>
               <button
                 type="button"
                 onClick={handleClearDateFilter}
-                className="px-2.5 py-1.5 bg-rose-500/20 hover:bg-rose-500/30 text-xs text-rose-300 border border-rose-500/40 rounded-lg transition-colors cursor-pointer flex items-center gap-1"
+                className="px-2 py-1 bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 rounded-lg transition-colors cursor-pointer flex items-center gap-1"
               >
-                <X className="w-3 h-3" /> ক্লিয়ার
+                <X className="w-3 h-3" /> বন্ধ
               </button>
             </div>
           </div>
         )}
 
+        {/* Compact Active Filter Badges (Only appears when any filter is active) */}
+        {(datePreset !== 'all' || statusFilter !== 'সব' || searchTerm) && (
+          <div className="pt-2 border-t border-slate-800/60 flex flex-wrap items-center justify-between gap-2 text-xs">
+            <div className="flex items-center gap-2 flex-wrap">
+              {getDateRangeLabel() && (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-300 text-[11px] font-medium">
+                  <Clock className="w-3 h-3 text-amber-400" />
+                  {getDateRangeLabel()}
+                </span>
+              )}
+
+              {statusFilter !== 'সব' && (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-slate-800 border border-slate-700 text-slate-200 text-[11px]">
+                  পেমেন্ট: {statusFilter}
+                  <button
+                    type="button"
+                    onClick={() => setStatusFilter('সব')}
+                    className="hover:text-rose-400 cursor-pointer ml-1"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </span>
+              )}
+
+              <button
+                type="button"
+                onClick={() => {
+                  handleClearDateFilter();
+                  setStatusFilter('সব');
+                  setSearchTerm('');
+                }}
+                className="text-[11px] text-slate-400 hover:text-rose-400 underline underline-offset-2 ml-1 cursor-pointer transition-colors"
+              >
+                ফিল্টার মুছুন
+              </button>
+            </div>
+
+            {onNavigate && pendingBookedCount > 0 && (
+              <button
+                type="button"
+                onClick={() => onNavigate('pending')}
+                className="text-[11px] text-amber-400/90 hover:text-amber-300 font-medium flex items-center gap-1 cursor-pointer ml-auto"
+              >
+                <Clock className="w-3 h-3 text-amber-400" />
+                <span>{toBnDigit(pendingBookedCount)} টি পেন্ডিং বুকিং</span>
+                <ArrowRight className="w-3 h-3" />
+              </button>
+            )}
+          </div>
+        )}
+
         {/* Date Filter Statistics Summary Ribbon */}
         {(startDate || endDate) && (
-          <div className="bg-slate-950 border border-amber-500/30 rounded-xl p-3 flex flex-wrap items-center justify-between gap-2.5 text-xs">
+          <div className="bg-slate-950 border border-amber-500/30 rounded-xl p-2.5 flex flex-wrap items-center justify-between gap-2 text-xs shadow-inner">
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="font-bold text-amber-400 flex items-center gap-1">
+              <span className="font-bold text-amber-400 flex items-center gap-1 text-[11px]">
                 <Calendar className="w-3.5 h-3.5" />
                 {getDateRangeLabel()}:
               </span>
-              <span className="text-slate-300">
-                মোট মেমো: <strong className="text-white font-bold">{toBnDigit(filteredOrders.length)}</strong> টি
+              <span className="text-slate-300 text-[11px]">
+                মেমো: <strong className="text-white font-bold">{toBnDigit(filteredOrders.length)}</strong> টি
               </span>
               <span className="text-slate-500">•</span>
-              <span className="text-slate-300">
-                মোট জোড়া: <strong className="text-amber-300 font-bold">{toBnDigit(totalFilteredPairs)}</strong> ({getDozenText(totalFilteredPairs)})
+              <span className="text-slate-300 text-[11px]">
+                জোড়া: <strong className="text-amber-300 font-bold">{toBnDigit(totalFilteredPairs)}</strong>
               </span>
               <span className="text-slate-500">•</span>
-              <span className="text-slate-300">
-                মোট বিক্রি: <strong className="text-amber-400 font-bold">{formatTaka(totalFilteredSales)}</strong>
+              <span className="text-slate-300 text-[11px]">
+                বিক্রি: <strong className="text-amber-400 font-bold">{formatTaka(totalFilteredSales)}</strong>
               </span>
               <span className="text-slate-500">•</span>
-              <span className="text-slate-300">
-                নগদ আদায়: <strong className="text-emerald-400 font-bold">{formatTaka(totalFilteredPaid)}</strong>
+              <span className="text-slate-300 text-[11px]">
+                জমা: <strong className="text-emerald-400 font-bold">{formatTaka(totalFilteredPaid)}</strong>
               </span>
               {totalFilteredDue > 0 && (
                 <>
                   <span className="text-slate-500">•</span>
-                  <span className="text-slate-300">
+                  <span className="text-slate-300 text-[11px]">
                     বকেয়া: <strong className="text-rose-400 font-bold">{formatTaka(totalFilteredDue)}</strong>
                   </span>
                 </>
@@ -633,9 +716,9 @@ export const SalesHistory: React.FC<SalesHistoryProps> = ({
             <button
               type="button"
               onClick={handleClearDateFilter}
-              className="text-[11px] text-slate-400 hover:text-white bg-slate-900 hover:bg-slate-800 px-2 py-1 rounded border border-slate-800 flex items-center gap-1 cursor-pointer ml-auto"
+              className="text-[10px] text-slate-400 hover:text-white bg-slate-900 hover:bg-slate-800 px-2 py-0.5 rounded border border-slate-800 flex items-center gap-1 cursor-pointer ml-auto"
             >
-              <X className="w-3 h-3" /> সব ইতিহাস দেখুন
+              <X className="w-3 h-3" /> সব দেখুন
             </button>
           </div>
         )}
@@ -656,19 +739,55 @@ export const SalesHistory: React.FC<SalesHistoryProps> = ({
             )}
           </div>
 
-          <div className="flex items-center gap-2 self-end sm:self-auto">
+          <div className="flex items-center gap-2 self-end sm:self-auto relative">
             <span className="text-slate-400 text-[11px]">প্রতি পেজে:</span>
-            <select
-              value={pageSize}
-              onChange={(e) => setPageSize(Number(e.target.value))}
-              className="bg-slate-900 border border-slate-700/90 text-xs text-amber-300 font-semibold rounded-lg px-2.5 py-1 focus:outline-none cursor-pointer"
-            >
-              <option value={15}>১৫ টি</option>
-              <option value={25}>২৫ টি</option>
-              <option value={50}>৫০ টি</option>
-              <option value={100}>১০০ টি</option>
-              <option value={999999}>সব মেমো</option>
-            </select>
+            <div className="relative">
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsPageSizeDropdownOpen((prev) => !prev);
+                }}
+                className="bg-slate-900 border border-slate-700/90 text-xs text-amber-300 font-semibold rounded-lg px-2.5 py-1 flex items-center gap-1.5 focus:outline-none cursor-pointer hover:border-slate-600 transition-colors"
+              >
+                <span>{pageSize >= 999999 ? 'সব মেমো' : `${toBnDigit(pageSize)} টি`}</span>
+                <ChevronDown className={`w-3 h-3 text-slate-400 transition-transform duration-150 ${isPageSizeDropdownOpen ? 'rotate-180 text-amber-400' : ''}`} />
+              </button>
+
+              {isPageSizeDropdownOpen && (
+                <div
+                  onClick={(e) => e.stopPropagation()}
+                  className="absolute right-0 bottom-full sm:bottom-auto sm:top-full mb-1 sm:mb-0 sm:mt-1 bg-slate-900 border border-slate-700 rounded-xl shadow-xl py-1 z-50 min-w-[100px]"
+                >
+                  {[
+                    { value: 15, label: '১৫ টি' },
+                    { value: 25, label: '২৫ টি' },
+                    { value: 50, label: '৫০ টি' },
+                    { value: 100, label: '১০০ টি' },
+                    { value: 999999, label: 'সব মেমো' },
+                  ].map((opt) => {
+                    const isSelected = pageSize === opt.value;
+                    return (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        onClick={() => {
+                          setPageSize(opt.value);
+                          setCurrentPage(1);
+                          setIsPageSizeDropdownOpen(false);
+                        }}
+                        className={`w-full px-3 py-1.5 text-left text-xs flex items-center justify-between cursor-pointer transition-colors ${
+                          isSelected ? 'bg-amber-500/20 text-amber-300 font-bold' : 'text-slate-300 hover:bg-slate-800'
+                        }`}
+                      >
+                        <span>{opt.label}</span>
+                        {isSelected && <Check className="w-3 h-3 text-amber-400 shrink-0" />}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
@@ -680,7 +799,6 @@ export const SalesHistory: React.FC<SalesHistoryProps> = ({
               </div>
             ) : (
               displayedOrders.map((ord, ordIdx) => {
-                const isBooked = ord.deliveryStatus === 'booked';
                 const isExpanded = expandedOrderId === ord.id;
                 const isLatest = currentPage === 1 && ordIdx === 0 && !searchTerm;
 
@@ -705,12 +823,14 @@ export const SalesHistory: React.FC<SalesHistoryProps> = ({
                           )}
                           <span
                             className={`px-2 py-0.5 rounded-full text-[10px] font-bold inline-flex items-center gap-1 ${
-                              isBooked
+                              ord.status === 'পরিশোধিত'
+                                ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
+                                : ord.status === 'আংশিক বাকী'
                                 ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
-                                : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
+                                : 'bg-rose-500/20 text-rose-300 border border-rose-500/40'
                             }`}
                           >
-                            {isBooked ? 'বুকড' : 'ডেলিভার্ড'}
+                            {ord.status}
                           </span>
                         </div>
 
@@ -738,7 +858,7 @@ export const SalesHistory: React.FC<SalesHistoryProps> = ({
                             <span className="truncate">{ord.shopName}</span>
                           </div>
                           <span className="text-[11px] text-slate-400 shrink-0 font-mono">
-                            {formatBnDate(ord.date)} {ord.time ? `(${ord.time})` : ''}
+                            {formatBnDate(ord.deliveryDate || ord.date)} {ord.time ? `(${ord.time})` : ''}
                           </span>
                         </div>
 
@@ -764,7 +884,7 @@ export const SalesHistory: React.FC<SalesHistoryProps> = ({
                             <span className="text-slate-400">সেলার:</span> <strong className="text-indigo-300">{ord.sellerName}</strong>
                           </div>
                           <div className="text-slate-400 text-[11px]">
-                            তারিখ ও সময়: {formatBnDate(ord.date)} ({ord.time})
+                            ডেলিভারি তারিখ: {formatBnDate(ord.deliveryDate || ord.date)} ({ord.time || ''})
                           </div>
                         </div>
 
@@ -839,15 +959,6 @@ export const SalesHistory: React.FC<SalesHistoryProps> = ({
                           </div>
                           
                           <div className="flex items-center gap-2 flex-wrap">
-                            {isBooked && (
-                              <button
-                                onClick={() => onConfirmDelivery(ord.id)}
-                                className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-xs flex items-center gap-1 shadow transition-colors cursor-pointer"
-                              >
-                                <CheckCircle className="w-3.5 h-3.5" />
-                                ডেলিভারি দিন
-                              </button>
-                            )}
                             <button
                               onClick={() => onSelectOrderForInvoice(ord)}
                               className="px-3 py-1.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded-xl text-xs flex items-center gap-1.5 shadow transition-colors cursor-pointer"
@@ -873,7 +984,7 @@ export const SalesHistory: React.FC<SalesHistoryProps> = ({
                   <th className="pb-3 px-3">তারিখ ও সময়</th>
                   <th className="pb-3 px-3">দোকানের নাম</th>
                   <th className="pb-3 px-3">পরিমাণ</th>
-                  <th className="pb-3 px-3 text-center">স্ট্যাটাস</th>
+                  <th className="pb-3 px-3 text-center">পেমেন্ট অবস্থা</th>
                   <th className="pb-3 pl-3 text-right">অ্যাকশন ও অপশন</th>
                 </tr>
               </thead>
@@ -886,7 +997,6 @@ export const SalesHistory: React.FC<SalesHistoryProps> = ({
                   </tr>
                 ) : (
                   displayedOrders.map((ord, ordIdx) => {
-                    const isBooked = ord.deliveryStatus === 'booked';
                     const isExpanded = expandedOrderId === ord.id;
                     const isLatest = currentPage === 1 && ordIdx === 0 && !searchTerm;
 
@@ -910,7 +1020,7 @@ export const SalesHistory: React.FC<SalesHistoryProps> = ({
                             </div>
                           </td>
                           <td className="py-3.5 px-3 text-slate-300 font-medium">
-                            {formatBnDate(ord.date)}
+                            {formatBnDate(ord.deliveryDate || ord.date)}
                             {ord.time && <span className="text-[10px] text-amber-400/90 ml-1">({ord.time})</span>}
                           </td>
                           <td className="py-3.5 px-3 font-bold text-slate-100">
@@ -925,12 +1035,14 @@ export const SalesHistory: React.FC<SalesHistoryProps> = ({
                           <td className="py-3.5 px-3 text-center">
                             <span
                               className={`px-2.5 py-1 rounded-full text-[10px] font-bold inline-flex items-center gap-1 ${
-                                isBooked
+                                ord.status === 'পরিশোধিত'
+                                  ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
+                                  : ord.status === 'আংশিক বাকী'
                                   ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
-                                  : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
+                                  : 'bg-rose-500/20 text-rose-300 border border-rose-500/40'
                               }`}
                             >
-                              {isBooked ? 'বুকড' : 'ডেলিভার্ড'}
+                              {ord.status}
                             </span>
                           </td>
                           <td className="py-3.5 pl-3 text-right" onClick={(e) => e.stopPropagation()}>
@@ -966,21 +1078,12 @@ export const SalesHistory: React.FC<SalesHistoryProps> = ({
                                       <span className="text-slate-400 font-normal text-xs">({ord.shopName})</span>
                                     </h4>
                                     <div className="text-xs text-slate-400 mt-0.5">
-                                      প্রোপ্রাইটর: <strong className="text-slate-200">{ord.customerName}</strong> | সেলার: <strong className="text-indigo-300">{ord.sellerName}</strong> | তারিখ: {formatBnDate(ord.date)} ({ord.time})
+                                      প্রোপ্রাইটর: <strong className="text-slate-200">{ord.customerName}</strong> | সেলার: <strong className="text-indigo-300">{ord.sellerName}</strong> | ডেলিভারি তারিখ: {formatBnDate(ord.deliveryDate || ord.date)} ({ord.time || ''})
                                     </div>
                                   </div>
 
                                   <div className="flex items-center gap-2 self-end sm:self-auto">
                                     {renderActionMenu(ord)}
-                                    {isBooked && (
-                                       <button
-                                        onClick={() => onConfirmDelivery(ord.id)}
-                                        className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-xs flex items-center gap-1 shadow transition-colors cursor-pointer"
-                                      >
-                                        <CheckCircle className="w-3.5 h-3.5" />
-                                        ডেলিভারি দিন
-                                      </button>
-                                    )}
                                     <button
                                       onClick={() => onSelectOrderForInvoice(ord)}
                                       className="px-3.5 py-1.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded-xl text-xs flex items-center gap-1.5 shadow transition-colors cursor-pointer"

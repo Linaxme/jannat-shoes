@@ -122,8 +122,19 @@ export interface Order {
   status: 'পরিশোধিত' | 'আংশিক বাকী' | 'সম্পূর্ণ বাকী';
   orderType?: 'sample_booking' | 'direct_sale';
   deliveryStatus?: 'booked' | 'delivered';
+  deliveryDate?: string; // YYYY-MM-DD যখন অর্ডারটি ডেলিভারি হলো
+  deliveryPaidAmount?: number; // ডেলিভারির সময়ে নগদ আদায়কৃত টাকা
+  deliveryPaymentMethod?: string;
+  deliveryNotes?: string;
   isOnlineOrder?: boolean;
   isClaimed?: boolean;
+  notes?: string;
+}
+
+export interface ConfirmDeliveryData {
+  deliveryDate: string;
+  collectedAtDelivery: number;
+  paymentMethod: 'নগদ ক্যাশ' | 'বিকাশ / নগদ' | 'ব্যাংক ট্রান্সফার';
   notes?: string;
 }
 

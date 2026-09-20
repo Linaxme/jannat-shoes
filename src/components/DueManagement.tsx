@@ -20,6 +20,9 @@ import {
   Wallet,
   Coins,
   ArrowRight,
+  ChevronDown,
+  Check,
+  X,
 } from 'lucide-react';
 
 interface DueManagementProps {
@@ -53,6 +56,7 @@ export const DueManagement: React.FC<DueManagementProps> = ({
   const { t } = useLanguage();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedSellerFilter, setSelectedSellerFilter] = useState<string>('সব');
+  const [isSellerDropdownOpen, setIsSellerDropdownOpen] = useState<boolean>(false);
   const [viewMode, setViewMode] = useState<'customer_wise' | 'seller_wise' | 'logs'>('customer_wise');
   const [customerViewMode, setCustomerViewMode] = useState<'table' | 'card'>(
     typeof window !== 'undefined' && window.innerWidth < 768 ? 'card' : 'table'
@@ -69,6 +73,7 @@ export const DueManagement: React.FC<DueManagementProps> = ({
   const [adjustType, setAdjustType] = useState<'add' | 'set'>('add');
   const [adjustNote, setAdjustNote] = useState<string>('পূর্বের খাতার বাকী');
   const [adjustCustomerSearch, setAdjustCustomerSearch] = useState<string>('');
+  const [isAdjustCustDropdownOpen, setIsAdjustCustDropdownOpen] = useState<boolean>(false);
 
   const openAdjustDueModal = (targetCust?: Customer) => {
     if (targetCust) {
@@ -377,7 +382,7 @@ export const DueManagement: React.FC<DueManagementProps> = ({
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" onClick={() => setIsSellerDropdownOpen(false)}>
       
       {/* Minimal Due Management Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1 pb-1">
@@ -436,56 +441,82 @@ export const DueManagement: React.FC<DueManagementProps> = ({
       </div>
 
       {/* Metric summary banner */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        <div className={`${activeTheme.cardClass} p-4 rounded-2xl flex items-center justify-between`}>
-          <div>
-            <p className="text-xs text-slate-400 font-medium">{t('total_due')}</p>
-            <h3 className="text-xl sm:text-2xl font-black text-rose-400 mt-1">
-              {formatTaka(totalMarketDue)}
-            </h3>
-            <span className="text-[10px] text-slate-400">{toBnDigit(dueCustomersCount)} জন কাস্টমার</span>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+        <div className="bg-slate-900/80 border border-slate-800/90 rounded-2xl p-4 sm:p-5 shadow-sm hover:border-slate-700/80 transition relative overflow-hidden group">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <span className="text-xs font-bold text-slate-400">{t('total_due')}</span>
+              <div className="text-xl sm:text-2xl font-black text-rose-400 font-mono tracking-tight mt-1">
+                {formatTaka(totalMarketDue)}
+              </div>
+            </div>
+            <div className="w-10 h-10 rounded-xl bg-rose-500/15 border border-rose-500/30 flex items-center justify-center text-rose-400 shrink-0 shadow-inner">
+              <Receipt className="w-5 h-5" />
+            </div>
           </div>
-          <div className="p-3 bg-rose-500/20 text-rose-400 rounded-2xl border border-rose-500/30">
-            <Receipt className="w-6 h-6" />
-          </div>
-        </div>
-
-        <div className={`${activeTheme.cardClass} p-4 rounded-2xl flex items-center justify-between`}>
-          <div>
-            <p className="text-xs text-slate-400 font-medium">অগ্রিম জমা / এডভান্স ক্রেডিট</p>
-            <h3 className="text-xl sm:text-2xl font-black text-emerald-400 mt-1">
-              {formatTaka(totalAdvanceCredit)}
-            </h3>
-            <span className="text-[10px] text-slate-400">{toBnDigit(advanceCustomersCount)} জন কাস্টমার</span>
-          </div>
-          <div className="p-3 bg-emerald-500/20 text-emerald-400 rounded-2xl border border-emerald-500/30">
-            <Coins className="w-6 h-6" />
+          <div className="mt-3 pt-3 border-t border-slate-800/70 flex items-center justify-between text-xs text-slate-400">
+            <span>বাকী খাতা</span>
+            <span className="font-bold text-rose-300 bg-rose-500/15 px-2 py-0.5 rounded-full border border-rose-500/30 text-[11px]">
+              {toBnDigit(dueCustomersCount)} জন
+            </span>
           </div>
         </div>
 
-        <div className={`${activeTheme.cardClass} p-4 rounded-2xl flex items-center justify-between`}>
-          <div>
-            <p className="text-xs text-slate-400 font-medium">{t('shopkeeper')}</p>
-            <h3 className="text-xl sm:text-2xl font-black text-amber-300 mt-1">
-              {toBnDigit(dueCustomersCount + advanceCustomersCount)} <span className="text-sm font-normal text-slate-400">{t('customers')}</span>
-            </h3>
-            <span className="text-[10px] text-slate-400">বাকী ও এডভান্স খাতা</span>
+        <div className="bg-slate-900/80 border border-slate-800/90 rounded-2xl p-4 sm:p-5 shadow-sm hover:border-slate-700/80 transition relative overflow-hidden group">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <span className="text-xs font-bold text-slate-400">অগ্রিম জমা</span>
+              <div className="text-xl sm:text-2xl font-black text-emerald-400 font-mono tracking-tight mt-1">
+                {formatTaka(totalAdvanceCredit)}
+              </div>
+            </div>
+            <div className="w-10 h-10 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400 shrink-0 shadow-inner">
+              <Coins className="w-5 h-5" />
+            </div>
           </div>
-          <div className="p-3 bg-amber-500/20 text-amber-400 rounded-2xl border border-amber-500/30">
-            <Store className="w-6 h-6" />
+          <div className="mt-3 pt-3 border-t border-slate-800/70 flex items-center justify-between text-xs text-slate-400">
+            <span>অগ্রিম কাস্টমার</span>
+            <span className="font-bold text-emerald-300 bg-emerald-500/15 px-2 py-0.5 rounded-full border border-emerald-500/30 text-[11px]">
+              {toBnDigit(advanceCustomersCount)} জন
+            </span>
           </div>
         </div>
 
-        <div className={`${activeTheme.cardClass} p-4 rounded-2xl flex items-center justify-between`}>
-          <div>
-            <p className="text-xs text-slate-400 font-medium">{t('total_collection')}</p>
-            <h3 className="text-xl sm:text-2xl font-black text-indigo-400 mt-1">
-              {toBnDigit(paymentLogs.length)} <span className="text-sm font-normal text-slate-400">{t('receipts')}</span>
-            </h3>
-            <span className="text-[10px] text-slate-400">মোট আদায় রসিদ</span>
+        <div className="bg-slate-900/80 border border-slate-800/90 rounded-2xl p-4 sm:p-5 shadow-sm hover:border-slate-700/80 transition relative overflow-hidden group">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <span className="text-xs font-bold text-slate-400">{t('shopkeeper')}</span>
+              <div className="text-xl sm:text-2xl font-black text-amber-300 font-mono tracking-tight mt-1">
+                {toBnDigit(dueCustomersCount + advanceCustomersCount)}{' '}
+                <span className="text-xs font-normal text-slate-400">{t('customers')}</span>
+              </div>
+            </div>
+            <div className="w-10 h-10 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400 shrink-0 shadow-inner">
+              <Store className="w-5 h-5" />
+            </div>
           </div>
-          <div className="p-3 bg-indigo-500/20 text-indigo-400 rounded-2xl border border-indigo-500/30">
-            <DollarSign className="w-6 h-6" />
+          <div className="mt-3 pt-3 border-t border-slate-800/70 flex items-center justify-between text-xs text-slate-400">
+            <span>মোট পার্টি</span>
+            <span className="font-bold text-slate-200">সক্রিয় খাতা</span>
+          </div>
+        </div>
+
+        <div className="bg-slate-900/80 border border-slate-800/90 rounded-2xl p-4 sm:p-5 shadow-sm hover:border-slate-700/80 transition relative overflow-hidden group">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <span className="text-xs font-bold text-slate-400">{t('total_collection')}</span>
+              <div className="text-xl sm:text-2xl font-black text-sky-400 font-mono tracking-tight mt-1">
+                {toBnDigit(paymentLogs.length)}{' '}
+                <span className="text-xs font-normal text-slate-400">{t('receipts')}</span>
+              </div>
+            </div>
+            <div className="w-10 h-10 rounded-xl bg-sky-500/15 border border-sky-500/30 flex items-center justify-center text-sky-400 shrink-0 shadow-inner">
+              <DollarSign className="w-5 h-5" />
+            </div>
+          </div>
+          <div className="mt-3 pt-3 border-t border-slate-800/70 flex items-center justify-between text-xs text-slate-400">
+            <span>কালেকশন লগ</span>
+            <span className="font-bold text-slate-200">মোট রসিদ</span>
           </div>
         </div>
       </div>
@@ -509,20 +540,100 @@ export const DueManagement: React.FC<DueManagementProps> = ({
               </div>
 
               <div className="flex items-center gap-2 w-full sm:w-auto overflow-x-auto justify-between sm:justify-end flex-wrap">
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-slate-400 whitespace-nowrap">সেলার:</span>
-                  <select
-                    value={selectedSellerFilter}
-                    onChange={(e) => setSelectedSellerFilter(e.target.value)}
-                    className="bg-slate-950 border border-slate-700 text-xs text-slate-200 rounded-xl px-3 py-2 focus:outline-none cursor-pointer"
+                {/* Custom Seller Dropdown */}
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setIsSellerDropdownOpen((prev) => !prev);
+                    }}
+                    className={`bg-slate-950 border text-xs rounded-xl px-3 py-2 font-medium flex items-center gap-1.5 transition-all cursor-pointer ${
+                      selectedSellerFilter !== 'সব'
+                        ? 'border-amber-500/80 text-amber-300 bg-amber-500/10 shadow-sm shadow-amber-500/10'
+                        : 'border-slate-800 hover:border-slate-700 text-slate-200'
+                    }`}
                   >
-                    <option value="সব">সব সেলার ও এডমিন</option>
-                    {sellers.map((s) => (
-                      <option key={s.id} value={s.id}>
-                        {s.name} {s.isAdmin || s.role === 'admin' ? '(এডমিন ও সেলার)' : ''} {s.area ? `(${s.area})` : ''}
-                      </option>
-                    ))}
-                  </select>
+                    <User className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                    <span className="truncate max-w-[130px] sm:max-w-none">
+                      {selectedSellerFilter === 'সব'
+                        ? 'সব সেলার ও এডমিন'
+                        : sellers.find((s) => s.id === selectedSellerFilter)?.name || 'সেলার'}
+                    </span>
+                    <ChevronDown
+                      className={`w-3.5 h-3.5 text-slate-400 shrink-0 transition-transform duration-200 ${
+                        isSellerDropdownOpen ? 'rotate-180 text-amber-400' : ''
+                      }`}
+                    />
+                  </button>
+
+                  {/* Custom Seller Menu */}
+                  {isSellerDropdownOpen && (
+                    <div
+                      onClick={(e) => e.stopPropagation()}
+                      className="absolute left-0 sm:left-auto sm:right-0 top-full mt-1.5 w-64 max-h-72 overflow-y-auto bg-slate-900 border border-slate-700/90 rounded-2xl shadow-2xl py-1.5 z-50 animate-in fade-in zoom-in-95 duration-150"
+                    >
+                      <div className="px-3 py-1.5 text-[10px] font-bold tracking-wider text-slate-400 border-b border-slate-800 flex items-center justify-between">
+                        <span>সেলার ফিল্টার</span>
+                        {selectedSellerFilter !== 'সব' && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSelectedSellerFilter('সব');
+                              setIsSellerDropdownOpen(false);
+                            }}
+                            className="text-rose-400 hover:text-rose-300 cursor-pointer text-[10px]"
+                          >
+                            রিসেট
+                          </button>
+                        )}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedSellerFilter('সব');
+                          setIsSellerDropdownOpen(false);
+                        }}
+                        className={`w-full px-3 py-2 text-left text-xs flex items-center justify-between transition-colors cursor-pointer ${
+                          selectedSellerFilter === 'সব'
+                            ? 'bg-amber-500/20 text-amber-300 font-bold'
+                            : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                        }`}
+                      >
+                        <span>সব সেলার ও এডমিন</span>
+                        {selectedSellerFilter === 'সব' && <Check className="w-3.5 h-3.5 text-amber-400" />}
+                      </button>
+                      {sellers.map((s) => {
+                        const isSelected = selectedSellerFilter === s.id;
+                        return (
+                          <button
+                            key={s.id}
+                            type="button"
+                            onClick={() => {
+                              setSelectedSellerFilter(s.id);
+                              setIsSellerDropdownOpen(false);
+                            }}
+                            className={`w-full px-3 py-2 text-left text-xs flex items-center justify-between transition-colors cursor-pointer border-t border-slate-800/40 ${
+                              isSelected
+                                ? 'bg-amber-500/20 text-amber-300 font-bold'
+                                : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                            }`}
+                          >
+                            <div className="truncate pr-2">
+                              <span className="font-medium text-slate-100">{s.name}</span>
+                              {(s.isAdmin || s.role === 'admin') && (
+                                <span className="ml-1 text-[10px] text-amber-400 font-semibold">(এডমিন)</span>
+                              )}
+                              {s.area && (
+                                <span className="ml-1 text-[10px] text-slate-400">({s.area})</span>
+                              )}
+                            </div>
+                            {isSelected && <Check className="w-3.5 h-3.5 text-amber-400 shrink-0" />}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
 
                 {/* View Mode Switcher */}
@@ -1069,16 +1180,26 @@ export const DueManagement: React.FC<DueManagementProps> = ({
 
                 <div>
                   <label className="block text-slate-300 font-semibold mb-1">পেমেন্ট মাধ্যম</label>
-                  <select
-                    value={paymentMethod}
-                    onChange={(e) => setPaymentMethod(e.target.value)}
-                    className="w-full bg-slate-950 border border-slate-700 text-slate-200 rounded-xl px-3 py-2 focus:outline-none"
-                  >
-                    <option value="নগদ ক্যাশ">নগদ ক্যাশ</option>
-                    <option value="বিকাশ / নগদ">বিকাশ / নগদ</option>
-                    <option value="ব্যাংক ডিপোজিট">ব্যাংক ডিপোজিট</option>
-                    <option value="চেক পেমেন্ট">চেক পেমেন্ট</option>
-                  </select>
+                  <div className="grid grid-cols-2 gap-1.5">
+                    {['নগদ ক্যাশ', 'বিকাশ / নগদ', 'ব্যাংক ডিপোজিট', 'চেক পেমেন্ট'].map((method) => {
+                      const isSelected = paymentMethod === method;
+                      return (
+                        <button
+                          key={method}
+                          type="button"
+                          onClick={() => setPaymentMethod(method)}
+                          className={`px-2.5 py-1.5 rounded-xl border text-[11px] font-semibold flex items-center justify-between transition-all cursor-pointer ${
+                            isSelected
+                              ? 'bg-amber-500/20 border-amber-500 text-amber-300 shadow-xs'
+                              : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-slate-200 hover:border-slate-700'
+                          }`}
+                        >
+                          <span className="truncate">{method}</span>
+                          {isSelected && <Check className="w-3 h-3 text-amber-400 shrink-0" />}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
 
@@ -1140,42 +1261,84 @@ export const DueManagement: React.FC<DueManagementProps> = ({
                   দোকান / কাস্টমার নির্বাচন করুন *
                 </label>
                 
-                {/* Search helper if multiple customers */}
-                {customers.length > 5 && (
-                  <div className="mb-2">
-                    <input
-                      type="text"
-                      placeholder="দোকান বা মালিকের নাম দিয়ে খুঁজুন..."
-                      value={adjustCustomerSearch}
-                      onChange={(e) => setAdjustCustomerSearch(e.target.value)}
-                      className="w-full bg-slate-950 border border-slate-800 text-slate-200 rounded-xl px-3 py-1.5 focus:outline-none focus:border-amber-500 text-xs"
-                    />
-                  </div>
-                )}
+                {/* Custom Searchable Customer Selector */}
+                <div className="relative">
+                  {(() => {
+                    const chosenCust = customers.find((c) => c.id === adjustCustomerId);
+                    return (
+                      <button
+                        type="button"
+                        onClick={() => setIsAdjustCustDropdownOpen(!isAdjustCustDropdownOpen)}
+                        className="w-full bg-slate-950 border border-slate-700 text-left p-2.5 rounded-xl flex items-center justify-between focus:outline-none focus:border-amber-500 cursor-pointer"
+                      >
+                        {chosenCust ? (
+                          <div className="truncate pr-2">
+                            <span className="font-bold text-amber-300 text-xs">{chosenCust.shopName}</span>
+                            <span className="text-slate-400 text-[11px] ml-1.5">(প্রো: {chosenCust.name})</span>
+                          </div>
+                        ) : (
+                          <span className="text-slate-500 text-xs">কাস্টমার নির্বাচন করুন...</span>
+                        )}
+                        <ChevronDown className={`w-3.5 h-3.5 text-slate-400 shrink-0 transition-transform duration-200 ${isAdjustCustDropdownOpen ? 'rotate-180 text-amber-400' : ''}`} />
+                      </button>
+                    );
+                  })()}
 
-                <select
-                  required
-                  value={adjustCustomerId}
-                  onChange={(e) => setAdjustCustomerId(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-700 text-amber-300 font-bold p-3 rounded-xl focus:outline-none focus:border-amber-500"
-                >
-                  <option value="" disabled>-- কাস্টমার নির্বাচন করুন --</option>
-                  {customers
-                    .filter((c) => {
-                      if (!adjustCustomerSearch.trim()) return true;
-                      const q = adjustCustomerSearch.toLowerCase();
-                      return (
-                        c.shopName.toLowerCase().includes(q) ||
-                        c.name.toLowerCase().includes(q) ||
-                        c.phone.includes(q)
-                      );
-                    })
-                    .map((c) => (
-                      <option key={c.id} value={c.id}>
-                        {c.shopName} (প্রো: {c.name}) - বর্তমান বাকী: ৳{c.currentDue.toLocaleString('bn-BD')} {c.address ? `[${c.address}]` : ''}
-                      </option>
-                    ))}
-                </select>
+                  {isAdjustCustDropdownOpen && (
+                    <div className="absolute left-0 right-0 top-full mt-1 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl p-2 z-50 space-y-1.5">
+                      <div className="relative">
+                        <Search className="w-3.5 h-3.5 text-slate-500 absolute left-2.5 top-1/2 -translate-y-1/2" />
+                        <input
+                          type="text"
+                          placeholder="দোকান বা মালিকের নাম দিয়ে খুঁজুন..."
+                          value={adjustCustomerSearch}
+                          onChange={(e) => setAdjustCustomerSearch(e.target.value)}
+                          className="w-full bg-slate-950 border border-slate-800 text-slate-200 rounded-lg pl-8 pr-2.5 py-1.5 text-xs focus:outline-none focus:border-amber-500"
+                          autoFocus
+                        />
+                      </div>
+
+                      <div className="max-h-48 overflow-y-auto space-y-0.5 divide-y divide-slate-800/40">
+                        {customers
+                          .filter((c) => {
+                            if (!adjustCustomerSearch.trim()) return true;
+                            const q = adjustCustomerSearch.toLowerCase();
+                            return (
+                              c.shopName.toLowerCase().includes(q) ||
+                              c.name.toLowerCase().includes(q) ||
+                              c.phone.includes(q)
+                            );
+                          })
+                          .map((c) => {
+                            const isSelected = c.id === adjustCustomerId;
+                            return (
+                              <button
+                                key={c.id}
+                                type="button"
+                                onClick={() => {
+                                  setAdjustCustomerId(c.id);
+                                  setIsAdjustCustDropdownOpen(false);
+                                }}
+                                className={`w-full p-2 text-left text-xs rounded-lg flex items-center justify-between transition-colors cursor-pointer ${
+                                  isSelected ? 'bg-amber-500/20 text-amber-300 font-bold' : 'text-slate-200 hover:bg-slate-800'
+                                }`}
+                              >
+                                <div className="truncate pr-2">
+                                  <div className="font-semibold text-slate-100">{c.shopName}</div>
+                                  <div className="text-[10px] text-slate-400">মালিক: {c.name} {c.address ? `• ${c.address}` : ''}</div>
+                                </div>
+                                <div className="text-right shrink-0">
+                                  <div className={`text-[11px] font-mono font-bold ${c.currentDue < 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                                    ৳ {c.currentDue.toLocaleString('bn-BD')}
+                                  </div>
+                                </div>
+                              </button>
+                            );
+                          })}
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Selected Customer Snapshot */}

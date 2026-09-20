@@ -13,6 +13,7 @@ import {
   Sliders,
   MessageSquare,
   LogOut,
+  LogIn,
   ChevronLeft,
   ChevronRight,
   Shield,
@@ -35,6 +36,7 @@ interface SidebarProps {
   currentUser?: UserAccount | null;
   currentUserRole?: UserRole;
   onLogout?: () => void;
+  onOpenLogin?: () => void;
   dueAlertCount?: number;
   lowStockCount?: number;
   pendingOrdersCount?: number;
@@ -64,6 +66,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   currentUser,
   currentUserRole = 'customer',
   onLogout,
+  onOpenLogin,
   dueAlertCount = 0,
   lowStockCount = 0,
   pendingOrdersCount = 0,
@@ -527,8 +530,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
             </button>
           )}
 
-          {/* Logout Button */}
-          {currentUser && onLogout && (
+          {/* Logout / Login Button */}
+          {currentUser && onLogout ? (
             <button
               type="button"
               onClick={onLogout}
@@ -540,7 +543,19 @@ export const Sidebar: React.FC<SidebarProps> = ({
               <LogOut className="w-3.5 h-3.5 text-rose-400 shrink-0" />
               {!isCollapsed && <span>{t('logout')}</span>}
             </button>
-          )}
+          ) : !currentUser && onOpenLogin ? (
+            <button
+              type="button"
+              onClick={onOpenLogin}
+              className={`flex items-center justify-center gap-1 p-1.5 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 text-xs font-bold transition-colors cursor-pointer ${
+                isCollapsed ? 'w-full' : 'px-2.5'
+              }`}
+              title="লগইন করুন"
+            >
+              <LogIn className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+              {!isCollapsed && <span>লগইন</span>}
+            </button>
+          ) : null}
         </div>
       </div>
     </aside>

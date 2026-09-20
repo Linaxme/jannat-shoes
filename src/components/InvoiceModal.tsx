@@ -211,19 +211,24 @@ export const InvoiceModal: React.FC<InvoiceModalProps> = ({ order, onClose }) =>
       <div className="bg-white text-slate-900 rounded-2xl max-w-2xl w-full p-3 sm:p-6 shadow-2xl space-y-4 my-auto print:shadow-none print:p-0 print:max-w-none print:w-full print:m-0">
         
         {/* Modal Controls (Hidden in Print) */}
-        <div className="flex items-center justify-between border-b pb-3 print:hidden flex-wrap gap-2">
-          <div className="flex items-center gap-2 text-emerald-700 font-bold text-xs sm:text-sm">
-            <CheckCircle2 className="w-5 h-5 shrink-0" />
-            <span>ক্যাশ মেমো প্রস্তুত</span>
+        <div className="flex items-center justify-between border-b border-slate-100 pb-3 print:hidden flex-wrap gap-2">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center font-bold">
+              <CheckCircle2 className="w-5 h-5" />
+            </div>
+            <div>
+              <span className="text-xs sm:text-sm font-black text-slate-800 tracking-tight block">ক্যাশ মেমো ভিউ</span>
+              <span className="text-[10px] text-slate-500 font-mono font-semibold">মেমো #{order.memoNo}</span>
+            </div>
           </div>
           <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
             {/* WhatsApp Button */}
             <button
               onClick={handleShareWhatsApp}
-              className="px-3 py-2 bg-[#25D366] hover:bg-[#20bd5a] text-white font-bold rounded-xl text-xs flex items-center gap-1.5 shadow transition-colors cursor-pointer"
+              className="px-3 py-2 bg-[#25D366] hover:bg-[#20bd5a] text-white font-bold rounded-xl text-xs flex items-center gap-1.5 shadow-sm hover:shadow transition-all cursor-pointer active:scale-95"
               title="হোয়াটসঅ্যাপে মেমোর হিসাব পাঠান"
             >
-              <Share2 className="w-4 h-4" />
+              <Share2 className="w-3.5 h-3.5" />
               <span>WhatsApp</span>
             </button>
 
@@ -231,10 +236,10 @@ export const InvoiceModal: React.FC<InvoiceModalProps> = ({ order, onClose }) =>
             <button
               onClick={handleDownloadImage}
               disabled={isDownloading}
-              className="px-3 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-400 text-white font-bold rounded-xl text-xs flex items-center gap-1.5 shadow transition-colors cursor-pointer"
+              className="px-3 py-2 bg-slate-900 hover:bg-slate-800 disabled:bg-slate-300 text-white font-bold rounded-xl text-xs flex items-center gap-1.5 shadow-sm hover:shadow transition-all cursor-pointer active:scale-95"
               title="ছবি হিসেবে মেমো গ্যালারিতে সেভ করুন"
             >
-              {isDownloading && downloadType === 'image' ? <Loader2 className="w-4 h-4 animate-spin" /> : <ImageIcon className="w-4 h-4" />}
+              {isDownloading && downloadType === 'image' ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ImageIcon className="w-3.5 h-3.5" />}
               <span className="hidden sm:inline">ছবি সেভ</span>
             </button>
 
@@ -242,26 +247,26 @@ export const InvoiceModal: React.FC<InvoiceModalProps> = ({ order, onClose }) =>
             <button
               onClick={handleDownloadPDF}
               disabled={isDownloading}
-              className="px-3 py-2 bg-rose-600 hover:bg-rose-700 disabled:bg-rose-400 text-white font-bold rounded-xl text-xs flex items-center gap-1.5 shadow transition-colors cursor-pointer"
+              className="px-3 py-2 bg-rose-600 hover:bg-rose-700 disabled:bg-rose-300 text-white font-bold rounded-xl text-xs flex items-center gap-1.5 shadow-sm hover:shadow transition-all cursor-pointer active:scale-95"
               title="PDF ফাইল ডাউনলোড করুন"
             >
-              {isDownloading && downloadType === 'pdf' ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileText className="w-4 h-4" />}
+              {isDownloading && downloadType === 'pdf' ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <FileText className="w-3.5 h-3.5" />}
               <span className="hidden sm:inline">PDF</span>
             </button>
 
             {/* Print Button */}
             <button
               onClick={handlePrint}
-              className="px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs flex items-center gap-1.5 shadow transition-colors cursor-pointer"
+              className="px-3 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black rounded-xl text-xs flex items-center gap-1.5 shadow-sm hover:shadow transition-all cursor-pointer active:scale-95"
             >
-              <Printer className="w-4 h-4" />
+              <Printer className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">প্রিন্ট</span>
             </button>
 
             {/* Close Button */}
             <button
               onClick={onClose}
-              className="p-2 text-slate-400 hover:text-slate-700 rounded-lg cursor-pointer"
+              className="p-2 text-slate-400 hover:text-slate-800 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer"
             >
               <X className="w-5 h-5" />
             </button>
@@ -270,45 +275,45 @@ export const InvoiceModal: React.FC<InvoiceModalProps> = ({ order, onClose }) =>
 
 
         {/* PRINTABLE MEMO CONTENT AREA */}
-        <div ref={memoRef} className="p-3 sm:p-4 border-2 border-slate-900 rounded-xl space-y-3 text-xs font-sans bg-white print:border-none print:p-0">
+        <div ref={memoRef} className="p-4 sm:p-5 border border-slate-300 rounded-xl space-y-3.5 text-xs font-sans bg-white print:border-none print:p-0">
           
           {/* Shop Header */}
-          <div className="text-center border-b-2 border-slate-900 pb-2.5 space-y-0.5">
-            <h1 className="text-lg sm:text-xl font-black text-slate-900 tracking-tight flex items-center justify-center gap-2">
-              <Store className="w-5 h-5 text-slate-900 hidden sm:inline" />
+          <div className="text-center border-b border-slate-200 pb-3 space-y-1">
+            <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight flex items-center justify-center gap-2">
+              <Store className="w-5 h-5 text-amber-500 hidden sm:inline" />
               মেসার্স জান্নাত সুজ
             </h1>
-            <p className="text-[11px] font-semibold text-slate-700">
+            <p className="text-xs font-medium text-slate-600">
               উন্নতমানের পাদুকা পাইকারী বিক্রয়ের বিশ্বস্ত প্রতিষ্ঠান
             </p>
-            <div className="text-[10px] text-slate-600 flex flex-wrap items-center justify-center gap-x-3 gap-y-0.5 mt-0.5">
-              <span className="flex items-center gap-1 font-medium">
-                <MapPin className="w-3 h-3 text-slate-600" />
-                সানানগর মেইল গেইট, দেবিদ্বার, কুমিল্লা।
+            <div className="text-[11px] text-slate-500 flex flex-wrap items-center justify-center gap-x-4 gap-y-0.5 mt-0.5">
+              <span className="flex items-center gap-1">
+                <MapPin className="w-3 h-3 text-slate-400" />
+                সানানগর মেইল গেইট, দেবিদ্বার, কুমিল্লা
               </span>
-              <span className="flex items-center gap-1 font-semibold text-slate-800">
-                <PhoneCall className="w-3 h-3 text-slate-600" />
-                ফোন: ০১৮৭২-২৫৯২৩৭
+              <span className="flex items-center gap-1 font-semibold text-slate-700">
+                <PhoneCall className="w-3 h-3 text-slate-400" />
+                ০১৮৭২-২৫৯২৩৭
               </span>
             </div>
-            <div className="inline-block px-3 py-0.5 bg-slate-900 text-white font-bold text-[11px] rounded-full mt-1 uppercase tracking-widest">
+            <div className="inline-block px-3.5 py-0.5 bg-slate-900 text-amber-400 font-bold text-[10px] rounded-full mt-1.5 uppercase tracking-wider shadow-xs">
               ক্যাশ মেমো / চালান
             </div>
           </div>
 
           {/* Memo Meta & Customer Info Grid */}
-          <div className="grid grid-cols-2 gap-3 bg-slate-50 p-2.5 rounded-lg border border-slate-200 text-[11px]">
-            <div className="space-y-0.5">
-              <div><span className="font-bold">দোকান:</span> {order.shopName}</div>
-              <div><span className="font-bold">প্রোপাইটার:</span> {order.customerName}</div>
-              <div><span className="font-bold">ঠিকানা:</span> {order.customerAddress}</div>
-              <div><span className="font-bold">মোবাইল:</span> {order.customerPhone || '—'}</div>
+          <div className="grid grid-cols-2 gap-3 bg-slate-50/80 p-3 rounded-xl border border-slate-200/80 text-[11px]">
+            <div className="space-y-1">
+              <div><span className="text-slate-500 font-medium">দোকানের নাম:</span> <strong className="text-slate-900 font-bold">{order.shopName}</strong></div>
+              <div><span className="text-slate-500 font-medium">প্রোপাইটার:</span> <span className="text-slate-800 font-semibold">{order.customerName}</span></div>
+              <div><span className="text-slate-500 font-medium">ঠিকানা:</span> <span className="text-slate-700">{order.customerAddress || '—'}</span></div>
+              <div><span className="text-slate-500 font-medium">মোবাইল:</span> <span className="text-slate-800 font-mono font-semibold">{order.customerPhone || '—'}</span></div>
             </div>
-            <div className="space-y-0.5 text-right">
-              <div><span className="font-bold">মেমো নং:</span> <span className="font-mono font-bold text-indigo-900">{order.memoNo}</span></div>
-              <div><span className="font-bold">তারিখ:</span> {formatBnDate(order.date)} ({order.time})</div>
-              <div><span className="font-bold">সেলার:</span> {order.sellerName}</div>
-              <div><span className="font-bold">পেমেন্ট:</span> {order.paymentMethod}</div>
+            <div className="space-y-1 text-right">
+              <div><span className="text-slate-500 font-medium">মেমো নং:</span> <span className="font-mono font-black text-amber-600 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">{order.memoNo}</span></div>
+              <div><span className="text-slate-500 font-medium">তারিখ:</span> <span className="text-slate-800 font-semibold">{formatBnDate(order.date)} ({order.time})</span></div>
+              <div><span className="text-slate-500 font-medium">বিক্রয় প্রতিনিধি:</span> <span className="text-slate-800 font-semibold">{order.sellerName}</span></div>
+              <div><span className="text-slate-500 font-medium">পেমেন্ট মাধ্যম:</span> <span className="text-slate-800 font-bold">{order.paymentMethod}</span></div>
             </div>
           </div>
 
@@ -350,142 +355,149 @@ export const InvoiceModal: React.FC<InvoiceModalProps> = ({ order, onClose }) =>
 
               return (
                 <>
-                  <table className="w-full text-left border-collapse border border-slate-900 text-[10px] sm:text-[11px]">
-                    <thead>
-                      <tr className="bg-slate-900 text-white font-bold">
-                        <th className="p-1 border border-slate-900 text-center w-6">ক্র:</th>
-                        <th className="p-1 border border-slate-900">আর্টিকল</th>
-                        <th className="p-1 border border-slate-900 text-center">সাইজ</th>
-                        <th className="p-1 border border-slate-900 text-center">পরিমাণ</th>
-                        <th className="p-1 border border-slate-900 text-center">মোট জোড়া</th>
-                        <th className="p-1 border border-slate-900 text-right">দর (৳)</th>
-                        {hasCommissionInItems && (
-                          <th className="p-1 border border-slate-900 text-right">কমিশন</th>
-                        )}
-                        <th className="p-1 border border-slate-900 text-right">মোট (৳)</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {order.items.map((item, idx) => {
-                        const artCode = item.articleCode || (item as any).articleNo || (item as any).article || '-';
-                        const sizes = item.sizeRange || (item as any).size || (item as any).color || '-';
-                        const pairs = item.totalPairs ?? (item as any).pairQty ?? (item as any).quantityInput ?? 0;
-                        const price = item.unitSellPrice ?? (item as any).rate ?? (item as any).price ?? 0;
-                        // মোট (৳) is always gross total (pairs * price), e.g. 12 * 105 = 1260
-                        const itemGrossTotal = pairs * price;
-                        const qtyInput = item.quantityInput || pairs;
-                        const unitLabel = item.unitType === 'cartons' ? 'ডজন' : 'জোড়া';
+                  <div className="overflow-hidden rounded-lg border border-slate-300 shadow-2xs">
+                    <table className="w-full text-left border-collapse text-[10px] sm:text-[11px]">
+                      <thead>
+                        <tr className="bg-slate-900 text-white font-bold">
+                          <th className="py-1.5 px-2 text-center w-7 border-r border-slate-800">ক্র:</th>
+                          <th className="py-1.5 px-2 border-r border-slate-800">আর্টিকল</th>
+                          <th className="py-1.5 px-2 text-center border-r border-slate-800">সাইজ</th>
+                          <th className="py-1.5 px-2 text-center border-r border-slate-800">পরিমাণ</th>
+                          <th className="py-1.5 px-2 text-center border-r border-slate-800">মোট জোড়া</th>
+                          <th className="py-1.5 px-2 text-right border-r border-slate-800">দর (৳)</th>
+                          {hasCommissionInItems && (
+                            <th className="py-1.5 px-2 text-right border-r border-slate-800">কমিশন</th>
+                          )}
+                          <th className="py-1.5 px-2 text-right">মোট (৳)</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-200">
+                        {order.items.map((item, idx) => {
+                          const artCode = item.articleCode || (item as any).articleNo || (item as any).article || '-';
+                          const sizes = item.sizeRange || (item as any).size || (item as any).color || '-';
+                          const pairs = item.totalPairs ?? (item as any).pairQty ?? (item as any).quantityInput ?? 0;
+                          const price = item.unitSellPrice ?? (item as any).rate ?? (item as any).price ?? 0;
+                          const itemGrossTotal = pairs * price;
+                          const qtyInput = item.quantityInput || pairs;
+                          const unitLabel = item.unitType === 'cartons' ? 'ডজন' : 'জোড়া';
 
-                        return (
-                          <tr key={idx} className="border-b border-slate-300">
-                            <td className="p-1 border border-slate-900 text-center font-mono">{toBnDigit(idx + 1)}</td>
-                            <td className="p-1 border border-slate-900 font-mono font-bold">
-                              {artCode}
-                            </td>
-                            <td className="p-1 border border-slate-900 text-center">{sizes}</td>
-                            <td className="p-1 border border-slate-900 text-center">
-                              {toBnDigit(qtyInput)} {unitLabel}
-                            </td>
-                            <td className="p-1 border border-slate-900 text-center font-semibold">
-                              {toBnDigit(pairs)}
-                            </td>
-                            <td className="p-1 border border-slate-900 text-right font-mono">{formatTaka(price)}</td>
-                            {hasCommissionInItems && (
-                              <td className="p-1 border border-slate-900 text-right font-mono font-semibold text-slate-700">
-                                {item.commissionPerPair && item.commissionPerPair > 0 ? `৳${item.commissionPerPair}` : '-'}
+                          return (
+                            <tr key={idx} className={idx % 2 === 1 ? 'bg-slate-50/50' : 'bg-white'}>
+                              <td className="py-1 px-2 text-center font-mono text-slate-500 border-r border-slate-200">{toBnDigit(idx + 1)}</td>
+                              <td className="py-1 px-2 font-mono font-bold text-slate-900 border-r border-slate-200">
+                                {artCode}
                               </td>
-                            )}
-                            <td className="p-1 border border-slate-900 text-right font-mono font-bold">{formatTaka(itemGrossTotal)}</td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
+                              <td className="py-1 px-2 text-center text-slate-700 border-r border-slate-200">{sizes}</td>
+                              <td className="py-1 px-2 text-center font-medium text-slate-800 border-r border-slate-200">
+                                {toBnDigit(qtyInput)} {unitLabel}
+                              </td>
+                              <td className="py-1 px-2 text-center font-bold text-slate-900 border-r border-slate-200">
+                                {toBnDigit(pairs)}
+                              </td>
+                              <td className="py-1 px-2 text-right font-mono font-semibold text-slate-800 border-r border-slate-200">{formatTaka(price)}</td>
+                              {hasCommissionInItems && (
+                                <td className="py-1 px-2 text-right font-mono font-semibold text-amber-700 border-r border-slate-200">
+                                  {item.commissionPerPair && item.commissionPerPair > 0 ? `৳${item.commissionPerPair}` : '-'}
+                                </td>
+                              )}
+                              <td className="py-1 px-2 text-right font-mono font-bold text-slate-900">{formatTaka(itemGrossTotal)}</td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
 
                   {/* Calculations Summary Grid */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-start pt-1">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-start pt-2">
                     
                     {/* Note & Policy */}
-                    <div className="text-[10px] text-slate-600 space-y-0.5 bg-slate-50 p-2 rounded border border-slate-200">
-                      <div className="font-bold text-slate-800">শর্তাবলী:</div>
-                      <div>১. বিক্রিত মাল ফেরত নেওয়া হয় না, তবে স্টক পরিবর্তন সাপেক্ষ।</div>
-                      <div>২. মেমো ছাড়া কোনো অভিযোগ গ্রহণযোগ্য নয়।</div>
+                    <div className="text-[10px] text-slate-600 space-y-1 bg-slate-50 p-3 rounded-xl border border-slate-200">
+                      <div className="font-bold text-slate-900 flex items-center gap-1">
+                        <span>বিশেষ শর্তাবলী:</span>
+                      </div>
+                      <div className="text-[10.5px] leading-relaxed">১. বিক্রিত মাল ফেরত নেওয়া হয় না, তবে স্টক থাকা সাপেক্ষে পরিবর্তনযোগ্য।</div>
+                      <div className="text-[10.5px] leading-relaxed">২. মেমো ছাড়া কোনো প্রকার অভিযোগ গ্রহণযোগ্য হবে না।</div>
                       {order.notes && (
-                        <div className="mt-0.5 font-semibold text-slate-800">নোট: {order.notes}</div>
+                        <div className="mt-1.5 pt-1.5 border-t border-slate-200 text-slate-800">
+                          <strong className="text-slate-900 font-semibold">মন্তব্য/নোট:</strong> {order.notes}
+                        </div>
                       )}
                     </div>
 
                     {/* Calculations */}
-                    <table className="w-full text-[10px] sm:text-[11px]">
-                      <tbody>
-                        <tr>
-                          <td className="py-0.5 text-slate-600">মোট জোড়া:</td>
-                          <td className="py-0.5 text-right font-bold">{toBnDigit(order.totalPairs)} জোড়া</td>
-                        </tr>
-                        <tr>
-                          <td className="py-0.5 text-slate-600">মোট মূল্য:</td>
-                          <td className="py-0.5 text-right font-semibold">{formatTaka(displayGrossTotal)}</td>
-                        </tr>
-                        {totalOrderCommission > 0 && (
+                    <div className="bg-slate-50/60 p-2.5 rounded-xl border border-slate-200">
+                      <table className="w-full text-[10.5px] sm:text-[11px]">
+                        <tbody>
                           <tr>
-                            <td className="py-0.5 text-amber-700 font-medium">জোড়া প্রতি কমিশন (ছাড়):</td>
-                            <td className="py-0.5 text-right text-amber-700 font-semibold">- {formatTaka(totalOrderCommission)}</td>
+                            <td className="py-0.5 text-slate-600 font-medium">মোট জোড়া:</td>
+                            <td className="py-0.5 text-right font-bold text-slate-900">{toBnDigit(order.totalPairs)} জোড়া</td>
                           </tr>
-                        )}
-                        {order.discount > 0 && (
                           <tr>
-                            <td className="py-0.5 text-rose-600 font-medium">অতিরিক্ত ছাড় / ডিসকাউন্ট:</td>
-                            <td className="py-0.5 text-right text-rose-600 font-semibold">- {formatTaka(order.discount)}</td>
+                            <td className="py-0.5 text-slate-600 font-medium">মোট মূল্য (গায়ের দর):</td>
+                            <td className="py-0.5 text-right font-semibold text-slate-800">{formatTaka(displayGrossTotal)}</td>
                           </tr>
-                        )}
-                        <tr className="border-t border-slate-900 font-bold text-xs">
-                          <td className="py-1">সর্বমোট নিট বিল:</td>
-                          <td className="py-1 text-right font-black">{formatTaka(finalGrandTotal)}</td>
-                        </tr>
-                <tr className="text-emerald-700 font-bold">
-                  <td className="py-0.5">জমা/নগদ প্রদান:</td>
-                  <td className="py-0.5 text-right font-black">{formatTaka(paidAmount)}</td>
-                </tr>
-                {paidAmount > finalGrandTotal && (
-                  <tr className="text-emerald-600 font-bold border-t border-slate-300">
-                    <td className="py-0.5">অতিরিক্ত জমা (অ্যাডভান্স):</td>
-                    <td className="py-0.5 text-right font-black">{formatTaka(finalOverpaid)}</td>
-                  </tr>
-                )}
-                {paidAmount <= finalGrandTotal && (
-                  <tr className="text-rose-700 font-bold border-t border-slate-300">
-                    <td className="py-0.5">চালানের বাকী:</td>
-                    <td className="py-0.5 text-right font-black">{formatTaka(finalDueAmount)}</td>
-                  </tr>
-                )}
-                <tr className="text-slate-600">
-                  <td className="py-0.5">
-                    {previousDue < 0 ? 'পূর্বের অ্যাডভান্স জমা:' : 'পূর্বের মার্কেট বাকী:'}
-                  </td>
-                  <td className={`py-0.5 text-right font-semibold ${previousDue < 0 ? 'text-emerald-700 font-bold' : ''}`}>
-                    {previousDue < 0 ? `+${formatTaka(Math.abs(previousDue))}` : formatTaka(previousDue)}
-                  </td>
-                </tr>
-                <tr className="bg-slate-900 text-white font-bold border-t border-slate-900">
-                  <td className="p-1">{finalTotalNetDue < 0 ? 'বর্তমান অ্যাডভান্স স্থিতি:' : 'বর্তমান মোট বাকী:'}</td>
-                  <td className={`p-1 text-right font-black ${finalTotalNetDue < 0 ? 'text-emerald-400' : 'text-amber-300'}`}>
-                    {finalTotalNetDue < 0 ? `+${formatTaka(Math.abs(finalTotalNetDue))}` : formatTaka(finalTotalNetDue)}
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+                          {totalOrderCommission > 0 && (
+                            <tr>
+                              <td className="py-0.5 text-amber-700 font-medium">জোড়া প্রতি কমিশন (ছাড়):</td>
+                              <td className="py-0.5 text-right text-amber-700 font-semibold">- {formatTaka(totalOrderCommission)}</td>
+                            </tr>
+                          )}
+                          {order.discount > 0 && (
+                            <tr>
+                              <td className="py-0.5 text-rose-600 font-medium">অতিরিক্ত ছাড় / ডিসকাউন্ট:</td>
+                              <td className="py-0.5 text-right text-rose-600 font-semibold">- {formatTaka(order.discount)}</td>
+                            </tr>
+                          )}
+                          <tr className="border-t border-slate-300 font-bold text-xs">
+                            <td className="py-1 text-slate-900">সর্বমোট নিট বিল:</td>
+                            <td className="py-1 text-right font-black text-slate-900">{formatTaka(finalGrandTotal)}</td>
+                          </tr>
+                          <tr className="text-emerald-700 font-bold">
+                            <td className="py-0.5">জমা / নগদ প্রদান:</td>
+                            <td className="py-0.5 text-right font-black">{formatTaka(paidAmount)}</td>
+                          </tr>
+                          {paidAmount > finalGrandTotal && (
+                            <tr className="text-emerald-600 font-bold border-t border-slate-200">
+                              <td className="py-0.5">অতিরিক্ত জমা (অ্যাডভান্স):</td>
+                              <td className="py-0.5 text-right font-black">{formatTaka(finalOverpaid)}</td>
+                            </tr>
+                          )}
+                          {paidAmount <= finalGrandTotal && (
+                            <tr className="text-rose-700 font-bold border-t border-slate-200">
+                              <td className="py-0.5">চালানের নতুন বাকী:</td>
+                              <td className="py-0.5 text-right font-black">{formatTaka(finalDueAmount)}</td>
+                            </tr>
+                          )}
+                          <tr className="text-slate-600 border-t border-slate-200">
+                            <td className="py-0.5">
+                              {previousDue < 0 ? 'পূর্বের অ্যাডভান্স জমা:' : 'পূর্বের মার্কেট বাকী:'}
+                            </td>
+                            <td className={`py-0.5 text-right font-semibold ${previousDue < 0 ? 'text-emerald-700 font-bold' : 'text-slate-800'}`}>
+                              {previousDue < 0 ? `+${formatTaka(Math.abs(previousDue))}` : formatTaka(previousDue)}
+                            </td>
+                          </tr>
+                          <tr className="bg-slate-900 text-white font-bold rounded-lg">
+                            <td className="p-1.5 rounded-l-lg">{finalTotalNetDue < 0 ? 'বর্তমান মোট অ্যাডভান্স:' : 'বর্তমান সর্বমোট বাকী:'}</td>
+                            <td className={`p-1.5 rounded-r-lg text-right font-black ${finalTotalNetDue < 0 ? 'text-emerald-400' : 'text-amber-300'}`}>
+                              {finalTotalNetDue < 0 ? `+${formatTaka(Math.abs(finalTotalNetDue))}` : formatTaka(finalTotalNetDue)}
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
 
-          </div>
+                  </div>
 
-          {/* Signatures Footer */}
-          <div className="flex items-center justify-between pt-8 text-[10px] text-slate-700">
-            <div className="border-t border-slate-800 pt-1 text-center w-28">
-              ক্রেতার স্বাক্ষর
-            </div>
-            <div className="border-t border-slate-800 pt-1 text-center w-28 font-bold">
-              জান্নাত সুজ পক্ষে
-            </div>
-          </div>
+                  {/* Signatures Footer */}
+                  <div className="flex items-center justify-between pt-10 text-[10.5px] text-slate-700">
+                    <div className="border-t border-slate-400 pt-1 text-center w-32 font-medium">
+                      ক্রেতার স্বাক্ষর
+                    </div>
+                    <div className="border-t border-slate-400 pt-1 text-center w-36 font-bold text-slate-900">
+                      জান্নাত সুজের পক্ষে
+                    </div>
+                  </div>
 
                 </>
               );

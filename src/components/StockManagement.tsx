@@ -20,6 +20,10 @@ import {
   Trash2,
   Eye,
   EyeOff,
+  ChevronDown,
+  Check,
+  Filter,
+  X,
 } from 'lucide-react';
 
 interface StockManagementProps {
@@ -53,6 +57,9 @@ export const StockManagement: React.FC<StockManagementProps> = ({
   );
 
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCategoryFilter, setSelectedCategoryFilter] = useState<string>('সব');
+  const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState<boolean>(false);
+  const [stockAlertFilter, setStockAlertFilter] = useState<'all' | 'low'>('all');
   const [viewMode, setViewMode] = useState<'table' | 'card' | 'grid'>(
     typeof window !== 'undefined' && window.innerWidth < 768 ? 'grid' : 'table'
   );
@@ -80,6 +87,9 @@ export const StockManagement: React.FC<StockManagementProps> = ({
   const categoriesList = systemConfig?.categories && systemConfig.categories.length > 0
     ? systemConfig.categories
     : defaultCategories;
+
+  const [showAddCatDropdown, setShowAddCatDropdown] = useState(false);
+  const [showEditCatDropdown, setShowEditCatDropdown] = useState(false);
 
   // Toggle state to show/hide buy price
   const [showBuyPrice, setShowBuyPrice] = useState(false);
@@ -167,10 +177,21 @@ export const StockManagement: React.FC<StockManagementProps> = ({
   };
 
   const filteredProducts = products.filter((p) => {
-    return (
+    const matchesSearch =
       (p.articleCode || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (p.brand && (p.brand || "").toLowerCase().includes(searchTerm.toLowerCase()))
-    );
+      (p.brand && (p.brand || "").toLowerCase().includes(searchTerm.toLowerCase()));
+    
+    if (!matchesSearch) return false;
+
+    if (selectedCategoryFilter !== 'সব' && p.category !== selectedCategoryFilter) {
+      return false;
+    }
+
+    if (stockAlertFilter === 'low' && p.stockPairs > p.minStockAlert) {
+      return false;
+    }
+
+    return true;
   });
 
   const totalStockPairs = products.reduce((sum, p) => sum + p.stockPairs, 0);
@@ -284,7 +305,7 @@ export const StockManagement: React.FC<StockManagementProps> = ({
   };
 
   return (
-    <div className="space-y-6" onClick={() => setActiveMenuProductId(null)}>
+    <div className="space-y-6" onClick={() => { setActiveMenuProductId(null); setIsCategoryDropdownOpen(false); }}>
       
       {/* Minimal Stock Header */}
       <div className="flex items-center justify-between gap-3 pt-1 pb-1">
@@ -308,59 +329,196 @@ export const StockManagement: React.FC<StockManagementProps> = ({
       </div>
 
       {/* Overview Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div className="bg-slate-900 border border-slate-800 p-4 rounded-2xl">
-          <p className="text-xs text-slate-400 font-medium">মোট মজুদ</p>
-          <h3 className="text-xl sm:text-2xl font-bold text-amber-300 mt-1">
-            {toBnDigit(totalStockPairs)} <span className="text-xs font-normal text-slate-400">জোড়া</span>
-          </h3>
-          <p className="text-[11px] text-slate-400 mt-1">
-            ডজন: {pairsToCartonText(totalStockPairs, 12)}
-          </p>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+        <div className="bg-slate-900/80 border border-slate-800/90 rounded-2xl p-4 sm:p-5 shadow-sm hover:border-slate-700/80 transition relative overflow-hidden group">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <span className="text-xs font-bold text-slate-400">মোট মজুদ</span>
+              <div className="text-2xl sm:text-3xl font-black text-amber-300 font-mono tracking-tight mt-1">
+                {toBnDigit(totalStockPairs)}{' '}
+                <span className="text-xs font-normal text-slate-400">জোড়া</span>
+              </div>
+            </div>
+            <div className="w-10 h-10 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400 shrink-0 shadow-inner">
+              <Boxes className="w-5 h-5" />
+            </div>
+          </div>
+          <div className="mt-3 pt-3 border-t border-slate-800/70 flex items-center justify-between text-xs text-slate-400">
+            <span>ডজন হিসাব</span>
+            <span className="font-bold text-slate-200">{pairsToCartonText(totalStockPairs, 12)}</span>
+          </div>
         </div>
 
-        <div className="bg-slate-900 border border-slate-800 p-4 rounded-2xl">
-          <p className="text-xs text-slate-400 font-medium">মোট ক্রয়মূল্য</p>
-          <h3 className="text-xl sm:text-2xl font-bold text-rose-400 mt-1">
-            {showBuyPrice ? formatTaka(totalStockValueBuy) : '•••• ৳'}
-          </h3>
-          <p className="text-[11px] text-slate-400 mt-1">
-            {showBuyPrice ? 'ক্রয়মূল্য উন্মুক্ত' : 'গোপন রয়েছে'}
-          </p>
+        <div className="bg-slate-900/80 border border-slate-800/90 rounded-2xl p-4 sm:p-5 shadow-sm hover:border-slate-700/80 transition relative overflow-hidden group">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <span className="text-xs font-bold text-slate-400">ইনভেন্টরি ক্রয়মূল্য</span>
+              <div className="text-2xl sm:text-3xl font-black text-rose-400 font-mono tracking-tight mt-1">
+                {showBuyPrice ? formatTaka(totalStockValueBuy) : '•••• ৳'}
+              </div>
+            </div>
+            <div className="w-10 h-10 rounded-xl bg-rose-500/15 border border-rose-500/30 flex items-center justify-center text-rose-400 shrink-0 shadow-inner">
+              <RefreshCw className="w-5 h-5" />
+            </div>
+          </div>
+          <div className="mt-3 pt-3 border-t border-slate-800/70 flex items-center justify-between text-xs text-slate-400">
+            <span>ক্রয় হিসাব</span>
+            <button
+              type="button"
+              onClick={() => setShowBuyPrice(!showBuyPrice)}
+              className="font-bold text-slate-300 hover:text-amber-400 flex items-center gap-1.5 transition cursor-pointer"
+            >
+              {showBuyPrice ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+              <span>{showBuyPrice ? 'লুকান' : 'দেখুন'}</span>
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Search Input & View Mode Switcher */}
-      <div className="bg-slate-900 border border-slate-800 p-4 rounded-2xl space-y-3">
+      {/* Search Input & Unified Action Controls */}
+      <div className="bg-slate-900/70 border border-slate-800/80 p-3 sm:p-3.5 rounded-2xl shadow-sm space-y-3">
         <div className="flex items-center gap-2 bg-slate-950 border border-slate-800 rounded-xl px-3 py-2">
-          <Search className="w-4 h-4 text-slate-400" />
+          <Search className="w-4 h-4 text-slate-400 shrink-0" />
           <input
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="আর্টিকল কোড দিয়ে খুঁজুন..."
+            placeholder="আর্টিকল খুঁজুন..."
             className="bg-transparent text-xs sm:text-sm text-slate-100 placeholder-slate-500 w-full focus:outline-none"
           />
+          {searchTerm && (
+            <button
+              type="button"
+              onClick={() => setSearchTerm('')}
+              className="text-slate-500 hover:text-slate-300 cursor-pointer"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
         </div>
 
-        {/* Action Controls Row: Left = Eye Icon, Right = View Mode Switcher */}
-        <div className="flex items-center justify-between gap-3">
-          {/* Left: Standalone Eye Icon Toggle */}
-          <button
-            type="button"
-            onClick={() => setShowBuyPrice(!showBuyPrice)}
-            className={`p-2 rounded-xl border transition cursor-pointer flex items-center justify-center shrink-0 ${
-              showBuyPrice
-                ? 'bg-amber-500/10 border-amber-500/30 text-amber-400'
-                : 'bg-slate-950 border-slate-800 text-slate-500 hover:text-slate-300 hover:border-slate-700'
-            }`}
-            title={showBuyPrice ? "ক্রয় মূল্য লুকান" : "ক্রয় মূল্য দেখুন"}
-          >
-            {showBuyPrice ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
-          </button>
+        {/* Action Controls Row */}
+        <div className="flex items-center justify-between gap-2 flex-wrap sm:flex-nowrap">
+          {/* Left Group: Eye toggle + Category Custom Dropdown + Low Stock Alert */}
+          <div className="flex items-center gap-2 flex-wrap">
+            {/* Standalone Eye Icon Toggle */}
+            <button
+              type="button"
+              onClick={() => setShowBuyPrice(!showBuyPrice)}
+              className={`p-2 rounded-xl border transition cursor-pointer flex items-center justify-center shrink-0 ${
+                showBuyPrice
+                  ? 'bg-amber-500/10 border-amber-500/30 text-amber-400'
+                  : 'bg-slate-950 border-slate-800 text-slate-500 hover:text-slate-300 hover:border-slate-700'
+              }`}
+              title={showBuyPrice ? "ক্রয় মূল্য লুকান" : "ক্রয় মূল্য দেখুন"}
+            >
+              {showBuyPrice ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+            </button>
+
+            {/* Custom Category Dropdown */}
+            <div className="relative">
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsCategoryDropdownOpen((prev) => !prev);
+                }}
+                className={`bg-slate-950 border text-xs rounded-xl px-3 py-2 font-medium flex items-center gap-1.5 transition-all cursor-pointer ${
+                  selectedCategoryFilter !== 'সব'
+                    ? 'border-amber-500/80 text-amber-300 bg-amber-500/10 shadow-sm shadow-amber-500/10'
+                    : 'border-slate-800 hover:border-slate-700 text-slate-200'
+                }`}
+              >
+                <Filter className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                <span className="truncate max-w-[110px] sm:max-w-none">
+                  {selectedCategoryFilter === 'সব' ? 'সব ক্যাটাগরি' : selectedCategoryFilter}
+                </span>
+                <ChevronDown
+                  className={`w-3.5 h-3.5 text-slate-400 shrink-0 transition-transform duration-200 ${
+                    isCategoryDropdownOpen ? 'rotate-180 text-amber-400' : ''
+                  }`}
+                />
+              </button>
+
+              {/* Custom Category Menu */}
+              {isCategoryDropdownOpen && (
+                <div
+                  onClick={(e) => e.stopPropagation()}
+                  className="absolute left-0 top-full mt-1.5 w-56 max-h-64 overflow-y-auto bg-slate-900 border border-slate-700/90 rounded-2xl shadow-2xl py-1.5 z-50 animate-in fade-in zoom-in-95 duration-150"
+                >
+                  <div className="px-3 py-1.5 text-[10px] font-bold tracking-wider text-slate-400 border-b border-slate-800 flex items-center justify-between">
+                    <span>ক্যাটাগরি ফিল্টার</span>
+                    {selectedCategoryFilter !== 'সব' && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedCategoryFilter('সব');
+                          setIsCategoryDropdownOpen(false);
+                        }}
+                        className="text-rose-400 hover:text-rose-300 cursor-pointer text-[10px]"
+                      >
+                        রিসেট
+                      </button>
+                    )}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedCategoryFilter('সব');
+                      setIsCategoryDropdownOpen(false);
+                    }}
+                    className={`w-full px-3 py-2 text-left text-xs flex items-center justify-between transition-colors cursor-pointer ${
+                      selectedCategoryFilter === 'সব'
+                        ? 'bg-amber-500/20 text-amber-300 font-bold'
+                        : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                    }`}
+                  >
+                    <span>সব ক্যাটাগরি</span>
+                    {selectedCategoryFilter === 'সব' && <Check className="w-3.5 h-3.5 text-amber-400" />}
+                  </button>
+                  {categoriesList.map((cat, idx) => {
+                    const isSelected = selectedCategoryFilter === cat;
+                    return (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={() => {
+                          setSelectedCategoryFilter(cat);
+                          setIsCategoryDropdownOpen(false);
+                        }}
+                        className={`w-full px-3 py-2 text-left text-xs flex items-center justify-between transition-colors cursor-pointer border-t border-slate-800/40 ${
+                          isSelected
+                            ? 'bg-amber-500/20 text-amber-300 font-bold'
+                            : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                        }`}
+                      >
+                        <span className="truncate">{cat}</span>
+                        {isSelected && <Check className="w-3.5 h-3.5 text-amber-400 shrink-0" />}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* Low Stock Alert Quick Toggle */}
+            <button
+              type="button"
+              onClick={() => setStockAlertFilter(stockAlertFilter === 'low' ? 'all' : 'low')}
+              className={`px-3 py-2 rounded-xl border text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
+                stockAlertFilter === 'low'
+                  ? 'bg-rose-500/20 border-rose-500 text-rose-300 shadow-sm shadow-rose-500/10'
+                  : 'bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700 hover:text-slate-200'
+              }`}
+              title="কম স্টক সতর্কতা"
+            >
+              <AlertTriangle className={`w-3.5 h-3.5 ${stockAlertFilter === 'low' ? 'text-rose-400' : 'text-slate-400'}`} />
+              <span className="hidden xs:inline">কম স্টক</span>
+            </button>
+          </div>
 
           {/* Right: View Mode Switcher */}
-          <div className="flex items-center gap-1 bg-slate-950 p-1 rounded-xl border border-slate-800">
+          <div className="flex items-center gap-1 bg-slate-950 p-1 rounded-xl border border-slate-800 shrink-0 ml-auto">
             <button
               type="button"
               onClick={() => setViewMode('table')}
@@ -881,15 +1039,39 @@ export const StockManagement: React.FC<StockManagementProps> = ({
                 </div>
                 <div>
                   <label className="block text-slate-300 font-semibold mb-1">ক্যাটাগরি</label>
-                  <select
-                    value={category}
-                    onChange={(e) => setCategory(e.target.value)}
-                    className="w-full bg-slate-950 border border-slate-700 text-slate-100 rounded-xl px-3 py-2 focus:outline-none"
-                  >
-                    {categoriesList.map((cat, idx) => (
-                      <option key={idx} value={cat}>{cat}</option>
-                    ))}
-                  </select>
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={() => setShowAddCatDropdown(!showAddCatDropdown)}
+                      className="w-full bg-slate-950 border border-slate-700 text-slate-100 rounded-xl px-3 py-2 flex items-center justify-between text-left focus:outline-none focus:border-amber-500 cursor-pointer text-xs"
+                    >
+                      <span className="truncate">{category || 'ক্যাটাগরি নির্বাচন'}</span>
+                      <ChevronDown className={`w-3.5 h-3.5 text-slate-400 shrink-0 transition-transform duration-200 ${showAddCatDropdown ? 'rotate-180 text-amber-400' : ''}`} />
+                    </button>
+                    {showAddCatDropdown && (
+                      <div className="absolute left-0 right-0 top-full mt-1 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl py-1 z-50 max-h-48 overflow-y-auto">
+                        {categoriesList.map((cat, idx) => {
+                          const isSelected = category === cat;
+                          return (
+                            <button
+                              key={idx}
+                              type="button"
+                              onClick={() => {
+                                setCategory(cat);
+                                setShowAddCatDropdown(false);
+                              }}
+                              className={`w-full px-3 py-2 text-left text-xs flex items-center justify-between cursor-pointer transition-colors ${
+                                isSelected ? 'bg-amber-500/20 text-amber-300 font-bold' : 'text-slate-200 hover:bg-slate-800'
+                              }`}
+                            >
+                              <span className="truncate">{cat}</span>
+                              {isSelected && <Check className="w-3.5 h-3.5 text-amber-400 shrink-0" />}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
 
@@ -1046,15 +1228,39 @@ export const StockManagement: React.FC<StockManagementProps> = ({
                 </div>
                 <div>
                   <label className="block text-slate-300 font-semibold mb-1">ক্যাটাগরি</label>
-                  <select
-                    value={editCategory}
-                    onChange={(e) => setEditCategory(e.target.value)}
-                    className="w-full bg-slate-950 border border-slate-700 text-slate-100 rounded-xl px-3 py-2 focus:outline-none"
-                  >
-                    {categoriesList.map((cat, idx) => (
-                      <option key={idx} value={cat}>{cat}</option>
-                    ))}
-                  </select>
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={() => setShowEditCatDropdown(!showEditCatDropdown)}
+                      className="w-full bg-slate-950 border border-slate-700 text-slate-100 rounded-xl px-3 py-2 flex items-center justify-between text-left focus:outline-none focus:border-amber-500 cursor-pointer text-xs"
+                    >
+                      <span className="truncate">{editCategory || 'ক্যাটাগরি নির্বাচন'}</span>
+                      <ChevronDown className={`w-3.5 h-3.5 text-slate-400 shrink-0 transition-transform duration-200 ${showEditCatDropdown ? 'rotate-180 text-amber-400' : ''}`} />
+                    </button>
+                    {showEditCatDropdown && (
+                      <div className="absolute left-0 right-0 top-full mt-1 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl py-1 z-50 max-h-48 overflow-y-auto">
+                        {categoriesList.map((cat, idx) => {
+                          const isSelected = editCategory === cat;
+                          return (
+                            <button
+                              key={idx}
+                              type="button"
+                              onClick={() => {
+                                setEditCategory(cat);
+                                setShowEditCatDropdown(false);
+                              }}
+                              className={`w-full px-3 py-2 text-left text-xs flex items-center justify-between cursor-pointer transition-colors ${
+                                isSelected ? 'bg-amber-500/20 text-amber-300 font-bold' : 'text-slate-200 hover:bg-slate-800'
+                              }`}
+                            >
+                              <span className="truncate">{cat}</span>
+                              {isSelected && <Check className="w-3.5 h-3.5 text-amber-400 shrink-0" />}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
 

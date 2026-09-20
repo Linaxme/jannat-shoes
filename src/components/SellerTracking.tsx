@@ -221,40 +221,55 @@ export const SellerTracking: React.FC<SellerTrackingProps> = ({
       </div>
 
       {/* Top Overview Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4">
-          <p className="text-xs text-slate-400 font-semibold mb-1 flex items-center gap-1">
-            <ShoppingCart className="w-3.5 h-3.5 text-blue-400" /> মোট সেলস
-          </p>
-          <p className="text-xl sm:text-2xl font-black text-emerald-400">{formatTaka(totalTeamRevenue)}</p>
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3.5">
+        <div className="bg-slate-900/80 border border-slate-800/90 rounded-2xl p-4 shadow-sm hover:border-slate-700 transition">
+          <div className="flex items-center justify-between text-xs font-bold text-slate-400 mb-2">
+            <span>মোট সেলস</span>
+            <div className="w-6 h-6 rounded-lg bg-blue-500/15 border border-blue-500/30 flex items-center justify-center text-blue-400">
+              <ShoppingCart className="w-3.5 h-3.5" />
+            </div>
+          </div>
+          <p className="text-lg sm:text-xl font-black text-emerald-400 font-mono tracking-tight">{formatTaka(totalTeamRevenue)}</p>
         </div>
 
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4">
-          <p className="text-xs text-slate-400 font-semibold mb-1 flex items-center gap-1">
-            <TrendingUp className="w-3.5 h-3.5 text-amber-400" /> মোট জোড়া
-          </p>
-          <p className="text-xl sm:text-2xl font-black text-amber-400">{toBnDigit(totalTeamPairs)} <span className="text-xs font-normal text-slate-400">জোড়া</span></p>
+        <div className="bg-slate-900/80 border border-slate-800/90 rounded-2xl p-4 shadow-sm hover:border-slate-700 transition">
+          <div className="flex items-center justify-between text-xs font-bold text-slate-400 mb-2">
+            <span>মোট জোড়া</span>
+            <div className="w-6 h-6 rounded-lg bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400">
+              <TrendingUp className="w-3.5 h-3.5" />
+            </div>
+          </div>
+          <p className="text-lg sm:text-xl font-black text-amber-400 font-mono tracking-tight">{toBnDigit(totalTeamPairs)} <span className="text-xs font-normal text-slate-400">জোড়া</span></p>
         </div>
 
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4">
-          <p className="text-xs text-amber-400/90 font-semibold mb-1 flex items-center gap-1">
-            <Percent className="w-3.5 h-3.5 text-amber-400" /> মোট অর্জিত কমিশন
-          </p>
-          <p className="text-xl sm:text-2xl font-black text-amber-300">{formatTaka(totalTeamCommission)}</p>
+        <div className="bg-slate-900/80 border border-slate-800/90 rounded-2xl p-4 shadow-sm hover:border-slate-700 transition">
+          <div className="flex items-center justify-between text-xs font-bold text-slate-400 mb-2">
+            <span>অর্জিত কমিশন</span>
+            <div className="w-6 h-6 rounded-lg bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400">
+              <Percent className="w-3.5 h-3.5" />
+            </div>
+          </div>
+          <p className="text-lg sm:text-xl font-black text-amber-300 font-mono tracking-tight">{formatTaka(totalTeamCommission)}</p>
         </div>
 
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4">
-          <p className="text-xs text-slate-400 font-semibold mb-1 flex items-center gap-1">
-            <Wallet className="w-3.5 h-3.5 text-rose-400" /> আওতাধীন বাকী
-          </p>
-          <p className="text-xl sm:text-2xl font-black text-rose-400">{formatTaka(totalTeamDue)}</p>
+        <div className="bg-slate-900/80 border border-slate-800/90 rounded-2xl p-4 shadow-sm hover:border-slate-700 transition">
+          <div className="flex items-center justify-between text-xs font-bold text-slate-400 mb-2">
+            <span>আওতাধীন বাকী</span>
+            <div className="w-6 h-6 rounded-lg bg-rose-500/15 border border-rose-500/30 flex items-center justify-center text-rose-400">
+              <Wallet className="w-3.5 h-3.5" />
+            </div>
+          </div>
+          <p className="text-lg sm:text-xl font-black text-rose-400 font-mono tracking-tight">{formatTaka(totalTeamDue)}</p>
         </div>
 
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4">
-          <p className="text-xs text-slate-400 font-semibold mb-1 flex items-center gap-1">
-            <DollarSign className="w-3.5 h-3.5 text-emerald-400" /> আদায়কৃত বাকী
-          </p>
-          <p className="text-xl sm:text-2xl font-black text-emerald-400">{formatTaka(totalTeamCollected)}</p>
+        <div className="bg-slate-900/80 border border-slate-800/90 rounded-2xl p-4 shadow-sm hover:border-slate-700 transition">
+          <div className="flex items-center justify-between text-xs font-bold text-slate-400 mb-2">
+            <span>আদায়কৃত বাকী</span>
+            <div className="w-6 h-6 rounded-lg bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+              <DollarSign className="w-3.5 h-3.5" />
+            </div>
+          </div>
+          <p className="text-lg sm:text-xl font-black text-emerald-400 font-mono tracking-tight">{formatTaka(totalTeamCollected)}</p>
         </div>
       </div>
 

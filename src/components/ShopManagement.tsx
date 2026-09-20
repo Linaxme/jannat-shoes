@@ -493,52 +493,62 @@ export const ShopManagement: React.FC<ShopManagementProps> = ({
 
         {/* Overview Stats Cards */}
         <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 mt-5 pt-4 border-t border-slate-800/80">
-          <div className="bg-slate-950/60 border border-slate-800 p-3 rounded-xl">
-            <div className="text-[11px] text-slate-400 flex items-center gap-1">
-              <Building2 className="w-3.5 h-3.5 text-blue-400" />
+          <div className="bg-slate-950/70 border border-slate-800/90 p-3.5 rounded-xl shadow-inner hover:border-slate-700 transition">
+            <div className="text-[11px] font-bold text-slate-400 flex items-center justify-between">
               <span>মোট দোকান</span>
+              <div className="w-6 h-6 rounded-lg bg-blue-500/15 border border-blue-500/30 flex items-center justify-center text-blue-400">
+                <Building2 className="w-3.5 h-3.5" />
+              </div>
             </div>
-            <div className="text-lg sm:text-xl font-black text-slate-100 mt-1">
+            <div className="text-lg sm:text-xl font-black text-slate-100 mt-2 font-mono">
               {toBnDigit(totalShopsCount)} <span className="text-xs font-normal text-slate-400">টি</span>
             </div>
           </div>
 
-          <div className="bg-slate-950/60 border border-slate-800 p-3 rounded-xl">
-            <div className="text-[11px] text-slate-400 flex items-center gap-1">
-              <Receipt className="w-3.5 h-3.5 text-rose-400" />
+          <div className="bg-slate-950/70 border border-slate-800/90 p-3.5 rounded-xl shadow-inner hover:border-slate-700 transition">
+            <div className="text-[11px] font-bold text-slate-400 flex items-center justify-between">
               <span>মোট বকেয়া</span>
+              <div className="w-6 h-6 rounded-lg bg-rose-500/15 border border-rose-500/30 flex items-center justify-center text-rose-400">
+                <Receipt className="w-3.5 h-3.5" />
+              </div>
             </div>
-            <div className="text-lg sm:text-xl font-black text-rose-400 mt-1">
+            <div className="text-lg sm:text-xl font-black text-rose-400 mt-2 font-mono">
               {formatTaka(totalDueAmount)}
             </div>
           </div>
 
-          <div className="bg-slate-950/60 border border-slate-800 p-3 rounded-xl">
-            <div className="text-[11px] text-slate-400 flex items-center gap-1">
-              <Coins className="w-3.5 h-3.5 text-emerald-400" />
+          <div className="bg-slate-950/70 border border-slate-800/90 p-3.5 rounded-xl shadow-inner hover:border-slate-700 transition">
+            <div className="text-[11px] font-bold text-slate-400 flex items-center justify-between">
               <span>এডভান্স জমা</span>
+              <div className="w-6 h-6 rounded-lg bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+                <Coins className="w-3.5 h-3.5" />
+              </div>
             </div>
-            <div className="text-lg sm:text-xl font-black text-emerald-400 mt-1">
+            <div className="text-lg sm:text-xl font-black text-emerald-400 mt-2 font-mono">
               +{formatTaka(totalAdvanceAmount)}
             </div>
           </div>
 
-          <div className="bg-slate-950/60 border border-slate-800 p-3 rounded-xl">
-            <div className="text-[11px] text-slate-400 flex items-center gap-1">
-              <User className="w-3.5 h-3.5 text-amber-400" />
+          <div className="bg-slate-950/70 border border-slate-800/90 p-3.5 rounded-xl shadow-inner hover:border-slate-700 transition">
+            <div className="text-[11px] font-bold text-slate-400 flex items-center justify-between">
               <span>বকেয়া দোকান</span>
+              <div className="w-6 h-6 rounded-lg bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400">
+                <User className="w-3.5 h-3.5" />
+              </div>
             </div>
-            <div className="text-lg sm:text-xl font-black text-amber-400 mt-1">
+            <div className="text-lg sm:text-xl font-black text-amber-400 mt-2 font-mono">
               {toBnDigit(shopsWithDueCount)} <span className="text-xs font-normal text-slate-400">টি</span>
             </div>
           </div>
 
-          <div className="bg-slate-950/60 border border-slate-800 p-3 rounded-xl">
-            <div className="text-[11px] text-slate-400 flex items-center gap-1">
-              <TrendingUp className="w-3.5 h-3.5 text-emerald-400" />
+          <div className="bg-slate-950/70 border border-slate-800/90 p-3.5 rounded-xl shadow-inner hover:border-slate-700 transition">
+            <div className="text-[11px] font-bold text-slate-400 flex items-center justify-between">
               <span>এলাকার দোকান</span>
+              <div className="w-6 h-6 rounded-lg bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+                <TrendingUp className="w-3.5 h-3.5" />
+              </div>
             </div>
-            <div className="text-lg sm:text-xl font-black text-emerald-400 mt-1">
+            <div className="text-lg sm:text-xl font-black text-emerald-400 mt-2 font-mono">
               {toBnDigit(myShopsCount)} <span className="text-xs font-normal text-slate-400">টি</span>
             </div>
           </div>
