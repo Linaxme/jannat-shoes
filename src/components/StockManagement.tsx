@@ -3,6 +3,7 @@ import { ShoeProduct, UITheme, Order, UserAccount, SystemConfig } from '../types
 import { formatTaka, toBnDigit, pairsToCartonText } from '../utils/formatters';
 import { useLanguage } from '../contexts/LanguageContext';
 import { ProductImageDisplay } from './Shoe2DPlaceholder';
+import { compressImageFile, getOptimizedCloudinaryUrl } from '../utils/imageCompressor';
 import {
   Boxes,
   Search,
@@ -126,11 +127,18 @@ export const StockManagement: React.FC<StockManagementProps> = ({
 
     setIsUploading(true);
     try {
+      // Compress client-side image to 150-350 KB (down from 4-8 MB) before uploading
+      const compressedFile = await compressImageFile(file, {
+        maxWidth: 1200,
+        maxHeight: 1200,
+        quality: 0.82,
+      });
+
       const activeCloudName = localStorage.getItem('cloudinary_cloud_name') || cloudName || 'aeuf3r8e';
       const activePreset = localStorage.getItem('cloudinary_upload_preset') || uploadPreset || 'stock_m';
 
       const formData = new FormData();
-      formData.append('file', file);
+      formData.append('file', compressedFile);
       formData.append('upload_preset', activePreset);
 
       const res = await fetch(`https://api.cloudinary.com/v1_1/${activeCloudName}/image/upload`, {
@@ -140,10 +148,11 @@ export const StockManagement: React.FC<StockManagementProps> = ({
 
       const data = await res.json();
       if (data.secure_url) {
+        const finalUrl = getOptimizedCloudinaryUrl(data.secure_url);
         if (isEdit) {
-          setEditImageUrl(data.secure_url);
+          setEditImageUrl(finalUrl);
         } else {
-          setImageUrl(data.secure_url);
+          setImageUrl(finalUrl);
         }
       } else {
         const errorMsg = data.error?.message || 'Cloudinary আপলোড সফল হয়নি';
@@ -157,7 +166,7 @@ export const StockManagement: React.FC<StockManagementProps> = ({
             setImageUrl(reader.result as string);
           }
         };
-        reader.readAsDataURL(file);
+        reader.readAsDataURL(compressedFile);
       }
     } catch (err: any) {
       console.error('Upload catch error:', err);

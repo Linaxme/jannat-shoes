@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Footprints } from 'lucide-react';
+import { getOptimizedCloudinaryUrl } from '../utils/imageCompressor';
 
 interface Shoe2DPlaceholderProps {
   articleCode?: string;
@@ -91,13 +92,17 @@ export const ProductImageDisplay: React.FC<ProductImageDisplayProps> = ({
     );
   }
 
+  const optimizedSrc = getOptimizedCloudinaryUrl(src, size === 'xs' || size === 'sm' ? 320 : 800);
+
   return (
     <img
-      src={src}
+      src={optimizedSrc}
       alt={alt || articleCode || 'Product'}
       className={className}
       onError={() => setImageError(true)}
       onClick={onClick}
+      loading="lazy"
+      decoding="async"
     />
   );
 };
