@@ -3,19 +3,18 @@ import {
   MessageSquare, 
   RefreshCw, 
   Send, 
-  CheckCircle2, 
   History, 
   Check, 
+  CheckCircle2,
   XCircle,
   AlertTriangle,
-  HelpCircle,
-  Info,
-  Headphones,
   ArrowLeft,
   Smartphone,
   ShieldCheck,
   Zap,
-  Sparkles
+  PhoneCall,
+  Copy,
+  X
 } from 'lucide-react';
 import { UITheme, UserAccount, SystemConfig } from '../types';
 import { saveDocumentToFirestore } from '../lib/firestoreService';
@@ -40,10 +39,10 @@ interface TopUpRequest {
 }
 
 const SMS_PACKAGES = [
-  { id: 'pkg-100', smsCount: 100, amount: 100, label: '১০০ টি SMS', badge: 'স্টার্টার প্যাক', color: 'from-blue-600 to-indigo-600' },
-  { id: 'pkg-500', smsCount: 500, amount: 500, label: '৫০০ টি SMS', badge: 'সেরা ভ্যালু', color: 'from-amber-600 to-orange-600', popular: true },
-  { id: 'pkg-1000', smsCount: 1000, amount: 1000, label: '১,০০০ টি SMS', badge: 'জনপ্রিয়', color: 'from-emerald-600 to-teal-600' },
-  { id: 'pkg-5000', smsCount: 5000, amount: 5000, label: '৫,০০০ টি SMS', badge: 'বিগ সেভার', color: 'from-pink-600 to-rose-600' },
+  { id: 'pkg-100', smsCount: 100, amount: 100, label: '১০০ টি SMS', badge: 'বেসিক', rate: '৳১.০০ / SMS', color: 'from-blue-600 to-indigo-600' },
+  { id: 'pkg-250', smsCount: 250, amount: 225, label: '২৫০ টি SMS', badge: '১০% ছাড়', rate: '৳০.৯০ / SMS', color: 'from-cyan-600 to-teal-600' },
+  { id: 'pkg-1000', smsCount: 1000, amount: 850, label: '১,০০০ টি SMS', badge: '১৫% ছাড়', rate: '৳০.৮৫ / SMS', color: 'from-amber-600 to-orange-600', popular: true },
+  { id: 'pkg-3000', smsCount: 3000, amount: 2400, label: '৩,০০০ টি SMS', badge: 'সর্বোচ্চ ২০% ছাড়', rate: '৳০.৮০ / SMS', color: 'from-pink-600 to-rose-600' },
 ];
 
 export const SMSPanel: React.FC<SMSPanelProps> = ({ 
@@ -55,6 +54,9 @@ export const SMSPanel: React.FC<SMSPanelProps> = ({
   const [transactionId, setTransactionId] = useState<string>('');
   const [amount, setAmount] = useState<number>(500);
   const [manualBalance, setManualBalance] = useState<string>('');
+  const [personalNumberInput, setPersonalNumberInput] = useState<string>(systemConfig?.bkashPersonalNumber || '01826990490');
+  const [agentNumberInput, setAgentNumberInput] = useState<string>(systemConfig?.bkashAgentNumber || '01924260055');
+  const [isSavingNumbers, setIsSavingNumbers] = useState<boolean>(false);
   const paymentMethod = 'bKash';
   
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
@@ -63,9 +65,10 @@ export const SMSPanel: React.FC<SMSPanelProps> = ({
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
   // Wizard States for Purchasing Flow (Admins / Sellers)
-  const [checkoutStep, setCheckoutStep] = useState<'package' | 'gateway' | 'bkash_themed'>('package');
+  const [checkoutStep, setCheckoutStep] = useState<'package' | 'confirm_pack' | 'gateway' | 'bkash_themed'>('package');
   const [selectedPackage, setSelectedPackage] = useState<typeof SMS_PACKAGES[0] | null>(null);
-  const [selectedGatewayType, setSelectedGatewayType] = useState<'cashout' | 'sendmoney' | null>(null);
+  const [selectedGatewayType, setSelectedGatewayType] = useState<'cashout' | 'sendmoney'>('cashout');
+  const [copiedNumber, setCopiedNumber] = useState<boolean>(false);
 
   const getPayAmount = () => {
     if (!selectedPackage) return 0;
@@ -73,6 +76,14 @@ export const SMSPanel: React.FC<SMSPanelProps> = ({
       return Math.round(selectedPackage.amount * 1.015);
     }
     return selectedPackage.amount;
+  };
+
+  const handleCopyNumber = (num: string) => {
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(num);
+    }
+    setCopiedNumber(true);
+    setTimeout(() => setCopiedNumber(false), 2000);
   };
 
   // Custom modal and status states
@@ -102,13 +113,52 @@ export const SMSPanel: React.FC<SMSPanelProps> = ({
     fetchTopupRequests();
   }, []);
 
+  useEffect(() => {
+    if (systemConfig?.bkashPersonalNumber) {
+      setPersonalNumberInput(systemConfig.bkashPersonalNumber);
+    }
+    if (systemConfig?.bkashAgentNumber) {
+      setAgentNumberInput(systemConfig.bkashAgentNumber);
+    }
+  }, [systemConfig?.bkashPersonalNumber, systemConfig?.bkashAgentNumber]);
+
+  const handleSaveBkashNumbers = async () => {
+    const pNum = personalNumberInput.trim();
+    const aNum = agentNumberInput.trim();
+
+    if (!pNum) {
+      setFormError('পার্সোনাল বিকাশ নম্বর প্রয়োজন');
+      return;
+    }
+
+    setIsSavingNumbers(true);
+    try {
+      const updatedConfig: SystemConfig = {
+        ...systemConfig,
+        bkashPersonalNumber: pNum,
+        bkashAgentNumber: aNum || '01924260055',
+      };
+      onUpdateSystemConfig(updatedConfig);
+      await saveDocumentToFirestore('systemConfig', systemConfig.id, updatedConfig);
+      setSuccessMsg('বিকাশ নম্বর সফলভাবে আপডেট হয়েছে');
+      setFormError(null);
+    } catch (err) {
+      console.error(err);
+      setFormError('নম্বর সেভ করতে সমস্যা হয়েছে');
+    } finally {
+      setIsSavingNumbers(false);
+    }
+  };
+
   const selectPackageHandler = (pkg: typeof SMS_PACKAGES[0]) => {
     setSelectedPackage(pkg);
     setAmount(pkg.amount);
-    setCheckoutStep('gateway');
-    setSelectedGatewayType(null);
+    setSelectedGatewayType('cashout');
+    setCheckoutStep('confirm_pack');
     setFormError(null);
     setSuccessMsg(null);
+    setSenderNumber('');
+    setTransactionId('');
   };
 
   const handleGatewaySelection = (type: 'cashout' | 'sendmoney') => {
@@ -157,7 +207,7 @@ export const SMSPanel: React.FC<SMSPanelProps> = ({
     try {
       await saveDocumentToFirestore('smsTopupRequests', newRequest.id, newRequest);
 
-      setSuccessMsg(`৳${finalAmount} মূল্যের রিকোয়েস্টটি সফলভাবে পাঠানো হয়েছে! সুপার এডমিন ট্রানজেকশন আইডি: ${cleanTxId} যাচাই করে ব্যালেন্স যোগ করে দেবেন।`);
+      setSuccessMsg('পেমেন্ট রিকোয়েস্ট সফলভাবে জমা হয়েছে। যাচাই শেষে ব্যালেন্স যুক্ত হবে।');
       setSenderNumber('');
       setTransactionId('');
       setCheckoutStep('package');
@@ -236,254 +286,266 @@ export const SMSPanel: React.FC<SMSPanelProps> = ({
   const renderCheckoutOverlay = () => {
     if (checkoutStep === 'package' || !selectedPackage || currentUser?.role === 'super_admin') return null;
     const payAmount = getPayAmount();
+    const currentPersonal = systemConfig?.bkashPersonalNumber || '01826990490';
+    const currentAgent = systemConfig?.bkashAgentNumber || '01924260055';
+    const activeNumber = selectedGatewayType === 'sendmoney' ? currentPersonal : currentAgent;
+    const activeLabel = selectedGatewayType === 'sendmoney' ? 'পার্সোনাল নম্বর' : 'এজেন্ট নম্বর';
+
+    const closeCheckout = () => {
+      setCheckoutStep('package');
+      setSelectedPackage(null);
+      setFormError(null);
+    };
+
+    if (checkoutStep === 'confirm_pack') {
+      return (
+        <div className="fixed inset-0 bg-black/75 backdrop-blur-sm text-slate-800 z-50 overflow-y-auto flex items-center justify-center p-3 sm:p-4 animate-fadeIn">
+          <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-[360px] overflow-hidden my-auto p-5 space-y-4">
+            {/* Header */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center">
+                  <Smartphone className="w-4 h-4" />
+                </div>
+                <h3 className="text-sm font-bold text-slate-900">প্যাক নিশ্চিতকরণ</h3>
+              </div>
+              <button 
+                type="button"
+                onClick={closeCheckout}
+                className="w-7 h-7 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-500 hover:text-slate-800 transition-colors cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Pack summary card */}
+            <div className="bg-slate-50 border border-slate-200 rounded-xl p-3.5 space-y-2.5">
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-slate-500 font-medium">প্যাকেজ</span>
+                <span className="font-bold text-slate-800">{selectedPackage.label}</span>
+              </div>
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-slate-500 font-medium">মূল্য</span>
+                <span className="font-black text-[#e2136e] font-mono text-base">৳{selectedPackage.amount}</span>
+              </div>
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-slate-500 font-medium">রেট</span>
+                <span className="font-medium text-slate-600 font-mono">{selectedPackage.rate}</span>
+              </div>
+            </div>
+
+            {/* Action buttons */}
+            <div className="grid grid-cols-2 gap-2.5 pt-1">
+              <button
+                type="button"
+                onClick={closeCheckout}
+                className="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition-colors cursor-pointer"
+              >
+                বাতিল
+              </button>
+              <button
+                type="button"
+                onClick={() => setCheckoutStep('bkash_themed')}
+                className="w-full py-2.5 bg-[#e2136e] hover:bg-[#c2145e] text-white font-bold text-xs rounded-xl transition-colors cursor-pointer shadow-md shadow-[#e2136e]/20"
+              >
+                কনফার্ম করুন
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    }
 
     return (
-      <div className="fixed inset-0 bg-[#f4f6fa] text-slate-800 z-50 overflow-y-auto flex flex-col justify-between items-center py-6 px-4 animate-fadeIn">
-        {/* Navigation / Header Bar */}
-        <div className="w-full max-w-md flex items-center justify-between pb-3 border-b border-slate-200">
-          <button 
-            onClick={() => {
-              if (checkoutStep === 'bkash_themed') {
-                setCheckoutStep('gateway');
-              } else {
-                setCheckoutStep('package');
-                setSelectedPackage(null);
-              }
-              setFormError(null);
-            }}
-            className="flex items-center gap-1.5 text-xs font-bold text-slate-600 hover:text-slate-900 transition-colors bg-white px-3 py-1.5 rounded-xl border border-slate-200 shadow-sm cursor-pointer"
-          >
-            <ArrowLeft className="w-3.5 h-3.5 text-[#e2125d]" />
-            <span>{checkoutStep === 'bkash_themed' ? 'আগের ধাপ' : 'ফিরে যান'}</span>
-          </button>
-          <div className="flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-[#e2125d] animate-pulse"></span>
-            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider font-mono">Secure Gateway</span>
-          </div>
-        </div>
-
-        {/* Dynamic step rendering */}
-        <div className="w-full flex-grow flex items-center justify-center py-4">
-          {checkoutStep === 'gateway' && (
-            <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-xl space-y-6 w-full max-w-sm transition-all duration-300">
-              <div className="text-center">
-                <h3 className="text-sm font-black text-slate-800">পেমেন্ট মেথড</h3>
-                <p className="text-[11px] text-slate-500 mt-1 leading-relaxed">৳{selectedPackage.amount} • {selectedPackage.smsCount} SMS</p>
+      <div className="fixed inset-0 bg-black/75 backdrop-blur-sm text-slate-800 z-50 overflow-y-auto flex items-center justify-center p-3 sm:p-4 animate-fadeIn">
+        <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-[390px] overflow-hidden my-auto">
+          
+          {/* Official bKash Magenta Header */}
+          <div className="bg-[#e2136e] text-white px-5 pt-4 pb-5 relative">
+            {/* Top Brand & Close Bar */}
+            <div className="flex items-center justify-between pb-3">
+              <div className="flex items-center gap-2">
+                {/* Official bKash Origami Bird */}
+                <svg className="w-7 h-7" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M48 8 L10 52 L50 43 Z" fill="#ffffff" />
+                  <path d="M48 8 L90 28 L54 47 Z" fill="#ffffff" opacity="0.88" />
+                  <path d="M50 43 L54 47 L47 92 Z" fill="#ffffff" opacity="0.94" />
+                  <path d="M54 47 L90 28 L74 66 Z" fill="#ffffff" opacity="0.78" />
+                </svg>
+                <span className="text-2xl font-black tracking-tight text-white font-sans">bKash</span>
               </div>
 
-              {/* Replica of the user's provided gateway mockup inside white bg */}
-              <div className="bg-[#f5f7fa] text-slate-800 rounded-2xl p-4 shadow-inner space-y-5">
-                
-                {/* Top bar with icons (headset, question, info) */}
-                <div className="flex justify-center gap-5 pt-1">
-                  <div className="w-9 h-9 rounded-full border border-slate-200 bg-white flex items-center justify-center text-slate-500 shadow-sm">
-                    <Headphones className="w-4 h-4 text-slate-600" />
-                  </div>
-                  <div className="w-9 h-9 rounded-full border border-slate-200 bg-white flex items-center justify-center text-slate-500 shadow-sm">
-                    <HelpCircle className="w-4 h-4 text-slate-600" />
-                  </div>
-                  <div className="w-9 h-9 rounded-full border border-slate-200 bg-white flex items-center justify-center text-slate-500 shadow-sm">
-                    <Info className="w-4 h-4 text-slate-600" />
-                  </div>
+              <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1 bg-white/20 px-2 py-0.5 rounded-full text-[10px] font-semibold text-white/95">
+                  <PhoneCall className="w-2.5 h-2.5" />
+                  <span>16247</span>
                 </div>
-
-                {/* Mobile Banking / Net Banking Tabs */}
-                <div className="flex rounded-lg overflow-hidden bg-slate-200 p-0.5">
-                  <button className="w-1/2 text-center py-1.5 bg-[#0052cc] text-white font-bold text-[9px] rounded-md uppercase tracking-wider shadow-sm">
-                    MOBILE BANKING
-                  </button>
-                  <button className="w-1/2 text-center py-1.5 text-slate-400 font-bold text-[9px] rounded-md uppercase tracking-wider cursor-not-allowed">
-                    NET BANKING
-                  </button>
-                </div>
-
-                {/* Gateway Options Grid */}
-                <div className="grid grid-cols-2 gap-3">
-                  {/* Option 1: Cash Out */}
-                  <div 
-                    onClick={() => handleGatewaySelection('cashout')}
-                    className="bg-white border border-slate-200 hover:border-[#e2125d] hover:shadow-md rounded-xl p-3 flex flex-col justify-between text-center cursor-pointer transition-all h-36"
-                  >
-                    <div className="flex justify-center py-1">
-                      <span className="text-lg font-black text-[#e2125d] tracking-tight">bKash</span>
-                    </div>
-                    <div className="border-t border-slate-100 pt-2 flex flex-col justify-center flex-grow">
-                      <span className="text-[10px] font-bold text-slate-800 leading-tight">ক্যাশ আউট</span>
-                      <p className="text-[8px] text-slate-500 mt-1 leading-snug">
-                        এজেন্ট
-                      </p>
-                    </div>
-                    <div className="mt-1 bg-slate-100 py-1 rounded text-[9px] font-bold text-slate-700">
-                      ৳{selectedPackage.amount} BDT
-                    </div>
-                  </div>
-
-                  {/* Option 2: Send Money */}
-                  <div 
-                    onClick={() => handleGatewaySelection('sendmoney')}
-                    className="bg-white border border-slate-200 hover:border-[#e2125d] hover:shadow-md rounded-xl p-3 flex flex-col justify-between text-center cursor-pointer transition-all h-36"
-                  >
-                    <div className="flex justify-center py-1">
-                      <span className="text-lg font-black text-[#e2125d] tracking-tight">bKash</span>
-                    </div>
-                    <div className="border-t border-slate-100 pt-2 flex flex-col justify-center flex-grow">
-                      <span className="text-[10px] font-bold text-slate-800 leading-tight">সেন্ড মানি</span>
-                      <p className="text-[8px] text-slate-500 mt-1 leading-snug">
-                        +১.৫% চার্জ
-                      </p>
-                    </div>
-                    <div className="mt-1 bg-amber-500/10 py-1 rounded text-[9px] font-bold text-[#e2125d]">
-                      ৳{Math.round(selectedPackage.amount * 1.015)} BDT
-                    </div>
-                  </div>
-                </div>
-
-                {/* Bottom Total Bar */}
-                <div className="bg-[#deebff] text-[#0052cc] rounded-xl py-2.5 text-center font-bold text-xs tracking-wide border border-blue-100 shadow-sm font-mono">
-                  Pay {selectedPackage.amount} BDT
-                </div>
+                <button 
+                  onClick={closeCheckout}
+                  className="w-7 h-7 rounded-full bg-black/15 hover:bg-black/30 flex items-center justify-center text-white transition-colors cursor-pointer"
+                  title="বন্ধ করুন"
+                >
+                  <X className="w-4 h-4" />
+                </button>
               </div>
             </div>
-          )}
 
-          {checkoutStep === 'bkash_themed' && (
-            <div className="w-full max-w-xs transition-all duration-300">
-              
-              {/* Main bKash container */}
-              <div className="bg-white rounded-3xl overflow-hidden shadow-2xl border border-slate-200 text-slate-800">
-                
-                {/* Header: iconic bKash Magenta Header */}
-                <div className="bg-[#e2125d] text-white p-5 relative flex flex-col items-center text-center space-y-1.5">
-                  <button 
-                    onClick={() => {
-                      setCheckoutStep('gateway');
-                      setFormError(null);
-                    }}
-                    className="absolute left-4 top-5 text-white hover:text-slate-200 transition-colors cursor-pointer"
-                  >
-                    <ArrowLeft className="w-4 h-4" />
-                  </button>
-                  
-                  {/* bKash styled logo representation */}
-                  <div className="flex items-center gap-1">
-                    <span className="text-xl font-black tracking-tight text-white">bKash</span>
-                    <div className="w-2 h-2 rounded-full bg-white animate-pulse"></div>
-                  </div>
+            {/* Merchant & Order Info */}
+            <div className="border-t border-white/20 pt-3 flex items-center justify-between text-xs text-white/90">
+              <div>
+                <span className="text-[10px] text-white/70 block uppercase tracking-wider">Merchant</span>
+                <span className="font-bold">Linax Footwear</span>
+              </div>
+              <div className="text-right">
+                <span className="text-[10px] text-white/70 block uppercase tracking-wider">Invoice</span>
+                <span className="font-mono font-semibold">SMS-{selectedPackage.smsCount}</span>
+              </div>
+            </div>
 
-                  <span className="text-[10px] bg-black/20 px-2.5 py-0.5 rounded-full text-white/90 font-bold uppercase tracking-wider">
-                    {selectedGatewayType === 'sendmoney' ? 'Send Money' : 'Cash Out'}
+            {/* Big Amount Banner */}
+            <div className="mt-3 bg-white/10 rounded-xl p-3 text-center border border-white/15">
+              <span className="text-[10px] text-white/80 block uppercase tracking-widest font-semibold">Amount to Pay</span>
+              <div className="text-3xl font-black font-mono tracking-tight text-white mt-0.5">
+                ৳ {payAmount}.00
+              </div>
+            </div>
+          </div>
+
+          {/* Body */}
+          <div className="p-5 space-y-4 bg-[#fafafa]">
+            
+            {/* Payment Channel Tabs */}
+            <div className="bg-slate-200/80 p-1 rounded-xl flex gap-1 text-xs">
+              <button
+                type="button"
+                onClick={() => setSelectedGatewayType('cashout')}
+                className={`flex-1 py-1.5 px-2 rounded-lg font-bold transition-all text-center cursor-pointer ${
+                  selectedGatewayType === 'cashout'
+                    ? 'bg-white text-[#e2136e] shadow-sm'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                ক্যাশ আউট
+                <span className="text-[10px] block font-normal text-slate-500">৳{selectedPackage.amount}</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setSelectedGatewayType('sendmoney')}
+                className={`flex-1 py-1.5 px-2 rounded-lg font-bold transition-all text-center cursor-pointer ${
+                  selectedGatewayType === 'sendmoney'
+                    ? 'bg-white text-[#e2136e] shadow-sm'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                সেন্ড মানি
+                <span className="text-[10px] block font-normal text-slate-500">৳{Math.round(selectedPackage.amount * 1.015)} (+১.৫%)</span>
+              </button>
+            </div>
+
+            {/* Target Account Info Card with One-Tap Copy */}
+            <div className="bg-white border border-slate-200 rounded-xl p-3 shadow-xs">
+              <div className="flex items-center justify-between">
+                <div>
+                  <span className="text-[10.5px] font-semibold text-slate-500 block">
+                    {activeLabel}
                   </span>
-
-                  <div className="pt-1">
-                    <span className="text-[10px] text-white/75 block">গ্রাহক: Linax Footwear</span>
-                  </div>
-
-                  <div className="pt-2">
-                    <span className="text-2xl font-black font-mono">৳{payAmount}.00</span>
-                    <span className="text-[9px] text-white/80 block mt-0.5 font-semibold">
-                      {selectedGatewayType === 'sendmoney' 
-                        ? `(৳${selectedPackage.amount} + ১.৫% চার্জ)` 
-                        : `(ক্যাশ আউট)`}
-                    </span>
-                  </div>
+                  <span className="text-base font-bold font-mono text-[#e2136e] tracking-wider select-all">
+                    {activeNumber}
+                  </span>
                 </div>
-
-                {/* bKash Body content */}
-                <div className="p-4 space-y-3 bg-[#fafafa]">
-                  
-                  {/* Step Banner / Guideline */}
-                  <div className="bg-amber-500/10 border border-amber-500/20 text-slate-700 rounded-xl p-3 text-xs space-y-1">
-                    <p className="font-bold flex items-center gap-1 text-[#b51248] text-[11px]">
-                      <Info className="w-3.5 h-3.5 flex-shrink-0" />
-                      <span>নির্দেশনা</span>
-                    </p>
-                    {selectedGatewayType === 'sendmoney' ? (
-                      <p className="leading-relaxed text-slate-600 text-[10px]">
-                        পার্সোনাল নম্বর: <strong className="text-[#e2125d] font-mono select-all">01826990490</strong> এ <strong className="text-[#e2125d] font-bold">৳{payAmount}</strong> সেন্ডমানি করুন।
-                      </p>
-                    ) : (
-                      <p className="leading-relaxed text-slate-600 text-[10px]">
-                        এজেন্ট নম্বর: <strong className="text-[#e2125d] font-mono select-all">01924260055</strong> এ <strong className="text-[#e2125d] font-bold">৳{payAmount}</strong> ক্যাশ আউট করুন।
-                      </p>
-                    )}
-                  </div>
-
-                  <form onSubmit={handleSubmit} className="space-y-3">
-                    {/* Input 1: sender phone number */}
-                    <div className="space-y-1">
-                      <label className="text-[10px] font-bold text-slate-600 block flex items-center gap-1">
-                        <Smartphone className="w-3.5 h-3.5 text-[#e2125d]" />
-                        <span>বিকাশ নম্বর</span>
-                      </label>
-                      <input
-                        type="text"
-                        placeholder="যেমন: ০১৮২৬xxxxxx"
-                        value={senderNumber}
-                        onChange={(e) => setSenderNumber(e.target.value)}
-                        className="w-full bg-white border border-slate-300 hover:border-slate-400 focus:border-[#e2125d] text-slate-800 rounded-xl py-2 px-3 text-xs font-semibold tracking-wide font-mono focus:outline-none transition-all"
-                        required
-                      />
-                    </div>
-
-                    {/* Input 2: transaction ID */}
-                    <div className="space-y-1">
-                      <label className="text-[10px] font-bold text-slate-600 block flex items-center gap-1">
-                        <ShieldCheck className="w-3.5 h-3.5 text-[#e2125d]" />
-                        <span>TxID (ট্রানজেকশন আইডি)</span>
-                      </label>
-                      <input
-                        type="text"
-                        placeholder="যেমন: AH76F92LK3"
-                        value={transactionId}
-                        onChange={(e) => setTransactionId(e.target.value)}
-                        className="w-full bg-white border border-slate-300 hover:border-slate-400 focus:border-[#e2125d] text-slate-800 rounded-xl py-2 px-3 text-xs font-bold uppercase tracking-widest font-mono focus:outline-none transition-all"
-                        required
-                      />
-                    </div>
-
-                    {formError && (
-                      <div className="p-2 bg-rose-100 border border-rose-200 text-rose-700 rounded-lg text-[10px] flex items-center gap-1">
-                        <AlertTriangle className="w-3 h-3 flex-shrink-0 text-rose-600" />
-                        <span className="font-semibold">{formError}</span>
-                      </div>
-                    )}
-
-                    {/* bKash footer with buttons */}
-                    <div className="flex gap-2 pt-1.5">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setCheckoutStep('gateway');
-                          setFormError(null);
-                        }}
-                        className="w-1/3 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold text-xs rounded-xl transition-colors cursor-pointer"
-                      >
-                        বাতিল
-                      </button>
-                      <button
-                        type="submit"
-                        disabled={isSubmitting}
-                        className="w-2/3 py-2 bg-[#e2125d] hover:bg-[#b51248] text-white font-black text-xs rounded-xl flex items-center justify-center gap-1 transition-colors cursor-pointer shadow-lg shadow-pink-500/10"
-                      >
-                        <Check className="w-3.5 h-3.5" />
-                        <span>{isSubmitting ? 'যাচাই হচ্ছে...' : 'নিশ্চিত করুন'}</span>
-                      </button>
-                    </div>
-                  </form>
-                </div>
+                <button
+                  type="button"
+                  onClick={() => handleCopyNumber(activeNumber)}
+                  className={`flex items-center gap-1 text-xs font-semibold px-2.5 py-1.5 rounded-lg border transition-all cursor-pointer ${
+                    copiedNumber 
+                      ? 'bg-emerald-50 text-emerald-600 border-emerald-200' 
+                      : 'bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200'
+                  }`}
+                  title="নম্বর কপি করুন"
+                >
+                  {copiedNumber ? (
+                    <>
+                      <Check className="w-3.5 h-3.5 text-emerald-600" />
+                      <span>কপি হয়েছে</span>
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="w-3.5 h-3.5 text-slate-500" />
+                      <span>কপি</span>
+                    </>
+                  )}
+                </button>
               </div>
             </div>
-          )}
-        </div>
 
-        {/* Footer info to look extra professional */}
-        <div className="w-full max-w-md text-center border-t border-slate-200 pt-3 flex items-center justify-between text-[10px] text-slate-400 gap-2">
-          <p>© {new Date().getFullYear()} Linax Footwear.</p>
-          <div className="flex items-center gap-2">
-            <span>Secured SSL</span>
-            <span>•</span>
-            <span>bKash API</span>
+            {/* Inputs styled exactly like Official bKash Gateway */}
+            <form onSubmit={handleSubmit} className="space-y-3">
+              <div className="space-y-1">
+                <label className="text-[11px] font-bold text-slate-700 block">
+                  বিকাশ একাউন্ট নাম্বার
+                </label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    placeholder="০১XXXXXXXXX"
+                    value={senderNumber}
+                    onChange={(e) => setSenderNumber(e.target.value)}
+                    className="w-full bg-white border border-slate-300 focus:border-[#e2136e] focus:ring-2 focus:ring-[#e2136e]/20 text-slate-900 rounded-xl py-2.5 px-3 text-xs font-mono font-semibold focus:outline-none transition-all placeholder:text-slate-400 shadow-xs"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-[11px] font-bold text-slate-700 block">
+                  ট্রানজেকশন আইডি (TrxID)
+                </label>
+                <input
+                  type="text"
+                  placeholder="যেমন: BL92KA87"
+                  value={transactionId}
+                  onChange={(e) => setTransactionId(e.target.value)}
+                  className="w-full bg-white border border-slate-300 focus:border-[#e2136e] focus:ring-2 focus:ring-[#e2136e]/20 text-slate-900 rounded-xl py-2.5 px-3 text-xs font-bold uppercase font-mono tracking-widest focus:outline-none transition-all placeholder:text-slate-400 placeholder:tracking-normal placeholder:font-normal shadow-xs"
+                  required
+                />
+              </div>
+
+              {formError && (
+                <div className="p-2.5 bg-rose-50 border border-rose-200 text-rose-600 rounded-xl text-xs font-semibold flex items-center gap-1.5">
+                  <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0" />
+                  <span>{formError}</span>
+                </div>
+              )}
+
+              {/* Official bKash Dual Button Bar */}
+              <div className="grid grid-cols-2 gap-2.5 pt-2">
+                <button
+                  type="button"
+                  onClick={closeCheckout}
+                  className="w-full py-2.5 bg-[#e5e7eb] hover:bg-[#d1d5db] text-slate-700 font-bold text-xs uppercase tracking-wider rounded-xl transition-colors cursor-pointer"
+                >
+                  CLOSE
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="w-full py-2.5 bg-[#e2136e] hover:bg-[#c2145e] text-white font-black text-xs uppercase tracking-wider rounded-xl flex items-center justify-center gap-1 transition-all cursor-pointer shadow-md shadow-[#e2136e]/25 disabled:opacity-50"
+                >
+                  {isSubmitting ? 'VERIFYING...' : 'CONFIRM'}
+                </button>
+              </div>
+            </form>
+
+            {/* Official bKash Footer */}
+            <div className="border-t border-slate-200 pt-3 text-center">
+              <div className="flex items-center justify-center gap-1.5 text-[11px] text-slate-500 font-medium">
+                <PhoneCall className="w-3 h-3 text-[#e2136e]" />
+                <span>24/7 হেল্পলাইন:</span>
+                <span className="font-mono font-bold text-[#e2136e]">16247</span>
+              </div>
+            </div>
           </div>
+
         </div>
       </div>
     );
@@ -493,139 +555,197 @@ export const SMSPanel: React.FC<SMSPanelProps> = ({
   const totalSent = systemConfig.totalSentSms ?? 0;
 
   return (
-    <div className="space-y-6 max-w-4xl mx-auto">
+    <div className="space-y-4 max-w-4xl mx-auto">
       {renderCheckoutOverlay()}
-      {/* Mini Header */}
-      <div className="flex items-center justify-between border-b border-slate-800/80 pb-4">
+      
+      {/* Header */}
+      <div className="flex items-center justify-between border-b border-slate-800/80 pb-3">
         <div className="flex items-center gap-2">
-          <MessageSquare className="w-5 h-5 text-amber-400" />
-          <h2 className="text-lg font-bold text-white">SMS প্যানেল</h2>
+          <div className="w-8 h-8 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400">
+            <MessageSquare className="w-4 h-4" />
+          </div>
+          <div>
+            <h2 className="text-base font-bold text-white tracking-tight">SMS প্যানেল</h2>
+          </div>
         </div>
         <button
           onClick={fetchTopupRequests}
           disabled={isLoadingRequests}
-          className="p-2 bg-slate-800 hover:bg-slate-700 rounded-xl text-slate-300 cursor-pointer transition-colors"
+          className="p-1.5 bg-slate-900 hover:bg-slate-800 border border-slate-800 rounded-lg text-slate-400 hover:text-slate-200 cursor-pointer transition-colors"
+          title="রিফ্রেশ"
         >
           <RefreshCw className={`w-3.5 h-3.5 ${isLoadingRequests ? 'animate-spin' : ''}`} />
         </button>
       </div>
 
-      {/* Basic Stat Row */}
-      <div className="grid grid-cols-2 gap-4">
-        <div className="bg-slate-950/60 border border-slate-800 rounded-xl p-4 text-center">
-          <span className="text-xs font-semibold text-slate-400 block mb-1">ব্যালেন্স</span>
-          <span className="text-2xl font-black text-amber-400 font-mono">{currentBalance} টি</span>
+      {/* Compact Stat Cards */}
+      <div className="grid grid-cols-2 gap-3">
+        <div className="bg-slate-900/70 border border-slate-800/80 rounded-xl px-4 py-3 flex items-center justify-between shadow-2xs">
+          <div>
+            <span className="text-[11px] font-medium text-slate-400 block mb-0.5">বর্তমান ব্যালেন্স</span>
+            <div className="text-xl font-black text-amber-400 font-mono">{currentBalance} <span className="text-xs font-medium text-slate-400">টি</span></div>
+          </div>
+          <div className="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center text-amber-400">
+            <MessageSquare className="w-4 h-4" />
+          </div>
         </div>
-        <div className="bg-slate-950/60 border border-slate-800 rounded-xl p-4 text-center">
-          <span className="text-xs font-semibold text-slate-400 block mb-1">মোট পাঠানো</span>
-          <span className="text-2xl font-black text-blue-400 font-mono">{totalSent} টি</span>
+        
+        <div className="bg-slate-900/70 border border-slate-800/80 rounded-xl px-4 py-3 flex items-center justify-between shadow-2xs">
+          <div>
+            <span className="text-[11px] font-medium text-slate-400 block mb-0.5">মোট পাঠানো</span>
+            <div className="text-xl font-black text-blue-400 font-mono">{totalSent} <span className="text-xs font-medium text-slate-400">টি</span></div>
+          </div>
+          <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-400">
+            <Send className="w-4 h-4" />
+          </div>
         </div>
       </div>
 
       {/* Success Notification */}
       {successMsg && (
-        <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-xl text-xs flex items-center gap-2">
-          <CheckCircle2 className="w-5 h-5 flex-shrink-0 text-emerald-400 animate-bounce" />
+        <div className="py-2.5 px-3 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-xl text-xs flex items-center gap-2">
+          <CheckCircle2 className="w-4 h-4 flex-shrink-0 text-emerald-400" />
           <span className="font-semibold">{successMsg}</span>
         </div>
       )}
 
-      {/* Top up Form / Super Admin settings */}
+      {/* Super Admin settings */}
       {currentUser?.role === 'super_admin' ? (
-        <div className="bg-slate-950/60 border border-slate-800/80 rounded-xl p-5 shadow-sm space-y-4">
-          <div>
-            <label className="text-xs font-bold text-slate-300 block mb-1.5">
-              ব্যালেন্স আপডেট:
-            </label>
-            <div className="flex items-center gap-2 max-w-xs">
-              <input
-                type="number"
-                placeholder="নতুন ব্যালেন্স"
-                value={manualBalance}
-                onChange={(e) => setManualBalance(e.target.value)}
-                className="bg-slate-900 border border-slate-700 text-slate-100 rounded-lg px-3 py-1.5 text-xs focus:outline-none focus:border-amber-500 w-44 font-mono text-center"
-              />
-              <button
-                type="button"
-                onClick={() => {
-                  const val = parseInt(manualBalance);
-                  if (isNaN(val) || val < 0) {
-                    setFormError('সঠিক সংখ্যা দিন');
-                    return;
-                  }
-                  onUpdateSystemConfig({ ...systemConfig, smsBalance: val });
-                  setSuccessMsg(`ব্যালেন্স ${val} টি সেট করা হয়েছে`);
-                  setFormError(null);
-                  setManualBalance('');
-                }}
-                className="bg-amber-500 hover:bg-amber-600 text-slate-950 text-xs font-bold px-3 py-1.5 rounded-lg transition-colors cursor-pointer flex-shrink-0"
-              >
-                সেট
-              </button>
+        <div className="bg-slate-900/50 border border-slate-800/80 rounded-xl p-3.5 sm:p-4 shadow-2xs space-y-3">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-amber-400">সুপার এডমিন নিয়ন্ত্রণ</span>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1 border-t border-slate-800/60">
+            {/* বিকাশ নম্বর পরিবর্তন */}
+            <div className="space-y-2">
+              <span className="text-[11px] font-bold text-slate-300 block">বিকাশ পেমেন্ট নম্বর:</span>
+              <div className="space-y-1.5">
+                <div className="flex items-center gap-2">
+                  <span className="text-[10.5px] text-slate-400 w-16">পার্সোনাল:</span>
+                  <input
+                    type="text"
+                    value={personalNumberInput}
+                    onChange={(e) => setPersonalNumberInput(e.target.value)}
+                    placeholder="পার্সোনাল নম্বর"
+                    className="flex-1 bg-slate-950 border border-slate-700 text-slate-100 rounded-lg px-2.5 py-1.5 text-xs font-mono focus:outline-none focus:border-amber-500"
+                  />
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-[10.5px] text-slate-400 w-16">এজেন্ট:</span>
+                  <input
+                    type="text"
+                    value={agentNumberInput}
+                    onChange={(e) => setAgentNumberInput(e.target.value)}
+                    placeholder="এজেন্ট নম্বর"
+                    className="flex-1 bg-slate-950 border border-slate-700 text-slate-100 rounded-lg px-2.5 py-1.5 text-xs font-mono focus:outline-none focus:border-amber-500"
+                  />
+                </div>
+                <div className="flex justify-end pt-0.5">
+                  <button
+                    type="button"
+                    disabled={isSavingNumbers}
+                    onClick={handleSaveBkashNumbers}
+                    className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition-colors cursor-pointer disabled:opacity-50"
+                  >
+                    {isSavingNumbers ? 'সংরক্ষণ হচ্ছে...' : 'নম্বর সংরক্ষণ'}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* ব্যালেন্স আপডেট */}
+            <div className="space-y-2 md:border-l md:border-slate-800/60 md:pl-3 flex flex-col justify-between">
+              <div>
+                <span className="text-[11px] font-bold text-slate-300 block mb-1.5">এসএমএস ব্যালেন্স আপডেট:</span>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number"
+                    placeholder="নতুন ব্যালেন্স"
+                    value={manualBalance}
+                    onChange={(e) => setManualBalance(e.target.value)}
+                    className="bg-slate-950 border border-slate-700 text-slate-100 rounded-lg px-3 py-1.5 text-xs focus:outline-none focus:border-amber-500 flex-1 font-mono text-center"
+                  />
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      const val = parseInt(manualBalance);
+                      if (isNaN(val) || val < 0) {
+                        setFormError('সঠিক সংখ্যা দিন');
+                        return;
+                      }
+                      const updatedConfig = { ...systemConfig, smsBalance: val };
+                      onUpdateSystemConfig(updatedConfig);
+                      await saveDocumentToFirestore('systemConfig', systemConfig.id, updatedConfig);
+                      setSuccessMsg(`ব্যালেন্স ${val} টি সেট করা হয়েছে`);
+                      setFormError(null);
+                      setManualBalance('');
+                    }}
+                    className="bg-amber-500 hover:bg-amber-600 text-slate-950 text-xs font-bold px-3.5 py-1.5 rounded-lg transition-colors cursor-pointer"
+                  >
+                    সেট
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       ) : (
-        <div className="space-y-4">
-          
-          {/* STEP 1: Package Selection Screen */}
-          {checkoutStep === 'package' && (
-            <div className="bg-slate-950/60 border border-slate-800 rounded-xl p-6 shadow-sm space-y-5">
-              <div className="text-center md:text-left">
-                <h3 className="text-sm font-bold text-slate-200 flex items-center gap-2 justify-center md:justify-start">
-                  <Sparkles className="w-4 h-4 text-amber-400" />
-                  <span>প্যাকেজ</span>
-                </h3>
-              </div>
+        /* Package Selection Section */
+        checkoutStep === 'package' && (
+          <div className="bg-slate-900/50 border border-slate-800/80 rounded-xl p-3.5 sm:p-4 shadow-2xs space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-slate-200">রিচার্জ প্যাকেজ</span>
+            </div>
 
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {SMS_PACKAGES.map((pkg) => (
-                  <div 
-                    key={pkg.id}
-                    onClick={() => selectPackageHandler(pkg)}
-                    className={`relative overflow-hidden bg-slate-900 hover:bg-slate-800 border ${pkg.popular ? 'border-amber-500/60' : 'border-slate-800'} hover:border-amber-500 rounded-2xl p-4 text-center cursor-pointer transition-all duration-200 hover:shadow-lg group flex flex-col justify-between h-40`}
-                  >
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+              {SMS_PACKAGES.map((pkg) => (
+                <div 
+                  key={pkg.id}
+                  onClick={() => selectPackageHandler(pkg)}
+                  className={`relative bg-slate-950/80 hover:bg-slate-900 border ${pkg.popular ? 'border-amber-500/60 ring-1 ring-amber-500/20' : 'border-slate-800'} hover:border-amber-400 rounded-xl p-3 cursor-pointer transition-all duration-150 group flex flex-col justify-between`}
+                >
+                  <div className="flex items-start justify-between gap-1">
+                    <span className="text-xs font-bold text-white group-hover:text-amber-400 transition-colors">
+                      {pkg.label}
+                    </span>
                     {pkg.badge && (
-                      <span className="absolute top-2 right-2 bg-amber-500 text-slate-950 text-[8px] font-black px-1.5 py-0.5 rounded-full uppercase tracking-wider">
+                      <span className={`text-[8.5px] font-bold px-1.5 py-0.5 rounded ${pkg.popular ? 'bg-amber-500 text-slate-950' : 'bg-slate-800 text-slate-300'}`}>
                         {pkg.badge}
                       </span>
                     )}
-                    <div className="pt-2">
-                      <span className="text-[10px] font-bold text-slate-400 block uppercase tracking-wider mb-1">প্যাকেজ</span>
-                      <span className="text-sm font-bold text-white block group-hover:text-amber-400 transition-colors">{pkg.label}</span>
-                    </div>
-
-                    <div className="mt-4 pb-2">
-                      <div className="text-2xl font-black text-amber-400 font-mono">৳{pkg.amount}</div>
-                      <span className="text-[9px] text-slate-500 block mt-1">১ টাকা = ১ SMS</span>
-                    </div>
                   </div>
-                ))}
-              </div>
+
+                  <div className="mt-3 pt-2 border-t border-slate-800/80 flex items-baseline justify-between">
+                    <span className="text-lg font-black text-amber-400 font-mono">৳{pkg.amount}</span>
+                    <span className="text-[9.5px] text-slate-400 font-medium">{pkg.rate}</span>
+                  </div>
+                </div>
+              ))}
             </div>
-          )}
-        </div>
+          </div>
+        )
       )}
 
       {/* History Log */}
-      <div className="bg-slate-950/60 border border-slate-800 rounded-xl p-5 shadow-sm space-y-3">
+      <div className="bg-slate-900/50 border border-slate-800/80 rounded-xl p-3.5 sm:p-4 shadow-2xs space-y-3">
         <div className="flex items-center justify-between pb-2 border-b border-slate-800/60">
-          <h3 className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-2">
-            <History className="w-4 h-4 text-slate-400" />
+          <span className="text-xs font-bold text-slate-300 flex items-center gap-1.5">
+            <History className="w-3.5 h-3.5 text-slate-400" />
             <span>ইতিহাস</span>
-          </h3>
+          </span>
         </div>
 
         {actionSuccess && (
-          <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-xl text-xs flex items-center gap-2">
-            <CheckCircle2 className="w-4 h-4 flex-shrink-0 text-emerald-400" />
+          <div className="py-2 px-3 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-lg text-xs flex items-center gap-2">
+            <CheckCircle2 className="w-3.5 h-3.5 flex-shrink-0 text-emerald-400" />
             <span>{actionSuccess}</span>
           </div>
         )}
 
         {actionError && (
-          <div className="p-3 bg-rose-500/10 border border-rose-500/20 text-rose-400 rounded-xl text-xs flex items-center gap-2">
-            <AlertTriangle className="w-4 h-4 flex-shrink-0 text-rose-400" />
+          <div className="py-2 px-3 bg-rose-500/10 border border-rose-500/20 text-rose-400 rounded-lg text-xs flex items-center gap-2">
+            <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0 text-rose-400" />
             <span>{actionError}</span>
           </div>
         )}
@@ -633,35 +753,34 @@ export const SMSPanel: React.FC<SMSPanelProps> = ({
         {isLoadingRequests ? (
           <div className="py-4 text-center text-slate-400 text-xs">ডাটা লোড হচ্ছে...</div>
         ) : requestsList.length === 0 ? (
-          <div className="py-4 text-center text-slate-400 text-xs">কোনো রেকর্ড নেই।</div>
+          <div className="py-4 text-center text-slate-500 text-xs">কোনো রেকর্ড নেই</div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs text-slate-300">
               <thead>
-                <tr className="border-b border-slate-800/60 text-slate-400 text-[10px] uppercase">
-                  <th className="py-2 px-2">তারিখ</th>
-                  <th className="py-2 px-2">SMS</th>
-                  <th className="py-2 px-2">মূল্য</th>
-                  <th className="py-2 px-2">নম্বর</th>
-                  <th className="py-2 px-2">TxID</th>
-                  <th className="py-2 px-2 text-center">অবস্থা</th>
+                <tr className="border-b border-slate-800/60 text-slate-400 text-[10px] uppercase font-semibold">
+                  <th className="py-1.5 px-2">তারিখ</th>
+                  <th className="py-1.5 px-2">SMS</th>
+                  <th className="py-1.5 px-2">মূল্য</th>
+                  <th className="py-1.5 px-2">নম্বর</th>
+                  <th className="py-1.5 px-2">TxID</th>
+                  <th className="py-1.5 px-2 text-center">অবস্থা</th>
                   {currentUser?.role === 'super_admin' && (
-                    <th className="py-2 px-2 text-right">অ্যাকশন</th>
+                    <th className="py-1.5 px-2 text-right">অ্যাকশন</th>
                   )}
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-800/40">
                 {requestsList.map((req) => (
-                  <tr key={req.id} className="hover:bg-slate-900/10">
-                    <td className="py-2.5 px-2 text-[10px] text-slate-400">{req.date}</td>
-                    <td className="py-2.5 px-2 font-bold text-amber-400">{req.smsCount} টি</td>
-                    <td className="py-2.5 px-2 font-mono">৳{req.amount}</td>
-                    <td className="py-2.5 px-2">
-                      <span className="font-bold text-[#e2125d] text-[10px]">bKash</span>
-                      <span className="text-[10px] text-slate-400 block font-mono">{req.senderNumber}</span>
+                  <tr key={req.id} className="hover:bg-slate-800/20">
+                    <td className="py-2 px-2 text-[10px] text-slate-400 font-mono">{req.date}</td>
+                    <td className="py-2 px-2 font-bold text-amber-400">{req.smsCount} টি</td>
+                    <td className="py-2 px-2 font-mono">৳{req.amount}</td>
+                    <td className="py-2 px-2">
+                      <span className="font-mono text-slate-300 text-[10px]">{req.senderNumber}</span>
                     </td>
-                    <td className="py-2.5 px-2 font-mono text-amber-400 select-all">{req.transactionId}</td>
-                    <td className="py-2.5 px-2 text-center">
+                    <td className="py-2 px-2 font-mono text-amber-400 select-all text-[11px]">{req.transactionId}</td>
+                    <td className="py-2 px-2 text-center">
                       {req.status === 'pending' ? (
                         <span className="px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-400 text-[9px] font-bold">পেন্ডিং</span>
                       ) : req.status === 'approved' ? (
@@ -671,19 +790,19 @@ export const SMSPanel: React.FC<SMSPanelProps> = ({
                       )}
                     </td>
                     {currentUser?.role === 'super_admin' && (
-                      <td className="py-2.5 px-2 text-right">
+                      <td className="py-2 px-2 text-right">
                         {req.status === 'pending' ? (
                           <div className="flex justify-end gap-1">
                             <button
                               onClick={() => triggerApprove(req)}
-                              className="px-1.5 py-0.5 bg-emerald-600 text-white text-[9px] font-bold rounded flex items-center gap-0.5 cursor-pointer"
+                              className="px-1.5 py-0.5 bg-emerald-600 hover:bg-emerald-700 text-white text-[9px] font-bold rounded flex items-center gap-0.5 cursor-pointer"
                               title="অনুমোদন করুন"
                             >
                               <Check className="w-2.5 h-2.5" />
                             </button>
                             <button
                               onClick={() => triggerReject(req)}
-                              className="px-1.5 py-0.5 bg-rose-600 text-white text-[9px] font-bold rounded flex items-center gap-0.5 cursor-pointer"
+                              className="px-1.5 py-0.5 bg-rose-600 hover:bg-rose-700 text-white text-[9px] font-bold rounded flex items-center gap-0.5 cursor-pointer"
                               title="বাতিল করুন"
                             >
                               <XCircle className="w-2.5 h-2.5" />

@@ -203,6 +203,8 @@ export interface SystemConfig {
   totalSentSms?: number;
   categories?: string[];
   apkDownloadUrl?: string;
+  bkashPersonalNumber?: string;
+  bkashAgentNumber?: string;
 }
 
 export type TrashItemType = 'order' | 'customer' | 'user' | 'product';

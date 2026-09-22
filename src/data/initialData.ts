@@ -91,5 +91,7 @@ export const DEFAULT_SYSTEM_CONFIG: SystemConfig = {
   smsBalance: 50,
   totalSentSms: 0,
   categories: ['জেন্টস ফর্মাল', 'জেন্টস ক্যাজুয়াল', 'স্পোর্টস কেডস', 'লেডিস হিল/স্যান্ডেল', 'বাচ্চাদের জুতা'],
+  bkashPersonalNumber: '01826990490',
+  bkashAgentNumber: '01924260055',
 };
 

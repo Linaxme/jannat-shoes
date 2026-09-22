@@ -207,8 +207,8 @@ export const InvoiceModal: React.FC<InvoiceModalProps> = ({ order, onClose }) =>
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-2 sm:p-4 overflow-y-auto">
-      <div className="bg-white text-slate-900 rounded-2xl max-w-2xl w-full p-3 sm:p-6 shadow-2xl space-y-4 my-auto print:shadow-none print:p-0 print:max-w-none print:w-full print:m-0">
+    <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-1.5 sm:p-4 overflow-y-auto">
+      <div className="bg-white text-slate-900 rounded-2xl max-w-2xl w-full p-2.5 sm:p-6 shadow-2xl space-y-3.5 sm:space-y-4 my-auto print:shadow-none print:p-0 print:max-w-none print:w-full print:m-0">
         
         {/* Modal Controls (Hidden in Print) */}
         <div className="flex items-center justify-between border-b border-slate-100 pb-3 print:hidden flex-wrap gap-2">
@@ -275,7 +275,7 @@ export const InvoiceModal: React.FC<InvoiceModalProps> = ({ order, onClose }) =>
 
 
         {/* PRINTABLE MEMO CONTENT AREA */}
-        <div ref={memoRef} className="p-4 sm:p-5 border border-slate-300 rounded-xl space-y-3.5 text-xs font-sans bg-white print:border-none print:p-0">
+        <div ref={memoRef} className="p-2 sm:p-5 border border-slate-300 rounded-xl space-y-3 sm:space-y-3.5 text-xs font-sans bg-white print:border-none print:p-0">
           
           {/* Shop Header */}
           <div className="text-center border-b border-slate-200 pb-3 space-y-1">
@@ -302,7 +302,7 @@ export const InvoiceModal: React.FC<InvoiceModalProps> = ({ order, onClose }) =>
           </div>
 
           {/* Memo Meta & Customer Info Grid */}
-          <div className="grid grid-cols-2 gap-3 bg-slate-50/80 p-3 rounded-xl border border-slate-200/80 text-[11px]">
+          <div className="grid grid-cols-2 gap-2 sm:gap-3 bg-slate-50/80 p-2.5 sm:p-3 rounded-xl border border-slate-200/80 text-[10.5px] sm:text-[11px]">
             <div className="space-y-1">
               <div><span className="text-slate-500 font-medium">দোকানের নাম:</span> <strong className="text-slate-900 font-bold">{order.shopName}</strong></div>
               <div><span className="text-slate-500 font-medium">প্রোপাইটার:</span> <span className="text-slate-800 font-semibold">{order.customerName}</span></div>
@@ -355,20 +355,20 @@ export const InvoiceModal: React.FC<InvoiceModalProps> = ({ order, onClose }) =>
 
               return (
                 <>
-                  <div className="overflow-hidden rounded-lg border border-slate-300 shadow-2xs">
-                    <table className="w-full text-left border-collapse text-[10px] sm:text-[11px]">
+                  <div className="overflow-x-auto rounded-lg border border-slate-300 shadow-2xs">
+                    <table className="w-full text-left border-collapse text-[9.5px] sm:text-[11px]">
                       <thead>
                         <tr className="bg-slate-900 text-white font-bold">
-                          <th className="py-1.5 px-2 text-center w-7 border-r border-slate-800">ক্র:</th>
-                          <th className="py-1.5 px-2 border-r border-slate-800">আর্টিকল</th>
-                          <th className="py-1.5 px-2 text-center border-r border-slate-800">সাইজ</th>
-                          <th className="py-1.5 px-2 text-center border-r border-slate-800">পরিমাণ</th>
-                          <th className="py-1.5 px-2 text-center border-r border-slate-800">মোট জোড়া</th>
-                          <th className="py-1.5 px-2 text-right border-r border-slate-800">দর (৳)</th>
+                          <th className="py-1.5 px-1 sm:px-2 text-center w-6 sm:w-7 border-r border-slate-800">ক্র:</th>
+                          <th className="py-1.5 px-1.5 sm:px-2 border-r border-slate-800">আর্টিকল</th>
+                          <th className="py-1.5 px-1 sm:px-2 text-center border-r border-slate-800">সাইজ</th>
+                          <th className="py-1.5 px-1 sm:px-2 text-center border-r border-slate-800">পরিমাণ</th>
+                          <th className="py-1.5 px-1 sm:px-2 text-center border-r border-slate-800">মোট জোড়া</th>
+                          <th className="py-1.5 px-1.5 sm:px-2 text-right border-r border-slate-800 whitespace-nowrap">দর (৳)</th>
                           {hasCommissionInItems && (
-                            <th className="py-1.5 px-2 text-right border-r border-slate-800">কমিশন</th>
+                            <th className="py-1.5 px-1.5 sm:px-2 text-right border-r border-slate-800 whitespace-nowrap">কমিশন</th>
                           )}
-                          <th className="py-1.5 px-2 text-right">মোট (৳)</th>
+                          <th className="py-1.5 px-1.5 sm:px-2 text-right whitespace-nowrap">মোট (৳)</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-200">
@@ -383,24 +383,24 @@ export const InvoiceModal: React.FC<InvoiceModalProps> = ({ order, onClose }) =>
 
                           return (
                             <tr key={idx} className={idx % 2 === 1 ? 'bg-slate-50/50' : 'bg-white'}>
-                              <td className="py-1 px-2 text-center font-mono text-slate-500 border-r border-slate-200">{toBnDigit(idx + 1)}</td>
-                              <td className="py-1 px-2 font-mono font-bold text-slate-900 border-r border-slate-200">
+                              <td className="py-1 px-1 sm:px-2 text-center font-mono text-slate-500 border-r border-slate-200">{toBnDigit(idx + 1)}</td>
+                              <td className="py-1 px-1.5 sm:px-2 font-mono font-bold text-slate-900 border-r border-slate-200">
                                 {artCode}
                               </td>
-                              <td className="py-1 px-2 text-center text-slate-700 border-r border-slate-200">{sizes}</td>
-                              <td className="py-1 px-2 text-center font-medium text-slate-800 border-r border-slate-200">
+                              <td className="py-1 px-1 sm:px-2 text-center text-slate-700 border-r border-slate-200">{sizes}</td>
+                              <td className="py-1 px-1 sm:px-2 text-center font-medium text-slate-800 border-r border-slate-200 whitespace-nowrap">
                                 {toBnDigit(qtyInput)} {unitLabel}
                               </td>
-                              <td className="py-1 px-2 text-center font-bold text-slate-900 border-r border-slate-200">
+                              <td className="py-1 px-1 sm:px-2 text-center font-bold text-slate-900 border-r border-slate-200">
                                 {toBnDigit(pairs)}
                               </td>
-                              <td className="py-1 px-2 text-right font-mono font-semibold text-slate-800 border-r border-slate-200">{formatTaka(price)}</td>
+                              <td className="py-1 px-1.5 sm:px-2 text-right font-mono font-semibold text-slate-800 border-r border-slate-200 whitespace-nowrap">{formatTaka(price)}</td>
                               {hasCommissionInItems && (
-                                <td className="py-1 px-2 text-right font-mono font-semibold text-amber-700 border-r border-slate-200">
+                                <td className="py-1 px-1.5 sm:px-2 text-right font-mono font-semibold text-amber-700 border-r border-slate-200 whitespace-nowrap">
                                   {item.commissionPerPair && item.commissionPerPair > 0 ? `৳${item.commissionPerPair}` : '-'}
                                 </td>
                               )}
-                              <td className="py-1 px-2 text-right font-mono font-bold text-slate-900">{formatTaka(itemGrossTotal)}</td>
+                              <td className="py-1 px-1.5 sm:px-2 text-right font-mono font-bold text-slate-900 whitespace-nowrap">{formatTaka(itemGrossTotal)}</td>
                             </tr>
                           );
                         })}
