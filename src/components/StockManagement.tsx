@@ -22,7 +22,10 @@ import {
   Eye,
   EyeOff,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   Check,
+  CheckCircle2,
   Filter,
   X,
 } from 'lucide-react';
@@ -64,6 +67,9 @@ export const StockManagement: React.FC<StockManagementProps> = ({
   const [viewMode, setViewMode] = useState<'table' | 'card' | 'grid'>(
     typeof window !== 'undefined' && window.innerWidth < 768 ? 'grid' : 'table'
   );
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [itemsPerPage, setItemsPerPage] = useState<number | 'all'>(100);
+  const productsContainerRef = React.useRef<HTMLDivElement>(null);
 
   const getBookedPairs = (productId: string) => {
     if (!orders) return 0;
@@ -203,8 +209,28 @@ export const StockManagement: React.FC<StockManagementProps> = ({
     return true;
   });
 
+  const totalPages = itemsPerPage === 'all' ? 1 : Math.max(1, Math.ceil(filteredProducts.length / itemsPerPage));
+  const safeCurrentPage = Math.min(currentPage, totalPages);
+  const startIndex = itemsPerPage === 'all' ? 0 : (safeCurrentPage - 1) * itemsPerPage;
+  const endIndex = itemsPerPage === 'all' ? filteredProducts.length : startIndex + itemsPerPage;
+  const paginatedProducts = filteredProducts.slice(startIndex, endIndex);
+
+  const handlePageChange = (newPage: number) => {
+    setCurrentPage(newPage);
+    if (productsContainerRef.current) {
+      productsContainerRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+  };
+
   const totalStockPairs = products.reduce((sum, p) => sum + p.stockPairs, 0);
   const totalStockValueBuy = products.reduce((sum, p) => sum + p.stockPairs * p.buyPrice, 0);
+  const allPendingBookedPairs = (orders || []).reduce((sum, order) => {
+    if (order.deliveryStatus !== 'booked') return sum;
+    const orderPairs = (order.items || []).reduce((iSum, item) => iSum + (item.totalPairs || 0), 0);
+    return sum + orderPairs;
+  }, 0);
+  const freeStockPairs = Math.max(0, totalStockPairs - allPendingBookedPairs);
+  const lowStockCount = products.filter((p) => p.stockPairs <= p.minStockAlert).length;
 
   const handleCreateProduct = (e: React.FormEvent) => {
     e.preventDefault();
@@ -337,49 +363,108 @@ export const StockManagement: React.FC<StockManagementProps> = ({
         )}
       </div>
 
-      {/* Overview Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-        <div className="bg-slate-900/80 border border-slate-800/90 rounded-2xl p-4 sm:p-5 shadow-sm hover:border-slate-700/80 transition relative overflow-hidden group">
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <span className="text-xs font-bold text-slate-400">মোট মজুদ</span>
-              <div className="text-2xl sm:text-3xl font-black text-amber-300 font-mono tracking-tight mt-1">
-                {toBnDigit(totalStockPairs)}{' '}
-                <span className="text-xs font-normal text-slate-400">জোড়া</span>
-              </div>
+      {/* 3D Dashboard-Style Unified Stock & Valuation Card */}
+      <div className="relative bg-gradient-to-b from-slate-800/90 via-slate-900 to-slate-950 border border-slate-700/60 border-t-slate-600/70 border-b-[3px] border-b-slate-950 p-4 sm:p-5 rounded-2xl shadow-[inset_0_1px_0_0_rgba(255,255,255,0.1),0_8px_24px_-4px_rgba(0,0,0,0.6)]">
+        {/* Top Status Row inside Stock Card */}
+        <div className="flex items-center justify-between gap-3 flex-wrap pb-3.5 border-b border-slate-800/80">
+          <div className="flex items-center gap-2.5">
+            <div className="p-2 bg-amber-500/15 text-amber-400 rounded-xl border border-amber-500/30">
+              <Boxes className="w-4.5 h-4.5" />
             </div>
-            <div className="w-10 h-10 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400 shrink-0 shadow-inner">
-              <Boxes className="w-5 h-5" />
+            <div className="flex items-center gap-2">
+              <h3 className="text-sm sm:text-base font-bold text-white">মোট মজুদ ওভারভিউ</h3>
+              <span className="px-2 py-0.5 bg-slate-800 text-slate-300 rounded-full text-[11px] font-medium border border-slate-700">
+                {toBnDigit(products.length)} টি মডেল
+              </span>
             </div>
           </div>
-          <div className="mt-3 pt-3 border-t border-slate-800/70 flex items-center justify-between text-xs text-slate-400">
-            <span>ডজন হিসাব</span>
-            <span className="font-bold text-slate-200">{pairsToCartonText(totalStockPairs, 12)}</span>
-          </div>
-        </div>
 
-        <div className="bg-slate-900/80 border border-slate-800/90 rounded-2xl p-4 sm:p-5 shadow-sm hover:border-slate-700/80 transition relative overflow-hidden group">
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <span className="text-xs font-bold text-slate-400">ইনভেন্টরি ক্রয়মূল্য</span>
-              <div className="text-2xl sm:text-3xl font-black text-rose-400 font-mono tracking-tight mt-1">
-                {showBuyPrice ? formatTaka(totalStockValueBuy) : '•••• ৳'}
-              </div>
-            </div>
-            <div className="w-10 h-10 rounded-xl bg-rose-500/15 border border-rose-500/30 flex items-center justify-center text-rose-400 shrink-0 shadow-inner">
-              <RefreshCw className="w-5 h-5" />
-            </div>
-          </div>
-          <div className="mt-3 pt-3 border-t border-slate-800/70 flex items-center justify-between text-xs text-slate-400">
-            <span>ক্রয় হিসাব</span>
+          {/* Right Action / Status Badges */}
+          <div className="flex items-center gap-2">
+            {lowStockCount > 0 ? (
+              <button
+                type="button"
+                onClick={() => {
+                  setStockAlertFilter(stockAlertFilter === 'low' ? 'all' : 'low');
+                  setCurrentPage(1);
+                }}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition cursor-pointer border ${
+                  stockAlertFilter === 'low'
+                    ? 'bg-rose-500/30 text-rose-200 border-rose-500 shadow-sm'
+                    : 'bg-rose-500/15 hover:bg-rose-500/25 text-rose-300 border-rose-500/40'
+                }`}
+                title="কম স্টক ফিল্টার"
+              >
+                <AlertTriangle className="w-3.5 h-3.5 text-rose-400 shrink-0" />
+                <span>কম স্টক: {toBnDigit(lowStockCount)} টি</span>
+              </button>
+            ) : (
+              <span className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 rounded-full text-xs font-medium">
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                <span>স্টক পর্যাপ্ত</span>
+              </span>
+            )}
+
             <button
               type="button"
               onClick={() => setShowBuyPrice(!showBuyPrice)}
-              className="font-bold text-slate-300 hover:text-amber-400 flex items-center gap-1.5 transition cursor-pointer"
+              className="flex items-center gap-1.5 px-2.5 py-1.5 bg-slate-950/80 hover:bg-slate-950 text-slate-300 border border-slate-800 rounded-xl text-xs font-medium transition cursor-pointer"
+              title={showBuyPrice ? "ক্রয় মূল্য লুকান" : "ক্রয় মূল্য দেখুন"}
             >
-              {showBuyPrice ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-              <span>{showBuyPrice ? 'লুকান' : 'দেখুন'}</span>
+              {showBuyPrice ? <EyeOff className="w-3.5 h-3.5 text-amber-400" /> : <Eye className="w-3.5 h-3.5 text-slate-400" />}
+              <span className="hidden xs:inline">{showBuyPrice ? 'লুকান' : 'দেখুন'}</span>
             </button>
+          </div>
+        </div>
+
+        {/* 3 Balanced Metric Columns */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 sm:gap-4 mt-3.5">
+          {/* 1. মোট মজুদ */}
+          <div className="bg-slate-950/70 border border-slate-800/90 rounded-xl p-2.5 sm:p-3.5 flex flex-col justify-between">
+            <span className="text-[11px] sm:text-xs font-semibold text-slate-400">মোট মজুদ</span>
+            <div className="text-sm sm:text-lg font-black text-amber-300 font-mono mt-1 truncate">
+              {toBnDigit(totalStockPairs)} <span className="text-[10px] sm:text-xs font-normal text-slate-400">জোড়া</span>
+            </div>
+            <div className="text-[10px] sm:text-xs text-amber-400/90 font-medium truncate mt-1">
+              {pairsToCartonText(totalStockPairs, 12)}
+            </div>
+          </div>
+
+          {/* 2. মোট ক্রয়মূল্য (ইনভেন্টরি মূল্য) */}
+          <div className="bg-slate-950/70 border border-slate-800/90 rounded-xl p-2.5 sm:p-3.5 flex flex-col justify-between">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] sm:text-xs font-semibold text-slate-400">মোট ক্রয়মূল্য</span>
+              <button
+                type="button"
+                onClick={() => setShowBuyPrice(!showBuyPrice)}
+                className="text-slate-500 hover:text-amber-400 transition cursor-pointer"
+                title={showBuyPrice ? "ক্রয় মূল্য লুকান" : "ক্রয় মূল্য দেখুন"}
+              >
+                {showBuyPrice ? <EyeOff className="w-3 h-3 text-amber-400" /> : <Eye className="w-3 h-3" />}
+              </button>
+            </div>
+            <div className="text-sm sm:text-lg font-black text-rose-400 font-mono mt-1 truncate">
+              {showBuyPrice ? formatTaka(totalStockValueBuy) : '•••• ৳'}
+            </div>
+            <div className="text-[10px] sm:text-xs text-slate-500 font-medium truncate mt-1">
+              ইনভেন্টরি ক্রয় হিসাব
+            </div>
+          </div>
+
+          {/* 3. ফ্রি ও বুকড স্টক */}
+          <div className="col-span-2 sm:col-span-1 bg-slate-950/70 border border-slate-800/90 rounded-xl p-2.5 sm:p-3.5 flex flex-col justify-between">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] sm:text-xs font-semibold text-emerald-400">ফ্রি স্টক</span>
+              <span className="text-[10px] font-semibold text-amber-400/90">
+                বুকড: {toBnDigit(allPendingBookedPairs)}
+              </span>
+            </div>
+            <div className="text-sm sm:text-lg font-black text-emerald-300 font-mono mt-1 truncate">
+              {toBnDigit(freeStockPairs)} <span className="text-[10px] sm:text-xs font-normal text-slate-400">জোড়া</span>
+            </div>
+            <div className="text-[10px] sm:text-xs text-emerald-300/80 font-medium truncate mt-1">
+              {pairsToCartonText(freeStockPairs, 12)}
+            </div>
           </div>
         </div>
       </div>
@@ -391,14 +476,20 @@ export const StockManagement: React.FC<StockManagementProps> = ({
           <input
             type="text"
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={(e) => {
+              setSearchTerm(e.target.value);
+              setCurrentPage(1);
+            }}
             placeholder="আর্টিকল খুঁজুন..."
             className="bg-transparent text-xs sm:text-sm text-slate-100 placeholder-slate-500 w-full focus:outline-none"
           />
           {searchTerm && (
             <button
               type="button"
-              onClick={() => setSearchTerm('')}
+              onClick={() => {
+                setSearchTerm('');
+                setCurrentPage(1);
+              }}
               className="text-slate-500 hover:text-slate-300 cursor-pointer"
             >
               <X className="w-3.5 h-3.5" />
@@ -462,6 +553,7 @@ export const StockManagement: React.FC<StockManagementProps> = ({
                         type="button"
                         onClick={() => {
                           setSelectedCategoryFilter('সব');
+                          setCurrentPage(1);
                           setIsCategoryDropdownOpen(false);
                         }}
                         className="text-rose-400 hover:text-rose-300 cursor-pointer text-[10px]"
@@ -474,6 +566,7 @@ export const StockManagement: React.FC<StockManagementProps> = ({
                     type="button"
                     onClick={() => {
                       setSelectedCategoryFilter('সব');
+                      setCurrentPage(1);
                       setIsCategoryDropdownOpen(false);
                     }}
                     className={`w-full px-3 py-2 text-left text-xs flex items-center justify-between transition-colors cursor-pointer ${
@@ -493,6 +586,7 @@ export const StockManagement: React.FC<StockManagementProps> = ({
                         type="button"
                         onClick={() => {
                           setSelectedCategoryFilter(cat);
+                          setCurrentPage(1);
                           setIsCategoryDropdownOpen(false);
                         }}
                         className={`w-full px-3 py-2 text-left text-xs flex items-center justify-between transition-colors cursor-pointer border-t border-slate-800/40 ${
@@ -513,7 +607,10 @@ export const StockManagement: React.FC<StockManagementProps> = ({
             {/* Low Stock Alert Quick Toggle */}
             <button
               type="button"
-              onClick={() => setStockAlertFilter(stockAlertFilter === 'low' ? 'all' : 'low')}
+              onClick={() => {
+                setStockAlertFilter(stockAlertFilter === 'low' ? 'all' : 'low');
+                setCurrentPage(1);
+              }}
               className={`px-3 py-2 rounded-xl border text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
                 stockAlertFilter === 'low'
                   ? 'bg-rose-500/20 border-rose-500 text-rose-300 shadow-sm shadow-rose-500/10'
@@ -569,12 +666,17 @@ export const StockManagement: React.FC<StockManagementProps> = ({
       </div>
 
       {/* Stock Items Container */}
-      <div className="bg-slate-900 border border-slate-800 p-3 sm:p-4 rounded-2xl min-h-[300px]">
-        
-        {/* Grid View */}
-        {viewMode === 'grid' && (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2.5 sm:gap-3.5">
-            {filteredProducts.map((p) => {
+      <div ref={productsContainerRef} className="bg-slate-900 border border-slate-800 p-3 sm:p-4 rounded-2xl min-h-[300px]">
+        {filteredProducts.length === 0 ? (
+          <div className="py-20 text-center text-slate-500 text-xs">
+            কোনো প্রডাক্ট বা আর্টিকল পাওয়া যায়নি।
+          </div>
+        ) : (
+          <>
+            {/* Grid View */}
+            {viewMode === 'grid' && (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2.5 sm:gap-3.5">
+                {paginatedProducts.map((p) => {
               const isLowStock = p.stockPairs <= p.minStockAlert;
               const cleanSize = p.sizeRange ? p.sizeRange.replace(/\(.*?\)/g, '').trim() : '৩৯-৪৪';
               const isMenuOpen = activeMenuProductId === p.id;
@@ -713,7 +815,7 @@ export const StockManagement: React.FC<StockManagementProps> = ({
         {/* Card View */}
         {viewMode === 'card' && (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
-            {filteredProducts.map((p) => {
+            {paginatedProducts.map((p) => {
               const isLowStock = p.stockPairs <= p.minStockAlert;
               const cleanSize = p.sizeRange ? p.sizeRange.replace(/\(.*?\)/g, '').trim() : '৩৯-৪৪';
               const isMenuOpen = activeMenuProductId === p.id;
@@ -870,7 +972,7 @@ export const StockManagement: React.FC<StockManagementProps> = ({
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-800/80">
-                {filteredProducts.map((p) => {
+                {paginatedProducts.map((p) => {
                   const isLowStock = p.stockPairs <= p.minStockAlert;
                   const cleanSize = p.sizeRange ? p.sizeRange.replace(/\(.*?\)/g, '').trim() : '৩৯-৪৪';
                   const isMenuOpen = activeMenuProductId === p.id;
@@ -1023,7 +1125,78 @@ export const StockManagement: React.FC<StockManagementProps> = ({
             </table>
           </div>
         )}
+          </>
+        )}
       </div>
+
+      {/* Pagination & Summary Bar */}
+      {filteredProducts.length > 0 && (
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-slate-900/80 border border-slate-800/90 px-3.5 py-2.5 rounded-2xl shadow-sm">
+          {/* Left: Summary */}
+          <div className="flex items-center gap-2 text-xs text-slate-400">
+            <span>মোট: <strong className="text-slate-200 font-mono font-bold">{toBnDigit(filteredProducts.length)}</strong> টি</span>
+            {itemsPerPage !== 'all' && filteredProducts.length > itemsPerPage && (
+              <span className="text-slate-500 font-mono text-[11px]">
+                ({toBnDigit(startIndex + 1)} - {toBnDigit(Math.min(endIndex, filteredProducts.length))})
+              </span>
+            )}
+          </div>
+
+          {/* Right: Per page switcher & Page navigation */}
+          <div className="flex items-center gap-2.5 flex-wrap justify-center sm:justify-end">
+            {/* Items Per Page Selector */}
+            <div className="flex items-center gap-1 bg-slate-950 p-1 rounded-xl border border-slate-800 text-xs shadow-inner">
+              <span className="text-[10px] text-slate-500 px-1 font-medium hidden xs:inline">প্রতি পেজে:</span>
+              {([50, 100, 200, 'all'] as const).map((opt) => (
+                <button
+                  key={String(opt)}
+                  type="button"
+                  onClick={() => {
+                    setItemsPerPage(opt);
+                    setCurrentPage(1);
+                  }}
+                  className={`px-2 py-0.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                    itemsPerPage === opt
+                      ? 'bg-amber-500 text-slate-950 font-bold shadow-sm'
+                      : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
+                  }`}
+                >
+                  {opt === 'all' ? 'সব' : toBnDigit(opt)}
+                </button>
+              ))}
+            </div>
+
+            {/* Page navigation buttons */}
+            {itemsPerPage !== 'all' && totalPages > 1 && (
+              <div className="flex items-center gap-1 bg-slate-950 p-1 rounded-xl border border-slate-800 shadow-inner">
+                <button
+                  type="button"
+                  disabled={safeCurrentPage <= 1}
+                  onClick={() => handlePageChange(Math.max(1, safeCurrentPage - 1))}
+                  className="p-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-slate-800 disabled:opacity-30 disabled:hover:bg-transparent disabled:cursor-not-allowed transition cursor-pointer"
+                  title="আগের পেজ"
+                >
+                  <ChevronLeft className="w-3.5 h-3.5" />
+                </button>
+
+                <span className="text-xs font-mono font-bold text-amber-300 px-1.5">
+                  {toBnDigit(safeCurrentPage)} / {toBnDigit(totalPages)}
+                </span>
+
+                <button
+                  type="button"
+                  disabled={safeCurrentPage >= totalPages}
+                  onClick={() => handlePageChange(Math.min(totalPages, safeCurrentPage + 1))}
+                  className="p-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-slate-800 disabled:opacity-30 disabled:hover:bg-transparent disabled:cursor-not-allowed transition cursor-pointer"
+                  title="পরের পেজ"
+                >
+                  <ChevronRight className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Add New Product Modal */}
       {showAddModal && (

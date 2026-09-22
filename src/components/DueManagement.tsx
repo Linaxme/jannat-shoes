@@ -21,6 +21,7 @@ import {
   Coins,
   ArrowRight,
   ChevronDown,
+  ChevronRight,
   Check,
   X,
 } from 'lucide-react';
@@ -202,6 +203,7 @@ export const DueManagement: React.FC<DueManagementProps> = ({
   const totalAdvanceCredit = customers.reduce((sum, c) => sum + (c.currentDue < 0 ? Math.abs(c.currentDue) : 0), 0);
   const dueCustomersCount = customers.filter((c) => c.currentDue > 0).length;
   const advanceCustomersCount = customers.filter((c) => c.currentDue < 0).length;
+  const totalCollectionAmount = paymentLogs.reduce((sum, p) => sum + (p.amountPaid || 0), 0);
 
   // Calculate Due Grouped by Seller / Admin (active due and advance balance)
   const sellerWiseDue = useMemo(() => {
@@ -382,164 +384,210 @@ export const DueManagement: React.FC<DueManagementProps> = ({
   };
 
   return (
-    <div className="space-y-6" onClick={() => setIsSellerDropdownOpen(false)}>
+    <div className="space-y-6 sm:space-y-7" onClick={() => setIsSellerDropdownOpen(false)}>
       
-      {/* Minimal Due Management Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1 pb-1">
-        <div className="flex items-center gap-3 flex-1 min-w-0">
-          <span className="text-base sm:text-lg md:text-xl font-black text-amber-400 tracking-wide whitespace-nowrap flex items-center gap-2">
-            <Receipt className="w-5 h-5 text-amber-400" />
-            বাকী খাতা
-          </span>
-          <div className="h-0.5 bg-gradient-to-r from-amber-500/50 via-slate-800 to-transparent flex-1" />
-        </div>
+      {/* Top Bar - Clean Dashboard-Style Header */}
+      <div className="flex items-center justify-between gap-2 flex-wrap bg-slate-900/70 border border-slate-800/80 p-2 sm:p-2.5 rounded-2xl shadow-sm">
+        <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-950 border border-slate-800/90 rounded-xl shadow-inner">
+            <Receipt className="w-4 h-4 text-amber-400" />
+            <span className="text-xs sm:text-sm font-bold text-slate-100">বাকী খাতা</span>
+          </div>
 
-        <div className="flex items-center gap-2 shrink-0 flex-wrap">
-          {(currentUser?.role === 'admin' || currentUser?.role === 'super_admin' || !currentUser?.role) && (
+          {/* View Mode Tabs styled like Dashboard */}
+          <div className="flex items-center bg-slate-950 border border-slate-800/90 p-1 rounded-xl shadow-inner gap-1 text-xs">
             <button
-              onClick={() => openAdjustDueModal()}
-              className="px-3 py-1.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded-xl text-xs shadow flex items-center gap-1.5 transition-all cursor-pointer"
-            >
-              <PlusCircle className="w-4 h-4" />
-              <span>পূর্বের বাকী যুক্ত করুন</span>
-            </button>
-          )}
-
-          <div className="flex items-center gap-1 bg-slate-900 p-1 rounded-xl border border-slate-800 text-xs">
-            <button
+              type="button"
               onClick={() => setViewMode('customer_wise')}
-              className={`px-2.5 py-1 rounded-lg text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
                 viewMode === 'customer_wise'
-                  ? 'bg-amber-500 text-slate-950 font-bold shadow'
-                  : 'text-slate-400 hover:text-slate-200'
+                  ? 'bg-amber-500 text-slate-950 shadow-sm'
+                  : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
               }`}
             >
-              {t('customer')}
+              <Store className="w-3.5 h-3.5" />
+              <span>{t('customer')}</span>
             </button>
             <button
+              type="button"
               onClick={() => setViewMode('seller_wise')}
-              className={`px-2.5 py-1 rounded-lg text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
                 viewMode === 'seller_wise'
-                  ? 'bg-amber-500 text-slate-950 font-bold shadow'
-                  : 'text-slate-400 hover:text-slate-200'
+                  ? 'bg-amber-500 text-slate-950 shadow-sm'
+                  : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
               }`}
             >
-              {t('seller')}
+              <User className="w-3.5 h-3.5" />
+              <span>{t('seller')}</span>
             </button>
             <button
+              type="button"
               onClick={() => setViewMode('logs')}
-              className={`px-2.5 py-1 rounded-lg text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
                 viewMode === 'logs'
-                  ? 'bg-amber-500 text-slate-950 font-bold shadow'
-                  : 'text-slate-400 hover:text-slate-200'
+                  ? 'bg-amber-500 text-slate-950 shadow-sm'
+                  : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
               }`}
             >
-              {t('history')}
+              <History className="w-3.5 h-3.5" />
+              <span>{t('history')}</span>
             </button>
           </div>
         </div>
+
+        {/* Right side: Add Initial Due */}
+        {(currentUser?.role === 'admin' || currentUser?.role === 'super_admin' || !currentUser?.role) && (
+          <button
+            type="button"
+            onClick={() => openAdjustDueModal()}
+            className="px-3 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold rounded-xl shadow-sm flex items-center gap-1.5 transition-all cursor-pointer"
+          >
+            <PlusCircle className="w-4 h-4" />
+            <span>পূর্বের বাকী যুক্ত</span>
+          </button>
+        )}
       </div>
 
-      {/* Metric summary banner */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
-        <div className="bg-slate-900/80 border border-slate-800/90 rounded-2xl p-4 sm:p-5 shadow-sm hover:border-slate-700/80 transition relative overflow-hidden group">
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <span className="text-xs font-bold text-slate-400">{t('total_due')}</span>
-              <div className="text-xl sm:text-2xl font-black text-rose-400 font-mono tracking-tight mt-1">
-                {formatTaka(totalMarketDue)}
-              </div>
+      {/* 3D Key Metrics Cards in 2 Rows (2 Columns) */}
+      <div className="grid grid-cols-2 gap-3.5 sm:gap-5">
+        
+        {/* Card 1: মোট বকেয়া (Total Market Due) */}
+        <div 
+          onClick={() => {
+            setViewMode('customer_wise');
+            setActiveDueFilter('due');
+          }}
+          className="relative bg-gradient-to-b from-slate-800/90 via-slate-900 to-slate-950 border border-slate-700/60 border-t-slate-600/70 border-b-[3px] border-b-slate-950 hover:border-rose-500/50 p-4 sm:p-5 rounded-2xl flex flex-col justify-between cursor-pointer transition-all duration-200 hover:-translate-y-1 hover:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.15),0_12px_24px_-4px_rgba(0,0,0,0.7)] active:translate-y-0 active:border-b-2 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.1),0_8px_20px_-3px_rgba(0,0,0,0.6)] group"
+        >
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-1">
+              <p className="text-xs sm:text-sm font-semibold text-slate-400 tracking-wide">মোট বকেয়া</p>
+              <ChevronRight className="w-3.5 h-3.5 text-rose-400/70 group-hover:translate-x-0.5 transition" />
             </div>
-            <div className="w-10 h-10 rounded-xl bg-rose-500/15 border border-rose-500/30 flex items-center justify-center text-rose-400 shrink-0 shadow-inner">
-              <Receipt className="w-5 h-5" />
+            <div className="p-2 sm:p-2.5 bg-gradient-to-b from-rose-500/25 to-rose-500/5 text-rose-400 rounded-full shrink-0 border border-rose-500/30 shadow-[inset_0_1px_1px_rgba(255,255,255,0.25),0_4px_8px_-2px_rgba(0,0,0,0.5)]">
+              <Receipt className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
             </div>
           </div>
-          <div className="mt-3 pt-3 border-t border-slate-800/70 flex items-center justify-between text-xs text-slate-400">
-            <span>বাকী খাতা</span>
-            <span className="font-bold text-rose-300 bg-rose-500/15 px-2 py-0.5 rounded-full border border-rose-500/30 text-[11px]">
-              {toBnDigit(dueCustomersCount)} জন
-            </span>
+          <div className="mt-3">
+            <h3 className="text-xl sm:text-2xl font-black text-rose-400 font-mono truncate drop-shadow-sm">
+              {formatTaka(totalMarketDue)}
+            </h3>
+            <div className="mt-2 pt-2 border-t border-slate-800/60 text-[10px] sm:text-[11px] text-slate-400 truncate">
+              {toBnDigit(dueCustomersCount)} জন বকেয়া কাস্টমার
+            </div>
           </div>
         </div>
 
-        <div className="bg-slate-900/80 border border-slate-800/90 rounded-2xl p-4 sm:p-5 shadow-sm hover:border-slate-700/80 transition relative overflow-hidden group">
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <span className="text-xs font-bold text-slate-400">অগ্রিম জমা</span>
-              <div className="text-xl sm:text-2xl font-black text-emerald-400 font-mono tracking-tight mt-1">
-                {formatTaka(totalAdvanceCredit)}
-              </div>
+        {/* Card 2: মোট আদায় (Total Collection) */}
+        <div
+          onClick={() => setViewMode('logs')}
+          className="relative bg-gradient-to-b from-slate-800/90 via-slate-900 to-slate-950 border border-slate-700/60 border-t-slate-600/70 border-b-[3px] border-b-slate-950 hover:border-emerald-500/50 p-4 sm:p-5 rounded-2xl flex flex-col justify-between cursor-pointer transition-all duration-200 hover:-translate-y-1 hover:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.15),0_12px_24px_-4px_rgba(0,0,0,0.7)] active:translate-y-0 active:border-b-2 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.1),0_8px_20px_-3px_rgba(0,0,0,0.6)] group"
+        >
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-1">
+              <p className="text-xs sm:text-sm font-semibold text-slate-400 tracking-wide">মোট আদায়</p>
+              <ChevronRight className="w-3.5 h-3.5 text-emerald-400/70 group-hover:translate-x-0.5 transition" />
             </div>
-            <div className="w-10 h-10 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400 shrink-0 shadow-inner">
-              <Coins className="w-5 h-5" />
+            <div className="p-2 sm:p-2.5 bg-gradient-to-b from-emerald-500/25 to-emerald-500/5 text-emerald-400 rounded-full shrink-0 border border-emerald-500/30 shadow-[inset_0_1px_1px_rgba(255,255,255,0.25),0_4px_8px_-2px_rgba(0,0,0,0.5)]">
+              <DollarSign className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
             </div>
           </div>
-          <div className="mt-3 pt-3 border-t border-slate-800/70 flex items-center justify-between text-xs text-slate-400">
-            <span>অগ্রিম কাস্টমার</span>
-            <span className="font-bold text-emerald-300 bg-emerald-500/15 px-2 py-0.5 rounded-full border border-emerald-500/30 text-[11px]">
-              {toBnDigit(advanceCustomersCount)} জন
-            </span>
+          <div className="mt-3">
+            <h3 className="text-xl sm:text-2xl font-black text-emerald-400 font-mono truncate drop-shadow-sm">
+              {formatTaka(totalCollectionAmount)}
+            </h3>
+            <div className="mt-2 pt-2 border-t border-slate-800/60 text-[10px] sm:text-[11px] text-slate-400 truncate">
+              {toBnDigit(paymentLogs.length)} টি রসিদ এন্ট্রি
+            </div>
           </div>
         </div>
 
-        <div className="bg-slate-900/80 border border-slate-800/90 rounded-2xl p-4 sm:p-5 shadow-sm hover:border-slate-700/80 transition relative overflow-hidden group">
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <span className="text-xs font-bold text-slate-400">{t('shopkeeper')}</span>
-              <div className="text-xl sm:text-2xl font-black text-amber-300 font-mono tracking-tight mt-1">
-                {toBnDigit(dueCustomersCount + advanceCustomersCount)}{' '}
-                <span className="text-xs font-normal text-slate-400">{t('customers')}</span>
-              </div>
+        {/* Card 3: অগ্রিম জমা (Advance Credit) */}
+        <div
+          onClick={() => {
+            setViewMode('customer_wise');
+            setActiveDueFilter('advance');
+          }}
+          className="relative bg-gradient-to-b from-slate-800/90 via-slate-900 to-slate-950 border border-slate-700/60 border-t-slate-600/70 border-b-[3px] border-b-slate-950 hover:border-emerald-500/50 p-4 sm:p-5 rounded-2xl flex flex-col justify-between cursor-pointer transition-all duration-200 hover:-translate-y-1 hover:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.15),0_12px_24px_-4px_rgba(0,0,0,0.7)] active:translate-y-0 active:border-b-2 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.1),0_8px_20px_-3px_rgba(0,0,0,0.6)] group"
+        >
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-1">
+              <p className="text-xs sm:text-sm font-semibold text-slate-400 tracking-wide">অগ্রিম জমা</p>
+              <ChevronRight className="w-3.5 h-3.5 text-emerald-400/70 group-hover:translate-x-0.5 transition" />
             </div>
-            <div className="w-10 h-10 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400 shrink-0 shadow-inner">
-              <Store className="w-5 h-5" />
+            <div className="p-2 sm:p-2.5 bg-gradient-to-b from-emerald-500/25 to-emerald-500/5 text-emerald-400 rounded-full shrink-0 border border-emerald-500/30 shadow-[inset_0_1px_1px_rgba(255,255,255,0.25),0_4px_8px_-2px_rgba(0,0,0,0.5)]">
+              <Coins className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
             </div>
           </div>
-          <div className="mt-3 pt-3 border-t border-slate-800/70 flex items-center justify-between text-xs text-slate-400">
-            <span>মোট পার্টি</span>
-            <span className="font-bold text-slate-200">সক্রিয় খাতা</span>
+          <div className="mt-3">
+            <h3 className="text-xl sm:text-2xl font-black text-emerald-300 font-mono truncate drop-shadow-sm">
+              {formatTaka(totalAdvanceCredit)}
+            </h3>
+            <div className="mt-2 pt-2 border-t border-slate-800/60 text-[10px] sm:text-[11px] text-slate-400 truncate">
+              {toBnDigit(advanceCustomersCount)} জন অগ্রিম পার্টি
+            </div>
           </div>
         </div>
 
-        <div className="bg-slate-900/80 border border-slate-800/90 rounded-2xl p-4 sm:p-5 shadow-sm hover:border-slate-700/80 transition relative overflow-hidden group">
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <span className="text-xs font-bold text-slate-400">{t('total_collection')}</span>
-              <div className="text-xl sm:text-2xl font-black text-sky-400 font-mono tracking-tight mt-1">
-                {toBnDigit(paymentLogs.length)}{' '}
-                <span className="text-xs font-normal text-slate-400">{t('receipts')}</span>
-              </div>
+        {/* Card 4: কাস্টমার হিসাব (Total Accounts) */}
+        <div
+          onClick={() => {
+            setViewMode('customer_wise');
+            setActiveDueFilter('all');
+          }}
+          className="relative bg-gradient-to-b from-slate-800/90 via-slate-900 to-slate-950 border border-slate-700/60 border-t-slate-600/70 border-b-[3px] border-b-slate-950 hover:border-amber-500/50 p-4 sm:p-5 rounded-2xl flex flex-col justify-between cursor-pointer transition-all duration-200 hover:-translate-y-1 hover:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.15),0_12px_24px_-4px_rgba(0,0,0,0.7)] active:translate-y-0 active:border-b-2 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.1),0_8px_20px_-3px_rgba(0,0,0,0.6)] group"
+        >
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-1">
+              <p className="text-xs sm:text-sm font-semibold text-slate-400 tracking-wide">মোট পার্টি</p>
+              <ChevronRight className="w-3.5 h-3.5 text-amber-400/70 group-hover:translate-x-0.5 transition" />
             </div>
-            <div className="w-10 h-10 rounded-xl bg-sky-500/15 border border-sky-500/30 flex items-center justify-center text-sky-400 shrink-0 shadow-inner">
-              <DollarSign className="w-5 h-5" />
+            <div className="p-2 sm:p-2.5 bg-gradient-to-b from-amber-500/25 to-amber-500/5 text-amber-400 rounded-full shrink-0 border border-amber-500/30 shadow-[inset_0_1px_1px_rgba(255,255,255,0.25),0_4px_8px_-2px_rgba(0,0,0,0.5)]">
+              <Store className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
             </div>
           </div>
-          <div className="mt-3 pt-3 border-t border-slate-800/70 flex items-center justify-between text-xs text-slate-400">
-            <span>কালেকশন লগ</span>
-            <span className="font-bold text-slate-200">মোট রসিদ</span>
+          <div className="mt-3">
+            <h3 className="text-xl sm:text-2xl font-black text-amber-300 font-mono truncate drop-shadow-sm">
+              {toBnDigit(dueCustomersCount + advanceCustomersCount)}{' '}
+              <span className="text-xs font-normal text-slate-400">জন</span>
+            </h3>
+            <div className="mt-2 pt-2 border-t border-slate-800/60 text-[10px] sm:text-[11px] text-slate-400 truncate">
+              মোট রেজিস্টার্ড: {toBnDigit(customers.length)} জন
+            </div>
           </div>
         </div>
+
       </div>
 
       {/* VIEW MODE 1: CUSTOMER-WISE DUE LIST */}
       {viewMode === 'customer_wise' && (
         <div className="space-y-4">
           
-          {/* Filters & View Switcher */}
-          <div className={`${activeTheme.cardClass} p-4 rounded-2xl flex flex-col gap-3`}>
-            <div className="flex flex-col sm:flex-row gap-3 items-center justify-between">
-              <div className="flex items-center gap-2 bg-slate-950 border border-slate-700/80 rounded-xl px-3 py-2 w-full sm:w-80">
-                <Search className="w-4 h-4 text-slate-400" />
+          {/* Filters & View Switcher - Sleek Minimal Strip */}
+          <div className="bg-slate-900/80 border border-slate-800/90 p-2.5 sm:p-3 rounded-2xl shadow-sm space-y-2.5">
+            <div className="flex flex-col sm:flex-row gap-2.5 items-center justify-between">
+              {/* Search */}
+              <div className="flex items-center gap-2 bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 w-full sm:w-72 shadow-inner">
+                <Search className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                 <input
                   type="text"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder="দোকানের নাম, মালিক বা ফোন..."
+                  placeholder="দোকান, নাম বা ফোন..."
                   className="bg-transparent text-xs text-slate-100 placeholder-slate-500 w-full focus:outline-none"
                 />
+                {searchTerm && (
+                  <button
+                    type="button"
+                    onClick={() => setSearchTerm('')}
+                    className="text-slate-500 hover:text-slate-300 text-xs cursor-pointer"
+                  >
+                    ✕
+                  </button>
+                )}
               </div>
 
-              <div className="flex items-center gap-2 w-full sm:w-auto overflow-x-auto justify-between sm:justify-end flex-wrap">
+              <div className="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-end">
                 {/* Custom Seller Dropdown */}
                 <div className="relative">
                   <button
@@ -548,16 +596,16 @@ export const DueManagement: React.FC<DueManagementProps> = ({
                       e.stopPropagation();
                       setIsSellerDropdownOpen((prev) => !prev);
                     }}
-                    className={`bg-slate-950 border text-xs rounded-xl px-3 py-2 font-medium flex items-center gap-1.5 transition-all cursor-pointer ${
+                    className={`bg-slate-950 border text-xs rounded-xl px-3 py-2 font-medium flex items-center gap-1.5 transition-all cursor-pointer shadow-inner ${
                       selectedSellerFilter !== 'সব'
-                        ? 'border-amber-500/80 text-amber-300 bg-amber-500/10 shadow-sm shadow-amber-500/10'
+                        ? 'border-amber-500/80 text-amber-300 bg-amber-500/10'
                         : 'border-slate-800 hover:border-slate-700 text-slate-200'
                     }`}
                   >
                     <User className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-                    <span className="truncate max-w-[130px] sm:max-w-none">
+                    <span className="truncate max-w-[120px] sm:max-w-none">
                       {selectedSellerFilter === 'সব'
-                        ? 'সব সেলার ও এডমিন'
+                        ? 'সব সেলার'
                         : sellers.find((s) => s.id === selectedSellerFilter)?.name || 'সেলার'}
                     </span>
                     <ChevronDown
@@ -571,7 +619,7 @@ export const DueManagement: React.FC<DueManagementProps> = ({
                   {isSellerDropdownOpen && (
                     <div
                       onClick={(e) => e.stopPropagation()}
-                      className="absolute left-0 sm:left-auto sm:right-0 top-full mt-1.5 w-64 max-h-72 overflow-y-auto bg-slate-900 border border-slate-700/90 rounded-2xl shadow-2xl py-1.5 z-50 animate-in fade-in zoom-in-95 duration-150"
+                      className="absolute left-0 sm:left-auto sm:right-0 top-full mt-1.5 w-60 max-h-72 overflow-y-auto bg-slate-900 border border-slate-700/90 rounded-2xl shadow-2xl py-1 z-50 animate-in fade-in zoom-in-95 duration-150"
                     >
                       <div className="px-3 py-1.5 text-[10px] font-bold tracking-wider text-slate-400 border-b border-slate-800 flex items-center justify-between">
                         <span>সেলার ফিল্টার</span>
@@ -594,7 +642,7 @@ export const DueManagement: React.FC<DueManagementProps> = ({
                           setSelectedSellerFilter('সব');
                           setIsSellerDropdownOpen(false);
                         }}
-                        className={`w-full px-3 py-2 text-left text-xs flex items-center justify-between transition-colors cursor-pointer ${
+                        className={`w-full px-3 py-1.5 text-left text-xs flex items-center justify-between transition-colors cursor-pointer ${
                           selectedSellerFilter === 'সব'
                             ? 'bg-amber-500/20 text-amber-300 font-bold'
                             : 'text-slate-300 hover:bg-slate-800 hover:text-white'
@@ -613,7 +661,7 @@ export const DueManagement: React.FC<DueManagementProps> = ({
                               setSelectedSellerFilter(s.id);
                               setIsSellerDropdownOpen(false);
                             }}
-                            className={`w-full px-3 py-2 text-left text-xs flex items-center justify-between transition-colors cursor-pointer border-t border-slate-800/40 ${
+                            className={`w-full px-3 py-1.5 text-left text-xs flex items-center justify-between transition-colors cursor-pointer border-t border-slate-800/40 ${
                               isSelected
                                 ? 'bg-amber-500/20 text-amber-300 font-bold'
                                 : 'text-slate-300 hover:bg-slate-800 hover:text-white'
@@ -637,49 +685,50 @@ export const DueManagement: React.FC<DueManagementProps> = ({
                 </div>
 
                 {/* View Mode Switcher */}
-                <div className="flex items-center gap-1 bg-slate-950 p-1 rounded-xl border border-slate-800">
+                <div className="flex items-center gap-1 bg-slate-950 p-1 rounded-xl border border-slate-800 shadow-inner">
                   <button
                     type="button"
                     onClick={() => setCustomerViewMode('table')}
-                    className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                    className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                       customerViewMode === 'table'
-                        ? 'bg-amber-500 text-slate-950 shadow'
+                        ? 'bg-amber-500 text-slate-950 shadow-sm'
                         : 'text-slate-400 hover:text-slate-200'
                     }`}
                   >
                     <List className="w-3.5 h-3.5" />
-                    টেবিল
+                    <span>টেবিল</span>
                   </button>
                   <button
                     type="button"
                     onClick={() => setCustomerViewMode('card')}
-                    className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                    className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                       customerViewMode === 'card'
-                        ? 'bg-amber-500 text-slate-950 shadow'
+                        ? 'bg-amber-500 text-slate-950 shadow-sm'
                         : 'text-slate-400 hover:text-slate-200'
                     }`}
                   >
                     <LayoutGrid className="w-3.5 h-3.5" />
-                    কার্ড
+                    <span>কার্ড</span>
                   </button>
                 </div>
               </div>
             </div>
 
             {/* Quick Filter: All vs Due vs Advance */}
-            <div className="flex items-center gap-2 border-t border-slate-800 pt-2.5 flex-wrap text-xs">
-              <span className="text-slate-400 text-[11px] font-medium mr-1">ফিল্টার:</span>
+            <div className="flex items-center gap-1.5 border-t border-slate-800/80 pt-2 text-xs">
               <button
                 type="button"
                 onClick={() => setActiveDueFilter('all')}
-                className={`px-3 py-1 rounded-lg font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${
+                className={`px-2.5 py-1 rounded-xl font-bold transition cursor-pointer flex items-center gap-1.5 text-xs ${
                   activeDueFilter === 'all'
-                    ? 'bg-amber-500 text-slate-950 shadow'
-                    : 'bg-slate-900 text-slate-300 hover:bg-slate-800 border border-slate-800'
+                    ? 'bg-amber-500 text-slate-950 shadow-sm'
+                    : 'bg-slate-950 text-slate-400 hover:text-slate-200 border border-slate-800'
                 }`}
               >
-                <span>সকল কাস্টমার</span>
-                <span className="px-1.5 py-0.2 text-[10px] rounded-full bg-slate-800 text-amber-300 font-mono">
+                <span>সব</span>
+                <span className={`px-1.5 py-0.2 text-[10px] rounded-md font-mono ${
+                  activeDueFilter === 'all' ? 'bg-slate-950/20 text-slate-950' : 'bg-slate-900 text-slate-400'
+                }`}>
                   {toBnDigit(dueCustomersCount + advanceCustomersCount)}
                 </span>
               </button>
@@ -687,15 +736,17 @@ export const DueManagement: React.FC<DueManagementProps> = ({
               <button
                 type="button"
                 onClick={() => setActiveDueFilter('due')}
-                className={`px-3 py-1 rounded-lg font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${
+                className={`px-2.5 py-1 rounded-xl font-bold transition cursor-pointer flex items-center gap-1.5 text-xs ${
                   activeDueFilter === 'due'
-                    ? 'bg-rose-500 text-white shadow'
-                    : 'bg-slate-900 text-slate-300 hover:bg-slate-800 border border-slate-800'
+                    ? 'bg-rose-500 text-white shadow-sm'
+                    : 'bg-slate-950 text-slate-400 hover:text-slate-200 border border-slate-800'
                 }`}
               >
-                <span className="w-2 h-2 rounded-full bg-rose-400"></span>
-                <span>শুধুমাত্র বকেয়া / বাকী</span>
-                <span className="px-1.5 py-0.2 text-[10px] rounded-full bg-slate-800 text-rose-300 font-mono">
+                <span className="w-1.5 h-1.5 rounded-full bg-rose-400"></span>
+                <span>বকেয়া</span>
+                <span className={`px-1.5 py-0.2 text-[10px] rounded-md font-mono ${
+                  activeDueFilter === 'due' ? 'bg-black/20 text-white' : 'bg-slate-900 text-rose-300'
+                }`}>
                   {toBnDigit(dueCustomersCount)}
                 </span>
               </button>
@@ -703,253 +754,250 @@ export const DueManagement: React.FC<DueManagementProps> = ({
               <button
                 type="button"
                 onClick={() => setActiveDueFilter('advance')}
-                className={`px-3 py-1 rounded-lg font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${
+                className={`px-2.5 py-1 rounded-xl font-bold transition cursor-pointer flex items-center gap-1.5 text-xs ${
                   activeDueFilter === 'advance'
-                    ? 'bg-emerald-500 text-slate-950 font-bold shadow'
-                    : 'bg-slate-900 text-slate-300 hover:bg-slate-800 border border-slate-800'
+                    ? 'bg-emerald-500 text-slate-950 shadow-sm'
+                    : 'bg-slate-950 text-slate-400 hover:text-slate-200 border border-slate-800'
                 }`}
               >
-                <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
-                <span>এডভান্স ক্রেডিট / অগ্রিম জমা</span>
-                <span className="px-1.5 py-0.2 text-[10px] rounded-full bg-slate-800 text-emerald-300 font-mono">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                <span>অগ্রিম</span>
+                <span className={`px-1.5 py-0.2 text-[10px] rounded-md font-mono ${
+                  activeDueFilter === 'advance' ? 'bg-slate-950/20 text-slate-950' : 'bg-slate-900 text-emerald-300'
+                }`}>
                   {toBnDigit(advanceCustomersCount)}
                 </span>
               </button>
             </div>
           </div>
 
-          {/* Customer Container */}
-          <div className={`${activeTheme.cardClass} p-4 rounded-2xl`}>
-            {customerViewMode === 'card' ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {dueCustomers.length === 0 ? (
-                  <div className="col-span-full py-12 text-center text-slate-500">
-                    কোনো কাস্টমার বা হিসাব পাওয়া যায়নি।
-                  </div>
-                ) : (
-                  dueCustomers.map((cust) => {
-                    const isAdvance = cust.currentDue < 0;
-                    return (
-                      <div
-                        key={cust.id}
-                        className={`bg-slate-950 border rounded-2xl p-4 space-y-3 relative flex flex-col justify-between transition-all shadow-md ${
-                          isAdvance
-                            ? 'border-emerald-500/40 hover:border-emerald-400'
-                            : 'border-slate-800 hover:border-amber-500/40'
-                        }`}
-                      >
-                        <div>
-                          {/* Shop Header */}
-                          <div className="flex items-start justify-between pb-2.5 border-b border-slate-800">
-                            <div>
-                              <div className="flex items-center gap-2">
-                                <h4 className="font-bold text-white text-sm">{cust.shopName}</h4>
-                                {isAdvance && (
-                                  <span className="px-1.5 py-0.5 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded text-[10px] font-bold">
-                                    এডভান্স
-                                  </span>
-                                )}
-                              </div>
-                              <div className="text-[11px] text-slate-400 flex items-center gap-1 mt-0.5">
-                                <User className="w-3 h-3 text-amber-400" />
-                                প্রো: {cust.name}
-                              </div>
-                            </div>
-                            <span className="px-2 py-1 bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 rounded-full text-[10px] font-bold">
-                              {cust.assignedSellerName}
-                            </span>
-                          </div>
-
-                          {/* Contact & Due */}
-                          <div className="py-2.5 space-y-1.5 text-xs">
-                            <div className="flex items-center justify-between">
-                              <span className="text-slate-400">মোবাইল:</span>
-                              <span className="font-mono text-slate-200">
-                                {cust.phone || '—'}
-                              </span>
-                            </div>
-                            <div className="flex items-center justify-between">
-                              <span className="text-slate-400">ঠিকানা:</span>
-                              <span className="text-slate-300 truncate max-w-[180px]">{cust.address}</span>
-                            </div>
-                            <div className="flex items-center justify-between pt-2 border-t border-slate-900">
-                              <span className="text-slate-400 font-bold">
-                                {isAdvance ? 'এডভান্স ক্রেডিট (অগ্রিম জমা):' : 'বর্তমান বাকী:'}
-                              </span>
-                              <div className="text-right">
-                                <span
-                                  className={`font-black text-sm font-mono ${
-                                    isAdvance ? 'text-emerald-400' : 'text-rose-400'
-                                  }`}
-                                >
-                                  {isAdvance ? `+${formatTaka(Math.abs(cust.currentDue))}` : formatTaka(cust.currentDue)}
-                                </span>
-                                {isAdvance && (
-                                  <div className="text-[9px] text-emerald-500 font-medium">পরবর্তী বিল থেকে বাদ যাবে</div>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Actions */}
-                        <div className="pt-3 border-t border-slate-800 flex items-center justify-end gap-2 flex-wrap">
-                          <button
-                            onClick={() => openAdjustDueModal(cust)}
-                            className="px-2.5 py-1.5 bg-slate-900 hover:bg-slate-800 text-amber-300 border border-slate-700 hover:border-amber-500/40 rounded-xl text-xs font-semibold flex items-center gap-1 transition-all cursor-pointer"
-                            title="পূর্বের বাকী যোগ বা সমন্বয় করুন"
-                          >
-                            <Sliders className="w-3.5 h-3.5 text-amber-400" />
-                            <span>সমন্বয়</span>
-                          </button>
-                          <button
-                            onClick={() => openPaymentModal(cust)}
-                            className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-xs shadow flex items-center gap-1 transition-all cursor-pointer"
-                          >
-                            <DollarSign className="w-3.5 h-3.5" />
-                            {isAdvance ? 'আরও জমা' : 'টাকা আদায়'}
-                          </button>
-                          {cust.phone && !isAdvance ? (
-                            <button
-                              onClick={() => handleMessageClick(cust)}
-                              disabled={sendingStatuses[cust.id] === 'sending'}
-                              className={`px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1 transition-all cursor-pointer ${
-                                sendingStatuses[cust.id] === 'sent' || cust.lastDueReminderDate === new Date().toISOString().split('T')[0]
-                                  ? 'bg-emerald-950/40 text-emerald-400 border border-emerald-500/20 opacity-90'
-                                  : sendingStatuses[cust.id] === 'sending'
-                                  ? 'bg-slate-850 text-slate-400 border border-slate-700'
-                                  : 'bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-500/30'
-                              }`}
-                              title={cust.lastDueReminderDate === new Date().toISOString().split('T')[0] ? "আজকে ইতিমধ্যে তাগদা মেসেজ পাঠানো হয়েছে (আবারও পাঠাতে পারেন)" : "এসএমএস তাগদা পাঠান"}
-                            >
-                              {renderMessageButtonContent(cust)}
-                            </button>
-                          ) : null}
-                        </div>
-                      </div>
-                    );
-                  })
-                )}
-              </div>
-            ) : (
-              <div className="overflow-x-auto no-scrollbar">
-                <table className="min-w-[580px] w-full text-left text-xs whitespace-nowrap">
-                  <thead>
-                    <tr className="border-b border-slate-700 text-slate-400 font-medium pb-2">
-                      <th className="pb-3 pr-3">দোকানের নাম ও মালিক</th>
-                      <th className="pb-3 px-3">মোবাইল ও ঠিকানা</th>
-                      <th className="pb-3 px-3">দায়িত্বপ্রাপ্ত সেলার</th>
-                      <th className="pb-3 px-3 text-right">স্থিতি / পরিমাণ (৳)</th>
-                      <th className="pb-3 pl-3 text-right">অ্যাকশন / আদায়</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-800">
-                    {dueCustomers.map((cust) => {
-                      const isAdvance = cust.currentDue < 0;
-                      return (
-                        <tr key={cust.id} className="hover:bg-slate-800/50 transition-colors">
-                          <td className="py-3 pr-3">
-                            <div className="flex items-center gap-2">
-                              <div className="font-bold text-slate-100 text-sm">{cust.shopName}</div>
+          {/* Customer Container - Minimal & Clean */}
+          {customerViewMode === 'card' ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-3.5">
+              {dueCustomers.length === 0 ? (
+                <div className="col-span-full py-12 text-center text-slate-500 text-xs bg-slate-900/40 rounded-2xl border border-slate-800/80">
+                  কোনো কাস্টমার বা হিসাব পাওয়া যায়নি।
+                </div>
+              ) : (
+                dueCustomers.map((cust) => {
+                  const isAdvance = cust.currentDue < 0;
+                  return (
+                    <div
+                      key={cust.id}
+                      className={`bg-slate-900/90 border rounded-2xl p-3.5 sm:p-4 flex flex-col justify-between transition-all duration-200 hover:border-slate-700 shadow-sm ${
+                        isAdvance
+                          ? 'border-emerald-500/30'
+                          : 'border-slate-800/90'
+                      }`}
+                    >
+                      <div>
+                        {/* Header: Shop & Due Amount */}
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-1.5">
+                              <h4 className="font-bold text-slate-100 text-sm truncate">{cust.shopName}</h4>
                               {isAdvance && (
-                                <span className="px-1.5 py-0.5 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded text-[10px] font-bold">
-                                  এডভান্স
+                                <span className="px-1.5 py-0.2 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded text-[9px] font-bold shrink-0">
+                                  অগ্রিম
                                 </span>
                               )}
                             </div>
-                            <div className="text-[11px] text-slate-400 flex items-center gap-1">
-                              <User className="w-3 h-3 text-amber-400" />
-                              প্রো: {cust.name}
+                            <div className="text-[11px] text-slate-400 truncate mt-0.5">
+                              {cust.name} {cust.assignedSellerName ? `• ${cust.assignedSellerName}` : ''}
                             </div>
-                          </td>
-
-                          <td className="py-3 px-3 text-slate-300">
-                            <div>{cust.phone || '—'}</div>
-                            <div className="text-[10px] text-slate-400">{cust.address}</div>
-                          </td>
-
-                          <td className="py-3 px-3 text-indigo-300 font-medium">
-                            {cust.assignedSellerName}
-                          </td>
-
-                          <td className="py-3 px-3 text-right">
+                          </div>
+                          <div className="text-right shrink-0">
                             <div
-                              className={`font-black text-sm font-mono ${
+                              className={`font-black text-base sm:text-lg font-mono tracking-tight ${
                                 isAdvance ? 'text-emerald-400' : 'text-rose-400'
                               }`}
                             >
                               {isAdvance ? `+${formatTaka(Math.abs(cust.currentDue))}` : formatTaka(cust.currentDue)}
                             </div>
                             <div className="text-[10px] text-slate-400">
-                              {isAdvance ? 'এডভান্স ক্রেডিট' : 'বকেয়া'}
+                              {isAdvance ? 'জমা' : 'বকেয়া'}
                             </div>
-                          </td>
+                          </div>
+                        </div>
 
-                          <td className="py-3 pl-3 text-right">
-                            <div className="flex items-center justify-end gap-2">
-                              <button
-                                onClick={() => openAdjustDueModal(cust)}
-                                className="px-2.5 py-1.5 bg-slate-900 hover:bg-slate-800 text-amber-300 border border-slate-700 hover:border-amber-500/40 rounded-xl text-xs font-semibold flex items-center gap-1 transition-all cursor-pointer"
-                                title="পূর্বের বাকী যোগ বা সমন্বয় করুন"
+                        {/* Phone & Address in single clean strip */}
+                        {(cust.phone || cust.address) && (
+                          <div className="flex items-center gap-2 text-xs text-slate-400 mt-2.5 pt-2 border-t border-slate-800/60 truncate">
+                            {cust.phone && (
+                              <span className="font-mono text-slate-300 shrink-0">{cust.phone}</span>
+                            )}
+                            {cust.phone && cust.address && <span className="text-slate-600">•</span>}
+                            {cust.address && (
+                              <span className="truncate">{cust.address}</span>
+                            )}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Actions */}
+                      <div className="mt-3 pt-2.5 border-t border-slate-800/60 flex items-center justify-end gap-1.5">
+                        <button
+                          type="button"
+                          onClick={() => openAdjustDueModal(cust)}
+                          className="px-2.5 py-1.5 bg-slate-950 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-800 rounded-xl text-xs font-medium flex items-center gap-1 transition cursor-pointer"
+                          title="সমন্বয় করুন"
+                        >
+                          <Sliders className="w-3.5 h-3.5 text-amber-400" />
+                          <span>সমন্বয়</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => openPaymentModal(cust)}
+                          className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-xs shadow-sm flex items-center gap-1 transition cursor-pointer"
+                        >
+                          <DollarSign className="w-3.5 h-3.5" />
+                          <span>{isAdvance ? 'জমা' : 'আদায়'}</span>
+                        </button>
+
+                        {cust.phone && !isAdvance ? (
+                          <button
+                            type="button"
+                            onClick={() => handleMessageClick(cust)}
+                            disabled={sendingStatuses[cust.id] === 'sending'}
+                            className={`px-2.5 py-1.5 rounded-xl text-xs font-medium flex items-center gap-1 transition cursor-pointer ${
+                              sendingStatuses[cust.id] === 'sent' || cust.lastDueReminderDate === new Date().toISOString().split('T')[0]
+                                ? 'bg-emerald-950/40 text-emerald-400 border border-emerald-500/20'
+                                : sendingStatuses[cust.id] === 'sending'
+                                ? 'bg-slate-850 text-slate-400 border border-slate-700'
+                                : 'bg-slate-950 hover:bg-slate-850 text-amber-300 border border-slate-800 hover:border-amber-500/30'
+                            }`}
+                          >
+                            {renderMessageButtonContent(cust)}
+                          </button>
+                        ) : null}
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          ) : (
+            <div className="bg-gradient-to-b from-slate-900 to-slate-950 border border-slate-800 rounded-2xl overflow-hidden shadow-sm">
+              <div className="overflow-x-auto no-scrollbar">
+                <table className="min-w-[560px] w-full text-left text-xs whitespace-nowrap">
+                  <thead>
+                    <tr className="bg-slate-950/70 border-b border-slate-800/90 text-slate-400 font-semibold text-[11px]">
+                      <th className="py-2.5 px-3.5">দোকান ও পার্টি</th>
+                      <th className="py-2.5 px-3">মোবাইল / ঠিকানা</th>
+                      <th className="py-2.5 px-3">সেলার</th>
+                      <th className="py-2.5 px-3 text-right">বকেয়া / স্থিতি</th>
+                      <th className="py-2.5 px-3.5 text-right">অ্যাকশন</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-800/60">
+                    {dueCustomers.length === 0 ? (
+                      <tr>
+                        <td colSpan={5} className="py-8 text-center text-slate-500 text-xs">
+                          কোনো কাস্টমার বা হিসাব পাওয়া যায়নি।
+                        </td>
+                      </tr>
+                    ) : (
+                      dueCustomers.map((cust) => {
+                        const isAdvance = cust.currentDue < 0;
+                        return (
+                          <tr key={cust.id} className="hover:bg-slate-800/40 transition-colors">
+                            <td className="py-2.5 px-3.5">
+                              <div className="flex items-center gap-1.5">
+                                <span className="font-bold text-slate-100">{cust.shopName}</span>
+                                {isAdvance && (
+                                  <span className="px-1.5 py-0.2 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded text-[9px] font-bold">
+                                    অগ্রিম
+                                  </span>
+                                )}
+                              </div>
+                              <div className="text-[10px] text-slate-400">{cust.name}</div>
+                            </td>
+
+                            <td className="py-2.5 px-3 text-slate-300">
+                              <div className="font-mono text-xs">{cust.phone || '—'}</div>
+                              {cust.address && <div className="text-[10px] text-slate-400 truncate max-w-[160px]">{cust.address}</div>}
+                            </td>
+
+                            <td className="py-2.5 px-3">
+                              <span className="px-2 py-0.5 bg-slate-950 border border-slate-800 text-slate-300 rounded-full text-[10px]">
+                                {cust.assignedSellerName || 'সেলার'}
+                              </span>
+                            </td>
+
+                            <td className="py-2.5 px-3 text-right">
+                              <div
+                                className={`font-black text-sm font-mono ${
+                                  isAdvance ? 'text-emerald-400' : 'text-rose-400'
+                                }`}
                               >
-                                <Sliders className="w-3.5 h-3.5 text-amber-400" />
-                                <span>সমন্বয়</span>
-                              </button>
+                                {isAdvance ? `+${formatTaka(Math.abs(cust.currentDue))}` : formatTaka(cust.currentDue)}
+                              </div>
+                            </td>
 
-                              <button
-                                onClick={() => openPaymentModal(cust)}
-                                className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-xs shadow flex items-center gap-1 transition-all cursor-pointer"
-                              >
-                                <DollarSign className="w-3.5 h-3.5" />
-                                {isAdvance ? 'আরও জমা' : 'টাকা আদায়'}
-                              </button>
-
-                              {cust.phone && !isAdvance ? (
+                            <td className="py-2.5 px-3.5 text-right">
+                              <div className="flex items-center justify-end gap-1.5">
                                 <button
-                                  onClick={() => handleMessageClick(cust)}
-                                  disabled={sendingStatuses[cust.id] === 'sending'}
-                                  className={`px-2.5 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1 transition-all cursor-pointer ${
-                                    sendingStatuses[cust.id] === 'sent' || cust.lastDueReminderDate === new Date().toISOString().split('T')[0]
-                                      ? 'bg-emerald-950/40 text-emerald-400 border border-emerald-500/20 opacity-90'
-                                      : sendingStatuses[cust.id] === 'sending'
-                                      ? 'bg-slate-850 text-slate-400 border border-slate-700'
-                                      : 'bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-500/30'
-                                  }`}
-                                  title={cust.lastDueReminderDate === new Date().toISOString().split('T')[0] ? "আজকে ইতিমধ্যে তাগদা মেসেজ পাঠানো হয়েছে (আবারও পাঠাতে পারেন)" : "এসএমএস তাগদা পাঠান"}
+                                  type="button"
+                                  onClick={() => openPaymentModal(cust)}
+                                  className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg text-xs transition cursor-pointer"
                                 >
-                                  {renderMessageButtonContent(cust)}
+                                  {isAdvance ? 'জমা' : 'আদায়'}
                                 </button>
-                              ) : null}
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })}
+                                <button
+                                  type="button"
+                                  onClick={() => openAdjustDueModal(cust)}
+                                  className="px-2 py-1 bg-slate-950 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-800 rounded-lg text-xs transition cursor-pointer"
+                                  title="সমন্বয়"
+                                >
+                                  <Sliders className="w-3 h-3 text-amber-400" />
+                                </button>
+                                {cust.phone && !isAdvance ? (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleMessageClick(cust)}
+                                    disabled={sendingStatuses[cust.id] === 'sending'}
+                                    className={`px-2 py-1 rounded-lg text-xs transition cursor-pointer ${
+                                      sendingStatuses[cust.id] === 'sent' || cust.lastDueReminderDate === new Date().toISOString().split('T')[0]
+                                        ? 'bg-emerald-950/40 text-emerald-400 border border-emerald-500/20'
+                                        : 'bg-slate-950 hover:bg-slate-850 text-amber-300 border border-slate-800'
+                                    }`}
+                                    title="তাগদা মেসেজ"
+                                  >
+                                    <MessageSquare className="w-3 h-3" />
+                                  </button>
+                                ) : null}
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })
+                    )}
                   </tbody>
                 </table>
               </div>
-            )}
-          </div>
+            </div>
+          )}
 
         </div>
       )}
 
       {/* VIEW MODE 2: SELLER-WISE DUE BREAKDOWN */}
       {viewMode === 'seller_wise' && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-5">
           {sellerWiseDue.map(({ seller, customerCount, totalDue, totalAdvance, customers: sCusts }) => (
-            <div key={seller.id} className={`${activeTheme.cardClass} p-5 rounded-2xl space-y-4`}>
-              <div className="flex items-center justify-between border-b border-slate-700 pb-3">
+            <div key={seller.id} className="bg-slate-900/80 border border-slate-800/90 rounded-2xl p-4 sm:p-5 shadow-sm space-y-3.5">
+              <div className="flex items-center justify-between border-b border-slate-800/80 pb-3">
                 <div>
                   <div className="flex items-center gap-1.5 flex-wrap">
-                    <h3 className="font-bold text-base text-white">{seller.name}</h3>
+                    <h3 className="font-bold text-sm sm:text-base text-slate-100">{seller.name}</h3>
                     {seller.isAdmin || seller.role === 'admin' ? (
-                      <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
-                        এডমিন ও সেলার
+                      <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/10 text-amber-300 border border-amber-500/20">
+                        এডমিন
                       </span>
                     ) : (
-                      <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-blue-500/20 text-blue-300">
-                        ফিল্ড সেলার
+                      <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-blue-500/10 text-blue-300 border border-blue-500/20">
+                        সেলার
                       </span>
                     )}
                   </div>
@@ -958,10 +1006,10 @@ export const DueManagement: React.FC<DueManagementProps> = ({
                   )}
                 </div>
                 <div className="text-right">
-                  <div className="text-xs text-slate-400">আন্ডারে মোট বাকী</div>
-                  <div className="text-lg font-black text-rose-400">{formatTaka(totalDue)}</div>
+                  <div className="text-xs text-slate-400">মোট বাকী</div>
+                  <div className="text-base sm:text-lg font-black text-rose-400 font-mono">{formatTaka(totalDue)}</div>
                   {totalAdvance > 0 && (
-                    <div className="text-[11px] font-bold text-emerald-400 mt-0.5">
+                    <div className="text-[11px] font-bold text-emerald-400 mt-0.5 font-mono">
                       এডভান্স: +{formatTaka(totalAdvance)}
                     </div>
                   )}
@@ -969,35 +1017,38 @@ export const DueManagement: React.FC<DueManagementProps> = ({
               </div>
 
               <div className="space-y-2">
-                <div className="text-xs font-bold text-slate-300">
-                  কাস্টমার তালিকা ({toBnDigit(customerCount)} জন):
+                <div className="text-xs font-bold text-slate-300 flex items-center justify-between">
+                  <span>কাস্টমার তালিকা:</span>
+                  <span className="font-mono text-slate-400">{toBnDigit(customerCount)} জন</span>
                 </div>
                 {sCusts.length > 0 ? (
-                  sCusts.map((c) => {
-                    const isAdv = c.currentDue < 0;
-                    return (
-                      <div
-                        key={c.id}
-                        className="p-2.5 bg-slate-950/80 rounded-xl border border-slate-800 flex items-center justify-between text-xs"
-                      >
-                        <div>
-                          <div className="font-bold text-slate-200">{c.shopName}</div>
-                          <div className="text-[10px] text-slate-400">{c.address}</div>
-                        </div>
-                        <div className="text-right">
-                          <div className={`font-bold ${isAdv ? 'text-emerald-400' : 'text-rose-400'}`}>
-                            {isAdv ? `+${formatTaka(Math.abs(c.currentDue))}` : formatTaka(c.currentDue)}
+                  <div className="space-y-1.5 max-h-72 overflow-y-auto pr-1">
+                    {sCusts.map((c) => {
+                      const isAdv = c.currentDue < 0;
+                      return (
+                        <div
+                          key={c.id}
+                          className="p-2.5 bg-slate-950 border border-slate-800/80 rounded-xl flex items-center justify-between text-xs"
+                        >
+                          <div>
+                            <div className="font-bold text-slate-200">{c.shopName}</div>
+                            <div className="text-[10px] text-slate-400">{c.address}</div>
                           </div>
-                          <div className="text-[9px] text-slate-400">
-                            {isAdv ? 'এডভান্স' : 'বাকী'}
+                          <div className="text-right font-mono">
+                            <div className={`font-bold ${isAdv ? 'text-emerald-400' : 'text-rose-400'}`}>
+                              {isAdv ? `+${formatTaka(Math.abs(c.currentDue))}` : formatTaka(c.currentDue)}
+                            </div>
+                            <div className="text-[9px] text-slate-400">
+                              {isAdv ? 'এডভান্স' : 'বাকী'}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    );
-                  })
+                      );
+                    })}
+                  </div>
                 ) : (
                   <div className="p-3 bg-slate-950/40 rounded-xl border border-dashed border-slate-800/80 text-center text-xs text-slate-500 py-3">
-                    এই সেলারের আন্ডারে বর্তমানে কোনো কাস্টমারের বাকী নেই (০ ৳ বাকী)
+                    বর্তমানে কোনো বকেয়া হিসাব নেই
                   </div>
                 )}
               </div>
@@ -1008,27 +1059,30 @@ export const DueManagement: React.FC<DueManagementProps> = ({
 
       {/* VIEW MODE 3: PAYMENT COLLECTION LOGS */}
       {viewMode === 'logs' && (
-        <div className={`${activeTheme.cardClass} p-5 rounded-2xl space-y-4`}>
-          <h3 className="font-bold text-sm text-white flex items-center gap-2">
-            <History className="w-4 h-4 text-emerald-400" />
-            সাম্প্রতিক বাকী আদায়ের ইতিহাস
-          </h3>
+        <div className="border border-slate-800/80 rounded-2xl overflow-hidden bg-slate-900/60 shadow-sm space-y-0">
+          <div className="px-4 py-3 border-b border-slate-800/90 flex items-center justify-between bg-slate-950/60">
+            <h3 className="font-bold text-xs sm:text-sm text-slate-100 flex items-center gap-2">
+              <History className="w-4 h-4 text-emerald-400" />
+              <span>বাকী আদায়ের ইতিহাস</span>
+            </h3>
+            <span className="text-xs text-slate-400 font-mono">মোট {toBnDigit(paymentLogs.length)} টি</span>
+          </div>
 
           <div className="overflow-x-auto no-scrollbar">
             <table className="min-w-[700px] w-full text-left text-xs whitespace-nowrap">
               <thead>
-                <tr className="border-b border-slate-700 text-slate-400 font-medium pb-2">
-                  <th className="pb-3 pr-3">রিসিট নম্বর</th>
-                  <th className="pb-3 px-3">তারিখ</th>
-                  <th className="pb-3 px-3">দোকানের নাম</th>
-                  <th className="pb-3 px-3">সেলার / রুট</th>
-                  <th className="pb-3 px-3">আদায়কারী (কে আদায় করলো)</th>
-                  <th className="pb-3 px-3 text-right">আদায়ের পরিমাণ (৳)</th>
-                  <th className="pb-3 px-3 text-right">অবশিষ্ট বাকী (৳)</th>
-                  <th className="pb-3 pl-3">পেমেন্ট মাধ্যম</th>
+                <tr className="bg-slate-950/80 border-b border-slate-800 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                  <th className="py-3 px-3 sm:px-4">রিসিট নম্বর</th>
+                  <th className="py-3 px-3">তারিখ</th>
+                  <th className="py-3 px-3">দোকানের নাম</th>
+                  <th className="py-3 px-3">সেলার / রুট</th>
+                  <th className="py-3 px-3">আদায়কারী</th>
+                  <th className="py-3 px-3 text-right">আদায়ের পরিমাণ (৳)</th>
+                  <th className="py-3 px-3 text-right">অবশিষ্ট বাকী (৳)</th>
+                  <th className="py-3 px-3 sm:px-4">পেমেন্ট মাধ্যম</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800">
+              <tbody className="divide-y divide-slate-800/60">
                 {[...paymentLogs]
                   .sort((a, b) => {
                     if (a.date !== b.date) {
@@ -1037,18 +1091,18 @@ export const DueManagement: React.FC<DueManagementProps> = ({
                     return b.id.localeCompare(a.id);
                   })
                   .map((log) => (
-                    <tr key={log.id} className="hover:bg-slate-800/40">
-                    <td className="py-3 pr-3 font-mono font-bold text-amber-300">{log.receiptNo}</td>
-                    <td className="py-3 px-3 text-slate-300">{formatBnDate(log.date)}</td>
+                    <tr key={log.id} className="hover:bg-slate-800/40 transition-colors">
+                    <td className="py-3 px-3 sm:px-4 font-mono font-bold text-amber-300">{log.receiptNo}</td>
+                    <td className="py-3 px-3 text-slate-300 font-mono">{formatBnDate(log.date)}</td>
                     <td className="py-3 px-3 font-bold text-slate-100">{log.shopName}</td>
                     <td className="py-3 px-3 text-slate-300">{log.sellerName}</td>
                     <td className="py-3 px-3">
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
                         <User className="w-3 h-3" />
                         {log.receivedBy || 'ক্যাশিয়ার'}
                       </span>
                     </td>
-                    <td className="py-3 px-3 text-right font-black text-emerald-400">
+                    <td className="py-3 px-3 text-right font-black text-emerald-400 font-mono">
                       <div>+{formatTaka(log.amountPaid)}</div>
                       {log.discountAmount && log.discountAmount > 0 ? (
                         <div className="text-[10px] text-amber-300 font-semibold mt-0.5">
@@ -1056,7 +1110,7 @@ export const DueManagement: React.FC<DueManagementProps> = ({
                         </div>
                       ) : null}
                     </td>
-                    <td className="py-3 px-3 text-right font-bold">
+                    <td className="py-3 px-3 text-right font-bold font-mono">
                       <span className={log.remainingDue < 0 ? 'text-emerald-400' : 'text-rose-400'}>
                         {log.remainingDue < 0 ? `+${formatTaka(Math.abs(log.remainingDue))}` : formatTaka(log.remainingDue)}
                       </span>
@@ -1064,7 +1118,7 @@ export const DueManagement: React.FC<DueManagementProps> = ({
                         <div className="text-[9px] text-emerald-500/80 font-normal">এডভান্স</div>
                       )}
                     </td>
-                    <td className="py-3 pl-3 text-slate-300">{log.paymentMethod}</td>
+                    <td className="py-3 px-3 sm:px-4 text-slate-300">{log.paymentMethod}</td>
                   </tr>
                 ))}
               </tbody>
@@ -1076,11 +1130,20 @@ export const DueManagement: React.FC<DueManagementProps> = ({
       {/* Payment Entry Dialog */}
       {selectedCustForPayment && (
         <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-slate-900 border border-slate-700 rounded-2xl max-w-md w-full p-6 space-y-4 shadow-2xl">
-            <h3 className="text-base font-bold text-white flex items-center gap-2 border-b border-slate-800 pb-3">
-              <DollarSign className="w-5 h-5 text-emerald-400" />
-              ক্যাশ/বাকী টাকা আদায়ের রশিদ এন্ট্রি
-            </h3>
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-5 sm:p-6 space-y-4 shadow-2xl">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+              <h3 className="text-base font-bold text-slate-100 flex items-center gap-2">
+                <DollarSign className="w-5 h-5 text-emerald-400" />
+                <span>টাকা আদায়ের রশিদ এন্ট্রি</span>
+              </h3>
+              <button
+                type="button"
+                onClick={() => setSelectedCustForPayment(null)}
+                className="text-slate-400 hover:text-slate-200 text-base font-bold px-2 py-1 cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
 
             <form onSubmit={handleSavePayment} className="space-y-3 text-xs">
               
@@ -1238,27 +1301,27 @@ export const DueManagement: React.FC<DueManagementProps> = ({
       {/* Adjust / Opening Due Modal */}
       {showAdjustDueModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
-          <div className="w-full max-w-lg bg-slate-900 border border-slate-700 rounded-2xl p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+          <div className="w-full max-w-lg bg-slate-900 border border-slate-800 rounded-2xl p-5 sm:p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between border-b border-slate-800 pb-3">
               <h3 className="text-base font-bold text-slate-100 flex items-center gap-2">
                 <Sliders className="w-5 h-5 text-amber-400" />
-                <span>প্রারম্ভিক বকেয়া / বাকী সমন্বয়</span>
+                <span>বকেয়া সমন্বয়</span>
               </h3>
               <button
                 type="button"
                 onClick={() => setShowAdjustDueModal(false)}
-                className="text-slate-400 hover:text-slate-200 text-lg font-bold px-2 py-1"
+                className="text-slate-400 hover:text-slate-200 text-base font-bold px-2 py-1 cursor-pointer"
               >
                 ✕
               </button>
             </div>
 
-            <form onSubmit={handleSaveAdjustDue} className="space-y-4 text-xs">
+            <form onSubmit={handleSaveAdjustDue} className="space-y-3.5 text-xs">
               
               {/* Customer Selector */}
               <div>
                 <label className="block text-slate-300 font-semibold mb-1">
-                  দোকান / কাস্টমার নির্বাচন করুন *
+                  দোকান / কাস্টমার *
                 </label>
                 
                 {/* Custom Searchable Customer Selector */}
@@ -1269,7 +1332,7 @@ export const DueManagement: React.FC<DueManagementProps> = ({
                       <button
                         type="button"
                         onClick={() => setIsAdjustCustDropdownOpen(!isAdjustCustDropdownOpen)}
-                        className="w-full bg-slate-950 border border-slate-700 text-left p-2.5 rounded-xl flex items-center justify-between focus:outline-none focus:border-amber-500 cursor-pointer"
+                        className="w-full bg-slate-950 border border-slate-800 text-left p-2.5 rounded-xl flex items-center justify-between focus:outline-none focus:border-amber-500 cursor-pointer shadow-inner"
                       >
                         {chosenCust ? (
                           <div className="truncate pr-2">
@@ -1285,12 +1348,12 @@ export const DueManagement: React.FC<DueManagementProps> = ({
                   })()}
 
                   {isAdjustCustDropdownOpen && (
-                    <div className="absolute left-0 right-0 top-full mt-1 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl p-2 z-50 space-y-1.5">
+                    <div className="absolute left-0 right-0 top-full mt-1 bg-slate-900 border border-slate-800 rounded-xl shadow-2xl p-2 z-50 space-y-1.5">
                       <div className="relative">
                         <Search className="w-3.5 h-3.5 text-slate-500 absolute left-2.5 top-1/2 -translate-y-1/2" />
                         <input
                           type="text"
-                          placeholder="দোকান বা মালিকের নাম দিয়ে খুঁজুন..."
+                          placeholder="দোকান বা মালিকের নাম..."
                           value={adjustCustomerSearch}
                           onChange={(e) => setAdjustCustomerSearch(e.target.value)}
                           className="w-full bg-slate-950 border border-slate-800 text-slate-200 rounded-lg pl-8 pr-2.5 py-1.5 text-xs focus:outline-none focus:border-amber-500"
@@ -1325,7 +1388,7 @@ export const DueManagement: React.FC<DueManagementProps> = ({
                               >
                                 <div className="truncate pr-2">
                                   <div className="font-semibold text-slate-100">{c.shopName}</div>
-                                  <div className="text-[10px] text-slate-400">মালিক: {c.name} {c.address ? `• ${c.address}` : ''}</div>
+                                  <div className="text-[10px] text-slate-400">{c.name} {c.address ? `• ${c.address}` : ''}</div>
                                 </div>
                                 <div className="text-right shrink-0">
                                   <div className={`text-[11px] font-mono font-bold ${c.currentDue < 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
@@ -1350,18 +1413,18 @@ export const DueManagement: React.FC<DueManagementProps> = ({
                 const finalDue = adjustType === 'add' ? target.currentDue + inputVal : inputVal;
 
                 return (
-                  <div className="bg-slate-950 border border-slate-800 rounded-xl p-3.5 space-y-2">
+                  <div className="bg-slate-950 border border-slate-800 rounded-xl p-3 space-y-1.5 shadow-inner">
                     <div className="flex items-center justify-between text-slate-300">
-                      <span>নির্বাচিত দোকান:</span>
-                      <span className="font-bold text-amber-400 text-sm">{target.shopName}</span>
+                      <span>দোকান:</span>
+                      <span className="font-bold text-amber-400 text-xs sm:text-sm">{target.shopName}</span>
                     </div>
                     <div className="flex items-center justify-between text-slate-400">
-                      <span>মালিক ও ফোন:</span>
+                      <span>মালিক:</span>
                       <span>{target.name} ({target.phone})</span>
                     </div>
-                    <div className="flex items-center justify-between border-t border-slate-900 pt-2">
-                      <span className="text-slate-400">বর্তমান বকেয়া স্থিতি:</span>
-                      <span className="font-black text-rose-400 text-sm">৳ {target.currentDue.toLocaleString('bn-BD')}</span>
+                    <div className="flex items-center justify-between border-t border-slate-900 pt-1.5">
+                      <span className="text-slate-400">বর্তমান বকেয়া:</span>
+                      <span className="font-black text-rose-400 font-mono text-sm">৳ {target.currentDue.toLocaleString('bn-BD')}</span>
                     </div>
                   </div>
                 );
@@ -1369,44 +1432,38 @@ export const DueManagement: React.FC<DueManagementProps> = ({
 
               {/* Adjustment Mode Selection */}
               <div>
-                <label className="block text-slate-300 font-semibold mb-1.5">
-                  সমন্বয়ের ধরণ নির্ধারণ করুন
+                <label className="block text-slate-300 font-semibold mb-1">
+                  সমন্বয়ের ধরণ
                 </label>
                 <div className="grid grid-cols-2 gap-2">
                   <button
                     type="button"
                     onClick={() => setAdjustType('add')}
-                    className={`p-3 rounded-xl border text-left flex flex-col gap-1 transition-all cursor-pointer ${
+                    className={`p-2.5 rounded-xl border text-left flex items-center gap-2 transition-all cursor-pointer ${
                       adjustType === 'add'
                         ? 'bg-amber-500/20 border-amber-500 text-amber-300'
                         : 'bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700'
                     }`}
                   >
-                    <span className="font-bold text-xs flex items-center gap-1">
-                      <PlusCircle className="w-3.5 h-3.5" />
-                      পূর্বের বকেয়া যোগ করুন (+)
-                    </span>
-                    <span className="text-[10px] text-slate-400">
-                      বর্তমান বাকীর সাথে নতুন উদ্বৃত্ত যোগ হবে
-                    </span>
+                    <PlusCircle className="w-4 h-4 shrink-0 text-amber-400" />
+                    <div>
+                      <span className="font-bold text-xs block">বকেয়া যোগ (+)</span>
+                    </div>
                   </button>
 
                   <button
                     type="button"
                     onClick={() => setAdjustType('set')}
-                    className={`p-3 rounded-xl border text-left flex flex-col gap-1 transition-all cursor-pointer ${
+                    className={`p-2.5 rounded-xl border text-left flex items-center gap-2 transition-all cursor-pointer ${
                       adjustType === 'set'
                         ? 'bg-amber-500/20 border-amber-500 text-amber-300'
                         : 'bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700'
                     }`}
                   >
-                    <span className="font-bold text-xs flex items-center gap-1">
-                      <Edit className="w-3.5 h-3.5" />
-                      মোট বকেয়া নির্ধারণ করুন (=)
-                    </span>
-                    <span className="text-[10px] text-slate-400">
-                      সরাসরি বকেয়ার মোট অংক সেট করবে
-                    </span>
+                    <Edit className="w-4 h-4 shrink-0 text-amber-400" />
+                    <div>
+                      <span className="font-bold text-xs block">মোট বকেয়া নির্ধারণ (=)</span>
+                    </div>
                   </button>
                 </div>
               </div>
@@ -1414,7 +1471,7 @@ export const DueManagement: React.FC<DueManagementProps> = ({
               {/* Amount Input */}
               <div>
                 <label className="block text-slate-300 font-semibold mb-1">
-                  {adjustType === 'add' ? 'যোগ করার পরিমাণ (টাকা ৳) *' : 'নতুন মোট বকেয়ার পরিমাণ (টাকা ৳) *'}
+                  {adjustType === 'add' ? 'যোগ করার পরিমাণ (টাকা ৳) *' : 'মোট বকেয়ার পরিমাণ (টাকা ৳) *'}
                 </label>
                 <div className="relative">
                   <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-amber-400 font-black text-base">৳</span>
@@ -1425,7 +1482,7 @@ export const DueManagement: React.FC<DueManagementProps> = ({
                     value={adjustAmount}
                     onChange={(e) => setAdjustAmount(e.target.value)}
                     placeholder="0"
-                    className="w-full bg-slate-950 border border-slate-700 text-amber-300 font-black text-lg pl-8 pr-3 py-2.5 rounded-xl focus:outline-none focus:border-amber-400 font-mono"
+                    className="w-full bg-slate-950 border border-slate-700 text-amber-300 font-black text-lg pl-8 pr-3 py-2.5 rounded-xl focus:outline-none focus:border-amber-400 font-mono shadow-inner"
                   />
                 </div>
               </div>
@@ -1438,9 +1495,9 @@ export const DueManagement: React.FC<DueManagementProps> = ({
                 const finalDue = adjustType === 'add' ? target.currentDue + inputVal : inputVal;
 
                 return (
-                  <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-3 flex items-center justify-between text-xs">
-                    <span className="text-amber-200 font-semibold">আপডেটের পর কাস্টমারের নতুন মোট বাকী হবে:</span>
-                    <span className="text-base font-black text-rose-400 font-mono">৳ {finalDue.toLocaleString('bn-BD')}</span>
+                  <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-2.5 flex items-center justify-between text-xs">
+                    <span className="text-amber-200 font-semibold">নতুন মোট বাকী হবে:</span>
+                    <span className="text-sm font-black text-rose-400 font-mono">৳ {finalDue.toLocaleString('bn-BD')}</span>
                   </div>
                 );
               })()}
@@ -1448,14 +1505,14 @@ export const DueManagement: React.FC<DueManagementProps> = ({
               {/* Note / Reason */}
               <div>
                 <label className="block text-slate-300 font-semibold mb-1">
-                  বিবরণ / কারণ (যেমন: পূর্বের খাতার বাকী, হিসাব সমন্বয়)
+                  বিবরণ / কারণ
                 </label>
                 <input
                   type="text"
                   value={adjustNote}
                   onChange={(e) => setAdjustNote(e.target.value)}
-                  placeholder="যেমন: পূর্বের খাতার বাকী হিসাবভুক্ত"
-                  className="w-full bg-slate-950 border border-slate-700 text-slate-200 rounded-xl px-3 py-2 focus:outline-none focus:border-amber-400"
+                  placeholder="নোট বা কারণ..."
+                  className="w-full bg-slate-950 border border-slate-800 text-slate-200 rounded-xl px-3 py-2 focus:outline-none focus:border-amber-400"
                 />
               </div>
 
@@ -1464,15 +1521,15 @@ export const DueManagement: React.FC<DueManagementProps> = ({
                 <button
                   type="button"
                   onClick={() => setShowAdjustDueModal(false)}
-                  className="px-4 py-2 bg-slate-800 text-slate-300 rounded-xl font-semibold hover:bg-slate-700"
+                  className="px-4 py-2 bg-slate-800 text-slate-300 rounded-xl font-semibold hover:bg-slate-700 cursor-pointer"
                 >
                   বাতিল
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded-xl shadow-md transition"
+                  className="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded-xl shadow-md transition cursor-pointer"
                 >
-                  বকেয়া আপডেট ও সংরক্ষণ করুন
+                  সংরক্ষণ করুন
                 </button>
               </div>
 
