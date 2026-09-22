@@ -27,10 +27,13 @@ import {
   Download,
   BarChart3,
   Trash2,
+  Sun,
+  Moon,
 } from 'lucide-react';
 import { UserAccount, UserRole, SystemConfig } from '../types';
 import { NavTab } from './Navigation';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useTheme } from '../contexts/ThemeContext';
 import { toBnDigit } from '../utils/formatters';
 
 interface HeaderProps {
@@ -71,6 +74,7 @@ export const Header: React.FC<HeaderProps> = ({
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [copiedPhone, setCopiedPhone] = useState(false);
   const { language, setLanguage, t } = useLanguage();
+  const { theme, toggleTheme } = useTheme();
 
   const isStaff = currentUserRole === 'super_admin' || currentUserRole === 'admin' || currentUserRole === 'seller';
 
@@ -141,7 +145,7 @@ export const Header: React.FC<HeaderProps> = ({
 
   return (
     <>
-      <header className={`bg-slate-950/95 border-b border-slate-800/80 sticky top-0 backdrop-blur-xl transition-all duration-150 ${isDrawerOpen ? 'z-50' : 'z-30'}`}>
+      <header className={`bg-white/95 dark:bg-slate-950/95 border-b border-slate-200 dark:border-slate-800/80 sticky top-0 backdrop-blur-xl transition-colors duration-200 ${isDrawerOpen ? 'z-50' : 'z-30'}`}>
       <div className="max-w-7xl mx-auto px-3 sm:px-6 py-2 sm:py-2.5">
         <div className="flex items-center justify-between gap-2 sm:gap-4">
           
@@ -153,35 +157,35 @@ export const Header: React.FC<HeaderProps> = ({
             <div className="text-left flex-1 min-w-0 flex flex-col justify-center">
               <div>
                 <div className="flex items-center gap-1.5 flex-wrap">
-                  <h1 className="text-sm sm:text-base md:text-lg font-bold tracking-tight text-white leading-tight">
+                  <h1 className="text-sm sm:text-base md:text-lg font-bold tracking-tight text-slate-900 dark:text-white leading-tight">
                     {t('store_name')}
                   </h1>
-                  <span className="text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded font-extrabold bg-amber-500/15 text-amber-300 border border-amber-500/30 whitespace-nowrap">
+                  <span className="text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded font-extrabold bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/30 whitespace-nowrap">
                     {t('wholesale')}
                   </span>
                 </div>
               </div>
 
               {/* Phone & Address */}
-              <div className="text-[10px] sm:text-xs text-slate-300 flex flex-wrap items-center gap-1 sm:gap-2.5 mt-0.5">
+              <div className="text-[10px] sm:text-xs text-slate-600 dark:text-slate-300 flex flex-wrap items-center gap-1 sm:gap-2.5 mt-0.5">
                 <button
                   type="button"
                   onClick={handleCopyPhone}
                   onTouchStart={handleCopyPhone}
-                  className="flex items-center gap-1 font-semibold text-amber-400 hover:text-amber-300 active:text-amber-200 transition-colors cursor-pointer select-none text-[10px] sm:text-xs w-fit bg-slate-900/90 hover:bg-slate-800 border border-slate-800 px-1.5 py-0.5 rounded-md"
+                  className="flex items-center gap-1 font-semibold text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 transition-colors cursor-pointer select-none text-[10px] sm:text-xs w-fit bg-slate-100 dark:bg-slate-900/90 hover:bg-slate-200 dark:hover:bg-slate-800 border border-slate-300 dark:border-slate-800 px-1.5 py-0.5 rounded-md"
                   title="ফোন নম্বর কপি করতে ক্লিক বা স্পর্শ করুন"
                 >
-                  <PhoneCall className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-amber-400 shrink-0" />
+                  <PhoneCall className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-amber-600 dark:text-amber-400 shrink-0" />
                   <span className="font-mono tracking-wide">{t('phone')}</span>
                   {copiedPhone && (
-                    <span className="ml-1 text-[9px] font-bold text-emerald-400 animate-fadeIn flex items-center gap-0.5">
+                    <span className="ml-1 text-[9px] font-bold text-emerald-600 dark:text-emerald-400 animate-fadeIn flex items-center gap-0.5">
                       <Check className="w-2.5 h-2.5" /> কপি!
                     </span>
                   )}
                 </button>
 
-                <span className="hidden sm:inline text-slate-700">•</span>
-                <span className="hidden sm:flex items-center gap-1 text-slate-400 leading-none">
+                <span className="hidden sm:inline text-slate-300 dark:text-slate-700">•</span>
+                <span className="hidden sm:flex items-center gap-1 text-slate-500 dark:text-slate-400 leading-none">
                   <MapPin className="w-3 h-3 text-slate-400 shrink-0" />
                   <span>{t('address')}</span>
                 </span>
@@ -189,21 +193,35 @@ export const Header: React.FC<HeaderProps> = ({
             </div>
           </div>
 
-          {/* Right Side Actions: Notification Bell, Desktop User, Mobile Menu Button & Date */}
+          {/* Right Side Actions: Theme Toggle, Date, Desktop User, Mobile Menu Button */}
           <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+            {/* Theme Toggle Button (Light/Dark Mode) */}
+            <button
+              type="button"
+              onClick={toggleTheme}
+              className="p-1.5 sm:p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-900/90 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-800 transition-colors cursor-pointer"
+              title={theme === 'dark' ? 'লাইট মোড অন করুন' : 'ডার্ক মোড অন করুন'}
+            >
+              {theme === 'dark' ? (
+                <Sun className="w-4 h-4 text-amber-400" />
+              ) : (
+                <Moon className="w-4 h-4 text-slate-700" />
+              )}
+            </button>
+
             {/* Today's Date (Desktop / Tablet) */}
-            <div className="hidden lg:block text-xs text-slate-400 font-medium px-2 py-1 bg-slate-900/60 border border-slate-800/80 rounded-lg">
+            <div className="hidden lg:block text-xs text-slate-600 dark:text-slate-400 font-medium px-2 py-1 bg-slate-100 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800/80 rounded-lg">
               {new Date().toLocaleDateString('bn-BD', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
             </div>
 
             {/* Desktop User Info / Login */}
             {currentUser ? (
-              <div className="hidden md:flex items-center gap-2 bg-slate-900/90 border border-slate-800 px-2 py-1 rounded-xl">
-                <div className="w-6 h-6 rounded-lg bg-amber-500/20 text-amber-300 font-bold flex items-center justify-center text-xs border border-amber-500/30">
+              <div className="hidden md:flex items-center gap-2 bg-slate-100 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 px-2 py-1 rounded-xl">
+                <div className="w-6 h-6 rounded-lg bg-amber-500/20 text-amber-700 dark:text-amber-300 font-bold flex items-center justify-center text-xs border border-amber-500/30">
                   {currentUser.name.charAt(0)}
                 </div>
                 <div className="text-left leading-tight">
-                  <div className="text-[11px] font-bold text-slate-100 flex items-center gap-1.5">
+                  <div className="text-[11px] font-bold text-slate-800 dark:text-slate-100 flex items-center gap-1.5">
                     <span>{currentUser.name}</span>
                     {getRoleBadge(currentUser.role)}
                   </div>
@@ -226,11 +244,11 @@ export const Header: React.FC<HeaderProps> = ({
               className={`md:hidden flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl font-bold text-xs transition-all duration-150 cursor-pointer relative border ${
                 isDrawerTabActive || isDrawerOpen
                   ? 'bg-amber-500 text-slate-950 border-amber-500 shadow-md shadow-amber-500/20'
-                  : 'bg-slate-900 hover:bg-slate-850 text-slate-200 border-slate-800 hover:border-slate-700'
+                  : 'bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-850 text-slate-800 dark:text-slate-200 border-slate-300 dark:border-slate-800'
               }`}
               title={t('menu_desc')}
             >
-              <Menu className={`w-4 h-4 ${isDrawerTabActive || isDrawerOpen ? 'text-slate-950' : 'text-amber-400'}`} />
+              <Menu className={`w-4 h-4 ${isDrawerTabActive || isDrawerOpen ? 'text-slate-950' : 'text-amber-600 dark:text-amber-400'}`} />
               <span>{t('menu')}</span>
               
               {totalDrawerBadges > 0 && (
@@ -255,18 +273,18 @@ export const Header: React.FC<HeaderProps> = ({
       >
           <div 
             onClick={(e) => e.stopPropagation()}
-            className="bg-slate-900 border-l border-slate-800 w-full max-w-[285px] h-full flex flex-col shadow-2xl animate-slideLeft"
+            className="bg-white dark:bg-slate-900 border-l border-slate-200 dark:border-slate-800 w-full max-w-[285px] h-full flex flex-col shadow-2xl animate-slideLeft transition-colors duration-200"
           >
             
             {/* Drawer Header */}
-            <div className="px-3.5 py-3 border-b border-slate-800 flex items-center justify-between bg-slate-950">
+            <div className="px-3.5 py-3 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-950">
               <div className="flex items-center gap-2">
-                <Menu className="w-4 h-4 text-amber-400" />
-                <h3 className="font-bold text-white text-xs">{t('menu')}</h3>
+                <Menu className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+                <h3 className="font-bold text-slate-900 dark:text-white text-xs">{t('menu')}</h3>
               </div>
               <button
                 onClick={() => setIsDrawerOpen(false)}
-                className="w-7 h-7 rounded-full bg-slate-800 hover:bg-slate-700 flex items-center justify-center text-slate-300 transition-colors cursor-pointer"
+                className="w-7 h-7 rounded-full bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 flex items-center justify-center text-slate-700 dark:text-slate-300 transition-colors cursor-pointer"
               >
                 <X className="w-3.5 h-3.5" />
               </button>
@@ -276,33 +294,33 @@ export const Header: React.FC<HeaderProps> = ({
             <div className="p-3 overflow-y-auto space-y-1.5 flex-1 no-scrollbar">
               {/* User Profile Card in Drawer Menu */}
               {currentUser ? (
-                <div className="p-2.5 bg-slate-950 border border-slate-800 rounded-xl mb-2 flex items-center gap-2.5">
-                  <div className="w-9 h-9 rounded-lg bg-amber-500/20 text-amber-300 font-bold flex items-center justify-center text-sm border border-amber-500/30 shrink-0">
+                <div className="p-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl mb-2 flex items-center gap-2.5">
+                  <div className="w-9 h-9 rounded-lg bg-amber-500/20 text-amber-700 dark:text-amber-300 font-bold flex items-center justify-center text-sm border border-amber-500/30 shrink-0">
                     {currentUser.name.charAt(0)}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="text-xs font-bold text-white truncate">
+                    <div className="text-xs font-bold text-slate-900 dark:text-white truncate">
                       {currentUser.name}
                     </div>
                     <div className="mt-0.5">
                       {getRoleBadge(currentUser.role)}
                     </div>
-                    <div className="text-[9px] text-slate-400 font-mono mt-0.5">
+                    <div className="text-[9px] text-slate-500 dark:text-slate-400 font-mono mt-0.5">
                       {t('id_label')}: {currentUser.loginId}
                     </div>
                   </div>
                 </div>
               ) : (
-                <div className="p-2.5 bg-slate-950 border border-slate-800 rounded-xl mb-2 flex items-center gap-2.5">
-                  <div className="w-9 h-9 rounded-lg bg-amber-500/20 text-amber-300 font-bold flex items-center justify-center text-sm border border-amber-500/30 shrink-0">
+                <div className="p-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl mb-2 flex items-center gap-2.5">
+                  <div className="w-9 h-9 rounded-lg bg-amber-500/20 text-amber-700 dark:text-amber-300 font-bold flex items-center justify-center text-sm border border-amber-500/30 shrink-0">
                     আ
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="text-xs font-bold text-white truncate">
+                    <div className="text-xs font-bold text-slate-900 dark:text-white truncate">
                       মো আলাউদ্দিন ইসলাম
                     </div>
                     <div className="mt-0.5">
-                      <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30 inline-flex items-center gap-1">
+                      <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/30 inline-flex items-center gap-1">
                         <Shield className="w-2.5 h-2.5" />
                         মালিক / এডমিন
                       </span>
@@ -319,31 +337,55 @@ export const Header: React.FC<HeaderProps> = ({
                     setIsDrawerOpen(false);
                     onInstallPWA();
                   }}
-                  className="w-full p-2.5 bg-gradient-to-r from-amber-500/20 to-amber-600/10 border border-amber-500/40 text-amber-300 rounded-xl font-bold text-xs flex items-center justify-between transition cursor-pointer mb-2"
+                  className="w-full p-2.5 bg-gradient-to-r from-amber-500/20 to-amber-600/10 border border-amber-500/40 text-amber-700 dark:text-amber-300 rounded-xl font-bold text-xs flex items-center justify-between transition cursor-pointer mb-2"
                 >
                   <div className="flex items-center gap-2">
-                    <Download className="w-4 h-4 text-amber-400" />
+                    <Download className="w-4 h-4 text-amber-600 dark:text-amber-400" />
                     <span>হোম স্ক্রিনে অ্যাপ ইনস্টল করুন</span>
                   </div>
                   <span className="text-[10px] bg-amber-500 text-slate-950 px-1.5 py-0.5 rounded font-black">PWA</span>
                 </button>
               )}
 
-              <div className="p-2 bg-slate-950 border border-slate-800 rounded-xl mb-2 flex items-center justify-between">
-                <div className="flex items-center gap-2.5 text-xs text-slate-300 font-bold">
-                  <Languages className="w-4 h-4 text-amber-400" />
+              {/* Theme Switcher in Drawer */}
+              <div className="p-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl mb-2 flex items-center justify-between">
+                <div className="flex items-center gap-2.5 text-xs text-slate-700 dark:text-slate-300 font-bold">
+                  {theme === 'dark' ? <Moon className="w-4 h-4 text-amber-400" /> : <Sun className="w-4 h-4 text-amber-600" />}
+                  <span>থিম মোড</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={toggleTheme}
+                  className="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-slate-200 dark:bg-slate-800 text-slate-800 dark:text-slate-200 flex items-center gap-1.5 cursor-pointer hover:bg-slate-300 dark:hover:bg-slate-700"
+                >
+                  {theme === 'dark' ? (
+                    <>
+                      <Sun className="w-3 h-3 text-amber-400" /> লাইট
+                    </>
+                  ) : (
+                    <>
+                      <Moon className="w-3 h-3 text-slate-700" /> ডার্ক
+                    </>
+                  )}
+                </button>
+              </div>
+
+              {/* Language Switcher in Drawer */}
+              <div className="p-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl mb-2 flex items-center justify-between">
+                <div className="flex items-center gap-2.5 text-xs text-slate-700 dark:text-slate-300 font-bold">
+                  <Languages className="w-4 h-4 text-amber-600 dark:text-amber-400" />
                   <span>{t('language')}</span>
                 </div>
-                <div className="flex bg-slate-800 rounded-lg p-0.5">
+                <div className="flex bg-slate-200 dark:bg-slate-800 rounded-lg p-0.5">
                   <button
                     onClick={() => setLanguage('bn')}
-                    className={`px-3 py-1 rounded-md text-[10px] font-bold ${language === 'bn' ? 'bg-amber-500 text-slate-950' : 'text-slate-400'}`}
+                    className={`px-3 py-1 rounded-md text-[10px] font-bold cursor-pointer ${language === 'bn' ? 'bg-amber-500 text-slate-950' : 'text-slate-600 dark:text-slate-400'}`}
                   >
                     বাংলা
                   </button>
                   <button
                     onClick={() => setLanguage('en')}
-                    className={`px-3 py-1 rounded-md text-[10px] font-bold ${language === 'en' ? 'bg-amber-500 text-slate-950' : 'text-slate-400'}`}
+                    className={`px-3 py-1 rounded-md text-[10px] font-bold cursor-pointer ${language === 'en' ? 'bg-amber-500 text-slate-950' : 'text-slate-600 dark:text-slate-400'}`}
                   >
                     English
                   </button>
@@ -364,11 +406,11 @@ export const Header: React.FC<HeaderProps> = ({
                     className={`w-full flex items-center justify-between p-2 rounded-xl font-semibold text-xs transition-all cursor-pointer ${
                       isActive
                         ? 'bg-amber-500 text-slate-950 font-bold shadow-md shadow-amber-500/20'
-                        : 'bg-slate-950/60 hover:bg-slate-800 text-slate-200 border border-slate-800/80'
+                        : 'bg-slate-50 hover:bg-slate-100 dark:bg-slate-950/60 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-800/80'
                     }`}
                   >
                     <div className="flex items-center gap-2.5">
-                      <div className={`p-1.5 rounded-lg ${isActive ? 'bg-slate-950/20 text-slate-950' : 'bg-slate-800 text-amber-400'}`}>
+                      <div className={`p-1.5 rounded-lg ${isActive ? 'bg-slate-950/20 text-slate-950' : 'bg-slate-200 dark:bg-slate-800 text-amber-600 dark:text-amber-400'}`}>
                         <Icon className="w-3.5 h-3.5" />
                       </div>
                       <span className="text-left text-xs">{tab.label}</span>
@@ -380,7 +422,7 @@ export const Header: React.FC<HeaderProps> = ({
                           {tab.badgeCount}
                         </span>
                       )}
-                      <ChevronRight className={`w-3.5 h-3.5 ${isActive ? 'text-slate-950' : 'text-slate-500'}`} />
+                      <ChevronRight className={`w-3.5 h-3.5 ${isActive ? 'text-slate-950' : 'text-slate-400 dark:text-slate-500'}`} />
                     </div>
                   </button>
                 );
@@ -393,15 +435,15 @@ export const Header: React.FC<HeaderProps> = ({
                   target="_blank"
                   rel="noreferrer"
                   onClick={() => setIsDrawerOpen(false)}
-                  className="w-full flex items-center justify-between p-2 rounded-xl font-semibold text-xs transition-all cursor-pointer bg-slate-950/60 hover:bg-slate-800 text-slate-200 border border-slate-800/80 mt-1"
+                  className="w-full flex items-center justify-between p-2 rounded-xl font-semibold text-xs transition-all cursor-pointer bg-slate-50 hover:bg-slate-100 dark:bg-slate-950/60 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-800/80 mt-1"
                 >
                   <div className="flex items-center gap-2.5">
-                    <div className="p-1.5 rounded-lg bg-slate-800 text-emerald-400">
+                    <div className="p-1.5 rounded-lg bg-slate-200 dark:bg-slate-800 text-emerald-600 dark:text-emerald-400">
                       <Smartphone className="w-3.5 h-3.5" />
                     </div>
                     <span className="text-left text-xs font-medium">Android Apk Download</span>
                   </div>
-                  <Download className="w-3.5 h-3.5 text-emerald-400" />
+                  <Download className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
                 </a>
               ) : (
                 <button
@@ -409,35 +451,35 @@ export const Header: React.FC<HeaderProps> = ({
                   onClick={() => {
                     alert('কোনো ফাইল নেই');
                   }}
-                  className="w-full flex items-center justify-between p-2 rounded-xl font-semibold text-xs transition-all cursor-pointer bg-slate-950/60 hover:bg-slate-800/60 text-slate-400 border border-slate-800/80 mt-1"
+                  className="w-full flex items-center justify-between p-2 rounded-xl font-semibold text-xs transition-all cursor-pointer bg-slate-50 hover:bg-slate-100 dark:bg-slate-950/60 dark:hover:bg-slate-800/60 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-800/80 mt-1"
                 >
                   <div className="flex items-center gap-2.5">
-                    <div className="p-1.5 rounded-lg bg-slate-800 text-slate-500">
+                    <div className="p-1.5 rounded-lg bg-slate-200 dark:bg-slate-800 text-slate-500">
                       <Smartphone className="w-3.5 h-3.5" />
                     </div>
                     <span className="text-left text-xs">Android Apk Download</span>
                   </div>
-                  <span className="text-[10px] text-amber-400/90 font-medium px-2 py-0.5 bg-amber-500/10 border border-amber-500/20 rounded">
+                  <span className="text-[10px] text-amber-700 dark:text-amber-400/90 font-medium px-2 py-0.5 bg-amber-500/10 border border-amber-500/20 rounded">
                     কোনো ফাইল নেই
                   </span>
                 </button>
               )}
 
               {currentUser && onLogout ? (
-                <div className="pt-3 mt-3 border-t border-slate-800">
+                <div className="pt-3 mt-3 border-t border-slate-200 dark:border-slate-800">
                   <button
                     onClick={() => {
                       setIsDrawerOpen(false);
                       onLogout();
                     }}
-                    className="w-full py-2 px-3 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer"
+                    className="w-full py-2 px-3 bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/30 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer"
                   >
                     <LogOut className="w-3.5 h-3.5" />
                     <span>{t('logout')}</span>
                   </button>
                 </div>
               ) : !currentUser && onOpenLogin ? (
-                <div className="pt-3 mt-3 border-t border-slate-800">
+                <div className="pt-3 mt-3 border-t border-slate-200 dark:border-slate-800">
                   <button
                     onClick={() => {
                       setIsDrawerOpen(false);
@@ -453,7 +495,7 @@ export const Header: React.FC<HeaderProps> = ({
             </div>
 
             {/* Drawer Footer */}
-            <div className="p-4 bg-slate-950 border-t border-slate-800 text-center text-[11px] text-slate-500">
+            <div className="p-4 bg-slate-50 dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800 text-center text-[11px] text-slate-500">
               {t('app_version')}
             </div>
 

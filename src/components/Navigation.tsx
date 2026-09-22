@@ -54,7 +54,7 @@ export const Navigation: React.FC<NavigationProps> = ({
   }
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-40 bg-slate-950/95 backdrop-blur-lg border-t border-slate-800/80 shadow-[0_-8px_25px_rgba(0,0,0,0.55)] md:hidden transition-all duration-200">
+    <nav className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-slate-950/95 backdrop-blur-lg border-t border-slate-200 dark:border-slate-800/80 shadow-[0_-8px_25px_rgba(0,0,0,0.1)] dark:shadow-[0_-8px_25px_rgba(0,0,0,0.55)] md:hidden transition-all duration-200">
       <div className="max-w-lg mx-auto px-2 pt-1.5 pb-2">
         <div className="flex items-center justify-around relative">
           {visibleTabs.map((tab) => {
@@ -82,7 +82,7 @@ export const Navigation: React.FC<NavigationProps> = ({
                   </div>
                   <span
                     className={`text-[10px] font-extrabold mt-1 tracking-tight transition-colors ${
-                      isActive ? 'text-amber-400' : 'text-slate-300'
+                      isActive ? 'text-amber-700 dark:text-amber-400' : 'text-slate-700 dark:text-slate-300'
                     }`}
                   >
                     {tab.label}
@@ -97,12 +97,12 @@ export const Navigation: React.FC<NavigationProps> = ({
                 type="button"
                 onClick={() => onSelectTab(tab.id)}
                 className={`flex-1 flex flex-col items-center justify-center py-1 px-1 rounded-xl transition-all duration-150 cursor-pointer relative group focus:outline-none ${
-                  isActive ? 'text-amber-400' : 'text-slate-400 hover:text-slate-200'
+                  isActive ? 'text-amber-700 dark:text-amber-400' : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200'
                 }`}
               >
                 {/* Active Indicator Top Pill */}
                 {isActive && (
-                  <span className="absolute top-0 w-6 h-0.5 rounded-full bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.8)]" />
+                  <span className="absolute top-0 w-6 h-0.5 rounded-full bg-amber-500 dark:bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.8)]" />
                 )}
 
                 <div className="relative mt-0.5">
@@ -126,7 +126,7 @@ export const Navigation: React.FC<NavigationProps> = ({
 
                 <span
                   className={`text-[10px] tracking-tight mt-1 truncate max-w-[65px] ${
-                    isActive ? 'font-bold text-amber-400' : 'font-medium text-slate-400'
+                    isActive ? 'font-bold text-amber-700 dark:text-amber-400' : 'font-medium text-slate-600 dark:text-slate-400'
                   }`}
                 >
                   {tab.label}

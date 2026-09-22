@@ -255,7 +255,7 @@ export const SalesHistory: React.FC<SalesHistoryProps> = ({
           className={`p-1.5 rounded-xl border transition-all cursor-pointer flex items-center justify-center ${
             isOpen
               ? 'bg-amber-500 text-slate-950 border-amber-400 shadow-md ring-2 ring-amber-500/40'
-              : 'bg-slate-900/90 hover:bg-slate-800 text-slate-300 hover:text-amber-300 border-slate-700/80 shadow-sm'
+              : 'bg-slate-100 dark:bg-slate-900/90 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 hover:text-amber-600 dark:hover:text-amber-300 border-slate-300 dark:border-slate-700/80 shadow-xs'
           }`}
           title="৩-ডট অপশন মেনু"
         >
@@ -264,13 +264,13 @@ export const SalesHistory: React.FC<SalesHistoryProps> = ({
 
         {isOpen && (
           <div
-            className="absolute right-0 mt-1.5 w-56 bg-slate-900 border border-slate-700/90 rounded-2xl shadow-2xl z-50 py-1.5 divide-y divide-slate-800 text-xs animate-fadeIn"
+            className="absolute right-0 mt-1.5 w-56 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700/90 rounded-2xl shadow-2xl z-50 py-1.5 divide-y divide-slate-100 dark:divide-slate-800 text-xs animate-fadeIn"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header info */}
-            <div className="px-3.5 py-1.5 text-[11px] font-semibold text-slate-400 font-mono flex items-center justify-between">
+            <div className="px-3.5 py-1.5 text-[11px] font-semibold text-slate-500 dark:text-slate-400 font-mono flex items-center justify-between">
               <span>মেমো #{ord.memoNo}</span>
-              <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
+              <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-50 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/40">
                 ডেলিভার্ড
               </span>
             </div>
@@ -283,12 +283,12 @@ export const SalesHistory: React.FC<SalesHistoryProps> = ({
                   onSelectOrderForInvoice(ord);
                   setOpenMenuId(null);
                 }}
-                className="w-full text-left px-3.5 py-2 text-slate-200 hover:bg-slate-800 hover:text-amber-300 flex items-center gap-2.5 transition-colors cursor-pointer"
+                className="w-full text-left px-3.5 py-2 text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-amber-700 dark:hover:text-amber-300 flex items-center gap-2.5 transition-colors cursor-pointer"
               >
-                <Download className="w-4 h-4 text-amber-400 shrink-0" />
+                <Download className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
                 <div>
-                  <span className="font-bold block text-slate-100">মেমো ডাউনলোড</span>
-                  <span className="text-[10px] text-slate-400 block">PDF ও ছবি সেভ / প্রিন্ট</span>
+                  <span className="font-bold block text-slate-900 dark:text-slate-100">মেমো ডাউনলোড</span>
+                  <span className="text-[10px] text-slate-500 dark:text-slate-400 block">PDF ও ছবি সেভ / প্রিন্ট</span>
                 </div>
               </button>
 
@@ -300,12 +300,12 @@ export const SalesHistory: React.FC<SalesHistoryProps> = ({
                     setEditingOrder(ord);
                     setOpenMenuId(null);
                   }}
-                  className="w-full text-left px-3.5 py-2 text-amber-300 hover:bg-amber-950/50 flex items-center gap-2.5 transition-colors cursor-pointer"
+                  className="w-full text-left px-3.5 py-2 text-amber-800 dark:text-amber-300 hover:bg-amber-50 dark:hover:bg-amber-950/50 flex items-center gap-2.5 transition-colors cursor-pointer"
                 >
-                  <Edit3 className="w-4 h-4 text-amber-400 shrink-0" />
+                  <Edit3 className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
                   <div>
-                    <span className="font-bold block text-slate-100">মেমো এডিট করুন</span>
-                    <span className="text-[10px] text-amber-400/80 block">মাল এড, বাদ ও দর পরিবর্তন (এডমিন)</span>
+                    <span className="font-bold block text-slate-900 dark:text-slate-100">মেমো এডিট করুন</span>
+                    <span className="text-[10px] text-amber-700/80 dark:text-amber-400/80 block">মাল এড, বাদ ও দর পরিবর্তন (এডমিন)</span>
                   </div>
                 </button>
               )}
@@ -320,12 +320,12 @@ export const SalesHistory: React.FC<SalesHistoryProps> = ({
                     setOrderToDelete(ord);
                     setOpenMenuId(null);
                   }}
-                  className="w-full text-left px-3.5 py-2 text-rose-400 hover:bg-rose-950/60 hover:text-rose-300 flex items-center gap-2.5 transition-colors cursor-pointer"
+                  className="w-full text-left px-3.5 py-2 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/60 hover:text-rose-700 dark:hover:text-rose-300 flex items-center gap-2.5 transition-colors cursor-pointer"
                 >
-                  <Trash2 className="w-4 h-4 text-rose-400 shrink-0" />
+                  <Trash2 className="w-4 h-4 text-rose-500 dark:text-rose-400 shrink-0" />
                   <div>
                     <span className="font-bold block">মেমো / ইনভয়েস ডিলেট</span>
-                    <span className="text-[10px] text-rose-300/70 block">এডমিন কনফার্মেশন সহ</span>
+                    <span className="text-[10px] text-rose-600/70 dark:text-rose-300/70 block">এডমিন কনফার্মেশন সহ</span>
                   </div>
                 </button>
               </div>
@@ -342,45 +342,45 @@ export const SalesHistory: React.FC<SalesHistoryProps> = ({
       {/* Minimal Header */}
       <div className="flex items-center justify-between gap-3 pt-1 pb-1">
         <div className="flex items-center gap-3 flex-1 min-w-0">
-          <span className="text-base sm:text-lg md:text-xl font-black text-amber-400 tracking-wide whitespace-nowrap flex items-center gap-2">
-            <History className="w-5 h-5 text-amber-400" />
+          <span className="text-base sm:text-lg md:text-xl font-black text-amber-700 dark:text-amber-400 tracking-wide whitespace-nowrap flex items-center gap-2">
+            <History className="w-5 h-5 text-amber-600 dark:text-amber-400" />
             {isCustomer ? 'আপনার অর্ডার হিস্টোরি' : 'বিক্রয় ইতিহাস'}
           </span>
-          <div className="h-0.5 bg-gradient-to-r from-amber-500/50 via-slate-800 to-transparent flex-1" />
+          <div className="h-0.5 bg-gradient-to-r from-amber-500/50 via-slate-300 dark:via-slate-800 to-transparent flex-1" />
         </div>
 
-        <div className="flex items-center gap-3 bg-slate-900 px-3 py-1.5 rounded-xl border border-slate-800 text-xs shrink-0">
+        <div className="flex items-center gap-3 bg-white dark:bg-slate-900 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 text-xs shrink-0 shadow-xs">
           <div>
-            <span className="text-slate-400 text-[11px] mr-1">{isCustomer ? 'মোট অর্ডার ক্রয়:' : 'মোট বিক্রি:'}</span>
-            <span className="font-bold text-amber-300">{formatTaka(totalFilteredSales)}</span>
+            <span className="text-slate-500 dark:text-slate-400 text-[11px] mr-1">{isCustomer ? 'মোট অর্ডার ক্রয়:' : 'মোট বিক্রি:'}</span>
+            <span className="font-bold text-amber-700 dark:text-amber-300">{formatTaka(totalFilteredSales)}</span>
           </div>
-          <div className="h-3 w-px bg-slate-700" />
+          <div className="h-3 w-px bg-slate-200 dark:bg-slate-700" />
           <div>
-            <span className="text-slate-400 text-[11px] mr-1">জোড়া:</span>
-            <span className="font-bold text-slate-200">{toBnDigit(totalFilteredPairs)}</span>
+            <span className="text-slate-500 dark:text-slate-400 text-[11px] mr-1">জোড়া:</span>
+            <span className="font-bold text-slate-800 dark:text-slate-200">{toBnDigit(totalFilteredPairs)}</span>
           </div>
         </div>
       </div>
 
       {/* Clean & Minimal Filters Bar */}
-      <div className={`${activeTheme.cardClass} p-3 sm:p-3.5 rounded-2xl space-y-2.5`}>
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm p-3 sm:p-3.5 rounded-2xl space-y-2.5">
         {/* Top Controls: Search, Compact Date Dropdown, Payment Status, View Switcher */}
         <div className="flex flex-col sm:flex-row gap-2.5 items-stretch sm:items-center justify-between">
           {/* Search input */}
-          <div className="flex items-center gap-2 bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 flex-1 max-w-md focus-within:border-amber-500/60 transition-colors">
+          <div className="flex items-center gap-2 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl px-3 py-2 flex-1 max-w-md focus-within:border-amber-500 transition-colors">
             <Search className="w-4 h-4 text-slate-400 shrink-0" />
             <input
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="মেমো বা কাস্টমার খুঁজুন..."
-              className="bg-transparent text-xs text-slate-100 placeholder-slate-500 w-full focus:outline-none"
+              className="bg-transparent text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 w-full focus:outline-none"
             />
             {searchTerm && (
               <button
                 type="button"
                 onClick={() => setSearchTerm('')}
-                className="text-slate-500 hover:text-slate-300 cursor-pointer"
+                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 cursor-pointer"
               >
                 <X className="w-3.5 h-3.5" />
               </button>
@@ -399,13 +399,13 @@ export const SalesHistory: React.FC<SalesHistoryProps> = ({
                   setIsStatusDropdownOpen(false);
                   setOpenMenuId(null);
                 }}
-                className={`bg-slate-950 border text-xs rounded-xl px-3 py-2 font-medium flex items-center gap-1.5 transition-all cursor-pointer ${
+                className={`border text-xs rounded-xl px-3 py-2 font-medium flex items-center gap-1.5 transition-all cursor-pointer ${
                   datePreset !== 'all' || startDate || endDate
-                    ? 'border-amber-500/80 text-amber-300 bg-amber-500/10 shadow-sm shadow-amber-500/10'
-                    : 'border-slate-800 hover:border-slate-700 text-slate-200'
+                    ? 'border-amber-500 text-amber-800 dark:text-amber-300 bg-amber-50 dark:bg-amber-500/10 shadow-xs'
+                    : 'bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 text-slate-700 dark:text-slate-200'
                 }`}
               >
-                <Calendar className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                <Calendar className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
                 <span className="truncate max-w-[85px] sm:max-w-none">
                   {datePreset === 'all'
                     ? 'সব সময়'
@@ -421,7 +421,7 @@ export const SalesHistory: React.FC<SalesHistoryProps> = ({
                 </span>
                 <ChevronDown
                   className={`w-3.5 h-3.5 text-slate-400 shrink-0 transition-transform duration-200 ${
-                    isDateDropdownOpen ? 'rotate-180 text-amber-400' : ''
+                    isDateDropdownOpen ? 'rotate-180 text-amber-500 dark:text-amber-400' : ''
                   }`}
                 />
               </button>
@@ -430,9 +430,9 @@ export const SalesHistory: React.FC<SalesHistoryProps> = ({
               {isDateDropdownOpen && (
                 <div
                   onClick={(e) => e.stopPropagation()}
-                  className="absolute left-0 sm:left-auto sm:right-0 top-full mt-1.5 w-48 bg-slate-900 border border-slate-700/90 rounded-2xl shadow-2xl py-1.5 z-50 animate-in fade-in zoom-in-95 duration-150"
+                  className="absolute left-0 sm:left-auto sm:right-0 top-full mt-1.5 w-48 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700/90 rounded-2xl shadow-2xl py-1.5 z-50 animate-in fade-in zoom-in-95 duration-150"
                 >
-                  <div className="px-3 py-1.5 text-[10px] font-bold tracking-wider text-slate-400 border-b border-slate-800 flex items-center justify-between">
+                  <div className="px-3 py-1.5 text-[10px] font-bold tracking-wider text-slate-500 dark:text-slate-400 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
                     <span>তারিখ ফিল্টার</span>
                     {datePreset !== 'all' && (
                       <button
@@ -441,7 +441,7 @@ export const SalesHistory: React.FC<SalesHistoryProps> = ({
                           handleClearDateFilter();
                           setIsDateDropdownOpen(false);
                         }}
-                        className="text-rose-400 hover:text-rose-300 cursor-pointer text-[10px]"
+                        className="text-rose-600 dark:text-rose-400 hover:text-rose-700 dark:hover:text-rose-300 cursor-pointer text-[10px]"
                       >
                         রিসেট
                       </button>
@@ -466,12 +466,12 @@ export const SalesHistory: React.FC<SalesHistoryProps> = ({
                         }}
                         className={`w-full text-left px-3 py-2 text-xs flex items-center justify-between transition-colors cursor-pointer ${
                           isSelected
-                            ? 'bg-amber-500/15 text-amber-300 font-bold border-l-2 border-amber-500'
-                            : 'text-slate-300 hover:bg-slate-800/80 hover:text-white'
+                            ? 'bg-amber-50 dark:bg-amber-500/15 text-amber-800 dark:text-amber-300 font-bold border-l-2 border-amber-500'
+                            : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/80 hover:text-slate-900 dark:hover:text-white'
                         }`}
                       >
                         <span>{preset.label}</span>
-                        {isSelected && <Check className="w-3.5 h-3.5 text-amber-400 shrink-0" />}
+                        {isSelected && <Check className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0" />}
                       </button>
                     );
                   })}
@@ -489,19 +489,19 @@ export const SalesHistory: React.FC<SalesHistoryProps> = ({
                   setIsDateDropdownOpen(false);
                   setOpenMenuId(null);
                 }}
-                className={`bg-slate-950 border text-xs rounded-xl px-3 py-2 font-medium flex items-center gap-1.5 transition-all cursor-pointer ${
+                className={`border text-xs rounded-xl px-3 py-2 font-medium flex items-center gap-1.5 transition-all cursor-pointer ${
                   statusFilter !== 'সব'
-                    ? 'border-amber-500/80 text-amber-300 bg-amber-500/10 shadow-sm shadow-amber-500/10'
-                    : 'border-slate-800 hover:border-slate-700 text-slate-200'
+                    ? 'border-amber-500 text-amber-800 dark:text-amber-300 bg-amber-50 dark:bg-amber-500/10 shadow-xs'
+                    : 'bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 text-slate-700 dark:text-slate-200'
                 }`}
               >
-                <Filter className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                <Filter className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
                 <span className="truncate max-w-[85px] sm:max-w-none">
                   {statusFilter === 'সব' ? 'সব অবস্থা' : statusFilter}
                 </span>
                 <ChevronDown
                   className={`w-3.5 h-3.5 text-slate-400 shrink-0 transition-transform duration-200 ${
-                    isStatusDropdownOpen ? 'rotate-180 text-amber-400' : ''
+                    isStatusDropdownOpen ? 'rotate-180 text-amber-500 dark:text-amber-400' : ''
                   }`}
                 />
               </button>
@@ -510,9 +510,9 @@ export const SalesHistory: React.FC<SalesHistoryProps> = ({
               {isStatusDropdownOpen && (
                 <div
                   onClick={(e) => e.stopPropagation()}
-                  className="absolute right-0 top-full mt-1.5 w-44 bg-slate-900 border border-slate-700/90 rounded-2xl shadow-2xl py-1.5 z-50 animate-in fade-in zoom-in-95 duration-150"
+                  className="absolute right-0 top-full mt-1.5 w-44 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700/90 rounded-2xl shadow-2xl py-1.5 z-50 animate-in fade-in zoom-in-95 duration-150"
                 >
-                  <div className="px-3 py-1.5 text-[10px] font-bold tracking-wider text-slate-400 border-b border-slate-800">
+                  <div className="px-3 py-1.5 text-[10px] font-bold tracking-wider text-slate-500 dark:text-slate-400 border-b border-slate-100 dark:border-slate-800">
                     পেমেন্ট অবস্থা
                   </div>
                   {[
@@ -532,12 +532,12 @@ export const SalesHistory: React.FC<SalesHistoryProps> = ({
                         }}
                         className={`w-full text-left px-3 py-2 text-xs flex items-center justify-between transition-colors cursor-pointer ${
                           isSelected
-                            ? 'bg-amber-500/15 text-amber-300 font-bold border-l-2 border-amber-500'
-                            : 'text-slate-300 hover:bg-slate-800/80 hover:text-white'
+                            ? 'bg-amber-50 dark:bg-amber-500/15 text-amber-800 dark:text-amber-300 font-bold border-l-2 border-amber-500'
+                            : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/80 hover:text-slate-900 dark:hover:text-white'
                         }`}
                       >
                         <span>{opt.label}</span>
-                        {isSelected && <Check className="w-3.5 h-3.5 text-amber-400 shrink-0" />}
+                        {isSelected && <Check className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0" />}
                       </button>
                     );
                   })}
@@ -546,14 +546,14 @@ export const SalesHistory: React.FC<SalesHistoryProps> = ({
             </div>
 
             {/* View Mode Switcher */}
-            <div className="flex items-center gap-0.5 bg-slate-950 p-1 rounded-xl border border-slate-800 shrink-0">
+            <div className="flex items-center gap-0.5 bg-slate-100 dark:bg-slate-950 p-1 rounded-xl border border-slate-200 dark:border-slate-800 shrink-0">
               <button
                 type="button"
                 onClick={() => setViewMode('table')}
                 className={`p-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
                   viewMode === 'table'
-                    ? 'bg-amber-500 text-slate-950 shadow'
-                    : 'text-slate-400 hover:text-slate-200'
+                    ? 'bg-amber-500 text-slate-950 shadow-xs'
+                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
                 }`}
                 title="টেবিল ভিউ"
               >
@@ -564,8 +564,8 @@ export const SalesHistory: React.FC<SalesHistoryProps> = ({
                 onClick={() => setViewMode('card')}
                 className={`p-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
                   viewMode === 'card'
-                    ? 'bg-amber-500 text-slate-950 shadow'
-                    : 'text-slate-400 hover:text-slate-200'
+                    ? 'bg-amber-500 text-slate-950 shadow-xs'
+                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
                 }`}
                 title="কার্ড ভিউ"
               >
@@ -577,9 +577,9 @@ export const SalesHistory: React.FC<SalesHistoryProps> = ({
 
         {/* Expandable Custom Date Range Inputs (Only when calendar/custom is selected) */}
         {showCustomPicker && (
-          <div className="pt-2 border-t border-slate-800/80 flex flex-wrap items-center gap-2.5 bg-slate-950/80 p-2.5 rounded-xl border border-slate-800 text-xs">
+          <div className="pt-2 border-t border-slate-200 dark:border-slate-800/80 flex flex-wrap items-center gap-2.5 bg-slate-50 dark:bg-slate-950/80 p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 text-xs">
             <div className="flex items-center gap-1.5">
-              <span className="text-slate-400 text-[11px]">শুরু:</span>
+              <span className="text-slate-600 dark:text-slate-400 text-[11px]">শুরু:</span>
               <input
                 type="date"
                 value={startDate}
@@ -587,12 +587,12 @@ export const SalesHistory: React.FC<SalesHistoryProps> = ({
                   setStartDate(e.target.value);
                   setDatePreset('custom');
                 }}
-                className="bg-slate-900 border border-slate-700 text-xs text-slate-200 rounded-lg px-2 py-1 focus:outline-none focus:border-amber-500"
+                className="bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs text-slate-900 dark:text-slate-200 rounded-lg px-2 py-1 focus:outline-none focus:border-amber-500"
               />
             </div>
 
             <div className="flex items-center gap-1.5">
-              <span className="text-slate-400 text-[11px]">শেষ:</span>
+              <span className="text-slate-600 dark:text-slate-400 text-[11px]">শেষ:</span>
               <input
                 type="date"
                 value={endDate}
@@ -600,7 +600,7 @@ export const SalesHistory: React.FC<SalesHistoryProps> = ({
                   setEndDate(e.target.value);
                   setDatePreset('custom');
                 }}
-                className="bg-slate-900 border border-slate-700 text-xs text-slate-200 rounded-lg px-2 py-1 focus:outline-none focus:border-amber-500"
+                className="bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs text-slate-900 dark:text-slate-200 rounded-lg px-2 py-1 focus:outline-none focus:border-amber-500"
               />
             </div>
 
@@ -614,14 +614,14 @@ export const SalesHistory: React.FC<SalesHistoryProps> = ({
                   setDatePreset('today');
                   setShowCustomPicker(false);
                 }}
-                className="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg transition-colors cursor-pointer"
+                className="px-2 py-1 bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg transition-colors cursor-pointer"
               >
                 আজকে
               </button>
               <button
                 type="button"
                 onClick={handleClearDateFilter}
-                className="px-2 py-1 bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 rounded-lg transition-colors cursor-pointer flex items-center gap-1"
+                className="px-2 py-1 bg-rose-50 dark:bg-rose-500/20 hover:bg-rose-100 dark:hover:bg-rose-500/30 text-rose-600 dark:text-rose-300 rounded-lg transition-colors cursor-pointer flex items-center gap-1"
               >
                 <X className="w-3 h-3" /> বন্ধ
               </button>
@@ -631,22 +631,22 @@ export const SalesHistory: React.FC<SalesHistoryProps> = ({
 
         {/* Compact Active Filter Badges (Only appears when any filter is active) */}
         {(datePreset !== 'all' || statusFilter !== 'সব' || searchTerm) && (
-          <div className="pt-2 border-t border-slate-800/60 flex flex-wrap items-center justify-between gap-2 text-xs">
+          <div className="pt-2 border-t border-slate-200 dark:border-slate-800/60 flex flex-wrap items-center justify-between gap-2 text-xs">
             <div className="flex items-center gap-2 flex-wrap">
               {getDateRangeLabel() && (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-300 text-[11px] font-medium">
-                  <Clock className="w-3 h-3 text-amber-400" />
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-amber-50 dark:bg-amber-500/10 border border-amber-300 dark:border-amber-500/30 text-amber-800 dark:text-amber-300 text-[11px] font-medium">
+                  <Clock className="w-3 h-3 text-amber-600 dark:text-amber-400" />
                   {getDateRangeLabel()}
                 </span>
               )}
 
               {statusFilter !== 'সব' && (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-slate-800 border border-slate-700 text-slate-200 text-[11px]">
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-[11px]">
                   পেমেন্ট: {statusFilter}
                   <button
                     type="button"
                     onClick={() => setStatusFilter('সব')}
-                    className="hover:text-rose-400 cursor-pointer ml-1"
+                    className="hover:text-rose-500 dark:hover:text-rose-400 cursor-pointer ml-1"
                   >
                     <X className="w-3 h-3" />
                   </button>
@@ -660,7 +660,7 @@ export const SalesHistory: React.FC<SalesHistoryProps> = ({
                   setStatusFilter('সব');
                   setSearchTerm('');
                 }}
-                className="text-[11px] text-slate-400 hover:text-rose-400 underline underline-offset-2 ml-1 cursor-pointer transition-colors"
+                className="text-[11px] text-slate-500 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 underline underline-offset-2 ml-1 cursor-pointer transition-colors"
               >
                 ফিল্টার মুছুন
               </button>
@@ -670,9 +670,9 @@ export const SalesHistory: React.FC<SalesHistoryProps> = ({
               <button
                 type="button"
                 onClick={() => onNavigate('pending')}
-                className="text-[11px] text-amber-400/90 hover:text-amber-300 font-medium flex items-center gap-1 cursor-pointer ml-auto"
+                className="text-[11px] text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 font-medium flex items-center gap-1 cursor-pointer ml-auto"
               >
-                <Clock className="w-3 h-3 text-amber-400" />
+                <Clock className="w-3 h-3 text-amber-600 dark:text-amber-400" />
                 <span>{toBnDigit(pendingBookedCount)} টি পেন্ডিং বুকিং</span>
                 <ArrowRight className="w-3 h-3" />
               </button>
@@ -682,32 +682,32 @@ export const SalesHistory: React.FC<SalesHistoryProps> = ({
 
         {/* Date Filter Statistics Summary Ribbon */}
         {(startDate || endDate) && (
-          <div className="bg-slate-950 border border-amber-500/30 rounded-xl p-2.5 flex flex-wrap items-center justify-between gap-2 text-xs shadow-inner">
+          <div className="bg-amber-50/70 dark:bg-slate-950 border border-amber-200 dark:border-amber-500/30 rounded-xl p-2.5 flex flex-wrap items-center justify-between gap-2 text-xs shadow-inner">
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="font-bold text-amber-400 flex items-center gap-1 text-[11px]">
+              <span className="font-bold text-amber-800 dark:text-amber-400 flex items-center gap-1 text-[11px]">
                 <Calendar className="w-3.5 h-3.5" />
                 {getDateRangeLabel()}:
               </span>
-              <span className="text-slate-300 text-[11px]">
-                মেমো: <strong className="text-white font-bold">{toBnDigit(filteredOrders.length)}</strong> টি
+              <span className="text-slate-700 dark:text-slate-300 text-[11px]">
+                মেমো: <strong className="text-slate-900 dark:text-white font-bold">{toBnDigit(filteredOrders.length)}</strong> টি
               </span>
-              <span className="text-slate-500">•</span>
-              <span className="text-slate-300 text-[11px]">
-                জোড়া: <strong className="text-amber-300 font-bold">{toBnDigit(totalFilteredPairs)}</strong>
+              <span className="text-slate-400 dark:text-slate-500">•</span>
+              <span className="text-slate-700 dark:text-slate-300 text-[11px]">
+                জোড়া: <strong className="text-amber-700 dark:text-amber-300 font-bold">{toBnDigit(totalFilteredPairs)}</strong>
               </span>
-              <span className="text-slate-500">•</span>
-              <span className="text-slate-300 text-[11px]">
-                বিক্রি: <strong className="text-amber-400 font-bold">{formatTaka(totalFilteredSales)}</strong>
+              <span className="text-slate-400 dark:text-slate-500">•</span>
+              <span className="text-slate-700 dark:text-slate-300 text-[11px]">
+                বিক্রি: <strong className="text-amber-700 dark:text-amber-400 font-bold">{formatTaka(totalFilteredSales)}</strong>
               </span>
-              <span className="text-slate-500">•</span>
-              <span className="text-slate-300 text-[11px]">
-                জমা: <strong className="text-emerald-400 font-bold">{formatTaka(totalFilteredPaid)}</strong>
+              <span className="text-slate-400 dark:text-slate-500">•</span>
+              <span className="text-slate-700 dark:text-slate-300 text-[11px]">
+                জমা: <strong className="text-emerald-700 dark:text-emerald-400 font-bold">{formatTaka(totalFilteredPaid)}</strong>
               </span>
               {totalFilteredDue > 0 && (
                 <>
-                  <span className="text-slate-500">•</span>
-                  <span className="text-slate-300 text-[11px]">
-                    বকেয়া: <strong className="text-rose-400 font-bold">{formatTaka(totalFilteredDue)}</strong>
+                  <span className="text-slate-400 dark:text-slate-500">•</span>
+                  <span className="text-slate-700 dark:text-slate-300 text-[11px]">
+                    বকেয়া: <strong className="text-rose-600 dark:text-rose-400 font-bold">{formatTaka(totalFilteredDue)}</strong>
                   </span>
                 </>
               )}
@@ -716,7 +716,7 @@ export const SalesHistory: React.FC<SalesHistoryProps> = ({
             <button
               type="button"
               onClick={handleClearDateFilter}
-              className="text-[10px] text-slate-400 hover:text-white bg-slate-900 hover:bg-slate-800 px-2 py-0.5 rounded border border-slate-800 flex items-center gap-1 cursor-pointer ml-auto"
+              className="text-[10px] text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 px-2 py-0.5 rounded border border-slate-200 dark:border-slate-800 flex items-center gap-1 cursor-pointer ml-auto"
             >
               <X className="w-3 h-3" /> সব দেখুন
             </button>
@@ -725,22 +725,22 @@ export const SalesHistory: React.FC<SalesHistoryProps> = ({
       </div>
 
       {/* Sales Orders Container */}
-      <div className={`${activeTheme.cardClass} p-4 sm:p-5 rounded-2xl`}>
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm p-4 sm:p-5 rounded-2xl">
         {/* Pagination & Count Header */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4 pb-3 border-b border-slate-800/80 text-xs">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4 pb-3 border-b border-slate-200 dark:border-slate-800/80 text-xs">
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="bg-slate-900 border border-slate-800 px-2.5 py-1 rounded-lg text-slate-300 font-medium">
-              মোট মেমো: <strong className="text-amber-400 font-bold">{toBnDigit(totalItems)}</strong> টি
+            <span className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-2.5 py-1 rounded-lg text-slate-700 dark:text-slate-300 font-medium">
+              মোট মেমো: <strong className="text-amber-600 dark:text-amber-400 font-bold">{toBnDigit(totalItems)}</strong> টি
             </span>
             {totalItems > 0 && (
-              <span className="text-slate-400 text-[11px]">
-                (দেখাচ্ছে: <strong className="text-slate-200">{toBnDigit(startIndex + 1)} - {toBnDigit(endIndex)}</strong>)
+              <span className="text-slate-500 dark:text-slate-400 text-[11px]">
+                (দেখাচ্ছে: <strong className="text-slate-800 dark:text-slate-200">{toBnDigit(startIndex + 1)} - {toBnDigit(endIndex)}</strong>)
               </span>
             )}
           </div>
 
           <div className="flex items-center gap-2 self-end sm:self-auto relative">
-            <span className="text-slate-400 text-[11px]">প্রতি পেজে:</span>
+            <span className="text-slate-500 dark:text-slate-400 text-[11px]">প্রতি পেজে:</span>
             <div className="relative">
               <button
                 type="button"
@@ -748,16 +748,16 @@ export const SalesHistory: React.FC<SalesHistoryProps> = ({
                   e.stopPropagation();
                   setIsPageSizeDropdownOpen((prev) => !prev);
                 }}
-                className="bg-slate-900 border border-slate-700/90 text-xs text-amber-300 font-semibold rounded-lg px-2.5 py-1 flex items-center gap-1.5 focus:outline-none cursor-pointer hover:border-slate-600 transition-colors"
+                className="bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700/90 text-xs text-amber-700 dark:text-amber-300 font-semibold rounded-lg px-2.5 py-1 flex items-center gap-1.5 focus:outline-none cursor-pointer hover:border-slate-400 dark:hover:border-slate-600 transition-colors"
               >
                 <span>{pageSize >= 999999 ? 'সব মেমো' : `${toBnDigit(pageSize)} টি`}</span>
-                <ChevronDown className={`w-3 h-3 text-slate-400 transition-transform duration-150 ${isPageSizeDropdownOpen ? 'rotate-180 text-amber-400' : ''}`} />
+                <ChevronDown className={`w-3 h-3 text-slate-400 transition-transform duration-150 ${isPageSizeDropdownOpen ? 'rotate-180 text-amber-500 dark:text-amber-400' : ''}`} />
               </button>
 
               {isPageSizeDropdownOpen && (
                 <div
                   onClick={(e) => e.stopPropagation()}
-                  className="absolute right-0 bottom-full sm:bottom-auto sm:top-full mb-1 sm:mb-0 sm:mt-1 bg-slate-900 border border-slate-700 rounded-xl shadow-xl py-1 z-50 min-w-[100px]"
+                  className="absolute right-0 bottom-full sm:bottom-auto sm:top-full mb-1 sm:mb-0 sm:mt-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl py-1 z-50 min-w-[100px]"
                 >
                   {[
                     { value: 15, label: '১৫ টি' },
@@ -777,11 +777,11 @@ export const SalesHistory: React.FC<SalesHistoryProps> = ({
                           setIsPageSizeDropdownOpen(false);
                         }}
                         className={`w-full px-3 py-1.5 text-left text-xs flex items-center justify-between cursor-pointer transition-colors ${
-                          isSelected ? 'bg-amber-500/20 text-amber-300 font-bold' : 'text-slate-300 hover:bg-slate-800'
+                          isSelected ? 'bg-amber-50 dark:bg-amber-500/20 text-amber-800 dark:text-amber-300 font-bold' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
                         }`}
                       >
                         <span>{opt.label}</span>
-                        {isSelected && <Check className="w-3 h-3 text-amber-400 shrink-0" />}
+                        {isSelected && <Check className="w-3 h-3 text-amber-600 dark:text-amber-400 shrink-0" />}
                       </button>
                     );
                   })}
@@ -794,7 +794,7 @@ export const SalesHistory: React.FC<SalesHistoryProps> = ({
         {viewMode === 'card' ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {displayedOrders.length === 0 ? (
-              <div className="col-span-full py-12 text-center text-slate-500">
+              <div className="col-span-full py-12 text-center text-slate-400">
                 কোনো বিক্রয় ইতিহাস পাওয়া যায়নি।
               </div>
             ) : (
@@ -805,29 +805,29 @@ export const SalesHistory: React.FC<SalesHistoryProps> = ({
                 return (
                   <div
                     key={ord.id}
-                    className={`bg-slate-950 border rounded-2xl transition-all shadow-md overflow-hidden ${
-                      isExpanded ? 'border-amber-500/80 ring-1 ring-amber-500/30' : 'border-slate-800 hover:border-slate-700'
+                    className={`bg-white dark:bg-slate-950 border rounded-2xl transition-all shadow-xs overflow-hidden ${
+                      isExpanded ? 'border-amber-400 dark:border-amber-500/80 ring-1 ring-amber-400/30' : 'border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
                     }`}
                   >
                     {/* Collapsed Overview Header */}
                     <div className="p-4 space-y-2 select-none">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <span className="font-mono text-sm font-black text-amber-300">
+                          <span className="font-mono text-sm font-black text-amber-700 dark:text-amber-300">
                             #{ord.memoNo}
                           </span>
                           {isLatest && (
-                            <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-500 text-slate-950 inline-flex items-center gap-0.5 shadow-sm">
+                            <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-500 text-slate-950 inline-flex items-center gap-0.5 shadow-xs">
                               সর্বশেষ
                             </span>
                           )}
                           <span
                             className={`px-2 py-0.5 rounded-full text-[10px] font-bold inline-flex items-center gap-1 ${
                               ord.status === 'পরিশোধিত'
-                                ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
+                                ? 'bg-emerald-50 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/40'
                                 : ord.status === 'আংশিক বাকী'
-                                ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
-                                : 'bg-rose-500/20 text-rose-300 border border-rose-500/40'
+                                ? 'bg-amber-50 dark:bg-amber-500/20 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-500/40'
+                                : 'bg-rose-50 dark:bg-rose-500/20 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-500/40'
                             }`}
                           >
                             {ord.status}
@@ -840,10 +840,10 @@ export const SalesHistory: React.FC<SalesHistoryProps> = ({
                           <button
                             type="button"
                             onClick={() => setExpandedOrderId(isExpanded ? null : ord.id)}
-                            className="p-1.5 bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-white rounded-xl border border-slate-800 transition cursor-pointer"
+                            className="p-1.5 bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white rounded-xl border border-slate-200 dark:border-slate-800 transition cursor-pointer"
                             title={isExpanded ? 'সংকোচন করুন' : 'বিস্তারিত দেখুন'}
                           >
-                            {isExpanded ? <ChevronUp className="w-4 h-4 text-amber-400" /> : <ChevronDown className="w-4 h-4" />}
+                            {isExpanded ? <ChevronUp className="w-4 h-4 text-amber-600 dark:text-amber-400" /> : <ChevronDown className="w-4 h-4" />}
                           </button>
                         </div>
                       </div>
@@ -853,69 +853,69 @@ export const SalesHistory: React.FC<SalesHistoryProps> = ({
                         className="cursor-pointer space-y-2"
                       >
                         <div className="flex items-center justify-between text-xs pt-0.5">
-                          <div className="font-bold text-white flex items-center gap-1.5 truncate pr-2">
-                            <Store className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                          <div className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5 truncate pr-2">
+                            <Store className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
                             <span className="truncate">{ord.shopName}</span>
                           </div>
-                          <span className="text-[11px] text-slate-400 shrink-0 font-mono">
+                          <span className="text-[11px] text-slate-500 dark:text-slate-400 shrink-0 font-mono">
                             {formatBnDate(ord.deliveryDate || ord.date)} {ord.time ? `(${ord.time})` : ''}
                           </span>
                         </div>
 
-                        <div className="flex items-center justify-between text-[11px] bg-slate-900/80 px-2.5 py-1.5 rounded-xl border border-slate-800/80 text-slate-300">
+                        <div className="flex items-center justify-between text-[11px] bg-slate-50 dark:bg-slate-900/80 px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800/80 text-slate-700 dark:text-slate-300">
                           <span>
-                            <strong className="text-white font-bold">{toBnDigit(ord.totalPairs)} জোড়া</strong>{' '}
-                            <span className="text-amber-300 font-semibold">({getDozenText(ord.totalPairs)})</span>
+                            <strong className="text-slate-900 dark:text-white font-bold">{toBnDigit(ord.totalPairs)} জোড়া</strong>{' '}
+                            <span className="text-amber-700 dark:text-amber-300 font-semibold">({getDozenText(ord.totalPairs)})</span>
                           </span>
-                          <span className="text-amber-300 font-black">{formatTaka(ord.grandTotal)}</span>
+                          <span className="text-amber-700 dark:text-amber-300 font-black">{formatTaka(ord.grandTotal)}</span>
                         </div>
                       </div>
                     </div>
 
                     {/* Expanded Details Section */}
                     {isExpanded && (
-                      <div className="p-4 pt-2 border-t border-slate-800/80 bg-slate-900/40 space-y-3.5 animate-fadeIn">
+                      <div className="p-4 pt-2 border-t border-slate-200 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-900/40 space-y-3.5 animate-fadeIn">
                         {/* Customer & Seller info */}
-                        <div className="text-xs space-y-1 bg-slate-950/80 p-2.5 rounded-xl border border-slate-800/60">
-                          <div className="text-slate-300">
-                            <span className="text-slate-400">প্রোপ্রাইটর:</span> <strong className="text-white">{ord.customerName}</strong>
+                        <div className="text-xs space-y-1 bg-white dark:bg-slate-950/80 p-2.5 rounded-xl border border-slate-200 dark:border-slate-800/60">
+                          <div className="text-slate-700 dark:text-slate-300">
+                            <span className="text-slate-500 dark:text-slate-400">প্রোপ্রাইটর:</span> <strong className="text-slate-900 dark:text-white">{ord.customerName}</strong>
                           </div>
-                          <div className="text-slate-300">
-                            <span className="text-slate-400">সেলার:</span> <strong className="text-indigo-300">{ord.sellerName}</strong>
+                          <div className="text-slate-700 dark:text-slate-300">
+                            <span className="text-slate-500 dark:text-slate-400">সেলার:</span> <strong className="text-indigo-600 dark:text-indigo-300">{ord.sellerName}</strong>
                           </div>
-                          <div className="text-slate-400 text-[11px]">
+                          <div className="text-slate-500 dark:text-slate-400 text-[11px]">
                             ডেলিভারি তারিখ: {formatBnDate(ord.deliveryDate || ord.date)} ({ord.time || ''})
                           </div>
                         </div>
 
                         {/* Financials Grid */}
-                        <div className="grid grid-cols-3 gap-2 bg-slate-950 p-2.5 rounded-xl border border-slate-800 text-center text-xs">
+                        <div className="grid grid-cols-3 gap-2 bg-white dark:bg-slate-950 p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 text-center text-xs shadow-xs">
                           <div>
-                            <span className="text-[10px] text-slate-400 block">নিট বিল</span>
-                            <span className="font-black text-amber-300">{formatTaka(ord.grandTotal)}</span>
+                            <span className="text-[10px] text-slate-500 dark:text-slate-400 block">নিট বিল</span>
+                            <span className="font-black text-amber-700 dark:text-amber-300">{formatTaka(ord.grandTotal)}</span>
                           </div>
                           <div>
-                            <span className="text-[10px] text-slate-400 block">জমা</span>
-                            <span className="font-bold text-emerald-400">{formatTaka(ord.paidAmount)}</span>
+                            <span className="text-[10px] text-slate-500 dark:text-slate-400 block">জমা</span>
+                            <span className="font-bold text-emerald-600 dark:text-emerald-400">{formatTaka(ord.paidAmount)}</span>
                           </div>
                           <div>
-                            <span className="text-[10px] text-slate-400 block">বাকী</span>
-                            <span className="font-bold text-rose-400">{formatTaka(ord.dueAmount)}</span>
+                            <span className="text-[10px] text-slate-500 dark:text-slate-400 block">বাকী</span>
+                            <span className="font-bold text-rose-600 dark:text-rose-400">{formatTaka(ord.dueAmount)}</span>
                           </div>
                         </div>
 
-                        <div className="text-xs text-slate-300 flex items-center justify-between px-1">
+                        <div className="text-xs text-slate-700 dark:text-slate-300 flex items-center justify-between px-1">
                           <span>মোট জুতা পরিমাণ:</span>
-                          <strong className="text-white font-bold">{toBnDigit(ord.totalPairs)} জোড়া ({getDozenText(ord.totalPairs)})</strong>
+                          <strong className="text-slate-900 dark:text-white font-bold">{toBnDigit(ord.totalPairs)} জোড়া ({getDozenText(ord.totalPairs)})</strong>
                         </div>
 
                         {/* Items list if available */}
                         {ord.items && ord.items.length > 0 && (
                           <div className="space-y-1.5">
-                            <span className="text-[11px] font-bold text-slate-400 flex items-center gap-1">
-                              <ShoppingBag className="w-3 h-3 text-amber-400" /> আইটেম বিবরণ ({toBnDigit(ord.items.length)}টি):
+                            <span className="text-[11px] font-bold text-slate-600 dark:text-slate-400 flex items-center gap-1">
+                              <ShoppingBag className="w-3 h-3 text-amber-600 dark:text-amber-400" /> আইটেম বিবরণ ({toBnDigit(ord.items.length)}টি):
                             </span>
-                            <div className="bg-slate-950 rounded-xl p-2 border border-slate-800 max-h-48 overflow-y-auto space-y-1.5 text-[11px]">
+                            <div className="bg-white dark:bg-slate-950 rounded-xl p-2 border border-slate-200 dark:border-slate-800 max-h-48 overflow-y-auto space-y-1.5 text-[11px]">
                               {ord.items.map((item, idx) => {
                                 const artCode = item.articleCode || (item as any).articleNo || '-';
                                 const prodName = item.productName || (item as any).name || '';
@@ -927,21 +927,21 @@ export const SalesHistory: React.FC<SalesHistoryProps> = ({
                                 const unitLabel = item.unitType === 'cartons' ? 'ডজন' : 'জোড়া';
 
                                 return (
-                                  <div key={idx} className="flex justify-between items-center py-1 border-b border-slate-800/60 last:border-0">
+                                  <div key={idx} className="flex justify-between items-center py-1 border-b border-slate-100 dark:border-slate-800/60 last:border-0">
                                     <div>
-                                      <div className="font-bold text-amber-300 font-mono text-xs">{artCode}</div>
-                                      <div className="text-slate-300 text-[10px]">
+                                      <div className="font-bold text-amber-700 dark:text-amber-300 font-mono text-xs">{artCode}</div>
+                                      <div className="text-slate-700 dark:text-slate-300 text-[10px]">
                                         {prodName} {sizes ? `(${sizes})` : ''}
                                       </div>
                                     </div>
                                     <div className="text-right">
-                                      <div className="text-slate-200 font-bold">
+                                      <div className="text-slate-800 dark:text-slate-200 font-bold">
                                         {toBnDigit(qtyInput)} {unitLabel} {item.unitType === 'cartons' ? `(${toBnDigit(pairs)} জোড়া)` : ''}
                                       </div>
-                                      <div className="text-slate-400 text-[10px]">
-                                        @{formatTaka(price)} = <span className="text-emerald-400 font-bold">{formatTaka(itemTotal)}</span>
+                                      <div className="text-slate-500 dark:text-slate-400 text-[10px]">
+                                        @{formatTaka(price)} = <span className="text-emerald-600 dark:text-emerald-400 font-bold">{formatTaka(itemTotal)}</span>
                                         {item.commissionPerPair && item.commissionPerPair > 0 ? (
-                                          <span className="text-slate-400 text-[10px] ml-1">(-৳{formatTaka(pairs * item.commissionPerPair)} কমিশন)</span>
+                                          <span className="text-slate-500 dark:text-slate-400 text-[10px] ml-1">(-৳{formatTaka(pairs * item.commissionPerPair)} কমিশন)</span>
                                         ) : null}
                                       </div>
                                     </div>
@@ -953,7 +953,7 @@ export const SalesHistory: React.FC<SalesHistoryProps> = ({
                         )}
 
                         {/* Direct Bottom Actions */}
-                        <div className="pt-2 border-t border-slate-800 flex items-center justify-between gap-2">
+                        <div className="pt-2 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between gap-2">
                           <div className="flex items-center gap-1.5">
                             {renderActionMenu(ord)}
                           </div>
@@ -961,7 +961,7 @@ export const SalesHistory: React.FC<SalesHistoryProps> = ({
                           <div className="flex items-center gap-2 flex-wrap">
                             <button
                               onClick={() => onSelectOrderForInvoice(ord)}
-                              className="px-3 py-1.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded-xl text-xs flex items-center gap-1.5 shadow transition-colors cursor-pointer"
+                              className="px-3 py-1.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded-xl text-xs flex items-center gap-1.5 shadow-xs transition-colors cursor-pointer"
                             >
                               <Download className="w-3.5 h-3.5" />
                               মেমো ডাউনলোড
@@ -979,7 +979,7 @@ export const SalesHistory: React.FC<SalesHistoryProps> = ({
           <div className="overflow-x-auto no-scrollbar">
             <table className="w-full text-left text-xs whitespace-nowrap">
               <thead>
-                <tr className="border-b border-slate-700 text-slate-400 font-medium pb-2">
+                <tr className="border-b border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 font-medium pb-2">
                   <th className="pb-3 pr-3">মেমো নং</th>
                   <th className="pb-3 px-3">তারিখ ও সময়</th>
                   <th className="pb-3 px-3">দোকানের নাম</th>
@@ -988,10 +988,10 @@ export const SalesHistory: React.FC<SalesHistoryProps> = ({
                   <th className="pb-3 pl-3 text-right">অ্যাকশন ও অপশন</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800/80">
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80">
                 {displayedOrders.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="py-12 text-center text-slate-500">
+                    <td colSpan={6} className="py-12 text-center text-slate-400">
                       কোনো বিক্রয় ইতিহাস পাওয়া যায়নি।
                     </td>
                   </tr>
@@ -1005,41 +1005,41 @@ export const SalesHistory: React.FC<SalesHistoryProps> = ({
                         {/* Collapsed Main Row: Memo, Date, Shop Name */}
                         <tr
                           onClick={() => setExpandedOrderId(isExpanded ? null : ord.id)}
-                          className={`hover:bg-slate-800/50 cursor-pointer transition-colors select-none ${
-                            isExpanded ? 'bg-amber-950/20' : ''
+                          className={`hover:bg-slate-50 dark:hover:bg-slate-800/50 cursor-pointer transition-colors select-none ${
+                            isExpanded ? 'bg-amber-50/60 dark:bg-amber-950/20' : ''
                           }`}
                         >
-                          <td className="py-3.5 pr-3 font-mono font-black text-amber-300 whitespace-nowrap">
+                          <td className="py-3.5 pr-3 font-mono font-black text-amber-700 dark:text-amber-300 whitespace-nowrap">
                             <div className="flex items-center gap-1.5">
                               <span>#{ord.memoNo}</span>
                               {isLatest && (
-                                <span className="text-[10px] font-bold bg-amber-500 text-slate-950 px-1.5 py-0.5 rounded shadow-sm">
+                                <span className="text-[10px] font-bold bg-amber-500 text-slate-950 px-1.5 py-0.5 rounded shadow-xs">
                                   সর্বশেষ
                                 </span>
                               )}
                             </div>
                           </td>
-                          <td className="py-3.5 px-3 text-slate-300 font-medium">
+                          <td className="py-3.5 px-3 text-slate-700 dark:text-slate-300 font-medium">
                             {formatBnDate(ord.deliveryDate || ord.date)}
-                            {ord.time && <span className="text-[10px] text-amber-400/90 ml-1">({ord.time})</span>}
+                            {ord.time && <span className="text-[10px] text-amber-700/90 dark:text-amber-400/90 ml-1">({ord.time})</span>}
                           </td>
-                          <td className="py-3.5 px-3 font-bold text-slate-100">
+                          <td className="py-3.5 px-3 font-bold text-slate-900 dark:text-slate-100">
                             <div className="flex items-center gap-1.5">
-                              <Store className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                              <Store className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
                               <span>{ord.shopName}</span>
                             </div>
                           </td>
-                          <td className="py-3.5 px-3 text-slate-200 font-bold">
-                            {toBnDigit(ord.totalPairs)} জোড়া <span className="text-amber-300 text-[11px]">({getDozenText(ord.totalPairs)})</span>
+                          <td className="py-3.5 px-3 text-slate-800 dark:text-slate-200 font-bold">
+                            {toBnDigit(ord.totalPairs)} জোড়া <span className="text-amber-700 dark:text-amber-300 text-[11px]">({getDozenText(ord.totalPairs)})</span>
                           </td>
                           <td className="py-3.5 px-3 text-center">
                             <span
                               className={`px-2.5 py-1 rounded-full text-[10px] font-bold inline-flex items-center gap-1 ${
                                 ord.status === 'পরিশোধিত'
-                                  ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
+                                  ? 'bg-emerald-50 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/40'
                                   : ord.status === 'আংশিক বাকী'
-                                  ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
-                                  : 'bg-rose-500/20 text-rose-300 border border-rose-500/40'
+                                  ? 'bg-amber-50 dark:bg-amber-500/20 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-500/40'
+                                  : 'bg-rose-50 dark:bg-rose-500/20 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-500/40'
                               }`}
                             >
                               {ord.status}
@@ -1057,7 +1057,7 @@ export const SalesHistory: React.FC<SalesHistoryProps> = ({
                                   e.stopPropagation();
                                   setExpandedOrderId(isExpanded ? null : ord.id);
                                 }}
-                                className="p-1.5 bg-slate-800 hover:bg-amber-500 hover:text-slate-950 text-amber-300 border border-slate-700/80 rounded-xl transition-all cursor-pointer inline-flex items-center justify-center"
+                                className="p-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-amber-500 hover:text-slate-950 text-slate-600 dark:text-amber-300 border border-slate-300 dark:border-slate-700/80 rounded-xl transition-all cursor-pointer inline-flex items-center justify-center"
                                 title={isExpanded ? 'সংকোচন' : 'এক্সপ্লোর'}
                               >
                                 {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
@@ -1068,17 +1068,17 @@ export const SalesHistory: React.FC<SalesHistoryProps> = ({
 
                         {/* Expanded Detail View Row */}
                         {isExpanded && (
-                          <tr className="bg-slate-900/60 border-b border-slate-800">
+                          <tr className="bg-slate-50/60 dark:bg-slate-900/60 border-b border-slate-200 dark:border-slate-800">
                             <td colSpan={6} className="p-4">
-                              <div className="bg-slate-950 p-4 rounded-2xl border border-amber-500/30 space-y-4">
-                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-slate-800">
+                              <div className="bg-white dark:bg-slate-950 p-4 rounded-2xl border border-amber-300 dark:border-amber-500/30 space-y-4 shadow-sm">
+                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-slate-200 dark:border-slate-800">
                                   <div>
-                                    <h4 className="font-bold text-white text-sm flex items-center gap-2">
+                                    <h4 className="font-bold text-slate-900 dark:text-white text-sm flex items-center gap-2">
                                       <span>মেমো #{ord.memoNo}</span>
-                                      <span className="text-slate-400 font-normal text-xs">({ord.shopName})</span>
+                                      <span className="text-slate-500 dark:text-slate-400 font-normal text-xs">({ord.shopName})</span>
                                     </h4>
-                                    <div className="text-xs text-slate-400 mt-0.5">
-                                      প্রোপ্রাইটর: <strong className="text-slate-200">{ord.customerName}</strong> | সেলার: <strong className="text-indigo-300">{ord.sellerName}</strong> | ডেলিভারি তারিখ: {formatBnDate(ord.deliveryDate || ord.date)} ({ord.time || ''})
+                                    <div className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                                      প্রোপ্রাইটর: <strong className="text-slate-800 dark:text-slate-200">{ord.customerName}</strong> | সেলার: <strong className="text-indigo-600 dark:text-indigo-300">{ord.sellerName}</strong> | ডেলিভারি তারিখ: {formatBnDate(ord.deliveryDate || ord.date)} ({ord.time || ''})
                                     </div>
                                   </div>
 
@@ -1086,7 +1086,7 @@ export const SalesHistory: React.FC<SalesHistoryProps> = ({
                                     {renderActionMenu(ord)}
                                     <button
                                       onClick={() => onSelectOrderForInvoice(ord)}
-                                      className="px-3.5 py-1.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded-xl text-xs flex items-center gap-1.5 shadow transition-colors cursor-pointer"
+                                      className="px-3.5 py-1.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded-xl text-xs flex items-center gap-1.5 shadow-xs transition-colors cursor-pointer"
                                     >
                                       <Download className="w-3.5 h-3.5" />
                                       মেমো ডাউনলোড ও প্রিন্ট
@@ -1095,36 +1095,36 @@ export const SalesHistory: React.FC<SalesHistoryProps> = ({
                                 </div>
 
                                 {/* Financial Summary Bar */}
-                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-slate-900/90 p-3 rounded-xl border border-slate-800 text-xs">
+                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-slate-50 dark:bg-slate-900/90 p-3 rounded-xl border border-slate-200 dark:border-slate-800 text-xs shadow-xs">
                                   <div>
-                                    <span className="text-slate-400 text-[10px] block">মোট বিল</span>
-                                    <span className="font-bold text-white text-sm">{formatTaka(ord.grandTotal)}</span>
+                                    <span className="text-slate-500 dark:text-slate-400 text-[10px] block">মোট বিল</span>
+                                    <span className="font-bold text-slate-900 dark:text-white text-sm">{formatTaka(ord.grandTotal)}</span>
                                   </div>
                                   <div>
-                                    <span className="text-slate-400 text-[10px] block">জমা</span>
-                                    <span className="font-bold text-emerald-400 text-sm">{formatTaka(ord.paidAmount)}</span>
+                                    <span className="text-slate-500 dark:text-slate-400 text-[10px] block">জমা</span>
+                                    <span className="font-bold text-emerald-600 dark:text-emerald-400 text-sm">{formatTaka(ord.paidAmount)}</span>
                                   </div>
                                   <div>
-                                    <span className="text-slate-400 text-[10px] block">বাকী/ডিউ</span>
-                                    <span className="font-bold text-rose-400 text-sm">{formatTaka(ord.dueAmount)}</span>
+                                    <span className="text-slate-500 dark:text-slate-400 text-[10px] block">বাকী/ডিউ</span>
+                                    <span className="font-bold text-rose-600 dark:text-rose-400 text-sm">{formatTaka(ord.dueAmount)}</span>
                                   </div>
                                   <div>
-                                    <span className="text-slate-400 text-[10px] block">পরিবহন / নোট</span>
-                                    <span className="font-medium text-slate-300 text-xs truncate block">{ord.transportName || ord.notes || 'N/A'}</span>
+                                    <span className="text-slate-500 dark:text-slate-400 text-[10px] block">পরিবহন / নোট</span>
+                                    <span className="font-medium text-slate-700 dark:text-slate-300 text-xs truncate block">{ord.transportName || ord.notes || 'N/A'}</span>
                                   </div>
                                 </div>
 
                                 {/* Item breakdown if present */}
                                 {ord.items && ord.items.length > 0 && (
                                   <div className="space-y-2">
-                                    <h5 className="text-xs font-bold text-amber-400 flex items-center gap-1.5">
+                                    <h5 className="text-xs font-bold text-amber-700 dark:text-amber-400 flex items-center gap-1.5">
                                       <ShoppingBag className="w-3.5 h-3.5" />
                                       বিক্রিত পণ্যসামগ্রী বিস্তারিত ({toBnDigit(ord.items.length)}টি):
                                     </h5>
                                     <div className="overflow-x-auto">
                                       <table className="w-full text-left text-xs">
                                         <thead>
-                                          <tr className="border-b border-slate-800 text-slate-400 font-medium">
+                                          <tr className="border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 font-medium">
                                             <th className="pb-2 pr-2">আর্টিকেল নং</th>
                                             <th className="pb-2 px-2">পণ্যের নাম</th>
                                             <th className="pb-2 px-2">সাইজ</th>
@@ -1134,7 +1134,7 @@ export const SalesHistory: React.FC<SalesHistoryProps> = ({
                                             <th className="pb-2 pl-2 text-right">মোট (৳)</th>
                                           </tr>
                                         </thead>
-                                        <tbody className="divide-y divide-slate-800/60">
+                                        <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
                                           {ord.items.map((item, idx) => {
                                             const artCode = item.articleCode || (item as any).articleNo || (item as any).article || '-';
                                             const prodName = item.productName || (item as any).name || (item as any).category || 'জুতা';
@@ -1146,14 +1146,14 @@ export const SalesHistory: React.FC<SalesHistoryProps> = ({
                                             const unitLabel = item.unitType === 'cartons' ? 'ডজন' : 'জোড়া';
 
                                             return (
-                                              <tr key={idx} className="hover:bg-slate-900/40">
-                                                <td className="py-2 pr-2 font-mono font-bold text-amber-300">{artCode}</td>
-                                                <td className="py-2 px-2 text-slate-200 font-semibold">{prodName}</td>
-                                                <td className="py-2 px-2 text-slate-400 font-mono">{sizes}</td>
-                                                <td className="py-2 px-2 text-center text-slate-300">{toBnDigit(qtyInput)} {unitLabel}</td>
-                                                <td className="py-2 px-2 text-center font-bold text-slate-200">{toBnDigit(pairs)} জোড়া</td>
-                                                <td className="py-2 px-2 text-right text-slate-300">{formatTaka(price)}</td>
-                                                <td className="py-2 pl-2 text-right font-bold text-emerald-400">{formatTaka(itemTotal)}</td>
+                                              <tr key={idx} className="hover:bg-slate-50 dark:hover:bg-slate-900/40">
+                                                <td className="py-2 pr-2 font-mono font-bold text-amber-700 dark:text-amber-300">{artCode}</td>
+                                                <td className="py-2 px-2 text-slate-800 dark:text-slate-200 font-semibold">{prodName}</td>
+                                                <td className="py-2 px-2 text-slate-500 dark:text-slate-400 font-mono">{sizes}</td>
+                                                <td className="py-2 px-2 text-center text-slate-700 dark:text-slate-300">{toBnDigit(qtyInput)} {unitLabel}</td>
+                                                <td className="py-2 px-2 text-center font-bold text-slate-800 dark:text-slate-200">{toBnDigit(pairs)} জোড়া</td>
+                                                <td className="py-2 px-2 text-right text-slate-700 dark:text-slate-300">{formatTaka(price)}</td>
+                                                <td className="py-2 pl-2 text-right font-bold text-emerald-600 dark:text-emerald-400">{formatTaka(itemTotal)}</td>
                                               </tr>
                                             );
                                           })}
@@ -1177,9 +1177,9 @@ export const SalesHistory: React.FC<SalesHistoryProps> = ({
 
         {/* Bottom Pagination Controls */}
         {totalPages > 1 && (
-          <div className="mt-6 pt-4 border-t border-slate-800/90 flex flex-col sm:flex-row items-center justify-between gap-3">
-            <div className="text-xs text-slate-400">
-              পেজ <strong className="text-amber-400 font-mono font-bold">{toBnDigit(safeCurrentPage)}</strong> / <span className="font-mono">{toBnDigit(totalPages)}</span> (মোট {toBnDigit(totalItems)} টি মেমো)
+          <div className="mt-6 pt-4 border-t border-slate-200 dark:border-slate-800/90 flex flex-col sm:flex-row items-center justify-between gap-3">
+            <div className="text-xs text-slate-500 dark:text-slate-400">
+              পেজ <strong className="text-amber-700 dark:text-amber-400 font-mono font-bold">{toBnDigit(safeCurrentPage)}</strong> / <span className="font-mono">{toBnDigit(totalPages)}</span> (মোট {toBnDigit(totalItems)} টি মেমো)
             </div>
 
             <div className="flex items-center gap-1.5 select-none flex-wrap justify-center">
@@ -1188,7 +1188,7 @@ export const SalesHistory: React.FC<SalesHistoryProps> = ({
                 type="button"
                 disabled={safeCurrentPage === 1}
                 onClick={() => handlePageChange(1)}
-                className="p-1.5 rounded-lg border border-slate-800 bg-slate-900 text-slate-400 hover:text-amber-400 hover:border-slate-700 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer transition"
+                className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 hover:border-slate-300 dark:hover:border-slate-700 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer transition"
                 title="প্রথম পেজ"
               >
                 <ChevronsLeft className="w-4 h-4" />
@@ -1199,7 +1199,7 @@ export const SalesHistory: React.FC<SalesHistoryProps> = ({
                 type="button"
                 disabled={safeCurrentPage === 1}
                 onClick={() => handlePageChange(safeCurrentPage - 1)}
-                className="px-2.5 py-1.5 rounded-lg border border-slate-800 bg-slate-900 text-slate-300 text-xs font-semibold hover:text-amber-400 hover:border-slate-700 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer transition flex items-center gap-1"
+                className="px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-slate-700 dark:text-slate-300 text-xs font-semibold hover:text-amber-600 dark:hover:text-amber-400 hover:border-slate-300 dark:hover:border-slate-700 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer transition flex items-center gap-1"
               >
                 <ChevronLeft className="w-3.5 h-3.5" />
                 <span className="hidden sm:inline">পূর্ববর্তী</span>
@@ -1210,7 +1210,7 @@ export const SalesHistory: React.FC<SalesHistoryProps> = ({
                 {getPageNumbers().map((pageNum, idx) => {
                   if (pageNum === '...') {
                     return (
-                      <span key={`ellipsis-${idx}`} className="px-1 text-slate-600 font-bold text-xs select-none">
+                      <span key={`ellipsis-${idx}`} className="px-1 text-slate-400 dark:text-slate-600 font-bold text-xs select-none">
                         ...
                       </span>
                     );
@@ -1223,8 +1223,8 @@ export const SalesHistory: React.FC<SalesHistoryProps> = ({
                       onClick={() => handlePageChange(pageNum as number)}
                       className={`min-w-[32px] h-8 rounded-lg text-xs font-bold font-mono transition cursor-pointer flex items-center justify-center ${
                         isCurrent
-                          ? 'bg-amber-500 text-slate-950 shadow-md ring-1 ring-amber-400'
-                          : 'bg-slate-900 border border-slate-800 text-slate-300 hover:bg-slate-800 hover:text-amber-300'
+                          ? 'bg-amber-500 text-slate-950 shadow-xs ring-1 ring-amber-400'
+                          : 'bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-amber-700 dark:hover:text-amber-300'
                       }`}
                     >
                       {toBnDigit(pageNum)}
@@ -1238,7 +1238,7 @@ export const SalesHistory: React.FC<SalesHistoryProps> = ({
                 type="button"
                 disabled={safeCurrentPage === totalPages}
                 onClick={() => handlePageChange(safeCurrentPage + 1)}
-                className="px-2.5 py-1.5 rounded-lg border border-slate-800 bg-slate-900 text-slate-300 text-xs font-semibold hover:text-amber-400 hover:border-slate-700 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer transition flex items-center gap-1"
+                className="px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-slate-700 dark:text-slate-300 text-xs font-semibold hover:text-amber-600 dark:hover:text-amber-400 hover:border-slate-300 dark:hover:border-slate-700 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer transition flex items-center gap-1"
               >
                 <span className="hidden sm:inline">পরবর্তী</span>
                 <ChevronRight className="w-3.5 h-3.5" />
@@ -1249,7 +1249,7 @@ export const SalesHistory: React.FC<SalesHistoryProps> = ({
                 type="button"
                 disabled={safeCurrentPage === totalPages}
                 onClick={() => handlePageChange(totalPages)}
-                className="p-1.5 rounded-lg border border-slate-800 bg-slate-900 text-slate-400 hover:text-amber-400 hover:border-slate-700 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer transition"
+                className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 hover:border-slate-300 dark:hover:border-slate-700 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer transition"
                 title="সর্বশেষ পেজ"
               >
                 <ChevronsRight className="w-4 h-4" />
@@ -1262,47 +1262,47 @@ export const SalesHistory: React.FC<SalesHistoryProps> = ({
       {/* Admin Delete Confirmation Modal */}
       {orderToDelete && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fadeIn"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 dark:bg-black/80 backdrop-blur-sm animate-fadeIn"
           onClick={() => setOrderToDelete(null)}
         >
           <div
-            className="bg-slate-900 border border-rose-500/50 rounded-2xl max-w-md w-full p-5 sm:p-6 shadow-2xl space-y-4"
+            className="bg-white dark:bg-slate-900 border border-rose-300 dark:border-rose-500/50 rounded-2xl max-w-md w-full p-5 sm:p-6 shadow-2xl space-y-4"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center gap-3">
-              <div className="p-3 bg-rose-500/20 text-rose-400 rounded-2xl border border-rose-500/30">
+              <div className="p-3 bg-rose-50 dark:bg-rose-500/20 text-rose-600 dark:text-rose-400 rounded-2xl border border-rose-200 dark:border-rose-500/30">
                 <AlertTriangle className="w-6 h-6" />
               </div>
               <div>
-                <h3 className="text-base sm:text-lg font-bold text-white">ইনভয়েস/মেমো ট্র্যাশে পাঠানো</h3>
-                <p className="text-xs text-rose-400 font-semibold">ট্র্যাশ থেকে যেকোনো সময় রিস্টোর করা যাবে</p>
+                <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white">ইনভয়েস/মেমো ট্র্যাশে পাঠানো</h3>
+                <p className="text-xs text-rose-600 dark:text-rose-400 font-semibold">ট্র্যাশ থেকে যেকোনো সময় রিস্টোর করা যাবে</p>
               </div>
             </div>
 
-            <div className="bg-slate-950 p-3.5 rounded-xl border border-slate-800 space-y-2 text-xs">
+            <div className="bg-slate-50 dark:bg-slate-950 p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 space-y-2 text-xs">
               <div className="flex justify-between items-center">
-                <span className="text-slate-400">মেমো নং:</span>
-                <span className="font-mono font-bold text-amber-300">#{orderToDelete.memoNo}</span>
+                <span className="text-slate-500 dark:text-slate-400">মেমো নং:</span>
+                <span className="font-mono font-bold text-amber-700 dark:text-amber-300">#{orderToDelete.memoNo}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-slate-400">দোকানের নাম:</span>
-                <span className="font-bold text-white">{orderToDelete.shopName}</span>
+                <span className="text-slate-500 dark:text-slate-400">দোকানের নাম:</span>
+                <span className="font-bold text-slate-900 dark:text-white">{orderToDelete.shopName}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-slate-400">কাস্টমার/প্রোপ্রাইটর:</span>
-                <span className="text-slate-300">{orderToDelete.customerName}</span>
+                <span className="text-slate-500 dark:text-slate-400">কাস্টমার/প্রোপ্রাইটর:</span>
+                <span className="text-slate-700 dark:text-slate-300">{orderToDelete.customerName}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-slate-400">তারিখ ও সময়:</span>
-                <span className="text-slate-300">{formatBnDate(orderToDelete.date)} {orderToDelete.time ? `(${orderToDelete.time})` : ''}</span>
+                <span className="text-slate-500 dark:text-slate-400">তারিখ ও সময়:</span>
+                <span className="text-slate-700 dark:text-slate-300">{formatBnDate(orderToDelete.date)} {orderToDelete.time ? `(${orderToDelete.time})` : ''}</span>
               </div>
-              <div className="flex justify-between items-center border-t border-slate-800 pt-2 font-bold">
-                <span className="text-slate-300">মোট বিক্রয় বিল ({toBnDigit(orderToDelete.totalPairs)} জোড়া):</span>
-                <span className="text-amber-300 font-mono">{formatTaka(orderToDelete.grandTotal)}</span>
+              <div className="flex justify-between items-center border-t border-slate-200 dark:border-slate-800 pt-2 font-bold">
+                <span className="text-slate-700 dark:text-slate-300">মোট বিক্রয় বিল ({toBnDigit(orderToDelete.totalPairs)} জোড়া):</span>
+                <span className="text-amber-700 dark:text-amber-300 font-mono">{formatTaka(orderToDelete.grandTotal)}</span>
               </div>
             </div>
 
-            <p className="text-xs text-slate-300 leading-relaxed bg-rose-950/30 border border-rose-500/30 p-3 rounded-xl text-rose-200">
+            <p className="text-xs text-rose-800 dark:text-rose-200 leading-relaxed bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-500/30 p-3 rounded-xl">
               ⚠️ আপনি কি নিশ্চিতভাবে মেমো <strong>#{orderToDelete.memoNo}</strong> ট্র্যাশে পাঠাতে চান? এটি ভুলবশত ডিলিট হলেও ট্র্যাশ থেকে সহজে রিস্টোর করা যাবে।
             </p>
 
@@ -1310,7 +1310,7 @@ export const SalesHistory: React.FC<SalesHistoryProps> = ({
               <button
                 type="button"
                 onClick={() => setOrderToDelete(null)}
-                className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold rounded-xl text-xs transition cursor-pointer"
+                className="px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold rounded-xl text-xs transition cursor-pointer"
               >
                 বাতিল করুন
               </button>
@@ -1322,7 +1322,7 @@ export const SalesHistory: React.FC<SalesHistoryProps> = ({
                     setOrderToDelete(null);
                   }
                 }}
-                className="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white font-bold rounded-xl text-xs flex items-center gap-1.5 shadow-lg shadow-rose-900/30 transition cursor-pointer"
+                className="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white font-bold rounded-xl text-xs flex items-center gap-1.5 shadow-lg shadow-rose-900/10 transition cursor-pointer"
               >
                 <Trash2 className="w-4 h-4" />
                 ট্র্যাশে পাঠান

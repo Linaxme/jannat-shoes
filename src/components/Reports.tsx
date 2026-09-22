@@ -374,14 +374,14 @@ export const Reports: React.FC<ReportsProps> = ({
     <div className="space-y-6">
       
       {/* Top Header & Filter Controls */}
-      <div className="bg-slate-900 border border-slate-800 p-4 sm:p-6 rounded-2xl space-y-4 shadow-xl">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-4">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 sm:p-6 rounded-2xl space-y-4 shadow-sm">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-4">
           <div>
-            <h2 className="text-lg sm:text-xl font-bold text-white flex items-center gap-2">
-              <BarChart3 className="w-5 h-5 text-amber-400" />
+            <h2 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+              <BarChart3 className="w-5 h-5 text-amber-600 dark:text-amber-400" />
               কাস্টম রিপোর্ট ও ডাউনলোড কেন্দ্র
             </h2>
-            <p className="text-xs text-slate-400 mt-1">
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
               মাসিক, বার্ষিক ও কাস্টম সময়কালের পূর্ণাঙ্গ বিক্রয় ও বকেয়া রিপোর্ট (PDF ও Excel এ ডাউনলোডযোগ্য)।
             </p>
           </div>
@@ -391,7 +391,7 @@ export const Reports: React.FC<ReportsProps> = ({
             <button
               onClick={handleExportExcel}
               disabled={isExportingExcel || filteredOrders.length === 0}
-              className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 disabled:bg-emerald-800/50 text-white font-bold rounded-xl text-xs flex items-center gap-2 shadow-lg shadow-emerald-900/30 transition cursor-pointer"
+              className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 disabled:bg-emerald-300 dark:disabled:bg-emerald-800/50 text-white font-bold rounded-xl text-xs flex items-center gap-2 shadow-sm transition cursor-pointer"
               title="এক্সেল স্প্রেডশীট (.xlsx) ডাউনলোড করুন"
             >
               {isExportingExcel ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileSpreadsheet className="w-4 h-4" />}
@@ -401,7 +401,7 @@ export const Reports: React.FC<ReportsProps> = ({
             <button
               onClick={handleExportPDF}
               disabled={isExportingPDF || filteredOrders.length === 0}
-              className="px-3.5 py-2 bg-rose-600 hover:bg-rose-500 disabled:bg-rose-800/50 text-white font-bold rounded-xl text-xs flex items-center gap-2 shadow-lg shadow-rose-900/30 transition cursor-pointer"
+              className="px-3.5 py-2 bg-rose-600 hover:bg-rose-500 disabled:bg-rose-300 dark:disabled:bg-rose-800/50 text-white font-bold rounded-xl text-xs flex items-center gap-2 shadow-sm transition cursor-pointer"
               title="PDF রিপোর্ট ফাইল ডাউনলোড করুন"
             >
               {isExportingPDF ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileText className="w-4 h-4" />}
@@ -410,7 +410,7 @@ export const Reports: React.FC<ReportsProps> = ({
 
             <button
               onClick={() => window.print()}
-              className="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold rounded-xl text-xs flex items-center gap-2 border border-slate-700 transition cursor-pointer"
+              className="px-3.5 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold rounded-xl text-xs flex items-center gap-2 border border-slate-300 dark:border-slate-700 transition cursor-pointer"
             >
               <Printer className="w-4 h-4" />
               <span className="hidden sm:inline">প্রিন্ট</span>
@@ -421,11 +421,11 @@ export const Reports: React.FC<ReportsProps> = ({
         {/* Period Selector Tabs */}
         <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-center">
           
-          <div className="md:col-span-4 flex items-center bg-slate-950 p-1 rounded-xl border border-slate-800 text-xs">
+          <div className="md:col-span-4 flex items-center bg-slate-100 dark:bg-slate-950 p-1 rounded-xl border border-slate-200 dark:border-slate-800 text-xs">
             <button
               onClick={() => setReportType('monthly')}
               className={`flex-1 py-1.5 rounded-lg font-bold transition cursor-pointer ${
-                reportType === 'monthly' ? 'bg-amber-500 text-slate-950 shadow' : 'text-slate-400 hover:text-white'
+                reportType === 'monthly' ? 'bg-amber-500 text-slate-950 shadow-xs' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
               মাসিক রিপোর্ট
@@ -433,7 +433,7 @@ export const Reports: React.FC<ReportsProps> = ({
             <button
               onClick={() => setReportType('annual')}
               className={`flex-1 py-1.5 rounded-lg font-bold transition cursor-pointer ${
-                reportType === 'annual' ? 'bg-amber-500 text-slate-950 shadow' : 'text-slate-400 hover:text-white'
+                reportType === 'annual' ? 'bg-amber-500 text-slate-950 shadow-xs' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
               বার্ষিক রিপোর্ট
@@ -441,7 +441,7 @@ export const Reports: React.FC<ReportsProps> = ({
             <button
               onClick={() => setReportType('custom')}
               className={`flex-1 py-1.5 rounded-lg font-bold transition cursor-pointer ${
-                reportType === 'custom' ? 'bg-amber-500 text-slate-950 shadow' : 'text-slate-400 hover:text-white'
+                reportType === 'custom' ? 'bg-amber-500 text-slate-950 shadow-xs' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
               কাস্টম তারিখ
@@ -461,14 +461,14 @@ export const Reports: React.FC<ReportsProps> = ({
                       setIsYearDropdownOpen(false);
                       setIsSellerDropdownOpen(false);
                     }}
-                    className="bg-slate-950 border border-slate-700 hover:border-slate-600 text-xs text-amber-300 font-bold rounded-xl px-3 py-2 flex items-center gap-1.5 focus:outline-none cursor-pointer transition-colors"
+                    className="bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 hover:border-slate-400 dark:hover:border-slate-600 text-xs text-amber-800 dark:text-amber-300 font-bold rounded-xl px-3 py-2 flex items-center gap-1.5 focus:outline-none cursor-pointer transition-colors"
                   >
                     <span>{monthsList.find((m) => m.num === selectedMonth)?.name || selectedMonth}</span>
-                    <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform ${isMonthDropdownOpen ? 'rotate-180 text-amber-400' : ''}`} />
+                    <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform ${isMonthDropdownOpen ? 'rotate-180 text-amber-500 dark:text-amber-400' : ''}`} />
                   </button>
 
                   {isMonthDropdownOpen && (
-                    <div className="absolute left-0 top-full mt-1 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl py-1 z-50 min-w-[170px] max-h-60 overflow-y-auto">
+                    <div className="absolute left-0 top-full mt-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-2xl py-1 z-50 min-w-[170px] max-h-60 overflow-y-auto">
                       {monthsList.map((m) => {
                         const isSelected = selectedMonth === m.num;
                         return (
@@ -480,11 +480,11 @@ export const Reports: React.FC<ReportsProps> = ({
                               setIsMonthDropdownOpen(false);
                             }}
                             className={`w-full px-3 py-1.5 text-left text-xs flex items-center justify-between cursor-pointer transition-colors ${
-                              isSelected ? 'bg-amber-500/20 text-amber-300 font-bold' : 'text-slate-300 hover:bg-slate-800'
+                              isSelected ? 'bg-amber-50 dark:bg-amber-500/20 text-amber-800 dark:text-amber-300 font-bold' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
                             }`}
                           >
                             <span>{m.name}</span>
-                            {isSelected && <Check className="w-3.5 h-3.5 text-amber-400 shrink-0" />}
+                            {isSelected && <Check className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0" />}
                           </button>
                         );
                       })}
@@ -501,14 +501,14 @@ export const Reports: React.FC<ReportsProps> = ({
                       setIsMonthDropdownOpen(false);
                       setIsSellerDropdownOpen(false);
                     }}
-                    className="bg-slate-950 border border-slate-700 hover:border-slate-600 text-xs text-amber-300 font-bold rounded-xl px-3 py-2 flex items-center gap-1.5 focus:outline-none cursor-pointer transition-colors"
+                    className="bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 hover:border-slate-400 dark:hover:border-slate-600 text-xs text-amber-800 dark:text-amber-300 font-bold rounded-xl px-3 py-2 flex items-center gap-1.5 focus:outline-none cursor-pointer transition-colors"
                   >
                     <span>{selectedYear} সাল</span>
-                    <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform ${isYearDropdownOpen ? 'rotate-180 text-amber-400' : ''}`} />
+                    <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform ${isYearDropdownOpen ? 'rotate-180 text-amber-500 dark:text-amber-400' : ''}`} />
                   </button>
 
                   {isYearDropdownOpen && (
-                    <div className="absolute left-0 top-full mt-1 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl py-1 z-50 min-w-[110px]">
+                    <div className="absolute left-0 top-full mt-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-2xl py-1 z-50 min-w-[110px]">
                       {yearsList.map((y) => {
                         const isSelected = selectedYear === y;
                         return (
@@ -520,11 +520,11 @@ export const Reports: React.FC<ReportsProps> = ({
                               setIsYearDropdownOpen(false);
                             }}
                             className={`w-full px-3 py-1.5 text-left text-xs flex items-center justify-between cursor-pointer transition-colors ${
-                              isSelected ? 'bg-amber-500/20 text-amber-300 font-bold' : 'text-slate-300 hover:bg-slate-800'
+                              isSelected ? 'bg-amber-50 dark:bg-amber-500/20 text-amber-800 dark:text-amber-300 font-bold' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
                             }`}
                           >
                             <span>{y} সাল</span>
-                            {isSelected && <Check className="w-3.5 h-3.5 text-amber-400 shrink-0" />}
+                            {isSelected && <Check className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0" />}
                           </button>
                         );
                       })}
@@ -543,14 +543,14 @@ export const Reports: React.FC<ReportsProps> = ({
                     setIsMonthDropdownOpen(false);
                     setIsSellerDropdownOpen(false);
                   }}
-                  className="bg-slate-950 border border-slate-700 hover:border-slate-600 text-xs text-amber-300 font-bold rounded-xl px-4 py-2 flex items-center gap-1.5 focus:outline-none cursor-pointer transition-colors"
+                  className="bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 hover:border-slate-400 dark:hover:border-slate-600 text-xs text-amber-800 dark:text-amber-300 font-bold rounded-xl px-4 py-2 flex items-center gap-1.5 focus:outline-none cursor-pointer transition-colors"
                 >
                   <span>{selectedYear} সাল</span>
-                  <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform ${isYearDropdownOpen ? 'rotate-180 text-amber-400' : ''}`} />
+                  <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform ${isYearDropdownOpen ? 'rotate-180 text-amber-500 dark:text-amber-400' : ''}`} />
                 </button>
 
                 {isYearDropdownOpen && (
-                  <div className="absolute left-0 top-full mt-1 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl py-1 z-50 min-w-[110px]">
+                  <div className="absolute left-0 top-full mt-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-2xl py-1 z-50 min-w-[110px]">
                     {yearsList.map((y) => {
                       const isSelected = selectedYear === y;
                       return (
@@ -562,11 +562,11 @@ export const Reports: React.FC<ReportsProps> = ({
                             setIsYearDropdownOpen(false);
                           }}
                           className={`w-full px-3 py-1.5 text-left text-xs flex items-center justify-between cursor-pointer transition-colors ${
-                            isSelected ? 'bg-amber-500/20 text-amber-300 font-bold' : 'text-slate-300 hover:bg-slate-800'
+                            isSelected ? 'bg-amber-50 dark:bg-amber-500/20 text-amber-800 dark:text-amber-300 font-bold' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
                           }`}
                         >
                           <span>{y} সাল</span>
-                          {isSelected && <Check className="w-3.5 h-3.5 text-amber-400 shrink-0" />}
+                          {isSelected && <Check className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0" />}
                         </button>
                       );
                     })}
@@ -581,14 +581,14 @@ export const Reports: React.FC<ReportsProps> = ({
                   type="date"
                   value={startDate}
                   onChange={(e) => setStartDate(e.target.value)}
-                  className="bg-slate-950 border border-slate-700 text-amber-300 rounded-xl px-3 py-1.5 focus:outline-none"
+                  className="bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-amber-800 dark:text-amber-300 rounded-xl px-3 py-1.5 focus:outline-none"
                 />
-                <span className="text-slate-400">থেকে</span>
+                <span className="text-slate-500 dark:text-slate-400">থেকে</span>
                 <input
                   type="date"
                   value={endDate}
                   onChange={(e) => setEndDate(e.target.value)}
-                  className="bg-slate-950 border border-slate-700 text-amber-300 rounded-xl px-3 py-1.5 focus:outline-none"
+                  className="bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-amber-800 dark:text-amber-300 rounded-xl px-3 py-1.5 focus:outline-none"
                 />
               </div>
             )}
@@ -603,19 +603,19 @@ export const Reports: React.FC<ReportsProps> = ({
                     setIsMonthDropdownOpen(false);
                     setIsYearDropdownOpen(false);
                   }}
-                  className="bg-slate-950 border border-slate-700 hover:border-slate-600 text-xs text-slate-200 font-medium rounded-xl px-3 py-2 flex items-center gap-1.5 focus:outline-none cursor-pointer transition-colors"
+                  className="bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 hover:border-slate-400 dark:hover:border-slate-600 text-xs text-slate-700 dark:text-slate-200 font-medium rounded-xl px-3 py-2 flex items-center gap-1.5 focus:outline-none cursor-pointer transition-colors"
                 >
-                  <Users className="w-3.5 h-3.5 text-amber-400" />
+                  <Users className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
                   <span>
                     {selectedSellerId === 'all'
                       ? 'সকল সেলার'
                       : sellers.find((s) => s.name === selectedSellerId)?.name || selectedSellerId}
                   </span>
-                  <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform ${isSellerDropdownOpen ? 'rotate-180 text-amber-400' : ''}`} />
+                  <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform ${isSellerDropdownOpen ? 'rotate-180 text-amber-500 dark:text-amber-400' : ''}`} />
                 </button>
 
                 {isSellerDropdownOpen && (
-                  <div className="absolute left-0 top-full mt-1 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl py-1 z-50 min-w-[180px] max-h-60 overflow-y-auto">
+                  <div className="absolute left-0 top-full mt-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-2xl py-1 z-50 min-w-[180px] max-h-60 overflow-y-auto">
                     <button
                       type="button"
                       onClick={() => {
@@ -623,11 +623,11 @@ export const Reports: React.FC<ReportsProps> = ({
                         setIsSellerDropdownOpen(false);
                       }}
                       className={`w-full px-3 py-1.5 text-left text-xs flex items-center justify-between cursor-pointer transition-colors ${
-                        selectedSellerId === 'all' ? 'bg-amber-500/20 text-amber-300 font-bold' : 'text-slate-300 hover:bg-slate-800'
+                        selectedSellerId === 'all' ? 'bg-amber-50 dark:bg-amber-500/20 text-amber-800 dark:text-amber-300 font-bold' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
                       }`}
                     >
                       <span>সকল সেলার</span>
-                      {selectedSellerId === 'all' && <Check className="w-3.5 h-3.5 text-amber-400 shrink-0" />}
+                      {selectedSellerId === 'all' && <Check className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0" />}
                     </button>
                     {sellers.map((s) => {
                       const isSelected = selectedSellerId === s.name;
@@ -640,11 +640,11 @@ export const Reports: React.FC<ReportsProps> = ({
                             setIsSellerDropdownOpen(false);
                           }}
                           className={`w-full px-3 py-1.5 text-left text-xs flex items-center justify-between cursor-pointer transition-colors ${
-                            isSelected ? 'bg-amber-500/20 text-amber-300 font-bold' : 'text-slate-300 hover:bg-slate-800'
+                            isSelected ? 'bg-amber-50 dark:bg-amber-500/20 text-amber-800 dark:text-amber-300 font-bold' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
                           }`}
                         >
                           <span>{s.name} ({s.area})</span>
-                          {isSelected && <Check className="w-3.5 h-3.5 text-amber-400 shrink-0" />}
+                          {isSelected && <Check className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0" />}
                         </button>
                       );
                     })}
@@ -660,7 +660,7 @@ export const Reports: React.FC<ReportsProps> = ({
                   setSelectedSellerId('all');
                   setSelectedCustomerId('all');
                 }}
-                className="p-2 text-slate-400 hover:text-white rounded-lg"
+                className="p-2 text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white rounded-lg"
                 title="ফিল্টার রিসেট করুন"
               >
                 <RotateCcw className="w-4 h-4" />
@@ -674,75 +674,75 @@ export const Reports: React.FC<ReportsProps> = ({
       {/* KPI Overview Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
         
-        <div className="bg-slate-900/80 border border-slate-800/90 rounded-2xl p-4 sm:p-5 shadow-sm hover:border-slate-700/80 transition relative overflow-hidden group">
+        <div className="bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800/90 rounded-2xl p-4 sm:p-5 shadow-xs hover:border-slate-300 dark:hover:border-slate-700/80 transition relative overflow-hidden group">
           <div className="flex items-start justify-between gap-3">
             <div>
-              <span className="text-xs font-bold text-slate-400">মোট বিক্রয়</span>
-              <div className="text-xl sm:text-2xl font-black text-amber-300 font-mono tracking-tight mt-1">
+              <span className="text-xs font-bold text-slate-500 dark:text-slate-400">মোট বিক্রয়</span>
+              <div className="text-xl sm:text-2xl font-black text-amber-700 dark:text-amber-300 font-mono tracking-tight mt-1">
                 {formatTaka(totalSalesRevenue)}
               </div>
             </div>
-            <div className="w-10 h-10 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400 shrink-0 shadow-inner">
+            <div className="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-500/15 border border-amber-200 dark:border-amber-500/30 flex items-center justify-center text-amber-600 dark:text-amber-400 shrink-0 shadow-inner">
               <TrendingUp className="w-5 h-5" />
             </div>
           </div>
-          <div className="mt-3 pt-3 border-t border-slate-800/70 flex items-center justify-between text-xs text-slate-400">
+          <div className="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800/70 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
             <span>বিক্রীত জুতো</span>
-            <span className="font-bold text-slate-200">{toBnDigit(totalPairsSold)} জোড়া</span>
+            <span className="font-bold text-slate-800 dark:text-slate-200">{toBnDigit(totalPairsSold)} জোড়া</span>
           </div>
         </div>
 
-        <div className="bg-slate-900/80 border border-slate-800/90 rounded-2xl p-4 sm:p-5 shadow-sm hover:border-slate-700/80 transition relative overflow-hidden group">
+        <div className="bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800/90 rounded-2xl p-4 sm:p-5 shadow-xs hover:border-slate-300 dark:hover:border-slate-700/80 transition relative overflow-hidden group">
           <div className="flex items-start justify-between gap-3">
             <div>
-              <span className="text-xs font-bold text-slate-400">নগদ আদায় ও কালেকশন</span>
-              <div className="text-xl sm:text-2xl font-black text-emerald-400 font-mono tracking-tight mt-1">
+              <span className="text-xs font-bold text-slate-500 dark:text-slate-400">নগদ আদায় ও কালেকশন</span>
+              <div className="text-xl sm:text-2xl font-black text-emerald-600 dark:text-emerald-400 font-mono tracking-tight mt-1">
                 {formatTaka(totalCashCollected)}
               </div>
             </div>
-            <div className="w-10 h-10 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400 shrink-0 shadow-inner">
+            <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-500/15 border border-emerald-200 dark:border-emerald-500/30 flex items-center justify-center text-emerald-600 dark:text-emerald-400 shrink-0 shadow-inner">
               <CheckCircle2 className="w-5 h-5" />
             </div>
           </div>
-          <div className="mt-3 pt-3 border-t border-slate-800/70 flex items-center justify-between text-xs text-slate-400">
+          <div className="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800/70 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
             <span>মোট মেমো</span>
-            <span className="font-bold text-slate-200">{toBnDigit(totalOrdersCount)} টি</span>
+            <span className="font-bold text-slate-800 dark:text-slate-200">{toBnDigit(totalOrdersCount)} টি</span>
           </div>
         </div>
 
-        <div className="bg-slate-900/80 border border-slate-800/90 rounded-2xl p-4 sm:p-5 shadow-sm hover:border-slate-700/80 transition relative overflow-hidden group">
+        <div className="bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800/90 rounded-2xl p-4 sm:p-5 shadow-xs hover:border-slate-300 dark:hover:border-slate-700/80 transition relative overflow-hidden group">
           <div className="flex items-start justify-between gap-3">
             <div>
-              <span className="text-xs font-bold text-slate-400">নতুন সৃষ্ট বাকী (Due)</span>
-              <div className="text-xl sm:text-2xl font-black text-rose-400 font-mono tracking-tight mt-1">
+              <span className="text-xs font-bold text-slate-500 dark:text-slate-400">নতুন সৃষ্ট বাকী (Due)</span>
+              <div className="text-xl sm:text-2xl font-black text-rose-600 dark:text-rose-400 font-mono tracking-tight mt-1">
                 {formatTaka(totalNewDue)}
               </div>
             </div>
-            <div className="w-10 h-10 rounded-xl bg-rose-500/15 border border-rose-500/30 flex items-center justify-center text-rose-400 shrink-0 shadow-inner">
+            <div className="w-10 h-10 rounded-xl bg-rose-50 dark:bg-rose-500/15 border border-rose-200 dark:border-rose-500/30 flex items-center justify-center text-rose-600 dark:text-rose-400 shrink-0 shadow-inner">
               <Users className="w-5 h-5" />
             </div>
           </div>
-          <div className="mt-3 pt-3 border-t border-slate-800/70 flex items-center justify-between text-xs text-slate-400">
+          <div className="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800/70 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
             <span>ডিসকাউন্ট</span>
-            <span className="font-bold text-slate-200">{formatTaka(totalDiscounts)}</span>
+            <span className="font-bold text-slate-800 dark:text-slate-200">{formatTaka(totalDiscounts)}</span>
           </div>
         </div>
 
-        <div className="bg-slate-900/80 border border-slate-800/90 rounded-2xl p-4 sm:p-5 shadow-sm hover:border-slate-700/80 transition relative overflow-hidden group">
+        <div className="bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800/90 rounded-2xl p-4 sm:p-5 shadow-xs hover:border-slate-300 dark:hover:border-slate-700/80 transition relative overflow-hidden group">
           <div className="flex items-start justify-between gap-3">
             <div>
-              <span className="text-xs font-bold text-slate-400">মোট লাভ ও মার্জিন</span>
-              <div className="text-xl sm:text-2xl font-black text-indigo-300 font-mono tracking-tight mt-1">
+              <span className="text-xs font-bold text-slate-500 dark:text-slate-400">মোট লাভ ও মার্জিন</span>
+              <div className="text-xl sm:text-2xl font-black text-indigo-600 dark:text-indigo-300 font-mono tracking-tight mt-1">
                 {formatTaka(grossProfit)}
               </div>
             </div>
-            <div className="w-10 h-10 rounded-xl bg-indigo-500/15 border border-indigo-500/30 flex items-center justify-center text-indigo-400 shrink-0 shadow-inner">
+            <div className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-500/15 border border-indigo-200 dark:border-indigo-500/30 flex items-center justify-center text-indigo-600 dark:text-indigo-400 shrink-0 shadow-inner">
               <Percent className="w-5 h-5" />
             </div>
           </div>
-          <div className="mt-3 pt-3 border-t border-slate-800/70 flex items-center justify-between text-xs text-slate-400">
+          <div className="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800/70 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
             <span>মুনাফার হার</span>
-            <span className="font-bold text-amber-300">{toBnDigit(profitMarginPercent)}%</span>
+            <span className="font-bold text-amber-700 dark:text-amber-300">{toBnDigit(profitMarginPercent)}%</span>
           </div>
         </div>
 
@@ -752,22 +752,22 @@ export const Reports: React.FC<ReportsProps> = ({
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         
         {/* Sales & Cash Trend Chart (8 cols) */}
-        <div className="lg:col-span-8 bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-4">
-          <h3 className="font-bold text-sm text-white flex items-center gap-2">
-            <TrendingUp className="w-4 h-4 text-amber-400" />
+        <div className="lg:col-span-8 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 rounded-2xl space-y-4 shadow-sm">
+          <h3 className="font-bold text-sm text-slate-900 dark:text-white flex items-center gap-2">
+            <TrendingUp className="w-4 h-4 text-amber-600 dark:text-amber-400" />
             বিক্রয় ও নগদ আদায়ের দৈনিক ট্রেন্ড
           </h3>
           <div className="h-72 w-full pt-2">
             {chartData.length === 0 ? (
-              <div className="h-full flex items-center justify-center text-slate-500 text-xs">
+              <div className="h-full flex items-center justify-center text-slate-400 text-xs">
                 সিলেক্ট করা সময়ে কোনো বিক্রয়ের ডাটা নেই।
               </div>
             ) : (
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-                  <XAxis dataKey="date" stroke="#94a3b8" fontSize={11} />
-                  <YAxis stroke="#94a3b8" fontSize={11} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="#94a3b8" strokeOpacity={0.25} />
+                  <XAxis dataKey="date" stroke="#64748b" fontSize={11} />
+                  <YAxis stroke="#64748b" fontSize={11} />
                   <Tooltip
                     contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', borderRadius: '12px', color: '#f8fafc', fontSize: '12px' }}
                   />
@@ -781,31 +781,31 @@ export const Reports: React.FC<ReportsProps> = ({
         </div>
 
         {/* Top Selling Shoe Models (4 cols) */}
-        <div className="lg:col-span-4 bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-4">
-          <h3 className="font-bold text-sm text-white flex items-center gap-2">
-            <ShoppingBag className="w-4 h-4 text-amber-400" />
+        <div className="lg:col-span-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 rounded-2xl space-y-4 shadow-sm">
+          <h3 className="font-bold text-sm text-slate-900 dark:text-white flex items-center gap-2">
+            <ShoppingBag className="w-4 h-4 text-amber-600 dark:text-amber-400" />
             সেরা বিক্রীত মডেল (Top Articles)
           </h3>
 
           <div className="space-y-2.5 max-h-[300px] overflow-y-auto pr-1">
             {topArticles.length === 0 ? (
-              <div className="text-center py-8 text-xs text-slate-500">কোনো তথ্য নেই</div>
+              <div className="text-center py-8 text-xs text-slate-400">কোনো তথ্য নেই</div>
             ) : (
               topArticles.slice(0, 10).map((a, idx) => (
                 <div
                   key={a.articleCode}
-                  className="p-3 bg-slate-950/80 rounded-xl border border-slate-800 flex items-center justify-between text-xs hover:border-slate-700 transition"
+                  className="p-3 bg-slate-50 dark:bg-slate-950/80 rounded-xl border border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs hover:border-slate-300 dark:hover:border-slate-700 transition"
                 >
                   <div>
-                    <div className="font-bold text-slate-100 flex items-center gap-1.5">
-                      <span className="text-amber-400 font-mono">#{idx + 1}</span>
+                    <div className="font-bold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
+                      <span className="text-amber-700 dark:text-amber-400 font-mono">#{idx + 1}</span>
                       <span>{a.articleCode}</span>
                     </div>
-                    <div className="text-[10px] text-slate-400 truncate max-w-[150px]">{a.productName}</div>
+                    <div className="text-[10px] text-slate-500 dark:text-slate-400 truncate max-w-[150px]">{a.productName}</div>
                   </div>
                   <div className="text-right">
-                    <div className="font-black text-amber-300">{toBnDigit(a.pairs)} জোড়া</div>
-                    <div className="text-[10px] text-emerald-400 font-mono">{formatTaka(a.revenue)}</div>
+                    <div className="font-black text-amber-700 dark:text-amber-300">{toBnDigit(a.pairs)} জোড়া</div>
+                    <div className="text-[10px] text-emerald-600 dark:text-emerald-400 font-mono">{formatTaka(a.revenue)}</div>
                   </div>
                 </div>
               ))
@@ -817,15 +817,15 @@ export const Reports: React.FC<ReportsProps> = ({
 
       {/* Seller Breakdown Table */}
       {sellerBreakdown.length > 0 && (
-        <div className="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-4">
-          <h3 className="font-bold text-sm text-white flex items-center gap-2">
-            <Users className="w-4 h-4 text-amber-400" />
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 rounded-2xl space-y-4 shadow-sm">
+          <h3 className="font-bold text-sm text-slate-900 dark:text-white flex items-center gap-2">
+            <Users className="w-4 h-4 text-amber-600 dark:text-amber-400" />
             সেলার অনুযায়ী পারফরম্যান্স সারসংক্ষেপ
           </h3>
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs border-collapse">
               <thead>
-                <tr className="bg-slate-950 text-slate-400 border-b border-slate-800">
+                <tr className="bg-slate-50 dark:bg-slate-950 text-slate-600 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
                   <th className="p-3 font-semibold">সেলার নাম</th>
                   <th className="p-3 font-semibold text-center">মেমো সংখ্যা</th>
                   <th className="p-3 font-semibold text-center">মোট জোড়া</th>
@@ -833,17 +833,17 @@ export const Reports: React.FC<ReportsProps> = ({
                   <th className="p-3 font-semibold text-right">নগদ আদায় (৳)</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800">
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                 {sellerBreakdown.map((s) => (
-                  <tr key={s.name} className="hover:bg-slate-800/40">
-                    <td className="p-3 font-bold text-white flex items-center gap-2">
-                      <Users className="w-3.5 h-3.5 text-amber-400" />
+                  <tr key={s.name} className="hover:bg-slate-50 dark:hover:bg-slate-800/40">
+                    <td className="p-3 font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                      <Users className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
                       {s.name}
                     </td>
-                    <td className="p-3 text-center text-slate-300">{toBnDigit(s.orders)}</td>
-                    <td className="p-3 text-center font-bold text-amber-300">{toBnDigit(s.pairs)} জোড়া</td>
-                    <td className="p-3 text-right font-black text-emerald-400">{formatTaka(s.sales)}</td>
-                    <td className="p-3 text-right font-bold text-slate-200">{formatTaka(s.cash)}</td>
+                    <td className="p-3 text-center text-slate-700 dark:text-slate-300">{toBnDigit(s.orders)}</td>
+                    <td className="p-3 text-center font-bold text-amber-700 dark:text-amber-300">{toBnDigit(s.pairs)} জোড়া</td>
+                    <td className="p-3 text-right font-black text-emerald-600 dark:text-emerald-400">{formatTaka(s.sales)}</td>
+                    <td className="p-3 text-right font-bold text-slate-700 dark:text-slate-200">{formatTaka(s.cash)}</td>
                   </tr>
                 ))}
               </tbody>

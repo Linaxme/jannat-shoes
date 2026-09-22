@@ -87,51 +87,51 @@ export const PendingOrders: React.FC<PendingOrdersProps> = ({
       {/* Header & Stats Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1 pb-1">
         <div className="flex items-center gap-3 flex-1 min-w-0">
-          <span className="text-base sm:text-lg md:text-xl font-black text-amber-400 tracking-wide whitespace-nowrap flex items-center gap-2">
-            <Clock className="w-5 h-5 text-amber-400" />
+          <span className="text-base sm:text-lg md:text-xl font-black text-amber-600 dark:text-amber-400 tracking-wide whitespace-nowrap flex items-center gap-2">
+            <Clock className="w-5 h-5 text-amber-600 dark:text-amber-400" />
             পেন্ডিং অর্ডার
           </span>
-          <div className="h-0.5 bg-gradient-to-r from-amber-500/50 via-slate-800 to-transparent flex-1" />
+          <div className="h-0.5 bg-gradient-to-r from-amber-500/50 via-slate-200 dark:via-slate-800 to-transparent flex-1" />
         </div>
 
-        <div className="flex items-center gap-3 bg-slate-950/80 px-3.5 py-1.5 rounded-xl border border-slate-800/90 text-xs shrink-0 self-start sm:self-auto shadow-inner">
+        <div className="flex items-center gap-3 bg-white dark:bg-slate-950/80 px-3.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800/90 text-xs shrink-0 self-start sm:self-auto shadow-xs">
           <div>
-            <span className="font-bold text-slate-200">{toBnDigit(filteredOrders.length)} টি</span>
+            <span className="font-bold text-slate-800 dark:text-slate-200">{toBnDigit(filteredOrders.length)} টি</span>
           </div>
-          <div className="h-3.5 w-px bg-slate-800" />
+          <div className="h-3.5 w-px bg-slate-200 dark:bg-slate-800" />
           <div>
-            <span className="font-bold text-amber-300">{toBnDigit(totalPendingPairs)} জোড়া</span>
+            <span className="font-bold text-amber-700 dark:text-amber-300">{toBnDigit(totalPendingPairs)} জোড়া</span>
           </div>
-          <div className="h-3.5 w-px bg-slate-800" />
+          <div className="h-3.5 w-px bg-slate-200 dark:bg-slate-800" />
           <div>
-            <span className="font-bold text-emerald-400">{formatTaka(totalPendingAmount)}</span>
+            <span className="font-bold text-emerald-600 dark:text-emerald-400">{formatTaka(totalPendingAmount)}</span>
           </div>
         </div>
       </div>
 
       {/* Search & View Switcher Toolbar */}
-      <div className={`${activeTheme.cardClass} p-3 sm:p-3.5 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-3`}>
-        <div className="relative w-full sm:w-80 bg-slate-950 border border-slate-700/80 rounded-xl px-3 py-2 flex items-center gap-2">
-          <Search className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-3 sm:p-3.5 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-3 shadow-xs">
+        <div className="relative w-full sm:w-80 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700/80 rounded-xl px-3 py-2 flex items-center gap-2">
+          <Search className="w-3.5 h-3.5 text-slate-400 dark:text-slate-400 shrink-0" />
           <input
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="মেমো বা দোকান খুঁজুন..."
-            className="bg-transparent text-xs text-slate-100 placeholder-slate-500 w-full focus:outline-none"
+            className="bg-transparent text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 w-full focus:outline-none"
           />
         </div>
 
         {/* View Mode Switcher */}
         <div className="flex items-center justify-end w-full sm:w-auto gap-3">
-          <div className="flex items-center gap-1 bg-slate-950 p-1 rounded-xl border border-slate-800 ml-auto sm:ml-0">
+          <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-950 p-1 rounded-xl border border-slate-200 dark:border-slate-800 ml-auto sm:ml-0">
             <button
               type="button"
               onClick={() => setViewMode('table')}
               className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
                 viewMode === 'table'
                   ? 'bg-amber-500 text-slate-950 shadow'
-                  : 'text-slate-400 hover:text-slate-200'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
               }`}
             >
               <List className="w-3.5 h-3.5" />
@@ -143,7 +143,7 @@ export const PendingOrders: React.FC<PendingOrdersProps> = ({
               className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
                 viewMode === 'card'
                   ? 'bg-amber-500 text-slate-950 shadow'
-                  : 'text-slate-400 hover:text-slate-200'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
               }`}
             >
               <LayoutGrid className="w-3.5 h-3.5" />
@@ -154,16 +154,16 @@ export const PendingOrders: React.FC<PendingOrdersProps> = ({
       </div>
 
       {/* Orders Container */}
-      <div className={`${activeTheme.cardClass} p-4 sm:p-5 rounded-2xl`}>
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 sm:p-5 rounded-2xl shadow-xs">
         {filteredOrders.length === 0 ? (
           <div className="py-12 text-center space-y-3">
-            <div className="w-16 h-16 bg-amber-500/10 text-amber-400 rounded-full flex items-center justify-center mx-auto border border-amber-500/20">
+            <div className="w-16 h-16 bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 rounded-full flex items-center justify-center mx-auto border border-amber-200 dark:border-amber-500/20">
               <Truck className="w-8 h-8" />
             </div>
-            <h3 className="text-base font-bold text-slate-200">
+            <h3 className="text-base font-bold text-slate-800 dark:text-slate-200">
               {isCustomer ? 'আপনার কোনো পেন্ডিং বা বুকিং অর্ডার নেই' : t('no_pending_orders_title')}
             </h3>
-            <p className="text-xs text-slate-400 max-w-md mx-auto">
+            <p className="text-xs text-slate-500 dark:text-slate-400 max-w-md mx-auto">
               {isCustomer
                 ? 'আপনার করা কোনো বুকিং অর্ডার থাকলে তা ডেলিভারির আগ পর্যন্ত এখানে প্রদর্শিত হবে।'
                 : t('no_pending_orders_desc')}
@@ -183,33 +183,33 @@ export const PendingOrders: React.FC<PendingOrdersProps> = ({
               return (
                 <div
                   key={ord.id}
-                  className={`bg-slate-950 border rounded-2xl transition-all shadow-md overflow-hidden ${
+                  className={`bg-slate-50 dark:bg-slate-950 border rounded-2xl transition-all shadow-xs overflow-hidden ${
                     isUnclaimed
-                      ? 'border-amber-500/80 ring-1 ring-amber-500/30'
+                      ? 'border-amber-400 dark:border-amber-500/80 ring-1 ring-amber-400/50 dark:ring-amber-500/30'
                       : isExpanded
-                      ? 'border-amber-500/80 ring-1 ring-amber-500/30'
-                      : 'border-slate-800 hover:border-slate-700'
+                      ? 'border-amber-400 dark:border-amber-500/80 ring-1 ring-amber-400/50 dark:ring-amber-500/30'
+                      : 'border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
                   }`}
                 >
                   {/* Collapsed Overview Header */}
                   <div
                     onClick={() => setExpandedOrderId(isExpanded ? null : ord.id)}
-                    className="p-4 cursor-pointer hover:bg-slate-900/60 transition-colors space-y-2 select-none"
+                    className="p-4 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-900/60 transition-colors space-y-2 select-none"
                   >
                     <div className="flex items-center justify-between">
-                      <span className="font-mono text-sm font-black text-amber-300 flex items-center gap-1.5">
+                      <span className="font-mono text-sm font-black text-amber-700 dark:text-amber-300 flex items-center gap-1.5">
                         #{ord.memoNo}
                         {isUnclaimed ? (
                           <span className="bg-amber-500 text-slate-950 text-[10px] font-black px-2 py-0.5 rounded-full inline-flex items-center gap-1 shadow">
                             উন্মুক্ত
                           </span>
                         ) : (
-                          <span className="bg-amber-500/20 text-amber-300 border border-amber-500/40 text-[10px] font-bold px-2 py-0.5 rounded-full inline-flex items-center gap-1">
+                          <span className="bg-amber-100 dark:bg-amber-500/20 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-500/40 text-[10px] font-bold px-2 py-0.5 rounded-full inline-flex items-center gap-1">
                             {t('sample_booked_tag')}
                           </span>
                         )}
                       </span>
-                      <div className="p-1 text-amber-400 flex items-center">
+                      <div className="p-1 text-amber-600 dark:text-amber-400 flex items-center">
                         {isExpanded ? (
                           <ChevronUp className="w-5 h-5" />
                         ) : (
@@ -219,41 +219,41 @@ export const PendingOrders: React.FC<PendingOrdersProps> = ({
                     </div>
 
                     <div className="flex items-center justify-between text-xs pt-0.5">
-                      <div className="font-bold text-white flex items-center gap-1.5 truncate pr-2">
-                        <Store className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                      <div className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5 truncate pr-2">
+                        <Store className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
                         <span className="truncate">{ord.shopName}</span>
                       </div>
-                      <span className="text-[11px] text-slate-400 shrink-0 font-mono">
+                      <span className="text-[11px] text-slate-500 dark:text-slate-400 shrink-0 font-mono">
                         {formatBnDate(ord.date)} {ord.time ? `(${ord.time})` : ''}
                       </span>
                     </div>
 
-                    <div className="flex items-center justify-between text-[11px] bg-slate-900/80 px-2.5 py-1.5 rounded-xl border border-slate-800/80 text-slate-300">
+                    <div className="flex items-center justify-between text-[11px] bg-white dark:bg-slate-900/80 px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800/80 text-slate-700 dark:text-slate-300">
                       <span>
-                        <strong className="text-white font-bold">{toBnDigit(ord.totalPairs)} জোড়া</strong>{' '}
-                        <span className="text-amber-300 font-semibold">({getDozenText(ord.totalPairs)})</span>
+                        <strong className="text-slate-900 dark:text-white font-bold">{toBnDigit(ord.totalPairs)} জোড়া</strong>{' '}
+                        <span className="text-amber-700 dark:text-amber-300 font-semibold">({getDozenText(ord.totalPairs)})</span>
                       </span>
-                      <span className="text-amber-300 font-black">{formatTaka(ord.grandTotal)}</span>
+                      <span className="text-amber-700 dark:text-amber-300 font-black">{formatTaka(ord.grandTotal)}</span>
                     </div>
                   </div>
 
                   {/* Expanded Details Section */}
                   {isExpanded && (
-                    <div className="p-4 pt-2 border-t border-slate-800/80 bg-slate-900/40 space-y-3.5 animate-fadeIn">
+                    <div className="p-4 pt-2 border-t border-slate-200 dark:border-slate-800/80 bg-slate-100/70 dark:bg-slate-900/40 space-y-3.5 animate-fadeIn">
                       {/* Customer & Seller Info */}
-                      <div className="text-xs space-y-1 bg-slate-950/80 p-2.5 rounded-xl border border-slate-800/60">
-                        <div className="text-slate-300">
-                          <span className="text-slate-400">প্রোপ্রাইটর:</span>{' '}
-                          <strong className="text-white">{ord.customerName}</strong>{' '}
-                          <span className="text-slate-400 font-mono">({ord.customerPhone})</span>
+                      <div className="text-xs space-y-1 bg-white dark:bg-slate-950/80 p-2.5 rounded-xl border border-slate-200 dark:border-slate-800/60">
+                        <div className="text-slate-700 dark:text-slate-300">
+                          <span className="text-slate-500 dark:text-slate-400">প্রোপ্রাইটর:</span>{' '}
+                          <strong className="text-slate-900 dark:text-white">{ord.customerName}</strong>{' '}
+                          <span className="text-slate-500 dark:text-slate-400 font-mono">({ord.customerPhone})</span>
                         </div>
-                        <div className="text-slate-300">
-                          <span className="text-slate-400">সেলার:</span>{' '}
-                          <strong className={isUnclaimed ? 'text-amber-400 font-bold' : 'text-indigo-300 font-bold'}>
+                        <div className="text-slate-700 dark:text-slate-300">
+                          <span className="text-slate-500 dark:text-slate-400">সেলার:</span>{' '}
+                          <strong className={isUnclaimed ? 'text-amber-700 dark:text-amber-400 font-bold' : 'text-indigo-600 dark:text-indigo-300 font-bold'}>
                             {ord.sellerName || 'উন্মুক্ত বুকিং'}
                           </strong>
                         </div>
-                        <div className="text-slate-400 text-[11px]">
+                        <div className="text-slate-500 dark:text-slate-400 text-[11px]">
                           বুকিং তারিখ: {formatBnDate(ord.date)} ({ord.time})
                         </div>
                       </div>
@@ -261,10 +261,10 @@ export const PendingOrders: React.FC<PendingOrdersProps> = ({
                       {/* Items List */}
                       {ord.items && ord.items.length > 0 && (
                         <div className="space-y-1.5">
-                          <span className="text-[11px] font-bold text-slate-400 flex items-center gap-1">
-                            <ShoppingBag className="w-3 h-3 text-amber-400" /> আইটেম বিবরণ ({toBnDigit(ord.items.length)}টি):
+                          <span className="text-[11px] font-bold text-slate-700 dark:text-slate-400 flex items-center gap-1">
+                            <ShoppingBag className="w-3 h-3 text-amber-600 dark:text-amber-400" /> আইটেম বিবরণ ({toBnDigit(ord.items.length)}টি):
                           </span>
-                          <div className="bg-slate-950 rounded-xl p-2.5 border border-slate-800 max-h-40 overflow-y-auto space-y-1.5 text-[11px]">
+                          <div className="bg-white dark:bg-slate-950 rounded-xl p-2.5 border border-slate-200 dark:border-slate-800 max-h-40 overflow-y-auto space-y-1.5 text-[11px]">
                             {ord.items.map((item, idx) => {
                               const artCode = item.articleCode || (item as any).articleNo || '';
                               const pName = item.productName || (item as any).name || 'জুতা';
@@ -272,13 +272,13 @@ export const PendingOrders: React.FC<PendingOrdersProps> = ({
                               const totPrice = item.totalAmount ?? (item as any).totalPrice ?? (item as any).itemTotal ?? 0;
 
                               return (
-                                <div key={idx} className="flex justify-between items-center py-1 border-b border-slate-800/60 last:border-0">
+                                <div key={idx} className="flex justify-between items-center py-1 border-b border-slate-100 dark:border-slate-800/60 last:border-0">
                                   <div>
-                                    <span className="font-bold text-amber-300 font-mono text-xs">{artCode ? `${artCode} - ` : ''}{pName}</span>
+                                    <span className="font-bold text-amber-700 dark:text-amber-300 font-mono text-xs">{artCode ? `${artCode} - ` : ''}{pName}</span>
                                   </div>
                                   <div className="text-right">
-                                    <span className="font-bold text-slate-200">{toBnDigit(pairs)} জোড়া</span>
-                                    <span className="text-[10px] text-slate-400 block">{formatTaka(totPrice)}</span>
+                                    <span className="font-bold text-slate-800 dark:text-slate-200">{toBnDigit(pairs)} জোড়া</span>
+                                    <span className="text-[10px] text-slate-500 dark:text-slate-400 block">{formatTaka(totPrice)}</span>
                                   </div>
                                 </div>
                               );
@@ -288,18 +288,18 @@ export const PendingOrders: React.FC<PendingOrdersProps> = ({
                       )}
 
                       {/* Financials Summary */}
-                      <div className="flex items-center justify-between bg-slate-950 p-2.5 rounded-xl border border-slate-800 text-xs">
-                        <span className="text-slate-400">মোট বুকিং বিল:</span>
-                        <span className="text-base font-black text-amber-300">{formatTaka(ord.grandTotal)}</span>
+                      <div className="flex items-center justify-between bg-white dark:bg-slate-950 p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 text-xs">
+                        <span className="text-slate-600 dark:text-slate-400">মোট বুকিং বিল:</span>
+                        <span className="text-base font-black text-amber-700 dark:text-amber-300">{formatTaka(ord.grandTotal)}</span>
                       </div>
 
                       {/* Action Buttons */}
-                      <div className="pt-2 border-t border-slate-800 flex items-center justify-end flex-wrap gap-1.5">
+                      <div className="pt-2 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end flex-wrap gap-1.5">
                         {isUnclaimed && onClaimOrder && (
                           <button
                             type="button"
                             onClick={() => onClaimOrder(ord.id)}
-                            className="px-2.5 py-1.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black rounded-xl text-xs flex items-center gap-1 shadow-lg shadow-amber-500/20 transition cursor-pointer"
+                            className="px-2.5 py-1.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black rounded-xl text-xs flex items-center gap-1 shadow-sm transition cursor-pointer"
                             title="এই অর্ডারটি ক্লেইম করে আপনার দায়িত্বে নিন"
                           >
                             <UserCheck className="w-3.5 h-3.5" />
@@ -310,7 +310,7 @@ export const PendingOrders: React.FC<PendingOrdersProps> = ({
                         <button
                           type="button"
                           onClick={() => setEditingOrder(ord)}
-                          className="px-2.5 py-1.5 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 rounded-xl text-xs font-bold flex items-center gap-1 transition-colors cursor-pointer"
+                          className="px-2.5 py-1.5 bg-amber-50 dark:bg-amber-500/20 hover:bg-amber-100 dark:hover:bg-amber-500/30 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-500/40 rounded-xl text-xs font-bold flex items-center gap-1 transition-colors cursor-pointer"
                         >
                           <Edit3 className="w-3.5 h-3.5" />
                           <span>এডিট</span>
@@ -319,7 +319,7 @@ export const PendingOrders: React.FC<PendingOrdersProps> = ({
                         <button
                           type="button"
                           onClick={() => onSelectOrderForInvoice(ord)}
-                          className="px-2.5 py-1.5 bg-indigo-600/30 hover:bg-indigo-600 text-indigo-200 border border-indigo-500/40 rounded-xl text-xs font-semibold flex items-center gap-1 transition-colors cursor-pointer"
+                          className="px-2.5 py-1.5 bg-indigo-50 dark:bg-indigo-600/30 hover:bg-indigo-100 dark:hover:bg-indigo-600 text-indigo-700 dark:text-indigo-200 border border-indigo-200 dark:border-indigo-500/40 rounded-xl text-xs font-semibold flex items-center gap-1 transition-colors cursor-pointer"
                         >
                           <Printer className="w-3.5 h-3.5" />
                           <span>প্রিন্ট</span>
@@ -338,7 +338,7 @@ export const PendingOrders: React.FC<PendingOrdersProps> = ({
                           <button
                             type="button"
                             onClick={() => setOrderToTrash(ord)}
-                            className="px-2.5 py-1.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 rounded-xl text-xs font-bold flex items-center gap-1 transition-colors cursor-pointer"
+                            className="px-2.5 py-1.5 bg-rose-50 dark:bg-rose-500/10 hover:bg-rose-100 dark:hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-500/30 rounded-xl text-xs font-bold flex items-center gap-1 transition-colors cursor-pointer"
                             title="মেমো ট্র্যাশে পাঠান"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
@@ -357,7 +357,7 @@ export const PendingOrders: React.FC<PendingOrdersProps> = ({
           <div className="overflow-x-auto no-scrollbar">
             <table className="w-full text-left text-xs whitespace-nowrap">
               <thead>
-                <tr className="border-b border-slate-700 text-slate-400 font-medium pb-2">
+                <tr className="border-b border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 font-medium pb-2">
                   <th className="pb-3 pr-3">মেমো নং</th>
                   <th className="pb-3 px-3">তারিখ ও সময়</th>
                   <th className="pb-3 px-3">দোকানের নাম</th>
@@ -367,7 +367,7 @@ export const PendingOrders: React.FC<PendingOrdersProps> = ({
                   <th className="pb-3 pl-3 text-right">ডিটেইলস</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800/80">
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80">
                 {filteredOrders.map((ord) => {
                   const isUnclaimed =
                     !ord.sellerId ||
@@ -381,28 +381,28 @@ export const PendingOrders: React.FC<PendingOrdersProps> = ({
                       {/* Collapsed Main Row */}
                       <tr
                         onClick={() => setExpandedOrderId(isExpanded ? null : ord.id)}
-                        className={`hover:bg-slate-800/50 cursor-pointer transition-colors select-none ${
-                          isExpanded ? 'bg-amber-950/20' : ''
+                        className={`hover:bg-slate-50 dark:hover:bg-slate-800/50 cursor-pointer transition-colors select-none ${
+                          isExpanded ? 'bg-amber-50/60 dark:bg-amber-950/20' : ''
                         }`}
                       >
-                        <td className="py-3.5 pr-3 font-mono font-black text-amber-300">
+                        <td className="py-3.5 pr-3 font-mono font-black text-amber-700 dark:text-amber-300">
                           #{ord.memoNo}
                         </td>
-                        <td className="py-3.5 px-3 text-slate-300 font-medium">
+                        <td className="py-3.5 px-3 text-slate-700 dark:text-slate-300 font-medium">
                           {formatBnDate(ord.date)}
-                          {ord.time && <span className="text-[10px] text-amber-400/90 ml-1">({ord.time})</span>}
+                          {ord.time && <span className="text-[10px] text-amber-700 dark:text-amber-400/90 ml-1">({ord.time})</span>}
                         </td>
-                        <td className="py-3.5 px-3 font-bold text-slate-100">
+                        <td className="py-3.5 px-3 font-bold text-slate-900 dark:text-slate-100">
                           <div className="flex items-center gap-1.5">
-                            <Store className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                            <Store className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
                             <span>{ord.shopName}</span>
                           </div>
                         </td>
-                        <td className="py-3.5 px-3 text-slate-200 font-bold">
+                        <td className="py-3.5 px-3 text-slate-800 dark:text-slate-200 font-bold">
                           {toBnDigit(ord.totalPairs)} জোড়া{' '}
-                          <span className="text-amber-300 text-[11px]">({getDozenText(ord.totalPairs)})</span>
+                          <span className="text-amber-700 dark:text-amber-300 text-[11px]">({getDozenText(ord.totalPairs)})</span>
                         </td>
-                        <td className="py-3.5 px-3 text-right font-black text-amber-300">
+                        <td className="py-3.5 px-3 text-right font-black text-amber-700 dark:text-amber-300">
                           {formatTaka(ord.grandTotal)}
                         </td>
                         <td className="py-3.5 px-3 text-center">
@@ -411,7 +411,7 @@ export const PendingOrders: React.FC<PendingOrdersProps> = ({
                               উন্মুক্ত
                             </span>
                           ) : (
-                            <span className="bg-amber-500/20 text-amber-300 border border-amber-500/40 text-[10px] font-bold px-2.5 py-1 rounded-full inline-flex items-center gap-1">
+                            <span className="bg-amber-100 dark:bg-amber-500/20 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-500/40 text-[10px] font-bold px-2.5 py-1 rounded-full inline-flex items-center gap-1">
                               {t('sample_booked_tag')}
                             </span>
                           )}
@@ -423,7 +423,7 @@ export const PendingOrders: React.FC<PendingOrdersProps> = ({
                               e.stopPropagation();
                               setExpandedOrderId(isExpanded ? null : ord.id);
                             }}
-                            className="p-1.5 bg-slate-800 hover:bg-amber-500 hover:text-slate-950 text-amber-300 border border-slate-700/80 rounded-xl transition-all cursor-pointer inline-flex items-center justify-center"
+                            className="p-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-amber-500 hover:text-slate-950 text-amber-700 dark:text-amber-300 border border-slate-200 dark:border-slate-700/80 rounded-xl transition-all cursor-pointer inline-flex items-center justify-center"
                             title={isExpanded ? 'সংকোচন' : 'ডিটেইলস দেখুন'}
                           >
                             {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
@@ -433,17 +433,17 @@ export const PendingOrders: React.FC<PendingOrdersProps> = ({
 
                       {/* Expanded Detail View Row */}
                       {isExpanded && (
-                        <tr className="bg-slate-900/60 border-b border-slate-800">
+                        <tr className="bg-slate-50 dark:bg-slate-900/60 border-b border-slate-200 dark:border-slate-800">
                           <td colSpan={7} className="p-4">
-                            <div className="bg-slate-950 p-4 rounded-2xl border border-amber-500/30 space-y-4">
-                              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-slate-800">
+                            <div className="bg-white dark:bg-slate-950 p-4 rounded-2xl border border-amber-200 dark:border-amber-500/30 space-y-4">
+                              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-slate-100 dark:border-slate-800">
                                 <div>
-                                  <h4 className="font-bold text-white text-sm flex items-center gap-2">
+                                  <h4 className="font-bold text-slate-900 dark:text-white text-sm flex items-center gap-2">
                                     <span>মেমো #{ord.memoNo}</span>
-                                    <span className="text-slate-400 font-normal text-xs">({ord.shopName})</span>
+                                    <span className="text-slate-500 dark:text-slate-400 font-normal text-xs">({ord.shopName})</span>
                                   </h4>
-                                  <div className="text-xs text-slate-400 mt-0.5">
-                                    প্রোপ্রাইটর: <strong className="text-slate-200">{ord.customerName}</strong> ({ord.customerPhone}) | সেলার: <strong className={isUnclaimed ? 'text-amber-400' : 'text-indigo-300'}>{ord.sellerName || 'উন্মুক্ত বুকিং'}</strong> | তারিখ: {formatBnDate(ord.date)} ({ord.time})
+                                  <div className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                                    প্রোপ্রাইটর: <strong className="text-slate-800 dark:text-slate-200">{ord.customerName}</strong> ({ord.customerPhone}) | সেলার: <strong className={isUnclaimed ? 'text-amber-700 dark:text-amber-400' : 'text-indigo-600 dark:text-indigo-300'}>{ord.sellerName || 'উন্মুক্ত বুকিং'}</strong> | তারিখ: {formatBnDate(ord.date)} ({ord.time})
                                   </div>
                                 </div>
 
@@ -462,7 +462,7 @@ export const PendingOrders: React.FC<PendingOrdersProps> = ({
                                   <button
                                     type="button"
                                     onClick={() => setEditingOrder(ord)}
-                                    className="px-3 py-1.5 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 rounded-xl text-xs font-bold flex items-center gap-1 transition cursor-pointer"
+                                    className="px-3 py-1.5 bg-amber-50 dark:bg-amber-500/20 hover:bg-amber-100 dark:hover:bg-amber-500/30 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-500/40 rounded-xl text-xs font-bold flex items-center gap-1 transition cursor-pointer"
                                   >
                                     <Edit3 className="w-3.5 h-3.5" />
                                     <span>আইটেম এডিট</span>
@@ -471,7 +471,7 @@ export const PendingOrders: React.FC<PendingOrdersProps> = ({
                                   <button
                                     type="button"
                                     onClick={() => onSelectOrderForInvoice(ord)}
-                                    className="px-3 py-1.5 bg-indigo-600/30 hover:bg-indigo-600 text-indigo-200 border border-indigo-500/40 rounded-xl text-xs font-semibold flex items-center gap-1 transition cursor-pointer"
+                                    className="px-3 py-1.5 bg-indigo-50 dark:bg-indigo-600/30 hover:bg-indigo-100 dark:hover:bg-indigo-600 text-indigo-700 dark:text-indigo-200 border border-indigo-200 dark:border-indigo-500/40 rounded-xl text-xs font-semibold flex items-center gap-1 transition cursor-pointer"
                                   >
                                     <Printer className="w-3.5 h-3.5" />
                                     <span>মেমো প্রিন্ট</span>
@@ -490,7 +490,7 @@ export const PendingOrders: React.FC<PendingOrdersProps> = ({
                                     <button
                                       type="button"
                                       onClick={() => setOrderToTrash(ord)}
-                                      className="px-2.5 py-1.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 rounded-xl text-xs font-bold flex items-center gap-1 transition cursor-pointer"
+                                      className="px-2.5 py-1.5 bg-rose-50 dark:bg-rose-500/10 hover:bg-rose-100 dark:hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-500/30 rounded-xl text-xs font-bold flex items-center gap-1 transition cursor-pointer"
                                       title="মেমো ট্র্যাশে পাঠান"
                                     >
                                       <Trash2 className="w-3.5 h-3.5" />
@@ -503,10 +503,10 @@ export const PendingOrders: React.FC<PendingOrdersProps> = ({
                               {/* Item Breakdown */}
                               {ord.items && ord.items.length > 0 && (
                                 <div className="space-y-1.5">
-                                  <span className="text-xs font-bold text-slate-400 flex items-center gap-1">
-                                    <ShoppingBag className="w-3.5 h-3.5 text-amber-400" /> বুকিং করা আইটেম তালিকা ({toBnDigit(ord.items.length)}টি):
+                                  <span className="text-xs font-bold text-slate-700 dark:text-slate-400 flex items-center gap-1">
+                                    <ShoppingBag className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" /> বুকিং করা আইটেম তালিকা ({toBnDigit(ord.items.length)}টি):
                                   </span>
-                                  <div className="bg-slate-900 rounded-xl p-3 border border-slate-800 max-h-48 overflow-y-auto space-y-2 text-xs">
+                                  <div className="bg-slate-50 dark:bg-slate-900 rounded-xl p-3 border border-slate-200 dark:border-slate-800 max-h-48 overflow-y-auto space-y-2 text-xs">
                                     {ord.items.map((item, idx) => {
                                       const artCode = item.articleCode || (item as any).articleNo || '-';
                                       const prodName = item.productName || (item as any).name || '';
@@ -515,17 +515,17 @@ export const PendingOrders: React.FC<PendingOrdersProps> = ({
                                       const itemTotal = pairs * price;
 
                                       return (
-                                        <div key={idx} className="flex justify-between items-center py-1 border-b border-slate-800/80 last:border-0">
+                                        <div key={idx} className="flex justify-between items-center py-1 border-b border-slate-200 dark:border-slate-800/80 last:border-0">
                                           <div>
-                                            <div className="font-bold text-amber-300 font-mono">{artCode}</div>
-                                            <div className="text-slate-300 text-xs">{prodName}</div>
+                                            <div className="font-bold text-amber-700 dark:text-amber-300 font-mono">{artCode}</div>
+                                            <div className="text-slate-700 dark:text-slate-300 text-xs">{prodName}</div>
                                           </div>
                                           <div className="text-right">
-                                            <div className="text-slate-100 font-bold">{toBnDigit(pairs)} জোড়া</div>
-                                            <div className="text-slate-400 text-[11px]">
-                                              @{formatTaka(price)} = <span className="text-amber-300 font-bold">{formatTaka(itemTotal)}</span>
+                                            <div className="text-slate-900 dark:text-slate-100 font-bold">{toBnDigit(pairs)} জোড়া</div>
+                                            <div className="text-slate-500 dark:text-slate-400 text-[11px]">
+                                              @{formatTaka(price)} = <span className="text-amber-700 dark:text-amber-300 font-bold">{formatTaka(itemTotal)}</span>
                                               {item.commissionPerPair && item.commissionPerPair > 0 ? (
-                                                <span className="text-slate-400 text-[10px] ml-1">(-৳{formatTaka(pairs * item.commissionPerPair)} কমিশন)</span>
+                                                <span className="text-slate-500 dark:text-slate-400 text-[10px] ml-1">(-৳{formatTaka(pairs * item.commissionPerPair)} কমিশন)</span>
                                               ) : null}
                                             </div>
                                           </div>
@@ -563,34 +563,34 @@ export const PendingOrders: React.FC<PendingOrdersProps> = ({
 
       {/* Trash / Delete Confirmation Modal Popup */}
       {orderToTrash && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fade-in">
-          <div className="bg-slate-900 border border-slate-700 p-5 rounded-2xl max-w-sm w-full space-y-4 shadow-2xl">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 dark:bg-slate-950/80 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 p-5 rounded-2xl max-w-sm w-full space-y-4 shadow-2xl">
             <div className="flex items-center gap-3">
-              <div className="p-2.5 bg-rose-500/10 text-rose-400 border border-rose-500/20 rounded-xl">
+              <div className="p-2.5 bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-500/20 rounded-xl">
                 <Trash2 className="w-5 h-5" />
               </div>
               <div>
-                <h4 className="text-sm font-bold text-white">পেন্ডিং মেমো ট্র্যাশে পাঠানো</h4>
-                <p className="text-xs text-slate-400">ট্র্যাশ থেকে যেকোনো সময় রিস্টোর করা যাবে</p>
+                <h4 className="text-sm font-bold text-slate-900 dark:text-white">পেন্ডিং মেমো ট্র্যাশে পাঠানো</h4>
+                <p className="text-xs text-slate-500 dark:text-slate-400">ট্র্যাশ থেকে যেকোনো সময় রিস্টোর করা যাবে</p>
               </div>
             </div>
 
-            <div className="bg-slate-950 border border-slate-800 p-3.5 rounded-xl space-y-1.5 text-xs">
+            <div className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-3.5 rounded-xl space-y-1.5 text-xs">
               <div className="flex justify-between items-center">
-                <span className="text-slate-400">মেমো নং:</span>
-                <span className="font-mono font-bold text-amber-300">#{orderToTrash.memoNo}</span>
+                <span className="text-slate-500 dark:text-slate-400">মেমো নং:</span>
+                <span className="font-mono font-bold text-amber-700 dark:text-amber-300">#{orderToTrash.memoNo}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-slate-400">দোকান / কাস্টমার:</span>
-                <span className="font-bold text-white">{orderToTrash.shopName || orderToTrash.customerName}</span>
+                <span className="text-slate-500 dark:text-slate-400">দোকান / কাস্টমার:</span>
+                <span className="font-bold text-slate-900 dark:text-white">{orderToTrash.shopName || orderToTrash.customerName}</span>
               </div>
-              <div className="flex justify-between items-center border-t border-slate-800 pt-1.5 font-bold">
-                <span className="text-slate-300">মোট মূল্য:</span>
-                <span className="text-emerald-400 font-mono">৳{orderToTrash.grandTotal}</span>
+              <div className="flex justify-between items-center border-t border-slate-200 dark:border-slate-800 pt-1.5 font-bold">
+                <span className="text-slate-700 dark:text-slate-300">মোট মূল্য:</span>
+                <span className="text-emerald-600 dark:text-emerald-400 font-mono">৳{orderToTrash.grandTotal}</span>
               </div>
             </div>
 
-            <p className="text-xs text-slate-300 leading-relaxed bg-rose-950/30 border border-rose-500/20 p-2.5 rounded-xl text-rose-200">
+            <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-500/20 p-2.5 rounded-xl text-rose-700 dark:text-rose-200">
               ⚠️ আপনি কি নিশ্চিতভাবে মেমো <strong>#{orderToTrash.memoNo}</strong> ট্র্যাশে পাঠাতে চান? এটি সরাসরি মুছে যাবে না, রিসাইকেল বিন এ সংরক্ষিত থাকবে।
             </p>
 
@@ -598,7 +598,7 @@ export const PendingOrders: React.FC<PendingOrdersProps> = ({
               <button
                 type="button"
                 onClick={() => setOrderToTrash(null)}
-                className="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold transition cursor-pointer"
+                className="px-3.5 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-semibold transition cursor-pointer"
               >
                 বাতিল
               </button>

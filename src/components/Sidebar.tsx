@@ -292,23 +292,23 @@ export const Sidebar: React.FC<SidebarProps> = ({
   return (
     <aside
       id="desktop-left-sidebar"
-      className={`hidden md:flex flex-col flex-shrink-0 bg-slate-900 border-r border-slate-800/90 h-screen sticky top-0 z-40 transition-all duration-300 select-none ${
+      className={`hidden md:flex flex-col flex-shrink-0 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800/90 h-screen sticky top-0 z-40 transition-all duration-300 select-none ${
         isCollapsed ? 'w-20' : 'w-64'
       }`}
     >
       {/* Sidebar Top Header / Brand */}
-      <div className="h-16 px-4 border-b border-slate-800 flex items-center justify-between bg-slate-950/70 shrink-0">
+      <div className="h-16 px-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-950/70 shrink-0">
         {!isCollapsed ? (
           <div className="flex items-center gap-2.5 min-w-0">
             <div className="w-9 h-9 rounded-xl bg-amber-500 text-slate-950 font-black flex items-center justify-center shadow-md shadow-amber-500/20 shrink-0">
               <Store className="w-5 h-5 stroke-[2.5]" />
             </div>
             <div className="min-w-0">
-              <div className="text-xs font-bold text-white tracking-tight truncate leading-tight">
+              <div className="text-xs font-bold text-slate-900 dark:text-white tracking-tight truncate leading-tight">
                 {t('store_name')}
               </div>
               <div className="flex items-center gap-1 mt-0.5">
-                <span className="text-[9px] px-1.5 py-0.2 rounded font-extrabold bg-amber-500/20 text-amber-300 border border-amber-500/30 whitespace-nowrap">
+                <span className="text-[9px] px-1.5 py-0.2 rounded font-extrabold bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/30 whitespace-nowrap">
                   {t('wholesale')}
                 </span>
               </div>
@@ -326,7 +326,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         <button
           type="button"
           onClick={toggleCollapse}
-          className={`p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 border border-slate-800 transition-colors cursor-pointer ${
+          className={`p-1.5 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 transition-colors cursor-pointer ${
             isCollapsed ? 'hidden' : 'block'
           }`}
           title={isCollapsed ? 'সাইডবার প্রসারিত করুন' : 'সাইডবার গুটিয়ে নিন'}
@@ -337,14 +337,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
       {/* When collapsed, a tiny expand toggle button */}
       {isCollapsed && (
-        <div className="py-1.5 border-b border-slate-800/80 flex justify-center bg-slate-950/40">
+        <div className="py-1.5 border-b border-slate-200 dark:border-slate-800/80 flex justify-center bg-slate-50 dark:bg-slate-950/40">
           <button
             type="button"
             onClick={toggleCollapse}
-            className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
+            className="p-1 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors cursor-pointer"
             title="সাইডবার প্রসারিত করুন"
           >
-            <ChevronRight className="w-4 h-4 text-amber-400" />
+            <ChevronRight className="w-4 h-4 text-amber-600 dark:text-amber-400" />
           </button>
         </div>
       )}
@@ -362,7 +362,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             <div key={`sec-${secIdx}`} className="space-y-1">
               {/* Category Header */}
               {!isCollapsed && (
-                <div className="px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
+                <div className="px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                   {sec.title}
                 </div>
               )}
@@ -384,7 +384,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     } ${
                       isActive
                         ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20 font-extrabold'
-                        : 'text-slate-300 hover:text-white hover:bg-slate-800/70'
+                        : 'text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/70'
                     }`}
                     title={isCollapsed ? item.label : undefined}
                   >
@@ -393,7 +393,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                         className={`w-4 h-4 shrink-0 transition-transform duration-150 ${
                           isActive
                             ? 'text-slate-950'
-                            : 'text-amber-400 group-hover:scale-110'
+                            : 'text-amber-600 dark:text-amber-400 group-hover:scale-110'
                         }`}
                       />
                       {!isCollapsed && (
@@ -410,7 +410,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                           item.badgeColor || 'bg-amber-500'
                         } ${
                           isCollapsed
-                            ? 'absolute -top-1 -right-1 ring-2 ring-slate-900'
+                            ? 'absolute -top-1 -right-1 ring-2 ring-white dark:ring-slate-900'
                             : ''
                         }`}
                       >
@@ -431,21 +431,21 @@ export const Sidebar: React.FC<SidebarProps> = ({
       </div>
 
       {/* Sidebar Footer: User Profile, Language & Logout */}
-      <div className="p-2.5 border-t border-slate-800 bg-slate-950/80 space-y-2 shrink-0">
+      <div className="p-2.5 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/80 space-y-2 shrink-0">
         {/* User Card */}
         {currentUser ? (
           <div
-            className={`bg-slate-900/90 border border-slate-800/90 rounded-xl p-2 flex items-center gap-2 ${
+            className={`bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800/90 rounded-xl p-2 flex items-center gap-2 ${
               isCollapsed ? 'justify-center' : ''
             }`}
           >
-            <div className="w-8 h-8 rounded-lg bg-amber-500/20 text-amber-300 font-bold flex items-center justify-center text-xs border border-amber-500/30 shrink-0">
+            <div className="w-8 h-8 rounded-lg bg-amber-500/20 text-amber-700 dark:text-amber-300 font-bold flex items-center justify-center text-xs border border-amber-500/30 shrink-0">
               {currentUser.name.charAt(0)}
             </div>
 
             {!isCollapsed && (
               <div className="min-w-0 flex-1">
-                <div className="text-xs font-bold text-white truncate leading-tight">
+                <div className="text-xs font-bold text-slate-900 dark:text-white truncate leading-tight">
                   {currentUser.name}
                 </div>
                 <div className="mt-0.5">
@@ -456,16 +456,16 @@ export const Sidebar: React.FC<SidebarProps> = ({
           </div>
         ) : (
           !isCollapsed && (
-            <div className="bg-slate-900/90 border border-slate-800/90 rounded-xl p-2 flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-amber-500/20 text-amber-300 font-bold flex items-center justify-center text-xs border border-amber-500/30 shrink-0">
+            <div className="bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800/90 rounded-xl p-2 flex items-center gap-2">
+              <div className="w-8 h-8 rounded-lg bg-amber-500/20 text-amber-700 dark:text-amber-300 font-bold flex items-center justify-center text-xs border border-amber-500/30 shrink-0">
                 আ
               </div>
               <div className="min-w-0 flex-1">
-                <div className="text-xs font-bold text-white truncate leading-tight">
+                <div className="text-xs font-bold text-slate-900 dark:text-white truncate leading-tight">
                   মো আলাউদ্দিন ইসলাম
                 </div>
                 <div className="mt-0.5">
-                  <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30 inline-flex items-center gap-1">
+                  <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/30 inline-flex items-center gap-1">
                     <Shield className="w-2.5 h-2.5" /> মালিক / এডমিন
                   </span>
                 </div>
@@ -479,10 +479,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <button
             type="button"
             onClick={onInstallPWA}
-            className="w-full px-2.5 py-1.5 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-300 rounded-lg font-bold text-[11px] flex items-center justify-between transition cursor-pointer"
+            className="w-full px-2.5 py-1.5 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-700 dark:text-amber-300 rounded-lg font-bold text-[11px] flex items-center justify-between transition cursor-pointer"
           >
             <div className="flex items-center gap-1.5">
-              <Download className="w-3.5 h-3.5 text-amber-400" />
+              <Download className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
               <span>অ্যাপ ইনস্টল</span>
             </div>
             <span className="text-[9px] bg-amber-500 text-slate-950 px-1 py-0.2 rounded font-black">
@@ -495,14 +495,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
         <div className={`flex items-center gap-1.5 ${isCollapsed ? 'flex-col' : 'justify-between'}`}>
           {/* Language Switcher */}
           {!isCollapsed ? (
-            <div className="flex bg-slate-900 border border-slate-800 rounded-lg p-0.5">
+            <div className="flex bg-slate-200 dark:bg-slate-900 border border-slate-300 dark:border-slate-800 rounded-lg p-0.5">
               <button
                 type="button"
                 onClick={() => setLanguage('bn')}
                 className={`px-2 py-1 rounded text-[10px] font-bold transition-colors cursor-pointer ${
                   language === 'bn'
                     ? 'bg-amber-500 text-slate-950'
-                    : 'text-slate-400 hover:text-white'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                 }`}
               >
                 বাংলা
@@ -513,7 +513,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 className={`px-2 py-1 rounded text-[10px] font-bold transition-colors cursor-pointer ${
                   language === 'en'
                     ? 'bg-amber-500 text-slate-950'
-                    : 'text-slate-400 hover:text-white'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                 }`}
               >
                 English
@@ -523,7 +523,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             <button
               type="button"
               onClick={() => setLanguage(language === 'bn' ? 'en' : 'bn')}
-              className="p-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-amber-400 border border-slate-800 text-[10px] font-bold"
+              className="p-1.5 rounded-lg bg-slate-200 dark:bg-slate-900 hover:bg-slate-300 dark:hover:bg-slate-800 text-amber-700 dark:text-amber-400 border border-slate-300 dark:border-slate-800 text-[10px] font-bold"
               title={language === 'bn' ? 'Switch to English' : 'বাংলায় দেখুন'}
             >
               {language.toUpperCase()}
@@ -535,24 +535,24 @@ export const Sidebar: React.FC<SidebarProps> = ({
             <button
               type="button"
               onClick={onLogout}
-              className={`flex items-center justify-center gap-1 p-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 border border-rose-500/30 text-xs font-bold transition-colors cursor-pointer ${
+              className={`flex items-center justify-center gap-1 p-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-300 border border-rose-500/30 text-xs font-bold transition-colors cursor-pointer ${
                 isCollapsed ? 'w-full' : 'px-2.5'
               }`}
               title="লগআউট করুন"
             >
-              <LogOut className="w-3.5 h-3.5 text-rose-400 shrink-0" />
+              <LogOut className="w-3.5 h-3.5 text-rose-500 dark:text-rose-400 shrink-0" />
               {!isCollapsed && <span>{t('logout')}</span>}
             </button>
           ) : !currentUser && onOpenLogin ? (
             <button
               type="button"
               onClick={onOpenLogin}
-              className={`flex items-center justify-center gap-1 p-1.5 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 text-xs font-bold transition-colors cursor-pointer ${
+              className={`flex items-center justify-center gap-1 p-1.5 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 text-amber-700 dark:text-amber-300 border border-amber-500/30 text-xs font-bold transition-colors cursor-pointer ${
                 isCollapsed ? 'w-full' : 'px-2.5'
               }`}
               title="লগইন করুন"
             >
-              <LogIn className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+              <LogIn className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
               {!isCollapsed && <span>লগইন</span>}
             </button>
           ) : null}

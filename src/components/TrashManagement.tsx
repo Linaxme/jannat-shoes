@@ -161,14 +161,14 @@ export const TrashManagement: React.FC<TrashManagementProps> = ({
       {/* Minimal Top Header Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1 pb-1">
         <div className="flex items-center gap-3 flex-1 min-w-0">
-          <span className="text-base sm:text-lg md:text-xl font-black text-rose-400 tracking-wide whitespace-nowrap flex items-center gap-2">
-            <Trash2 className="w-5 h-5 text-rose-400" />
+          <span className="text-base sm:text-lg md:text-xl font-black text-rose-600 dark:text-rose-400 tracking-wide whitespace-nowrap flex items-center gap-2">
+            <Trash2 className="w-5 h-5 text-rose-600 dark:text-rose-400" />
             রিসাইকেল বিন
           </span>
-          <span className="text-xs px-2 py-0.5 bg-rose-500/10 text-rose-300 font-mono rounded-full border border-rose-500/20 font-bold">
+          <span className="text-xs px-2 py-0.5 bg-rose-500/10 text-rose-700 dark:text-rose-300 font-mono rounded-full border border-rose-500/20 font-bold">
             {toBnDigit(trashItems.length)} টি
           </span>
-          <div className="h-0.5 bg-gradient-to-r from-rose-500/30 via-slate-800 to-transparent flex-1" />
+          <div className="h-0.5 bg-gradient-to-r from-rose-500/30 via-slate-300 dark:via-slate-800 to-transparent flex-1" />
         </div>
 
         {trashItems.length > 0 && (
@@ -177,7 +177,7 @@ export const TrashManagement: React.FC<TrashManagementProps> = ({
               <button
                 type="button"
                 onClick={() => setShowRestoreAllConfirm(true)}
-                className="px-3 py-1.5 bg-emerald-600/10 hover:bg-emerald-600/20 text-emerald-400 border border-emerald-500/30 rounded-xl text-xs font-bold flex items-center gap-1.5 transition cursor-pointer"
+                className="px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-600/10 dark:hover:bg-emerald-600/20 text-emerald-700 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-500/30 rounded-xl text-xs font-bold flex items-center gap-1.5 transition cursor-pointer"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
                 <span>সব রিস্টোর</span>
@@ -207,12 +207,12 @@ export const TrashManagement: React.FC<TrashManagementProps> = ({
             className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
               selectedType === 'all'
                 ? 'bg-amber-500 text-slate-950 shadow'
-                : 'bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800'
+                : 'bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800'
             }`}
           >
             <span>সব</span>
             <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
-              selectedType === 'all' ? 'bg-slate-950 text-amber-400' : 'bg-slate-800 text-slate-400'
+              selectedType === 'all' ? 'bg-slate-950 text-amber-400' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
             }`}>
               {toBnDigit(counts.all)}
             </span>
@@ -224,13 +224,13 @@ export const TrashManagement: React.FC<TrashManagementProps> = ({
             className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
               selectedType === 'order'
                 ? 'bg-amber-500 text-slate-950 shadow'
-                : 'bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800'
+                : 'bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800'
             }`}
           >
             <Receipt className="w-3.5 h-3.5" />
             <span>মেমো</span>
             <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
-              selectedType === 'order' ? 'bg-slate-950 text-amber-400' : 'bg-slate-800 text-slate-400'
+              selectedType === 'order' ? 'bg-slate-950 text-amber-400' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
             }`}>
               {toBnDigit(counts.order)}
             </span>
@@ -242,13 +242,13 @@ export const TrashManagement: React.FC<TrashManagementProps> = ({
             className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
               selectedType === 'customer'
                 ? 'bg-amber-500 text-slate-950 shadow'
-                : 'bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800'
+                : 'bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800'
             }`}
           >
             <Store className="w-3.5 h-3.5" />
             <span>দোকান</span>
             <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
-              selectedType === 'customer' ? 'bg-slate-950 text-amber-400' : 'bg-slate-800 text-slate-400'
+              selectedType === 'customer' ? 'bg-slate-950 text-amber-400' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
             }`}>
               {toBnDigit(counts.customer)}
             </span>
@@ -260,13 +260,13 @@ export const TrashManagement: React.FC<TrashManagementProps> = ({
             className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
               selectedType === 'user'
                 ? 'bg-amber-500 text-slate-950 shadow'
-                : 'bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800'
+                : 'bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800'
             }`}
           >
             <User className="w-3.5 h-3.5" />
             <span>ইউজার</span>
             <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
-              selectedType === 'user' ? 'bg-slate-950 text-amber-400' : 'bg-slate-800 text-slate-400'
+              selectedType === 'user' ? 'bg-slate-950 text-amber-400' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
             }`}>
               {toBnDigit(counts.user)}
             </span>
@@ -278,13 +278,13 @@ export const TrashManagement: React.FC<TrashManagementProps> = ({
             className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
               selectedType === 'product'
                 ? 'bg-amber-500 text-slate-950 shadow'
-                : 'bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800'
+                : 'bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800'
             }`}
           >
             <Boxes className="w-3.5 h-3.5" />
             <span>পণ্য</span>
             <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
-              selectedType === 'product' ? 'bg-slate-950 text-amber-400' : 'bg-slate-800 text-slate-400'
+              selectedType === 'product' ? 'bg-slate-950 text-amber-400' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
             }`}>
               {toBnDigit(counts.product)}
             </span>
@@ -299,13 +299,13 @@ export const TrashManagement: React.FC<TrashManagementProps> = ({
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="খুঁজুন..."
-            className="w-full bg-slate-900 border border-slate-800 focus:border-amber-500 rounded-xl pl-8 pr-7 py-1.5 text-xs text-white placeholder-slate-500 outline-none transition"
+            className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-800 focus:border-amber-500 rounded-xl pl-8 pr-7 py-1.5 text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 outline-none transition"
           />
           {searchQuery && (
             <button
               type="button"
               onClick={() => setSearchQuery('')}
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 dark:hover:text-white cursor-pointer"
             >
               <X className="w-3.5 h-3.5" />
             </button>
@@ -315,9 +315,9 @@ export const TrashManagement: React.FC<TrashManagementProps> = ({
 
       {/* Item List */}
       {filteredItems.length === 0 ? (
-        <div className="bg-slate-900/60 border border-slate-800 rounded-2xl py-12 text-center">
-          <Trash2 className="w-8 h-8 text-slate-600 mx-auto mb-2 opacity-50" />
-          <p className="text-xs text-slate-400">
+        <div className="bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-2xl py-12 text-center">
+          <Trash2 className="w-8 h-8 text-slate-400 dark:text-slate-600 mx-auto mb-2 opacity-50" />
+          <p className="text-xs text-slate-500 dark:text-slate-400">
             {trashItems.length === 0 ? 'রিসাইকেল বিন খালি' : 'কোনো আইটেম পাওয়া যায়নি'}
           </p>
         </div>
@@ -330,7 +330,7 @@ export const TrashManagement: React.FC<TrashManagementProps> = ({
             return (
               <div
                 key={item.id}
-                className="bg-slate-900 border border-slate-800 hover:border-slate-700 rounded-xl p-3.5 transition flex flex-col justify-between gap-2.5 shadow-sm"
+                className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 rounded-xl p-3.5 transition flex flex-col justify-between gap-2.5 shadow-sm"
               >
                 <div className="space-y-1.5">
                   <div className="flex items-center justify-between gap-2">
@@ -346,27 +346,27 @@ export const TrashManagement: React.FC<TrashManagementProps> = ({
                   </div>
 
                   <div>
-                    <h4 className="text-xs sm:text-sm font-bold text-white">
+                    <h4 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
                       {item.title}
                     </h4>
                     {item.subtitle && (
-                      <p className="text-xs text-slate-300 mt-0.5 font-medium">
+                      <p className="text-xs text-slate-600 dark:text-slate-300 mt-0.5 font-medium">
                         {item.subtitle}
                       </p>
                     )}
                     {item.details && (
-                      <p className="text-[11px] text-slate-400 mt-0.5">
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
                         {item.details}
                       </p>
                     )}
                   </div>
                 </div>
 
-                <div className="pt-2 border-t border-slate-800 flex items-center justify-end gap-2">
+                <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end gap-2">
                   <button
                     type="button"
                     onClick={() => setItemToPermanentDelete(item)}
-                    className="px-2.5 py-1 text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg text-xs font-semibold transition cursor-pointer flex items-center gap-1"
+                    className="px-2.5 py-1 text-slate-500 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-lg text-xs font-semibold transition cursor-pointer flex items-center gap-1"
                   >
                     <Trash2 className="w-3 h-3" />
                     <span>স্থায়ী মুছুন</span>
@@ -389,13 +389,13 @@ export const TrashManagement: React.FC<TrashManagementProps> = ({
 
       {/* Confirmation Modal: Restore Single Item */}
       {itemToRestore && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
-          <div className="bg-slate-900 border border-slate-700 p-4 rounded-2xl max-w-sm w-full space-y-3 shadow-2xl">
-            <h4 className="text-xs font-bold text-white">রিস্টোর নিশ্চিতকরণ</h4>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 dark:bg-slate-950/80 backdrop-blur-sm">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 p-4 rounded-2xl max-w-sm w-full space-y-3 shadow-2xl">
+            <h4 className="text-xs font-bold text-slate-900 dark:text-white">রিস্টোর নিশ্চিতকরণ</h4>
 
-            <div className="bg-slate-950 border border-slate-800 p-2.5 rounded-xl text-xs text-slate-200">
-              <span className="font-bold text-amber-300">{itemToRestore.title}</span>
-              {itemToRestore.subtitle && <p className="text-slate-400 text-[11px] mt-0.5">{itemToRestore.subtitle}</p>}
+            <div className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-2.5 rounded-xl text-xs text-slate-700 dark:text-slate-200">
+              <span className="font-bold text-amber-600 dark:text-amber-300">{itemToRestore.title}</span>
+              {itemToRestore.subtitle && <p className="text-slate-500 dark:text-slate-400 text-[11px] mt-0.5">{itemToRestore.subtitle}</p>}
             </div>
 
             <div className="flex justify-end gap-2 pt-1">
@@ -403,7 +403,7 @@ export const TrashManagement: React.FC<TrashManagementProps> = ({
                 type="button"
                 disabled={isProcessing}
                 onClick={() => setItemToRestore(null)}
-                className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-medium cursor-pointer"
+                className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-medium cursor-pointer"
               >
                 বাতিল
               </button>
@@ -422,13 +422,13 @@ export const TrashManagement: React.FC<TrashManagementProps> = ({
 
       {/* Confirmation Modal: Permanent Delete Single Item */}
       {itemToPermanentDelete && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
-          <div className="bg-slate-900 border border-rose-500/40 p-4 rounded-2xl max-w-sm w-full space-y-3 shadow-2xl">
-            <h4 className="text-xs font-bold text-rose-400">স্থায়ীভাবে মুছে ফেলা</h4>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 dark:bg-slate-950/80 backdrop-blur-sm">
+          <div className="bg-white dark:bg-slate-900 border border-rose-300 dark:border-rose-500/40 p-4 rounded-2xl max-w-sm w-full space-y-3 shadow-2xl">
+            <h4 className="text-xs font-bold text-rose-600 dark:text-rose-400">স্থায়ীভাবে মুছে ফেলা</h4>
 
-            <div className="bg-slate-950 border border-slate-800 p-2.5 rounded-xl text-xs text-slate-200">
-              <span className="font-bold text-white">{itemToPermanentDelete.title}</span>
-              {itemToPermanentDelete.subtitle && <p className="text-slate-400 text-[11px] mt-0.5">{itemToPermanentDelete.subtitle}</p>}
+            <div className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-2.5 rounded-xl text-xs text-slate-700 dark:text-slate-200">
+              <span className="font-bold text-slate-900 dark:text-white">{itemToPermanentDelete.title}</span>
+              {itemToPermanentDelete.subtitle && <p className="text-slate-500 dark:text-slate-400 text-[11px] mt-0.5">{itemToPermanentDelete.subtitle}</p>}
             </div>
 
             <div className="flex justify-end gap-2 pt-1">
@@ -436,7 +436,7 @@ export const TrashManagement: React.FC<TrashManagementProps> = ({
                 type="button"
                 disabled={isProcessing}
                 onClick={() => setItemToPermanentDelete(null)}
-                className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-medium cursor-pointer"
+                className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-medium cursor-pointer"
               >
                 বাতিল
               </button>
@@ -455,16 +455,16 @@ export const TrashManagement: React.FC<TrashManagementProps> = ({
 
       {/* Confirmation Modal: Restore All Items */}
       {showRestoreAllConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
-          <div className="bg-slate-900 border border-slate-700 p-4 rounded-2xl max-w-sm w-full space-y-3 shadow-2xl">
-            <h4 className="text-xs font-bold text-white">সব রিস্টোর ({toBnDigit(trashItems.length)} টি) করবেন?</h4>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 dark:bg-slate-950/80 backdrop-blur-sm">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 p-4 rounded-2xl max-w-sm w-full space-y-3 shadow-2xl">
+            <h4 className="text-xs font-bold text-slate-900 dark:text-white">সব রিস্টোর ({toBnDigit(trashItems.length)} টি) করবেন?</h4>
 
             <div className="flex justify-end gap-2 pt-1">
               <button
                 type="button"
                 disabled={isProcessing}
                 onClick={() => setShowRestoreAllConfirm(false)}
-                className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-medium cursor-pointer"
+                className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-medium cursor-pointer"
               >
                 বাতিল
               </button>
@@ -483,16 +483,16 @@ export const TrashManagement: React.FC<TrashManagementProps> = ({
 
       {/* Confirmation Modal: Empty All Trash */}
       {showEmptyConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
-          <div className="bg-slate-900 border border-rose-500/40 p-4 rounded-2xl max-w-sm w-full space-y-3 shadow-2xl">
-            <h4 className="text-xs font-bold text-rose-400">ট্র্যাশ খালি ({toBnDigit(trashItems.length)} টি) করবেন?</h4>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 dark:bg-slate-950/80 backdrop-blur-sm">
+          <div className="bg-white dark:bg-slate-900 border border-rose-300 dark:border-rose-500/40 p-4 rounded-2xl max-w-sm w-full space-y-3 shadow-2xl">
+            <h4 className="text-xs font-bold text-rose-600 dark:text-rose-400">ট্র্যাশ খালি ({toBnDigit(trashItems.length)} টি) করবেন?</h4>
 
             <div className="flex justify-end gap-2 pt-1">
               <button
                 type="button"
                 disabled={isProcessing}
                 onClick={() => setShowEmptyConfirm(false)}
-                className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-medium cursor-pointer"
+                className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-medium cursor-pointer"
               >
                 বাতিল
               </button>

@@ -450,17 +450,17 @@ export const ShopManagement: React.FC<ShopManagementProps> = ({
   return (
     <div className="space-y-6 animate-fadeIn pb-12">
       {/* Top Header Card */}
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-6 shadow-xl relative overflow-hidden">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 sm:p-6 shadow-sm relative overflow-hidden">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 relative z-10">
           <div>
             <div className="flex items-center gap-2.5">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-amber-600 flex items-center justify-center text-slate-950 font-bold shadow-lg shadow-amber-500/20 shrink-0">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-amber-600 flex items-center justify-center text-slate-950 font-bold shadow-xs shrink-0">
                 <Store className="w-5 h-5" />
               </div>
               <div>
-                <h1 className="text-xl sm:text-2xl font-black text-slate-100 flex items-center gap-2">
+                <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-slate-100 flex items-center gap-2">
                   দোকান তালিকা
-                  <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                  <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-500/20">
                     {toBnDigit(totalShopsCount)} টি
                   </span>
                 </h1>
@@ -471,10 +471,10 @@ export const ShopManagement: React.FC<ShopManagementProps> = ({
           <div className="flex flex-wrap items-center gap-2.5">
             <button
               onClick={handleExportExcel}
-              className="px-3 py-2 rounded-xl text-xs font-bold bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 flex items-center gap-1.5 transition cursor-pointer"
+              className="px-3 py-2 rounded-xl text-xs font-bold bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-700 flex items-center gap-1.5 transition cursor-pointer"
               title="এক্সেল শীট ডাউনলোড করুন"
             >
-              <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-400" />
+              <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
               <span className="hidden sm:inline">এক্সেল</span>
             </button>
 
@@ -483,7 +483,7 @@ export const ShopManagement: React.FC<ShopManagementProps> = ({
                 setFormError('');
                 setShowAddModal(true);
               }}
-              className="px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 shadow-lg shadow-amber-500/25 flex items-center gap-2 active:scale-95 transition cursor-pointer"
+              className="px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 shadow-xs flex items-center gap-2 active:scale-95 transition cursor-pointer"
             >
               <Plus className="w-4 h-4" />
               <span>নতুন দোকান</span>
@@ -492,83 +492,83 @@ export const ShopManagement: React.FC<ShopManagementProps> = ({
         </div>
 
         {/* Overview Stats Cards */}
-        <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 mt-5 pt-4 border-t border-slate-800/80">
-          <div className="bg-slate-950/70 border border-slate-800/90 p-3.5 rounded-xl shadow-inner hover:border-slate-700 transition">
-            <div className="text-[11px] font-bold text-slate-400 flex items-center justify-between">
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 mt-5 pt-4 border-t border-slate-100 dark:border-slate-800/80">
+          <div className="bg-slate-50 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800/90 p-3.5 rounded-xl hover:border-slate-300 dark:hover:border-slate-700 transition">
+            <div className="text-[11px] font-bold text-slate-500 dark:text-slate-400 flex items-center justify-between">
               <span>মোট দোকান</span>
-              <div className="w-6 h-6 rounded-lg bg-blue-500/15 border border-blue-500/30 flex items-center justify-center text-blue-400">
+              <div className="w-6 h-6 rounded-lg bg-blue-50 dark:bg-blue-500/15 border border-blue-200 dark:border-blue-500/30 flex items-center justify-center text-blue-600 dark:text-blue-400">
                 <Building2 className="w-3.5 h-3.5" />
               </div>
             </div>
-            <div className="text-lg sm:text-xl font-black text-slate-100 mt-2 font-mono">
-              {toBnDigit(totalShopsCount)} <span className="text-xs font-normal text-slate-400">টি</span>
+            <div className="text-lg sm:text-xl font-black text-slate-900 dark:text-slate-100 mt-2 font-mono">
+              {toBnDigit(totalShopsCount)} <span className="text-xs font-normal text-slate-500 dark:text-slate-400">টি</span>
             </div>
           </div>
 
-          <div className="bg-slate-950/70 border border-slate-800/90 p-3.5 rounded-xl shadow-inner hover:border-slate-700 transition">
-            <div className="text-[11px] font-bold text-slate-400 flex items-center justify-between">
+          <div className="bg-slate-50 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800/90 p-3.5 rounded-xl hover:border-slate-300 dark:hover:border-slate-700 transition">
+            <div className="text-[11px] font-bold text-slate-500 dark:text-slate-400 flex items-center justify-between">
               <span>মোট বকেয়া</span>
-              <div className="w-6 h-6 rounded-lg bg-rose-500/15 border border-rose-500/30 flex items-center justify-center text-rose-400">
+              <div className="w-6 h-6 rounded-lg bg-rose-50 dark:bg-rose-500/15 border border-rose-200 dark:border-rose-500/30 flex items-center justify-center text-rose-600 dark:text-rose-400">
                 <Receipt className="w-3.5 h-3.5" />
               </div>
             </div>
-            <div className="text-lg sm:text-xl font-black text-rose-400 mt-2 font-mono">
+            <div className="text-lg sm:text-xl font-black text-rose-600 dark:text-rose-400 mt-2 font-mono">
               {formatTaka(totalDueAmount)}
             </div>
           </div>
 
-          <div className="bg-slate-950/70 border border-slate-800/90 p-3.5 rounded-xl shadow-inner hover:border-slate-700 transition">
-            <div className="text-[11px] font-bold text-slate-400 flex items-center justify-between">
+          <div className="bg-slate-50 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800/90 p-3.5 rounded-xl hover:border-slate-300 dark:hover:border-slate-700 transition">
+            <div className="text-[11px] font-bold text-slate-500 dark:text-slate-400 flex items-center justify-between">
               <span>এডভান্স জমা</span>
-              <div className="w-6 h-6 rounded-lg bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+              <div className="w-6 h-6 rounded-lg bg-emerald-50 dark:bg-emerald-500/15 border border-emerald-200 dark:border-emerald-500/30 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
                 <Coins className="w-3.5 h-3.5" />
               </div>
             </div>
-            <div className="text-lg sm:text-xl font-black text-emerald-400 mt-2 font-mono">
+            <div className="text-lg sm:text-xl font-black text-emerald-600 dark:text-emerald-400 mt-2 font-mono">
               +{formatTaka(totalAdvanceAmount)}
             </div>
           </div>
 
-          <div className="bg-slate-950/70 border border-slate-800/90 p-3.5 rounded-xl shadow-inner hover:border-slate-700 transition">
-            <div className="text-[11px] font-bold text-slate-400 flex items-center justify-between">
+          <div className="bg-slate-50 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800/90 p-3.5 rounded-xl hover:border-slate-300 dark:hover:border-slate-700 transition">
+            <div className="text-[11px] font-bold text-slate-500 dark:text-slate-400 flex items-center justify-between">
               <span>বকেয়া দোকান</span>
-              <div className="w-6 h-6 rounded-lg bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400">
+              <div className="w-6 h-6 rounded-lg bg-amber-50 dark:bg-amber-500/15 border border-amber-200 dark:border-amber-500/30 flex items-center justify-center text-amber-600 dark:text-amber-400">
                 <User className="w-3.5 h-3.5" />
               </div>
             </div>
-            <div className="text-lg sm:text-xl font-black text-amber-400 mt-2 font-mono">
-              {toBnDigit(shopsWithDueCount)} <span className="text-xs font-normal text-slate-400">টি</span>
+            <div className="text-lg sm:text-xl font-black text-amber-700 dark:text-amber-400 mt-2 font-mono">
+              {toBnDigit(shopsWithDueCount)} <span className="text-xs font-normal text-slate-500 dark:text-slate-400">টি</span>
             </div>
           </div>
 
-          <div className="bg-slate-950/70 border border-slate-800/90 p-3.5 rounded-xl shadow-inner hover:border-slate-700 transition">
-            <div className="text-[11px] font-bold text-slate-400 flex items-center justify-between">
+          <div className="bg-slate-50 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800/90 p-3.5 rounded-xl hover:border-slate-300 dark:hover:border-slate-700 transition">
+            <div className="text-[11px] font-bold text-slate-500 dark:text-slate-400 flex items-center justify-between">
               <span>এলাকার দোকান</span>
-              <div className="w-6 h-6 rounded-lg bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+              <div className="w-6 h-6 rounded-lg bg-emerald-50 dark:bg-emerald-500/15 border border-emerald-200 dark:border-emerald-500/30 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
                 <TrendingUp className="w-3.5 h-3.5" />
               </div>
             </div>
-            <div className="text-lg sm:text-xl font-black text-emerald-400 mt-2 font-mono">
-              {toBnDigit(myShopsCount)} <span className="text-xs font-normal text-slate-400">টি</span>
+            <div className="text-lg sm:text-xl font-black text-emerald-600 dark:text-emerald-400 mt-2 font-mono">
+              {toBnDigit(myShopsCount)} <span className="text-xs font-normal text-slate-500 dark:text-slate-400">টি</span>
             </div>
           </div>
         </div>
       </div>
 
       {/* Filter and Search Bar */}
-      <div className="bg-slate-900 border border-slate-800 p-3.5 sm:p-4 rounded-2xl flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 shadow-lg">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-3.5 sm:p-4 rounded-2xl flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 shadow-xs">
         {/* Filter Pills */}
         <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
           <button
             onClick={() => setActiveFilter('all')}
             className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1 cursor-pointer ${
               activeFilter === 'all'
-                ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20'
-                : 'bg-slate-950 text-slate-300 hover:text-white border border-slate-800'
+                ? 'bg-amber-500 text-slate-950 shadow-xs'
+                : 'bg-slate-100 dark:bg-slate-950 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-slate-800'
             }`}
           >
             <span>সব দোকান</span>
-            <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-slate-900/40">
+            <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-slate-200 dark:bg-slate-900/40 text-slate-700 dark:text-slate-300">
               {toBnDigit(totalShopsCount)}
             </span>
           </button>
@@ -578,12 +578,12 @@ export const ShopManagement: React.FC<ShopManagementProps> = ({
               onClick={() => setActiveFilter('my')}
               className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1 cursor-pointer ${
                 activeFilter === 'my'
-                  ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20'
-                  : 'bg-slate-950 text-slate-300 hover:text-white border border-slate-800'
+                  ? 'bg-amber-500 text-slate-950 shadow-xs'
+                  : 'bg-slate-100 dark:bg-slate-950 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-slate-800'
               }`}
             >
               <span>আমার দোকান</span>
-              <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-slate-900/40">
+              <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-slate-200 dark:bg-slate-900/40 text-slate-700 dark:text-slate-300">
                 {toBnDigit(myShopsCount)}
               </span>
             </button>
@@ -593,12 +593,12 @@ export const ShopManagement: React.FC<ShopManagementProps> = ({
             onClick={() => setActiveFilter('due')}
             className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1 cursor-pointer ${
               activeFilter === 'due'
-                ? 'bg-rose-500 text-white shadow-md shadow-rose-500/20'
-                : 'bg-slate-950 text-rose-400 hover:bg-slate-800 border border-slate-800'
+                ? 'bg-rose-500 text-white shadow-xs'
+                : 'bg-rose-50 dark:bg-slate-950 text-rose-600 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-slate-800 border border-rose-200 dark:border-slate-800'
             }`}
           >
             <span>বকেয়া আছে</span>
-            <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-rose-950/40 text-rose-200">
+            <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-rose-200 dark:bg-rose-950/40 text-rose-800 dark:text-rose-200">
               {toBnDigit(shopsWithDueCount)}
             </span>
           </button>
@@ -607,12 +607,12 @@ export const ShopManagement: React.FC<ShopManagementProps> = ({
             onClick={() => setActiveFilter('advance')}
             className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1 cursor-pointer ${
               activeFilter === 'advance'
-                ? 'bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20'
-                : 'bg-slate-950 text-emerald-400 hover:bg-slate-800 border border-slate-800'
+                ? 'bg-emerald-500 text-slate-950 shadow-xs'
+                : 'bg-emerald-50 dark:bg-slate-950 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-slate-800 border border-emerald-200 dark:border-slate-800'
             }`}
           >
             <span>এডভান্স জমা</span>
-            <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-emerald-950/40 text-emerald-200">
+            <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-emerald-200 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-200">
               {toBnDigit(shopsWithAdvanceCount)}
             </span>
           </button>
@@ -621,8 +621,8 @@ export const ShopManagement: React.FC<ShopManagementProps> = ({
             onClick={() => setActiveFilter('paid')}
             className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1 cursor-pointer ${
               activeFilter === 'paid'
-                ? 'bg-blue-500 text-white shadow-md shadow-blue-500/20'
-                : 'bg-slate-950 text-slate-300 hover:bg-slate-800 border border-slate-800'
+                ? 'bg-blue-500 text-white shadow-xs'
+                : 'bg-slate-100 dark:bg-slate-950 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800'
             }`}
           >
             <span>পরিশোধিত</span>
@@ -632,18 +632,18 @@ export const ShopManagement: React.FC<ShopManagementProps> = ({
         {/* Search & Sort Controls */}
         <div className="flex items-center gap-2 w-full md:w-auto">
           <div className="relative flex-1 md:w-64">
-            <Search className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
+            <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               placeholder="দোকান, মালিক বা এলাকা খুঁজুন..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-8 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-amber-500 transition"
+              className="w-full pl-9 pr-8 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:border-amber-500 transition"
             />
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery('')}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300"
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
               >
                 <X className="w-3.5 h-3.5" />
               </button>
@@ -654,7 +654,7 @@ export const ShopManagement: React.FC<ShopManagementProps> = ({
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as any)}
-              className="px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-300 font-bold focus:outline-none focus:border-amber-500 cursor-pointer"
+              className="px-3 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-700 dark:text-slate-300 font-bold focus:outline-none focus:border-amber-500 cursor-pointer"
             >
               <option value="due_high">সর্বোচ্চ বকেয়া</option>
               <option value="orders_high">সর্বোচ্চ অর্ডার</option>
@@ -667,12 +667,12 @@ export const ShopManagement: React.FC<ShopManagementProps> = ({
 
       {/* Shops Grid / List View */}
       {filteredShops.length === 0 ? (
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-12 text-center space-y-3">
-          <div className="w-12 h-12 rounded-full bg-slate-800 text-slate-500 mx-auto flex items-center justify-center">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-12 text-center space-y-3">
+          <div className="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 mx-auto flex items-center justify-center">
             <Store className="w-6 h-6" />
           </div>
-          <h3 className="text-base font-bold text-slate-200">কোন দোকান খুঁজে পাওয়া যায়নি</h3>
-          <p className="text-xs text-slate-400 max-w-sm mx-auto">
+          <h3 className="text-base font-bold text-slate-800 dark:text-slate-200">কোন দোকান খুঁজে পাওয়া যায়নি</h3>
+          <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto">
             আপনার অনুসন্ধান বা ফিল্টারের সাথে মিলে এমন কোনো দোকান নেই। সঠিক বানান দিয়ে খুঁজুন অথবা নতুন দোকান যুক্ত করুন।
           </p>
           <button
@@ -680,7 +680,7 @@ export const ShopManagement: React.FC<ShopManagementProps> = ({
               setSearchQuery('');
               setActiveFilter('all');
             }}
-            className="px-4 py-2 rounded-xl text-xs font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20 hover:bg-amber-500/20 transition cursor-pointer"
+            className="px-4 py-2 rounded-xl text-xs font-bold bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-500/20 hover:bg-amber-100 dark:hover:bg-amber-500/20 transition cursor-pointer"
           >
             ফিল্টার রিসেট করুন
           </button>
@@ -698,26 +698,26 @@ export const ShopManagement: React.FC<ShopManagementProps> = ({
             return (
               <div
                 key={`shop-card-${shop.id}-${idx}`}
-                className="bg-slate-900 border border-slate-800/90 hover:border-slate-700/80 rounded-2xl p-4 transition-all duration-150 flex flex-col justify-between group shadow-sm hover:shadow-md"
+                className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800/90 hover:border-slate-300 dark:hover:border-slate-700/80 rounded-2xl p-4 transition-all duration-150 flex flex-col justify-between group shadow-xs hover:shadow-md"
               >
                 <div>
                   {/* Card Header: Shop Name & Due Amount */}
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0">
+                        <div className="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
                           <Store className="w-4 h-4" />
                         </div>
                         <div className="min-w-0 flex-1">
                           <h3
-                            className="text-sm font-bold text-slate-100 truncate cursor-pointer hover:text-amber-400 transition"
+                            className="text-sm font-bold text-slate-900 dark:text-slate-100 truncate cursor-pointer hover:text-amber-600 dark:hover:text-amber-400 transition"
                             onClick={() => setSelectedShopDetail(shop)}
                             title={shop.shopName}
                           >
                             {shop.shopName}
                           </h3>
-                          <div className="text-[11px] text-slate-400 flex items-center gap-1 truncate">
-                            <User className="w-3 h-3 text-slate-500 shrink-0" />
+                          <div className="text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-1 truncate">
+                            <User className="w-3 h-3 text-slate-400 shrink-0" />
                             <span className="truncate">{shop.name}</span>
                           </div>
                         </div>
@@ -729,10 +729,10 @@ export const ShopManagement: React.FC<ShopManagementProps> = ({
                       <span
                         className={`px-2.5 py-1 rounded-lg text-xs font-bold whitespace-nowrap shrink-0 inline-flex items-center leading-normal ${
                           hasDue
-                            ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30 font-black'
+                            ? 'bg-rose-50 dark:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-500/30 font-black'
                             : isAdvance
-                            ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-black'
-                            : 'bg-slate-800 text-slate-400 border border-slate-700'
+                            ? 'bg-emerald-50 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/30 font-black'
+                            : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700'
                         }`}
                       >
                         {hasDue
@@ -745,59 +745,59 @@ export const ShopManagement: React.FC<ShopManagementProps> = ({
                   </div>
 
                   {/* Shop Details info (Market, Phone, Assigned Seller) */}
-                  <div className="mt-3.5 pt-3 border-t border-slate-800/60 space-y-1.5 text-xs text-slate-300">
+                  <div className="mt-3.5 pt-3 border-t border-slate-100 dark:border-slate-800/60 space-y-1.5 text-xs text-slate-600 dark:text-slate-300">
                     {/* Area / Market */}
                     <div className="flex items-center justify-between text-[11px]">
-                      <span className="text-slate-500 flex items-center gap-1 shrink-0">
-                        <MapPin className="w-3 h-3 text-slate-500" />
+                      <span className="text-slate-500 dark:text-slate-400 flex items-center gap-1 shrink-0">
+                        <MapPin className="w-3 h-3 text-slate-400" />
                         বাজার / ঠিকানা:
                       </span>
-                      <span className="text-slate-300 font-semibold truncate max-w-[180px]" title={shop.address}>
+                      <span className="text-slate-800 dark:text-slate-300 font-semibold truncate max-w-[180px]" title={shop.address}>
                         {shop.address || '—'}
                       </span>
                     </div>
 
                     {/* Mobile / Contact with Call and Copy */}
                     <div className="flex items-center justify-between text-[11px]">
-                      <span className="text-slate-500 flex items-center gap-1 shrink-0">
-                        <Phone className="w-3 h-3 text-slate-500" />
+                      <span className="text-slate-500 dark:text-slate-400 flex items-center gap-1 shrink-0">
+                        <Phone className="w-3 h-3 text-slate-400" />
                         মোবাইল:
                       </span>
                       {shop.phone ? (
                         <div className="flex items-center gap-1.5">
-                          <span className="font-mono text-slate-200">{shop.phone}</span>
+                          <span className="font-mono text-slate-800 dark:text-slate-200">{shop.phone}</span>
                           <button
                             onClick={() => handleCopyPhone(shop.phone, shop.id)}
-                            className="p-1 rounded text-slate-400 hover:text-amber-400 hover:bg-slate-800 transition"
+                            className="p-1 rounded text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
                             title="কপি করুন"
                           >
                             {copiedPhoneId === shop.id ? (
-                              <Check className="w-3 h-3 text-emerald-400" />
+                              <Check className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
                             ) : (
                               <Copy className="w-3 h-3" />
                             )}
                           </button>
                           <a
                             href={`tel:${shop.phone}`}
-                            className="p-1 rounded text-slate-400 hover:text-emerald-400 hover:bg-slate-800 transition"
+                            className="p-1 rounded text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
                             title="সরাসরি কল দিন"
                           >
                             <Phone className="w-3 h-3" />
                           </a>
                         </div>
                       ) : (
-                        <span className="text-slate-500 italic">নম্বর নেই</span>
+                        <span className="text-slate-400 italic">নম্বর নেই</span>
                       )}
                     </div>
 
                     {/* Assigned Seller Tag */}
                     <div className="flex items-center justify-between text-[11px]">
-                      <span className="text-slate-500 shrink-0">দায়িত্বপ্রাপ্ত সেলার:</span>
+                      <span className="text-slate-500 dark:text-slate-400 shrink-0">দায়িত্বপ্রাপ্ত সেলার:</span>
                       <span
                         className={`px-1.5 py-0.5 rounded text-[10px] font-semibold truncate max-w-[150px] ${
                           isMyAssigned
-                            ? 'bg-amber-500/15 text-amber-300 border border-amber-500/30 font-bold'
-                            : 'bg-slate-800 text-slate-300'
+                            ? 'bg-amber-50 dark:bg-amber-500/15 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-500/30 font-bold'
+                            : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'
                         }`}
                       >
                         {shop.assignedSellerName || 'প্রধান শাখা'}
@@ -805,28 +805,28 @@ export const ShopManagement: React.FC<ShopManagementProps> = ({
                     </div>
 
                     {/* Orders Summary Badge */}
-                    <div className="flex items-center justify-between text-[11px] pt-1 text-slate-400">
-                      <span>মোট অর্ডার: <strong className="text-slate-200 font-mono">{toBnDigit(shop.totalOrdersCount)}</strong> টি</span>
-                      <span>মোট ক্রয়: <strong className="text-slate-200 font-mono">{formatTaka(shop.totalOrderAmount)}</strong></span>
+                    <div className="flex items-center justify-between text-[11px] pt-1 text-slate-500 dark:text-slate-400">
+                      <span>মোট অর্ডার: <strong className="text-slate-800 dark:text-slate-200 font-mono">{toBnDigit(shop.totalOrdersCount)}</strong> টি</span>
+                      <span>মোট ক্রয়: <strong className="text-slate-800 dark:text-slate-200 font-mono">{formatTaka(shop.totalOrderAmount)}</strong></span>
                     </div>
                   </div>
                 </div>
 
                 {/* Card Actions Footer */}
-                <div className="mt-4 pt-3 border-t border-slate-800/80 flex items-center justify-between gap-2">
+                <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between gap-2">
                   <div className="flex items-center gap-1.5">
                     <button
                       onClick={() => setSelectedShopDetail(shop)}
-                      className="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-200 transition flex items-center gap-1 cursor-pointer"
+                      className="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition flex items-center gap-1 cursor-pointer"
                       title="বিস্তারিত হিসাব দেখুন"
                     >
-                      <Receipt className="w-3 h-3 text-slate-400" />
+                      <Receipt className="w-3 h-3 text-slate-500 dark:text-slate-400" />
                       <span>হিসাব</span>
                     </button>
 
                     <button
                       onClick={() => handleOpenEdit(shop)}
-                      className="p-1.5 rounded-lg text-slate-400 hover:text-amber-400 hover:bg-slate-800 transition cursor-pointer"
+                      className="p-1.5 rounded-lg text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
                       title="দোকানের তথ্য এডিট করুন"
                     >
                       <Edit2 className="w-3.5 h-3.5" />
@@ -835,7 +835,7 @@ export const ShopManagement: React.FC<ShopManagementProps> = ({
                     {onDeleteShop && (
                       <button
                         onClick={() => setShopToTrash(shop)}
-                        className="p-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-rose-950/40 transition cursor-pointer"
+                        className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition cursor-pointer"
                         title="দোকান ট্র্যাশে পাঠান"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
@@ -847,7 +847,7 @@ export const ShopManagement: React.FC<ShopManagementProps> = ({
                   {onNavigateToPos && (
                     <button
                       onClick={() => onNavigateToPos(shop.id)}
-                      className="px-3 py-1.5 rounded-xl text-xs font-bold bg-amber-500 hover:bg-amber-400 text-slate-950 flex items-center gap-1.5 shadow-sm active:scale-95 transition cursor-pointer"
+                      className="px-3 py-1.5 rounded-xl text-xs font-bold bg-amber-500 hover:bg-amber-400 text-slate-950 flex items-center gap-1.5 shadow-xs active:scale-95 transition cursor-pointer"
                     >
                       <ShoppingCart className="w-3.5 h-3.5" />
                       <span>নতুন মেমো</span>
@@ -860,26 +860,26 @@ export const ShopManagement: React.FC<ShopManagementProps> = ({
         </div>
       )}
 
-      {/* MODAL: Add New Shop (সেলার নতুন দোকান যুক্ত করার ফর্ম) */}
+      {/* MODAL: Add New Shop */}
       {showAddModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-fadeIn">
-          <div className="bg-slate-900 border border-slate-800 w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 dark:bg-slate-950/80 backdrop-blur-sm p-4 animate-fadeIn">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
             {/* Modal Header */}
-            <div className="p-4 sm:p-5 border-b border-slate-800 flex items-center justify-between bg-slate-950">
+            <div className="p-4 sm:p-5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-950">
               <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center font-bold">
+                <div className="w-9 h-9 rounded-xl bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center font-bold">
                   <Store className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-base font-bold text-slate-100">নতুন দোকান নিবন্ধন করুন</h3>
-                  <p className="text-xs text-slate-400">
+                  <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">নতুন দোকান নিবন্ধন করুন</h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
                     দোকানের নাম ও তথ্য প্রদান করে গ্রাহক তালিকাভুক্ত করুন
                   </p>
                 </div>
               </div>
               <button
                 onClick={() => setShowAddModal(false)}
-                className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition"
+                className="p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -888,15 +888,15 @@ export const ShopManagement: React.FC<ShopManagementProps> = ({
             {/* Modal Body Form */}
             <form onSubmit={handleCreateShop} className="p-4 sm:p-6 overflow-y-auto space-y-4">
               {formError && (
-                <div className="p-3 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-300 text-xs font-semibold">
+                <div className="p-3 rounded-xl bg-rose-50 dark:bg-rose-500/15 border border-rose-200 dark:border-rose-500/30 text-rose-700 dark:text-rose-300 text-xs font-semibold">
                   {formError}
                 </div>
               )}
 
               {/* Shop Name */}
               <div>
-                <label className="block text-xs font-bold text-slate-300 mb-1">
-                  দোকানের নাম <span className="text-rose-400">*</span>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  দোকানের নাম <span className="text-rose-500">*</span>
                 </label>
                 <input
                   type="text"
@@ -904,14 +904,14 @@ export const ShopManagement: React.FC<ShopManagementProps> = ({
                   placeholder="যেমন: আল-মদিনা শু হাউস / মেসার্স রফিক সুজ"
                   value={formShopName}
                   onChange={(e) => setFormShopName(e.target.value)}
-                  className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs sm:text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-amber-500 transition"
+                  className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:border-amber-500 transition"
                 />
               </div>
 
               {/* Proprietor / Owner Name */}
               <div>
-                <label className="block text-xs font-bold text-slate-300 mb-1">
-                  প্রোপাইটার / মালিকের নাম <span className="text-rose-400">*</span>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  প্রোপাইটার / মালিকের নাম <span className="text-rose-500">*</span>
                 </label>
                 <input
                   type="text"
@@ -919,43 +919,43 @@ export const ShopManagement: React.FC<ShopManagementProps> = ({
                   placeholder="যেমন: মোঃ রফিকুল ইসলাম"
                   value={formProprietorName}
                   onChange={(e) => setFormProprietorName(e.target.value)}
-                  className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs sm:text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-amber-500 transition"
+                  className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:border-amber-500 transition"
                 />
               </div>
 
               {/* Phone Number */}
               <div>
-                <label className="block text-xs font-bold text-slate-300 mb-1">
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                   মোবাইল নম্বর (লগইন আইডি হিসেবে ব্যবহৃত হবে)
                 </label>
                 <div className="relative">
-                  <Phone className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
+                  <Phone className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
                   <input
                     type="tel"
                     placeholder="যেমন: 01711223344"
                     value={formPhone}
                     onChange={(e) => setFormPhone(e.target.value)}
-                    className="w-full pl-9 pr-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs sm:text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-amber-500 transition font-mono"
+                    className="w-full pl-9 pr-3 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:border-amber-500 transition font-mono"
                   />
                 </div>
-                <p className="text-[10px] text-slate-500 mt-1">
+                <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-1">
                   * মোবাইল নম্বর দিলে দোকানদার নিজে অ্যাপে লগইন করে অর্ডার ও ক্যাটালগ দেখতে পারবেন।
                 </p>
               </div>
 
               {/* Address / Market */}
               <div>
-                <label className="block text-xs font-bold text-slate-300 mb-1">
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                   বাজার / এলাকা / ঠিকানা
                 </label>
                 <div className="relative">
-                  <MapPin className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
+                  <MapPin className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
                   <input
                     type="text"
                     placeholder="যেমন: চকবাজার মার্কেট, ঢাকা"
                     value={formAddress}
                     onChange={(e) => setFormAddress(e.target.value)}
-                    className="w-full pl-9 pr-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs sm:text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-amber-500 transition"
+                    className="w-full pl-9 pr-3 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:border-amber-500 transition"
                   />
                 </div>
               </div>
@@ -963,11 +963,11 @@ export const ShopManagement: React.FC<ShopManagementProps> = ({
               {/* Initial Due & Password Grid */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-bold text-slate-300 mb-1">
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                     পূর্বের বকেয়া (যদি থাকে)
                   </label>
                   <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 font-bold text-xs">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-xs">
                       ৳
                     </span>
                     <input
@@ -977,45 +977,45 @@ export const ShopManagement: React.FC<ShopManagementProps> = ({
                       placeholder="0"
                       value={formInitialDue}
                       onChange={(e) => setFormInitialDue(e.target.value)}
-                      className="w-full pl-7 pr-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs sm:text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-amber-500 transition font-mono"
+                      className="w-full pl-7 pr-3 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:border-amber-500 transition font-mono"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-300 mb-1">
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                     ডিফল্ট পাসওয়ার্ড
                   </label>
                   <input
                     type="text"
                     value={formPassword}
                     onChange={(e) => setFormPassword(e.target.value)}
-                    className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs sm:text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-amber-500 transition font-mono"
+                    className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:border-amber-500 transition font-mono"
                   />
                 </div>
               </div>
 
               {/* Assigned Rep info banner */}
-              <div className="p-3 rounded-xl bg-slate-950 border border-slate-800 text-[11px] text-slate-400 flex items-center justify-between">
+              <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-[11px] text-slate-600 dark:text-slate-400 flex items-center justify-between">
                 <span>দায়িত্বপ্রাপ্ত সেলার:</span>
-                <span className="font-bold text-amber-400">
+                <span className="font-bold text-amber-600 dark:text-amber-400">
                   {currentUser?.name || 'প্রধান শাখা'}
                 </span>
               </div>
 
               {/* Action Buttons */}
-              <div className="pt-3 border-t border-slate-800 flex items-center justify-end gap-2.5">
+              <div className="pt-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end gap-2.5">
                 <button
                   type="button"
                   onClick={() => setShowAddModal(false)}
-                  className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800 transition cursor-pointer"
+                  className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
                 >
                   বাতিল
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 shadow-md shadow-amber-500/20 active:scale-95 transition flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                  className="px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 shadow-xs active:scale-95 transition flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
                 >
                   <Plus className="w-4 h-4" />
                   <span>{isSubmitting ? 'সংরক্ষণ হচ্ছে...' : 'দোকান সংরক্ষণ করুন'}</span>
@@ -1028,16 +1028,16 @@ export const ShopManagement: React.FC<ShopManagementProps> = ({
 
       {/* MODAL: Edit Shop Info */}
       {editingShop && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-fadeIn">
-          <div className="bg-slate-900 border border-slate-800 w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
-            <div className="p-4 sm:p-5 border-b border-slate-800 flex items-center justify-between bg-slate-950">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 dark:bg-slate-950/80 backdrop-blur-sm p-4 animate-fadeIn">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+            <div className="p-4 sm:p-5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-950">
               <div className="flex items-center gap-2">
-                <Edit2 className="w-5 h-5 text-amber-400" />
-                <h3 className="text-base font-bold text-slate-100">দোকানের তথ্য সংশোধন</h3>
+                <Edit2 className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+                <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">দোকানের তথ্য সংশোধন</h3>
               </div>
               <button
                 onClick={() => setEditingShop(null)}
-                className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition"
+                className="p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -1045,7 +1045,7 @@ export const ShopManagement: React.FC<ShopManagementProps> = ({
 
             <form onSubmit={handleSaveEdit} className="p-4 sm:p-6 overflow-y-auto space-y-4">
               <div>
-                <label className="block text-xs font-bold text-slate-300 mb-1">
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                   দোকানের নাম
                 </label>
                 <input
@@ -1053,12 +1053,12 @@ export const ShopManagement: React.FC<ShopManagementProps> = ({
                   required
                   value={editShopName}
                   onChange={(e) => setEditShopName(e.target.value)}
-                  className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs sm:text-sm text-slate-100 focus:outline-none focus:border-amber-500 transition"
+                  className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:border-amber-500 transition"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-300 mb-1">
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                   প্রোপাইটার / মালিকের নাম
                 </label>
                 <input
@@ -1066,43 +1066,43 @@ export const ShopManagement: React.FC<ShopManagementProps> = ({
                   required
                   value={editProprietorName}
                   onChange={(e) => setEditProprietorName(e.target.value)}
-                  className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs sm:text-sm text-slate-100 focus:outline-none focus:border-amber-500 transition"
+                  className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:border-amber-500 transition"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-300 mb-1">
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                   মোবাইল নম্বর
                 </label>
                 <input
                   type="tel"
                   value={editPhone}
                   onChange={(e) => setEditPhone(e.target.value)}
-                  className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs sm:text-sm text-slate-100 focus:outline-none focus:border-amber-500 transition font-mono"
+                  className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:border-amber-500 transition font-mono"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-300 mb-1">
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                   বাজার / এলাকা / ঠিকানা
                 </label>
                 <input
                   type="text"
                   value={editAddress}
                   onChange={(e) => setEditAddress(e.target.value)}
-                  className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs sm:text-sm text-slate-100 focus:outline-none focus:border-amber-500 transition"
+                  className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:border-amber-500 transition"
                 />
               </div>
 
               {sellers.length > 0 && (
                 <div>
-                  <label className="block text-xs font-bold text-slate-300 mb-1">
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                     দায়িত্বপ্রাপ্ত সেলার নির্ধারণ
                   </label>
                   <select
                     value={editSellerId}
                     onChange={(e) => setEditSellerId(e.target.value)}
-                    className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs sm:text-sm text-slate-100 focus:outline-none focus:border-amber-500 transition"
+                    className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:border-amber-500 transition"
                   >
                     <option value="">উন্মুক্ত / প্রধান শাখা</option>
                     {sellers.map((s) => (
@@ -1114,18 +1114,18 @@ export const ShopManagement: React.FC<ShopManagementProps> = ({
                 </div>
               )}
 
-              <div className="pt-3 border-t border-slate-800 flex items-center justify-end gap-2.5">
+              <div className="pt-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end gap-2.5">
                 <button
                   type="button"
                   onClick={() => setEditingShop(null)}
-                  className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800 transition cursor-pointer"
+                  className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
                 >
                   বাতিল
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-md active:scale-95 transition cursor-pointer disabled:opacity-50"
+                  className="px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-xs active:scale-95 transition cursor-pointer disabled:opacity-50"
                 >
                   {isSubmitting ? 'আপডেট হচ্ছে...' : 'আপডেট সম্পন্ন করুন'}
                 </button>
@@ -1137,22 +1137,22 @@ export const ShopManagement: React.FC<ShopManagementProps> = ({
 
       {/* MODAL: Detailed Shop Ledger & Profile */}
       {selectedShopDetail && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-fadeIn">
-          <div className="bg-slate-900 border border-slate-800 w-full max-w-xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 dark:bg-slate-950/80 backdrop-blur-sm p-4 animate-fadeIn">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 w-full max-w-xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
             {/* Header */}
-            <div className="p-4 sm:p-5 border-b border-slate-800 flex items-center justify-between bg-slate-950">
+            <div className="p-4 sm:p-5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-950">
               <div className="flex items-center gap-2.5">
-                <div className="w-10 h-10 rounded-xl bg-emerald-500/15 text-emerald-400 flex items-center justify-center font-bold">
+                <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold">
                   <Store className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-base font-bold text-slate-100">{selectedShopDetail.shopName}</h3>
-                  <p className="text-xs text-slate-400">প্রোপাইটার: {selectedShopDetail.name}</p>
+                  <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">{selectedShopDetail.shopName}</h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">প্রোপাইটার: {selectedShopDetail.name}</p>
                 </div>
               </div>
               <button
                 onClick={() => setSelectedShopDetail(null)}
-                className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition"
+                className="p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -1162,16 +1162,16 @@ export const ShopManagement: React.FC<ShopManagementProps> = ({
             <div className="p-4 sm:p-6 overflow-y-auto space-y-4 text-xs">
               {/* Top Quick Status Grid */}
               <div className="grid grid-cols-2 gap-3">
-                <div className="bg-slate-950 p-3.5 rounded-xl border border-slate-800">
-                  <span className="text-slate-500 text-[11px]">
+                <div className="bg-slate-50 dark:bg-slate-950 p-3.5 rounded-xl border border-slate-200 dark:border-slate-800">
+                  <span className="text-slate-500 dark:text-slate-400 text-[11px]">
                     {selectedShopDetail.currentDue < 0 ? 'এডভান্স জমা (ক্রেডিট):' : 'বর্তমান বকেয়া (Due):'}
                   </span>
                   <div className={`text-base sm:text-lg font-black mt-0.5 ${
                     selectedShopDetail.currentDue > 0
-                      ? 'text-rose-400'
+                      ? 'text-rose-600 dark:text-rose-400'
                       : selectedShopDetail.currentDue < 0
-                      ? 'text-emerald-400'
-                      : 'text-slate-300'
+                      ? 'text-emerald-600 dark:text-emerald-400'
+                      : 'text-slate-700 dark:text-slate-300'
                   }`}>
                     {selectedShopDetail.currentDue < 0
                       ? `+${formatTaka(Math.abs(selectedShopDetail.currentDue))}`
@@ -1179,24 +1179,24 @@ export const ShopManagement: React.FC<ShopManagementProps> = ({
                   </div>
                 </div>
 
-                <div className="bg-slate-950 p-3.5 rounded-xl border border-slate-800">
-                  <span className="text-slate-500 text-[11px]">মোট ক্রয়কৃত পরিমাণ:</span>
-                  <div className="text-base sm:text-lg font-black text-slate-100 mt-0.5">
+                <div className="bg-slate-50 dark:bg-slate-950 p-3.5 rounded-xl border border-slate-200 dark:border-slate-800">
+                  <span className="text-slate-500 dark:text-slate-400 text-[11px]">মোট ক্রয়কৃত পরিমাণ:</span>
+                  <div className="text-base sm:text-lg font-black text-slate-900 dark:text-slate-100 mt-0.5">
                     {formatTaka(selectedShopDetail.totalOrderAmount)}
                   </div>
                 </div>
               </div>
 
               {/* Profile Details List */}
-              <div className="bg-slate-950 p-3.5 rounded-xl border border-slate-800 space-y-2.5">
+              <div className="bg-slate-50 dark:bg-slate-950 p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 space-y-2.5">
                 <div className="flex items-center justify-between">
-                  <span className="text-slate-400">মোবাইল নম্বর:</span>
-                  <div className="flex items-center gap-1.5 font-mono text-slate-200">
+                  <span className="text-slate-500 dark:text-slate-400">মোবাইল নম্বর:</span>
+                  <div className="flex items-center gap-1.5 font-mono text-slate-800 dark:text-slate-200">
                     <span>{selectedShopDetail.phone || 'নেই'}</span>
                     {selectedShopDetail.phone && (
                       <a
                         href={`tel:${selectedShopDetail.phone}`}
-                        className="p-1 rounded bg-slate-800 text-emerald-400 hover:bg-slate-700"
+                        className="p-1 rounded bg-slate-200 dark:bg-slate-800 text-emerald-600 dark:text-emerald-400 hover:bg-slate-300 dark:hover:bg-slate-700"
                         title="কল দিন"
                       >
                         <Phone className="w-3 h-3" />
@@ -1206,18 +1206,18 @@ export const ShopManagement: React.FC<ShopManagementProps> = ({
                 </div>
 
                 <div className="flex items-center justify-between">
-                  <span className="text-slate-400">বাজার / ঠিকানা:</span>
-                  <span className="text-slate-200 font-semibold">{selectedShopDetail.address}</span>
+                  <span className="text-slate-500 dark:text-slate-400">বাজার / ঠিকানা:</span>
+                  <span className="text-slate-800 dark:text-slate-200 font-semibold">{selectedShopDetail.address}</span>
                 </div>
 
                 <div className="flex items-center justify-between">
-                  <span className="text-slate-400">দায়িত্বপ্রাপ্ত সেলার:</span>
-                  <span className="text-amber-400 font-bold">{selectedShopDetail.assignedSellerName || 'প্রধান শাখা'}</span>
+                  <span className="text-slate-500 dark:text-slate-400">দায়িত্বপ্রাপ্ত সেলার:</span>
+                  <span className="text-amber-700 dark:text-amber-400 font-bold">{selectedShopDetail.assignedSellerName || 'প্রধান শাখা'}</span>
                 </div>
 
                 <div className="flex items-center justify-between">
-                  <span className="text-slate-400">মোট সম্পন্ন মেমো:</span>
-                  <span className="text-slate-200 font-mono font-bold">{toBnDigit(selectedShopDetail.totalOrdersCount)} টি</span>
+                  <span className="text-slate-500 dark:text-slate-400">মোট সম্পন্ন মেমো:</span>
+                  <span className="text-slate-800 dark:text-slate-200 font-mono font-bold">{toBnDigit(selectedShopDetail.totalOrdersCount)} টি</span>
                 </div>
               </div>
 
@@ -1238,7 +1238,7 @@ export const ShopManagement: React.FC<ShopManagementProps> = ({
                 )}
                 <button
                   onClick={() => setSelectedShopDetail(null)}
-                  className="px-4 py-2 rounded-xl text-xs font-semibold bg-slate-800 text-slate-300 hover:text-white transition"
+                  className="px-4 py-2 rounded-xl text-xs font-semibold bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition"
                 >
                   বন্ধ করুন
                 </button>
@@ -1250,38 +1250,38 @@ export const ShopManagement: React.FC<ShopManagementProps> = ({
 
       {/* MODAL: Move Shop to Trash Confirmation */}
       {shopToTrash && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fadeIn">
-          <div className="bg-slate-900 border border-slate-700 p-5 rounded-2xl max-w-sm w-full space-y-4 shadow-2xl">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 dark:bg-slate-950/80 backdrop-blur-sm animate-fadeIn">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 p-5 rounded-2xl max-w-sm w-full space-y-4 shadow-2xl">
             <div className="flex items-center gap-3">
-              <div className="p-2.5 bg-rose-500/10 text-rose-400 border border-rose-500/20 rounded-xl">
+              <div className="p-2.5 bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-500/20 rounded-xl">
                 <Trash2 className="w-5 h-5" />
               </div>
               <div>
-                <h4 className="text-sm font-bold text-white">দোকান ট্র্যাশে পাঠানো</h4>
-                <p className="text-xs text-slate-400">রিসাইকেল বিন থেকে যেকোনো সময় রিস্টোর করা যাবে</p>
+                <h4 className="text-sm font-bold text-slate-900 dark:text-white">দোকান ট্র্যাশে পাঠানো</h4>
+                <p className="text-xs text-slate-500 dark:text-slate-400">রিসাইকেল বিন থেকে যেকোনো সময় রিস্টোর করা যাবে</p>
               </div>
             </div>
 
-            <div className="bg-slate-950 border border-slate-800 p-3 rounded-xl space-y-1.5 text-xs">
+            <div className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-3 rounded-xl space-y-1.5 text-xs">
               <div className="flex justify-between items-center">
-                <span className="text-slate-400">দোকানের নাম:</span>
-                <span className="font-bold text-amber-300">{shopToTrash.shopName || shopToTrash.name}</span>
+                <span className="text-slate-500 dark:text-slate-400">দোকানের নাম:</span>
+                <span className="font-bold text-amber-700 dark:text-amber-300">{shopToTrash.shopName || shopToTrash.name}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-slate-400">প্রোপাইটার:</span>
-                <span className="font-semibold text-white">{shopToTrash.name}</span>
+                <span className="text-slate-500 dark:text-slate-400">প্রোপাইটার:</span>
+                <span className="font-semibold text-slate-900 dark:text-white">{shopToTrash.name}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-slate-400">মোবাইল:</span>
-                <span className="font-mono text-slate-300">{shopToTrash.phone || '-'}</span>
+                <span className="text-slate-500 dark:text-slate-400">মোবাইল:</span>
+                <span className="font-mono text-slate-700 dark:text-slate-300">{shopToTrash.phone || '-'}</span>
               </div>
-              <div className="flex justify-between items-center border-t border-slate-800 pt-1.5">
-                <span className="text-slate-400">বর্তমান বকেয়া:</span>
-                <span className="font-bold text-rose-400">{formatTaka(shopToTrash.currentDue)}</span>
+              <div className="flex justify-between items-center border-t border-slate-200 dark:border-slate-800 pt-1.5">
+                <span className="text-slate-500 dark:text-slate-400">বর্তমান বকেয়া:</span>
+                <span className="font-bold text-rose-600 dark:text-rose-400">{formatTaka(shopToTrash.currentDue)}</span>
               </div>
             </div>
 
-            <div className="text-xs text-slate-300 leading-relaxed bg-rose-950/30 border border-rose-500/20 p-2.5 rounded-xl text-rose-200">
+            <div className="text-xs text-rose-800 dark:text-rose-200 leading-relaxed bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-500/20 p-2.5 rounded-xl">
               ⚠️ আপনি কি নিশ্চিতভাবে <strong>{shopToTrash.shopName || shopToTrash.name}</strong> দোকানটি ট্র্যাশে পাঠাতে চান? এটি সরাসরি ডাটাবেজ থেকে মুছে যাবে না, ট্র্যাশ থেকে যেকোনো সময় সম্পূর্ণ রিস্টোর করা যাবে।
             </div>
 
@@ -1289,7 +1289,7 @@ export const ShopManagement: React.FC<ShopManagementProps> = ({
               <button
                 type="button"
                 onClick={() => setShopToTrash(null)}
-                className="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold transition cursor-pointer"
+                className="px-3.5 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-semibold transition cursor-pointer"
               >
                 বাতিল
               </button>
@@ -1303,7 +1303,7 @@ export const ShopManagement: React.FC<ShopManagementProps> = ({
                     setShopToTrash(null);
                   }
                 }}
-                className="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-lg shadow-rose-600/30 cursor-pointer"
+                className="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm cursor-pointer"
               >
                 <Trash2 className="w-4 h-4" />
                 <span>ট্র্যাশে পাঠান</span>

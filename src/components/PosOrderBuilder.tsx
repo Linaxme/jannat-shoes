@@ -524,24 +524,24 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
       {/* Minimal Header like Dashboard */}
       <div className="flex items-center justify-between gap-3 pt-1 pb-1">
         <div className="flex items-center gap-3 flex-1 min-w-0">
-          <span className="text-base sm:text-lg md:text-xl font-black text-amber-400 tracking-wide whitespace-nowrap flex items-center gap-2">
-            <ShoppingBag className="w-5 h-5 text-amber-400" />
+          <span className="text-base sm:text-lg md:text-xl font-black text-amber-600 dark:text-amber-400 tracking-wide whitespace-nowrap flex items-center gap-2">
+            <ShoppingBag className="w-5 h-5 text-amber-600 dark:text-amber-400" />
             বিক্রয় ও অর্ডার বুকিং
           </span>
-          <div className="h-0.5 bg-gradient-to-r from-amber-500/50 via-slate-800 to-transparent flex-1" />
+          <div className="h-0.5 bg-gradient-to-r from-amber-500/50 via-slate-200 dark:via-slate-800 to-transparent flex-1" />
         </div>
 
         {/* Draft indicator & Reset button */}
         {cartItems.length > 0 && (
           <div className="flex items-center gap-2 shrink-0">
-            <span className="px-2.5 py-1 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-300 text-[11px] font-medium flex items-center gap-1.5">
-              <Save className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
+            <span className="px-2.5 py-1 rounded-lg bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/30 text-amber-800 dark:text-amber-300 text-[11px] font-medium flex items-center gap-1.5">
+              <Save className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 animate-pulse" />
               <span>খসড়া ({toBnDigit(cartItems.length)}টি)</span>
             </span>
             <button
               type="button"
               onClick={handleClearDraft}
-              className="px-2.5 py-1 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 text-rose-300 hover:text-rose-200 text-[11px] font-bold flex items-center gap-1 transition-colors cursor-pointer"
+              className="px-2.5 py-1 rounded-lg bg-rose-50 dark:bg-rose-500/10 hover:bg-rose-100 dark:hover:bg-rose-500/20 border border-rose-200 dark:border-rose-500/30 text-rose-700 dark:text-rose-300 hover:text-rose-900 dark:hover:text-rose-200 text-[11px] font-bold flex items-center gap-1 transition-colors cursor-pointer"
               title="নতুন মেমো শুরু করুন"
             >
               <RotateCcw className="w-3.5 h-3.5" />
@@ -553,7 +553,7 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
 
       {/* Two Tabs: অর্ডার বুকিং (Order Booking) vs সরাসরি বিক্রয় (Direct Sale) */}
       {(!systemConfig || systemConfig.enableSampleBooking) && (
-        <div className="bg-slate-900 border border-slate-800 p-1.5 rounded-2xl">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-1.5 rounded-2xl shadow-xs">
           <div className="grid grid-cols-2 gap-2">
             <button
               type="button"
@@ -561,10 +561,10 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
               className={`flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl font-bold text-xs sm:text-sm transition-all cursor-pointer ${
                 orderType === 'sample_booking'
                   ? 'bg-amber-500 text-slate-950 shadow-md font-black'
-                  : 'bg-slate-950/80 text-slate-400 hover:text-slate-200 hover:bg-slate-800/80 border border-slate-800/80'
+                  : 'bg-slate-50 dark:bg-slate-950/80 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/80 border border-slate-200 dark:border-slate-800/80'
               }`}
             >
-              <ClipboardList className={`w-4 h-4 ${orderType === 'sample_booking' ? 'text-slate-950' : 'text-amber-400'}`} />
+              <ClipboardList className={`w-4 h-4 ${orderType === 'sample_booking' ? 'text-slate-950' : 'text-amber-600 dark:text-amber-400'}`} />
               <span>অর্ডার বুকিং</span>
             </button>
 
@@ -574,10 +574,10 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
               className={`flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl font-bold text-xs sm:text-sm transition-all cursor-pointer ${
                 orderType === 'direct_sale'
                   ? 'bg-emerald-500 text-slate-950 shadow-md font-black'
-                  : 'bg-slate-950/80 text-slate-400 hover:text-slate-200 hover:bg-slate-800/80 border border-slate-800/80'
+                  : 'bg-slate-50 dark:bg-slate-950/80 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/80 border border-slate-200 dark:border-slate-800/80'
               }`}
             >
-              <Zap className={`w-4 h-4 ${orderType === 'direct_sale' ? 'text-slate-950' : 'text-emerald-400'}`} />
+              <Zap className={`w-4 h-4 ${orderType === 'direct_sale' ? 'text-slate-950' : 'text-emerald-600 dark:text-emerald-400'}`} />
               <span>সরাসরি বিক্রয়</span>
             </button>
           </div>
@@ -585,10 +585,10 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
       )}
 
       {/* Customer Selection: Clean & Minimal */}
-      <div className="bg-slate-900 border border-slate-800/90 p-4 rounded-xl space-y-3">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800/90 p-4 rounded-xl space-y-3 shadow-xs">
         <div className="flex items-center justify-between">
-          <label className="text-xs font-bold text-slate-200 flex items-center gap-1.5">
-            <Store className="w-4 h-4 text-amber-400" />
+          <label className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+            <Store className="w-4 h-4 text-amber-600 dark:text-amber-400" />
             কাস্টমার
           </label>
           <button
@@ -597,7 +597,7 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
               setNewPhone(customerSearchQuery.replace(/\D/g, ''));
               setShowAddCustomerModal(true);
             }}
-            className="text-[11px] text-amber-400 hover:text-amber-300 flex items-center gap-1 font-bold bg-amber-500/10 border border-amber-500/20 px-2.5 py-1 rounded-lg transition-colors cursor-pointer"
+            className="text-[11px] text-amber-700 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-300 flex items-center gap-1 font-bold bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 px-2.5 py-1 rounded-lg transition-colors cursor-pointer"
           >
             <PlusCircle className="w-3.5 h-3.5" /> + নতুন
           </button>
@@ -607,8 +607,8 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
         <div className="relative">
           <div className="flex gap-2 items-center">
             <div className="relative flex-1">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500">
-                <Search className="w-4 h-4 text-amber-400" />
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 dark:text-slate-500">
+                <Search className="w-4 h-4 text-amber-600 dark:text-amber-400" />
               </div>
               <input
                 type="text"
@@ -619,7 +619,7 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
                 }}
                 onFocus={() => setShowCustomerDropdown(true)}
                 placeholder="নাম বা ফোন নম্বর..."
-                className="w-full bg-slate-950 border border-slate-800 focus:border-amber-500 rounded-xl pl-9 pr-8 py-2 text-xs text-white placeholder-slate-500 focus:outline-none transition-colors"
+                className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 focus:border-amber-500 rounded-xl pl-9 pr-8 py-2 text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none transition-colors"
               />
               {customerSearchQuery && (
                 <button
@@ -629,7 +629,7 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
                     setSelectedCustomerId('');
                     setShowCustomerDropdown(false);
                   }}
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-white"
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-white"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
                 </button>
@@ -645,9 +645,9 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
                   setCustomerSearchQuery('');
                   setShowCustomerDropdown(true);
                 }}
-                className="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-xs font-semibold rounded-xl border border-slate-700 whitespace-nowrap transition-colors flex items-center gap-1 cursor-pointer"
+                className="px-3 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white text-xs font-semibold rounded-xl border border-slate-200 dark:border-slate-700 whitespace-nowrap transition-colors flex items-center gap-1 cursor-pointer"
               >
-                <X className="w-3.5 h-3.5 text-rose-400" />
+                <X className="w-3.5 h-3.5 text-rose-500 dark:text-rose-400" />
                 <span>পরিবর্তন</span>
               </button>
             )}
@@ -655,8 +655,8 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
 
           {/* Autocomplete Suggestions Dropdown */}
           {showCustomerDropdown && customerSuggestions.length > 0 && (
-            <div className="absolute left-0 right-0 top-full mt-1.5 z-40 bg-slate-950 border border-slate-700 rounded-xl shadow-2xl overflow-hidden max-h-60 overflow-y-auto divide-y divide-slate-800/80">
-              <div className="p-2 bg-slate-900/80 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+            <div className="absolute left-0 right-0 top-full mt-1.5 z-40 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-xl shadow-2xl overflow-hidden max-h-60 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800/80">
+              <div className="p-2 bg-slate-50 dark:bg-slate-900/80 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                 দোকান তালিকা ({toBnDigit(customerSuggestions.length)}):
               </div>
               {customerSuggestions.map((c, idx) => (
@@ -667,27 +667,27 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
                     setCustomerSearchQuery(c.phone ? `${c.shopName} - ${c.phone}` : c.shopName);
                     setShowCustomerDropdown(false);
                   }}
-                  className={`p-2.5 hover:bg-amber-500/10 cursor-pointer transition-colors flex items-center justify-between gap-3 text-xs ${
-                    selectedCustomerId === c.id ? 'bg-amber-500/15 border-l-2 border-amber-400' : ''
+                  className={`p-2.5 hover:bg-amber-50 dark:hover:bg-amber-500/10 cursor-pointer transition-colors flex items-center justify-between gap-3 text-xs ${
+                    selectedCustomerId === c.id ? 'bg-amber-50 dark:bg-amber-500/15 border-l-2 border-amber-500' : ''
                   }`}
                 >
                   <div className="min-w-0 flex-1">
-                    <div className="font-bold text-white flex items-center gap-1.5">
-                      <Store className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                    <div className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                      <Store className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
                       <span className="truncate">{c.shopName}</span>
-                      <span className="text-[10px] text-slate-400 font-normal">({c.name})</span>
+                      <span className="text-[10px] text-slate-500 dark:text-slate-400 font-normal">({c.name})</span>
                     </div>
-                    <div className="text-[11px] text-slate-400 flex items-center gap-2 mt-0.5">
+                    <div className="text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-2 mt-0.5">
                       {c.phone && <span className="font-mono">{c.phone}</span>}
                       {c.phone && <span>•</span>}
                       <span className="truncate font-sans">{c.address}</span>
                     </div>
                   </div>
                   <div className="text-right shrink-0">
-                    <div className="text-[10px] text-slate-400">
+                    <div className="text-[10px] text-slate-500 dark:text-slate-400">
                       {c.currentDue < 0 ? 'এডভান্স' : 'বর্তমান বাকী'}
                     </div>
-                    <div className={`font-bold ${c.currentDue > 0 ? 'text-rose-400' : c.currentDue < 0 ? 'text-emerald-400' : 'text-slate-300'}`}>
+                    <div className={`font-bold ${c.currentDue > 0 ? 'text-rose-600 dark:text-rose-400' : c.currentDue < 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-600 dark:text-slate-300'}`}>
                       {c.currentDue < 0 ? `+${formatTaka(Math.abs(c.currentDue))}` : formatTaka(c.currentDue)}
                     </div>
                   </div>
@@ -698,8 +698,8 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
 
           {/* Not found state */}
           {showCustomerDropdown && customerSearchQuery.trim() && customerSuggestions.length === 0 && (
-            <div className="absolute left-0 right-0 top-full mt-1.5 z-40 bg-slate-950 border border-slate-700 rounded-xl p-3.5 shadow-2xl text-center space-y-2">
-              <p className="text-xs text-slate-400">
+            <div className="absolute left-0 right-0 top-full mt-1.5 z-40 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-xl p-3.5 shadow-2xl text-center space-y-2">
+              <p className="text-xs text-slate-500 dark:text-slate-400">
                 কোনো দোকান পাওয়া যায়নি
               </p>
               <button
@@ -720,25 +720,25 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
 
         {/* Selected Customer Highlight Card */}
         {selectedCustomer ? (
-          <div className="p-3 bg-slate-950/70 border border-amber-500/30 rounded-xl flex items-center justify-between gap-3 text-xs">
+          <div className="p-3 bg-amber-50/50 dark:bg-slate-950/70 border border-amber-200 dark:border-amber-500/30 rounded-xl flex items-center justify-between gap-3 text-xs">
             <div className="flex items-center gap-2 min-w-0">
-              <Store className="w-4 h-4 text-amber-400 shrink-0" />
-              <span className="font-bold text-amber-300 text-sm truncate">
+              <Store className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
+              <span className="font-bold text-amber-800 dark:text-amber-300 text-sm truncate">
                 {selectedCustomer.shopName}
               </span>
             </div>
 
             <div className="flex items-center gap-3 shrink-0">
-              <div className="text-right bg-slate-900/90 px-3 py-1.5 rounded-lg border border-slate-800 flex items-center gap-2">
-                <span className="text-[11px] text-slate-400">
+              <div className="text-right bg-white dark:bg-slate-900/90 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 flex items-center gap-2">
+                <span className="text-[11px] text-slate-500 dark:text-slate-400">
                   {selectedCustomer.currentDue < 0 ? 'এডভান্স:' : 'বকেয়া:'}
                 </span>
                 <span className={`font-bold text-sm ${
                   selectedCustomer.currentDue > 0
-                    ? 'text-rose-400'
+                    ? 'text-rose-600 dark:text-rose-400'
                     : selectedCustomer.currentDue < 0
-                    ? 'text-emerald-400'
-                    : 'text-slate-300'
+                    ? 'text-emerald-600 dark:text-emerald-400'
+                    : 'text-slate-700 dark:text-slate-300'
                 }`}>
                   {selectedCustomer.currentDue < 0
                     ? `+${formatTaka(Math.abs(selectedCustomer.currentDue))}`
@@ -751,15 +751,15 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
                   setSelectedCustomerId('');
                   setCustomerSearchQuery('');
                 }}
-                className="p-1.5 rounded-lg bg-slate-800/80 hover:bg-rose-500/20 text-slate-400 hover:text-rose-400 border border-slate-700/60 transition-colors cursor-pointer"
+                className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800/80 hover:bg-rose-50 dark:hover:bg-rose-500/20 text-slate-500 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 border border-slate-200 dark:border-slate-700/60 transition-colors cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
           </div>
         ) : (
-          <div className="p-2.5 bg-slate-950/40 border border-dashed border-slate-800 rounded-xl text-center text-xs text-slate-400 flex items-center justify-center gap-2">
-            <AlertCircle className="w-4 h-4 text-amber-400/80" />
+          <div className="p-2.5 bg-slate-50 dark:bg-slate-950/40 border border-dashed border-slate-200 dark:border-slate-800 rounded-xl text-center text-xs text-slate-500 dark:text-slate-400 flex items-center justify-center gap-2">
+            <AlertCircle className="w-4 h-4 text-amber-600 dark:text-amber-400/80" />
             <span>কাস্টমার নির্বাচন করুন</span>
           </div>
         )}
@@ -767,9 +767,9 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
 
 
       {/* QUICK ENTRY BOX (Product Search, Quantity & Price Inputs) */}
-      <div className="bg-slate-900 border border-amber-500/30 p-4 rounded-2xl space-y-3 shadow-lg">
-        <h3 className="text-xs font-bold text-amber-300 flex items-center gap-1.5 uppercase tracking-wider">
-          <Sparkles className="w-4 h-4 text-amber-400" />
+      <div className="bg-white dark:bg-slate-900 border border-amber-300 dark:border-amber-500/30 p-4 rounded-2xl space-y-3 shadow-sm">
+        <h3 className="text-xs font-bold text-amber-700 dark:text-amber-300 flex items-center gap-1.5 uppercase tracking-wider">
+          <Sparkles className="w-4 h-4 text-amber-600 dark:text-amber-400" />
           আইটেম এন্ট্রি
         </h3>
 
@@ -777,7 +777,7 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
           
           {/* Product Auto-complete Search Box */}
           <div className={`${currentUser?.role === 'admin' ? 'sm:col-span-5' : 'sm:col-span-6'} relative`}>
-            <label className="block text-xs font-semibold text-slate-300 mb-1">
+            <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
               প্রোডাক্ট / আর্টিকল:
             </label>
             <div className="relative">
@@ -791,22 +791,22 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
                 }}
                 onFocus={() => setShowSuggestions(true)}
                 placeholder="আর্টিকল বা নাম..."
-                className="w-full bg-slate-950 border border-slate-800 text-xs sm:text-sm text-slate-100 placeholder-slate-500 rounded-xl px-3 py-2.5 focus:outline-none focus:border-amber-500 font-medium"
+                className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs sm:text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 rounded-xl px-3 py-2.5 focus:outline-none focus:border-amber-500 font-medium"
               />
-              <Search className="w-4 h-4 text-slate-500 absolute right-3 top-3 pointer-events-none" />
+              <Search className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute right-3 top-3 pointer-events-none" />
             </div>
 
             {/* Suggestions Overlay Dropdown */}
             {showSuggestions && suggestions.length > 0 && (
-              <div className="absolute z-30 left-0 right-0 mt-1 bg-slate-950 border border-slate-700/90 rounded-xl shadow-2xl max-h-64 overflow-y-auto divide-y divide-slate-800/80">
+              <div className="absolute z-30 left-0 right-0 mt-1 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700/90 rounded-xl shadow-2xl max-h-64 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800/80">
                 {suggestions.map((p) => (
                   <div
                     key={p.id}
                     onClick={() => handleSelectSuggestion(p)}
-                    className="p-2.5 hover:bg-slate-800/90 cursor-pointer flex items-center justify-between gap-3 text-xs transition-colors"
+                    className="p-2.5 hover:bg-slate-50 dark:hover:bg-slate-800/90 cursor-pointer flex items-center justify-between gap-3 text-xs transition-colors"
                   >
                     <div className="flex items-center gap-2.5 min-w-0">
-                      <div className="w-9 h-9 rounded-lg overflow-hidden border border-slate-800 bg-slate-900 flex-shrink-0">
+                      <div className="w-9 h-9 rounded-lg overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-900 flex-shrink-0">
                         <ProductImageDisplay
                           src={p.imageUrl}
                           alt={p.articleCode}
@@ -818,23 +818,23 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
                       </div>
                       <div className="min-w-0">
                         <div className="flex items-center gap-1.5 flex-wrap">
-                          <span className="font-bold text-amber-300 font-mono text-xs">{p.articleCode}</span>
-                          <span className="text-slate-200 font-medium truncate">{p.name}</span>
+                          <span className="font-bold text-amber-700 dark:text-amber-300 font-mono text-xs">{p.articleCode}</span>
+                          <span className="text-slate-900 dark:text-slate-200 font-medium truncate">{p.name}</span>
                         </div>
                         <div className="flex items-center gap-2 mt-0.5 text-[11px] flex-wrap">
-                          <span className="px-1.5 py-0.5 bg-amber-500/15 text-amber-300 border border-amber-500/30 rounded font-semibold text-[10px]">
+                          <span className="px-1.5 py-0.5 bg-amber-50 dark:bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-500/30 rounded font-semibold text-[10px]">
                             সাইজ: {p.sizeRange || '৩৯-৪৪'}
                           </span>
                           {p.category && (
-                            <span className="text-slate-400 text-[10px] hidden sm:inline">• {p.category}</span>
+                            <span className="text-slate-500 dark:text-slate-400 text-[10px] hidden sm:inline">• {p.category}</span>
                           )}
                         </div>
                       </div>
                     </div>
                     <div className="text-right shrink-0">
-                      <div className="font-bold text-emerald-400 text-xs">৳{p.sellPrice}/জোড়া</div>
-                      <div className="text-[11px] text-slate-300">
-                        স্টক: <span className="text-amber-400 font-bold">{toBnDigit(p.stockPairs)}</span> জোড়া
+                      <div className="font-bold text-emerald-600 dark:text-emerald-400 text-xs">৳{p.sellPrice}/জোড়া</div>
+                      <div className="text-[11px] text-slate-600 dark:text-slate-300">
+                        স্টক: <span className="text-amber-600 dark:text-amber-400 font-bold">{toBnDigit(p.stockPairs)}</span> জোড়া
                       </div>
                     </div>
                   </div>
@@ -844,18 +844,18 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
 
             {/* Selected Product Size & Stock Quick Badge */}
             {selectedProduct && (
-              <div className="mt-2 px-2.5 py-1.5 bg-slate-950/90 border border-amber-500/30 rounded-xl flex items-center justify-between text-xs">
+              <div className="mt-2 px-2.5 py-1.5 bg-slate-50 dark:bg-slate-950/90 border border-amber-200 dark:border-amber-500/30 rounded-xl flex items-center justify-between text-xs">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-slate-400 text-[11px]">সাইজ:</span>
-                  <span className="px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-300 font-bold border border-amber-500/30 text-xs">
+                  <span className="text-slate-500 dark:text-slate-400 text-[11px]">সাইজ:</span>
+                  <span className="px-2 py-0.5 rounded-md bg-amber-100 dark:bg-amber-500/20 text-amber-800 dark:text-amber-300 font-bold border border-amber-200 dark:border-amber-500/30 text-xs">
                     {selectedProduct.sizeRange || '৩৯-৪৪'}
                   </span>
-                  <span className="text-slate-400 text-[11px] ml-1">স্টক:</span>
-                  <span className="text-emerald-400 font-bold text-xs">
+                  <span className="text-slate-500 dark:text-slate-400 text-[11px] ml-1">স্টক:</span>
+                  <span className="text-emerald-600 dark:text-emerald-400 font-bold text-xs">
                     {toBnDigit(selectedProduct.stockPairs)} জোড়া
                   </span>
                 </div>
-                <span className="text-[10px] text-slate-400">
+                <span className="text-[10px] text-slate-500 dark:text-slate-400">
                   (প্রতি ডজন {toBnDigit(selectedProduct.pairsPerCarton || 12)} জোড়া)
                 </span>
               </div>
@@ -865,15 +865,15 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
           {/* Quantity Input Box */}
           <div className="sm:col-span-3">
             <div className="flex items-center justify-between mb-1">
-              <label className="text-xs font-semibold text-slate-300">
+              <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
                 পরিমাণ:
               </label>
               <div className="flex gap-1 text-[10px]">
                 <button
                   type="button"
                   onClick={() => setEntryUnitType('pairs')}
-                  className={`px-1.5 py-0.5 rounded font-bold ${
-                    entryUnitType === 'pairs' ? 'bg-amber-500 text-slate-950' : 'bg-slate-800 text-slate-400'
+                  className={`px-1.5 py-0.5 rounded font-bold transition-colors ${
+                    entryUnitType === 'pairs' ? 'bg-amber-500 text-slate-950' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
                   }`}
                 >
                   জোড়া
@@ -881,8 +881,8 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
                 <button
                   type="button"
                   onClick={() => setEntryUnitType('cartons')}
-                  className={`px-1.5 py-0.5 rounded font-bold ${
-                    entryUnitType === 'cartons' ? 'bg-amber-500 text-slate-950' : 'bg-slate-800 text-slate-400'
+                  className={`px-1.5 py-0.5 rounded font-bold transition-colors ${
+                    entryUnitType === 'cartons' ? 'bg-amber-500 text-slate-950' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
                   }`}
                 >
                   ডজন
@@ -895,13 +895,13 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
               value={entryQty}
               onChange={(e) => setEntryQty(e.target.value === '' ? '' : parseInt(e.target.value))}
               placeholder="পরিমাণ"
-              className="w-full bg-slate-950 border border-slate-800 text-xs sm:text-sm text-amber-300 font-bold rounded-xl px-3 py-2.5 focus:outline-none focus:border-amber-500"
+              className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs sm:text-sm text-amber-700 dark:text-amber-300 font-bold rounded-xl px-3 py-2.5 focus:outline-none focus:border-amber-500"
             />
           </div>
 
           {/* Price per pair Input Box */}
           <div className={`${currentUser?.role === 'admin' ? 'sm:col-span-2' : 'sm:col-span-3'}`}>
-            <label className="block text-xs font-semibold text-slate-300 mb-1">
+            <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
               দর (৳):
             </label>
             <input
@@ -910,14 +910,14 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
               value={entryPricePerPair}
               onChange={(e) => setEntryPricePerPair(e.target.value === '' ? '' : parseFloat(e.target.value))}
               placeholder="দর"
-              className="w-full bg-slate-950 border border-slate-800 text-xs sm:text-sm text-emerald-400 font-bold rounded-xl px-3 py-2.5 focus:outline-none focus:border-amber-500"
+              className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs sm:text-sm text-emerald-600 dark:text-emerald-400 font-bold rounded-xl px-3 py-2.5 focus:outline-none focus:border-amber-500"
             />
           </div>
 
           {/* Commission per pair Input Box (Admin Only) */}
           {currentUser?.role === 'admin' && (
             <div className="sm:col-span-2">
-              <label className="block text-xs font-semibold text-amber-300 mb-1">
+              <label className="block text-xs font-semibold text-amber-700 dark:text-amber-300 mb-1">
                 কমিশন (৳):
               </label>
               <input
@@ -926,7 +926,7 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
                 value={entryCommissionPerPair}
                 onChange={(e) => setEntryCommissionPerPair(e.target.value === '' ? '' : parseFloat(e.target.value))}
                 placeholder="কমিশন"
-                className="w-full bg-slate-950 border border-amber-500/40 text-xs sm:text-sm text-amber-300 font-bold rounded-xl px-3 py-2.5 focus:outline-none focus:border-amber-500"
+                className="w-full bg-slate-50 dark:bg-slate-950 border border-amber-200 dark:border-amber-500/40 text-xs sm:text-sm text-amber-700 dark:text-amber-300 font-bold rounded-xl px-3 py-2.5 focus:outline-none focus:border-amber-500"
               />
             </div>
           )}
@@ -935,14 +935,14 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
 
         {/* Live Calculation Preview when Price and Commission are present */}
         {Number(entryPricePerPair) > 0 && Number(entryCommissionPerPair) > 0 && (
-          <div className="flex flex-wrap items-center gap-2 text-xs bg-amber-500/10 border border-amber-500/20 px-3 py-1.5 rounded-xl text-amber-300">
-            <span className="font-semibold text-slate-300">হিসাব প্রিভিউ:</span>
+          <div className="flex flex-wrap items-center gap-2 text-xs bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 px-3 py-1.5 rounded-xl text-amber-800 dark:text-amber-300">
+            <span className="font-semibold text-slate-700 dark:text-slate-300">হিসাব প্রিভিউ:</span>
             <span>বিক্রয় মূল্য ৳{entryPricePerPair} - কমিশন ৳{entryCommissionPerPair} =</span>
-            <span className="font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
+            <span className="font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-200 dark:border-emerald-500/20">
               নিট দর ৳{Math.max(0, Number(entryPricePerPair) - Number(entryCommissionPerPair))}/জোড়া
             </span>
             {Number(entryQty) > 0 && (
-              <span className="text-slate-400 text-[11px] ml-auto">
+              <span className="text-slate-500 dark:text-slate-400 text-[11px] ml-auto">
                 (মোট: {entryUnitType === 'cartons' ? Number(entryQty) * (selectedProduct?.pairsPerCarton || 12) : entryQty} জোড়া | নিট বিল: ৳{((entryUnitType === 'cartons' ? Number(entryQty) * (selectedProduct?.pairsPerCarton || 12) : Number(entryQty)) * Math.max(0, Number(entryPricePerPair) - Number(entryCommissionPerPair))).toLocaleString('bn-BD')})
               </span>
             )}
@@ -964,26 +964,26 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
       </div>
 
       {/* MEMO CART TABLE */}
-      <div className="bg-slate-900 border border-slate-800/90 p-4 rounded-xl space-y-3">
-        <div className="flex items-center justify-between border-b border-slate-800 pb-2.5">
-          <h3 className="font-bold text-xs sm:text-sm text-white flex items-center gap-1.5">
-            <Layers className="w-4 h-4 text-amber-400" />
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800/90 p-4 rounded-xl space-y-3 shadow-xs">
+        <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2.5">
+          <h3 className="font-bold text-xs sm:text-sm text-slate-900 dark:text-white flex items-center gap-1.5">
+            <Layers className="w-4 h-4 text-amber-600 dark:text-amber-400" />
             আইটেম ({toBnDigit(cartItems.length)})
           </h3>
-          <span className="text-xs font-bold text-amber-300 bg-amber-500/10 px-2 py-0.5 rounded-md border border-amber-500/20 font-mono">
+          <span className="text-xs font-bold text-amber-800 dark:text-amber-300 bg-amber-50 dark:bg-amber-500/10 px-2 py-0.5 rounded-md border border-amber-200 dark:border-amber-500/20 font-mono">
             {toBnDigit(totalPairs)} জোড়া
           </span>
         </div>
 
         {cartItems.length === 0 ? (
-          <div className="py-6 text-center text-xs text-slate-500 border border-dashed border-slate-800 rounded-xl">
+          <div className="py-6 text-center text-xs text-slate-400 dark:text-slate-500 border border-dashed border-slate-200 dark:border-slate-800 rounded-xl">
             মেমো খালি
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="min-w-[620px] w-full text-left text-xs whitespace-nowrap">
               <thead>
-                <tr className="border-b border-slate-800 text-slate-400 font-medium pb-2">
+                <tr className="border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 font-medium pb-2">
                   <th className="pb-2 pr-2">আর্টিকল</th>
                   <th className="pb-2 px-2">সাইজ</th>
                   <th className="pb-2 px-2 text-center">পরিমাণ</th>
@@ -993,19 +993,19 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
                   <th className="pb-2 pl-2 text-right"></th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800/80">
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80">
                 {cartItems.map((item, index) => (
-                  <tr key={`${item.productId}-${item.unitType}-${index}`} className="hover:bg-slate-800/40">
+                  <tr key={`${item.productId}-${item.unitType}-${index}`} className="hover:bg-slate-50 dark:hover:bg-slate-800/40">
                     
                     {/* Article Only */}
                     <td className="py-2.5 pr-2">
-                      <span className="font-mono font-bold text-amber-300 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20 text-xs">
+                      <span className="font-mono font-bold text-amber-800 dark:text-amber-300 bg-amber-50 dark:bg-amber-500/10 px-2 py-0.5 rounded border border-amber-200 dark:border-amber-500/20 text-xs">
                         {item.articleCode}
                       </span>
                     </td>
 
                     {/* Size */}
-                    <td className="py-2.5 px-2 text-slate-300 font-semibold">
+                    <td className="py-2.5 px-2 text-slate-700 dark:text-slate-300 font-semibold">
                       {item.sizeRange ? item.sizeRange.replace(/\(.*?\)/g, '').trim() : '৩৯-৪৪'}
                     </td>
 
@@ -1017,9 +1017,9 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
                           min="1"
                           value={item.quantityInput}
                           onChange={(e) => handleUpdateQty(index, parseInt(e.target.value) || 1)}
-                          className="w-14 bg-slate-950 border border-slate-700 text-amber-300 font-bold text-center text-xs py-1 rounded-lg focus:outline-none"
+                          className="w-14 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 text-amber-700 dark:text-amber-300 font-bold text-center text-xs py-1 rounded-lg focus:outline-none"
                         />
-                        <span className="text-[11px] text-slate-400 font-semibold">
+                        <span className="text-[11px] text-slate-500 dark:text-slate-400 font-semibold">
                           {item.unitType === 'cartons' ? 'ডজন' : 'জোড়া'}
                         </span>
                       </div>
@@ -1028,13 +1028,13 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
                     {/* Unit Price (Editable) */}
                     <td className="py-2.5 px-2 text-right">
                       <div className="inline-flex items-center justify-end gap-1">
-                        <span className="text-[11px] text-slate-400 font-bold">৳</span>
+                        <span className="text-[11px] text-slate-500 dark:text-slate-400 font-bold">৳</span>
                         <input
                           type="number"
                           min="0"
                           value={item.unitSellPrice}
                           onChange={(e) => handleUpdateUnitPrice(index, parseFloat(e.target.value) || 0)}
-                          className="w-16 bg-slate-950 border border-slate-700 text-emerald-400 font-bold text-right text-xs py-1 px-1.5 rounded-lg focus:outline-none focus:border-amber-500"
+                          className="w-16 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 text-emerald-600 dark:text-emerald-400 font-bold text-right text-xs py-1 px-1.5 rounded-lg focus:outline-none focus:border-amber-500"
                         />
                       </div>
                     </td>
@@ -1042,23 +1042,23 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
                     {/* Commission Per Pair (Editable) */}
                     <td className="py-2.5 px-2 text-right">
                       <div className="inline-flex items-center justify-end gap-1">
-                        <span className="text-[11px] text-slate-400 font-bold">৳</span>
+                        <span className="text-[11px] text-slate-500 dark:text-slate-400 font-bold">৳</span>
                         <input
                           type="number"
                           min="0"
                           value={item.commissionPerPair !== undefined && item.commissionPerPair !== null ? item.commissionPerPair : ''}
                           onChange={(e) => handleUpdateCommission(index, e.target.value === '' ? 0 : parseFloat(e.target.value) || 0)}
                           placeholder="০"
-                          className="w-16 bg-slate-950 border border-amber-500/40 text-amber-300 font-bold text-right text-xs py-1 px-1.5 rounded-lg focus:outline-none focus:border-amber-500"
+                          className="w-16 bg-slate-50 dark:bg-slate-950 border border-amber-200 dark:border-amber-500/40 text-amber-700 dark:text-amber-300 font-bold text-right text-xs py-1 px-1.5 rounded-lg focus:outline-none focus:border-amber-500"
                         />
                       </div>
                     </td>
 
                     {/* Line Total */}
-                    <td className="py-2.5 px-2 text-right font-bold text-emerald-400">
+                    <td className="py-2.5 px-2 text-right font-bold text-emerald-600 dark:text-emerald-400">
                       <div>{formatTaka(item.totalPairs * item.unitSellPrice)}</div>
                       {item.totalCommission && item.totalCommission > 0 ? (
-                        <div className="text-[10px] text-amber-400/80 font-normal">
+                        <div className="text-[10px] text-amber-600 dark:text-amber-400/80 font-normal">
                           -৳{item.totalCommission}
                         </div>
                       ) : null}
@@ -1069,7 +1069,7 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
                       <button
                         type="button"
                         onClick={() => setItemToRemoveIndex(index)}
-                        className="p-1 text-rose-400 hover:text-rose-300 bg-rose-500/10 hover:bg-rose-500/20 rounded-lg transition-colors cursor-pointer"
+                        className="p-1 text-rose-500 hover:text-rose-600 dark:text-rose-400 dark:hover:text-rose-300 bg-rose-50 dark:bg-rose-500/10 hover:bg-rose-100 dark:hover:bg-rose-500/20 rounded-lg transition-colors cursor-pointer"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
@@ -1084,87 +1084,87 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
       </div>
 
       {/* CALCULATIONS & FINAL PAYMENT CARD */}
-      <div className="bg-slate-900 border border-slate-800/90 p-4 rounded-xl space-y-3">
-        <h3 className="text-xs font-bold text-slate-300 uppercase tracking-wider">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800/90 p-4 rounded-xl space-y-3 shadow-xs">
+        <h3 className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
           হিসাব ও পেমেন্ট
         </h3>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
           
           {/* Left Column: Totals */}
-          <div className="space-y-2 bg-slate-950 p-3 rounded-xl border border-slate-800">
-            <div className="flex justify-between text-slate-300">
+          <div className="space-y-2 bg-slate-50 dark:bg-slate-950 p-3 rounded-xl border border-slate-200 dark:border-slate-800">
+            <div className="flex justify-between text-slate-700 dark:text-slate-300">
               <span>মোট মূল্য:</span>
-              <span className="font-bold text-slate-100">{formatTaka(grossTotal)}</span>
+              <span className="font-bold text-slate-900 dark:text-slate-100">{formatTaka(grossTotal)}</span>
             </div>
 
             {totalCommission > 0 && (
-              <div className="flex justify-between text-amber-400 font-medium">
+              <div className="flex justify-between text-amber-700 dark:text-amber-400 font-medium">
                 <span>কমিশন:</span>
                 <span className="font-bold">- {formatTaka(totalCommission)}</span>
               </div>
             )}
 
-            <div className="flex justify-between text-slate-300">
+            <div className="flex justify-between text-slate-700 dark:text-slate-300">
               <span>নিট বিল:</span>
-              <span className="font-bold text-slate-100">{formatTaka(subTotal)}</span>
+              <span className="font-bold text-slate-900 dark:text-slate-100">{formatTaka(subTotal)}</span>
             </div>
 
             <div className="flex items-center justify-between">
-              <span className="text-slate-300">অতিরিক্ত ছাড়:</span>
+              <span className="text-slate-700 dark:text-slate-300">অতিরিক্ত ছাড়:</span>
               <input
                 type="number"
                 min="0"
                 value={discount}
                 onChange={(e) => setDiscount(e.target.value === '' ? '' : parseFloat(e.target.value))}
                 placeholder="০"
-                className="w-24 bg-slate-900 border border-slate-700 text-amber-300 font-bold text-right text-xs py-1 px-2 rounded-lg focus:outline-none"
+                className="w-24 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-amber-700 dark:text-amber-300 font-bold text-right text-xs py-1 px-2 rounded-lg focus:outline-none"
               />
             </div>
 
-            <div className="flex justify-between text-slate-100 font-bold text-sm py-1 border-t border-slate-800">
+            <div className="flex justify-between text-slate-900 dark:text-slate-100 font-bold text-sm py-1 border-t border-slate-200 dark:border-slate-800">
               <span>সর্বমোট বিল:</span>
-              <span className="text-amber-400 text-base">{formatTaka(grandTotal)}</span>
+              <span className="text-amber-600 dark:text-amber-400 text-base">{formatTaka(grandTotal)}</span>
             </div>
           </div>
 
           {/* Right Column: Payment & Due */}
-          <div className="space-y-2 bg-slate-950 p-3 rounded-xl border border-slate-800">
+          <div className="space-y-2 bg-slate-50 dark:bg-slate-950 p-3 rounded-xl border border-slate-200 dark:border-slate-800">
             
             <div className="flex items-center justify-between">
-              <span className="text-slate-300 font-semibold">নগদ জমা:</span>
+              <span className="text-slate-700 dark:text-slate-300 font-semibold">নগদ জমা:</span>
               <input
                 type="number"
                 min="0"
                 value={paidAmount}
                 onChange={(e) => setPaidAmount(e.target.value === '' ? '' : parseFloat(e.target.value))}
                 placeholder="০"
-                className="w-24 bg-slate-900 border border-emerald-500/80 text-emerald-400 font-bold text-right text-xs py-1 px-2 rounded-lg focus:outline-none"
+                className="w-24 bg-white dark:bg-slate-900 border border-emerald-500/80 text-emerald-600 dark:text-emerald-400 font-bold text-right text-xs py-1 px-2 rounded-lg focus:outline-none"
               />
             </div>
 
-            <div className="pt-2 border-t border-slate-800 space-y-1 text-[11px]">
-              <div className="flex justify-between text-rose-300 font-semibold">
+            <div className="pt-2 border-t border-slate-200 dark:border-slate-800 space-y-1 text-[11px]">
+              <div className="flex justify-between text-rose-600 dark:text-rose-300 font-semibold">
                 <span>নতুন বাকী:</span>
                 <span>{formatTaka(newDueAmount)}</span>
               </div>
               {overpaidAmount > 0 && (
-                <div className="flex justify-between text-emerald-400 font-semibold">
+                <div className="flex justify-between text-emerald-600 dark:text-emerald-400 font-semibold">
                   <span>অ্যাডভান্স:</span>
                   <span>{formatTaka(overpaidAmount)}</span>
                 </div>
               )}
-              <div className="flex justify-between text-slate-400">
+              <div className="flex justify-between text-slate-500 dark:text-slate-400">
                 <span>{previousDue < 0 ? 'পূর্বের জমা:' : 'পূর্বের বাকী:'}</span>
-                <span className={previousDue < 0 ? 'text-emerald-400 font-bold' : 'text-slate-300'}>
+                <span className={previousDue < 0 ? 'text-emerald-600 dark:text-emerald-400 font-bold' : 'text-slate-700 dark:text-slate-300'}>
                   {previousDue < 0 ? `+${formatTaka(Math.abs(previousDue))}` : formatTaka(previousDue)}
                 </span>
               </div>
-              <div className="flex justify-between font-bold text-xs pt-1 border-t border-slate-800">
-                <span className={totalNetDue < 0 ? 'text-emerald-300' : 'text-rose-400'}>
+              <div className="flex justify-between font-bold text-xs pt-1 border-t border-slate-200 dark:border-slate-800">
+                <span className={totalNetDue < 0 ? 'text-emerald-700 dark:text-emerald-300' : 'text-rose-600 dark:text-rose-400'}>
                   {totalNetDue < 0 ? 'চূড়ান্ত স্থিতি:' : 'সর্বমোট বাকী:'}
                 </span>
-                <span className={totalNetDue < 0 ? "text-sm text-emerald-400 font-black font-mono" : "text-sm text-rose-400 font-black font-mono"}>
+                <span className={totalNetDue < 0 ? "text-sm text-emerald-600 dark:text-emerald-400 font-black font-mono" : "text-sm text-rose-600 dark:text-rose-400 font-black font-mono"}>
                   {totalNetDue < 0 ? `+${formatTaka(Math.abs(totalNetDue))}` : formatTaka(totalNetDue)}
                 </span>
               </div>
@@ -1176,8 +1176,8 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
 
         {/* Validation error display */}
         {formError && (
-          <div className="p-3 bg-rose-500/15 border border-rose-500/40 rounded-xl text-xs text-rose-300 font-bold flex items-center gap-2 animate-bounce">
-            <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
+          <div className="p-3 bg-rose-50 dark:bg-rose-500/15 border border-rose-200 dark:border-rose-500/40 rounded-xl text-xs text-rose-600 dark:text-rose-300 font-bold flex items-center gap-2 animate-bounce">
+            <AlertCircle className="w-4 h-4 text-rose-500 dark:text-rose-400 shrink-0" />
             <span>{formError}</span>
           </div>
         )}
@@ -1189,12 +1189,12 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
           disabled={isSubmittingOrder}
           className={`w-full py-3.5 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow transition-all ${
             isSubmittingOrder
-              ? 'bg-slate-800 text-slate-400 cursor-wait'
+              ? 'bg-slate-200 dark:bg-slate-800 text-slate-500 dark:text-slate-400 cursor-wait'
               : cartItems.length > 0
                 ? orderType === 'sample_booking'
                   ? 'bg-amber-500 hover:bg-amber-400 text-slate-950 cursor-pointer shadow-amber-500/20 active:scale-[0.99]'
                   : 'bg-emerald-500 hover:bg-emerald-400 text-slate-950 cursor-pointer shadow-emerald-500/20 active:scale-[0.99]'
-                : 'bg-slate-800 text-slate-400 hover:bg-slate-700/80 cursor-pointer border border-slate-700/50'
+                : 'bg-slate-100 dark:bg-slate-800 text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700/80 cursor-pointer border border-slate-200 dark:border-slate-700/50'
           }`}
         >
           {isSubmittingOrder ? (
@@ -1214,39 +1214,39 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
 
       {/* Quick Add Customer Modal */}
       {showAddCustomerModal && (
-        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-slate-900 border border-slate-700 rounded-2xl max-w-md w-full p-5 space-y-4 shadow-2xl">
-            <h3 className="text-base font-bold text-white border-b border-slate-800 pb-2">
+        <div className="fixed inset-0 z-50 bg-slate-950/60 dark:bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl max-w-md w-full p-5 space-y-4 shadow-2xl">
+            <h3 className="text-base font-bold text-slate-900 dark:text-white border-b border-slate-100 dark:border-slate-800 pb-2">
               নতুন কাস্টমার যোগ করুন
             </h3>
 
             <form onSubmit={handleSaveQuickCustomer} className="space-y-3 text-xs">
               <div>
-                <label className="block text-slate-300 font-medium mb-1">দোকানের নাম *</label>
+                <label className="block text-slate-700 dark:text-slate-300 font-medium mb-1">দোকানের নাম *</label>
                 <input
                   type="text"
                   required
                   value={newShopName}
                   onChange={(e) => setNewShopName(e.target.value)}
                   placeholder="দোকানের নাম"
-                  className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-slate-100 focus:outline-none"
+                  className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-amber-500"
                 />
               </div>
 
               <div>
-                <label className="block text-slate-300 font-medium mb-1">মালিকের নাম *</label>
+                <label className="block text-slate-700 dark:text-slate-300 font-medium mb-1">মালিকের নাম *</label>
                 <input
                   type="text"
                   required
                   value={newCustName}
                   onChange={(e) => setNewCustName(e.target.value)}
                   placeholder="মালিকের নাম"
-                  className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-slate-100 focus:outline-none"
+                  className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-amber-500"
                 />
               </div>
 
               <div>
-                <label className="block text-slate-300 font-medium mb-1">
+                <label className="block text-slate-700 dark:text-slate-300 font-medium mb-1">
                   মোবাইল নম্বর <span className="text-slate-400 font-normal text-[10px]">(ঐচ্ছিক)</span>
                 </label>
                 <input
@@ -1254,23 +1254,23 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
                   value={newPhone}
                   onChange={(e) => setNewPhone(e.target.value)}
                   placeholder="মোবাইল নম্বর (ঐচ্ছিক)"
-                  className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-slate-100 focus:outline-none"
+                  className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-amber-500"
                 />
               </div>
 
               <div>
-                <label className="block text-slate-300 font-medium mb-1">ঠিকানা / জেলা</label>
+                <label className="block text-slate-700 dark:text-slate-300 font-medium mb-1">ঠিকানা / জেলা</label>
                 <input
                   type="text"
                   value={newAddress}
                   onChange={(e) => setNewAddress(e.target.value)}
                   placeholder="জেলা / ঠিকানা"
-                  className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-slate-100 focus:outline-none"
+                  className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-amber-500"
                 />
               </div>
 
-              <div className="bg-amber-500/10 border border-amber-500/20 p-2.5 rounded-xl">
-                <label className="block text-amber-300 font-semibold mb-1">
+              <div className="bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 p-2.5 rounded-xl">
+                <label className="block text-amber-800 dark:text-amber-300 font-semibold mb-1">
                   পূর্বের বকেয়া / প্রারম্ভিক বাকী (৳) (ঐচ্ছিক)
                 </label>
                 <input
@@ -1279,16 +1279,16 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
                   value={newOpeningDue}
                   onChange={(e) => setNewOpeningDue(e.target.value)}
                   placeholder="0 (যদি আগের কোনো বাকী থাকে)"
-                  className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-amber-400 font-mono focus:outline-none"
+                  className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-1.5 text-amber-700 dark:text-amber-400 font-mono focus:outline-none focus:border-amber-500"
                 />
-                <span className="text-[10px] text-slate-400 block mt-1">দোকানের পূর্বের কোনো বকেয়া থাকলে এখানে লিখুন</span>
+                <span className="text-[10px] text-slate-500 dark:text-slate-400 block mt-1">দোকানের পূর্বের কোনো বকেয়া থাকলে এখানে লিখুন</span>
               </div>
 
-              <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-800">
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
                 <button
                   type="button"
                   onClick={() => setShowAddCustomerModal(false)}
-                  className="px-4 py-2 bg-slate-800 text-slate-300 rounded-xl"
+                  className="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-xl"
                 >
                   বাতিল
                 </button>
@@ -1306,29 +1306,29 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
 
       {/* Remove Item Confirmation Modal */}
       {itemToRemoveIndex !== null && cartItems[itemToRemoveIndex] && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fade-in">
-          <div className="bg-slate-900 border border-slate-700 p-5 rounded-2xl max-w-sm w-full space-y-4 shadow-2xl">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 dark:bg-slate-950/80 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 p-5 rounded-2xl max-w-sm w-full space-y-4 shadow-2xl">
             <div className="flex items-center gap-3">
-              <div className="p-2.5 bg-rose-500/10 text-rose-400 border border-rose-500/20 rounded-xl">
+              <div className="p-2.5 bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-500/20 rounded-xl">
                 <Trash2 className="w-5 h-5" />
               </div>
               <div>
-                <h4 className="text-sm font-bold text-white">আইটেম রিমুভ নিশ্চিতকরণ</h4>
-                <p className="text-xs text-slate-400">মেমো তালিকা থেকে বাদ দিতে চান?</p>
+                <h4 className="text-sm font-bold text-slate-900 dark:text-white">আইটেম রিমুভ নিশ্চিতকরণ</h4>
+                <p className="text-xs text-slate-500 dark:text-slate-400">মেমো তালিকা থেকে বাদ দিতে চান?</p>
               </div>
             </div>
 
-            <div className="bg-slate-950 border border-slate-800 p-3 rounded-xl space-y-1">
-              <div className="text-xs font-bold text-amber-300">
+            <div className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-3 rounded-xl space-y-1">
+              <div className="text-xs font-bold text-amber-700 dark:text-amber-300">
                 {cartItems[itemToRemoveIndex].articleCode} - {cartItems[itemToRemoveIndex].productName}
               </div>
-              <div className="text-[11px] text-slate-300 flex items-center justify-between">
+              <div className="text-[11px] text-slate-700 dark:text-slate-300 flex items-center justify-between">
                 <span>পরিমাণ: {toBnDigit(cartItems[itemToRemoveIndex].totalPairs)} জোড়া</span>
-                <span className="font-bold text-emerald-400">{formatTaka(cartItems[itemToRemoveIndex].totalPairs * cartItems[itemToRemoveIndex].unitSellPrice)}</span>
+                <span className="font-bold text-emerald-600 dark:text-emerald-400">{formatTaka(cartItems[itemToRemoveIndex].totalPairs * cartItems[itemToRemoveIndex].unitSellPrice)}</span>
               </div>
             </div>
 
-            <p className="text-xs text-slate-300">
+            <p className="text-xs text-slate-600 dark:text-slate-300">
               আপনি কি নিশ্চিত যে এই আইটেমটি মেমো তালিকা থেকে বাদ দিতে চান?
             </p>
 
@@ -1336,7 +1336,7 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
               <button
                 type="button"
                 onClick={() => setItemToRemoveIndex(null)}
-                className="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold transition cursor-pointer"
+                className="px-3.5 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-semibold transition cursor-pointer"
               >
                 বাতিল
               </button>

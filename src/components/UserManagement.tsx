@@ -409,25 +409,25 @@ export const UserManagement: React.FC<UserManagementProps> = ({
     switch (r) {
       case 'super_admin':
         return (
-          <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-purple-500/20 text-purple-300 border border-purple-500/30 flex items-center gap-1 w-fit shrink-0 whitespace-nowrap">
+          <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-purple-500/10 dark:bg-purple-500/20 text-purple-700 dark:text-purple-300 border border-purple-500/30 flex items-center gap-1 w-fit shrink-0 whitespace-nowrap">
             <ShieldAlert className="w-3.5 h-3.5 shrink-0" /> {t('super_admin')}
           </span>
         );
       case 'admin':
         return (
-          <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30 flex items-center gap-1 w-fit shrink-0 whitespace-nowrap">
+          <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-amber-500/10 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/30 flex items-center gap-1 w-fit shrink-0 whitespace-nowrap">
             <Shield className="w-3.5 h-3.5 shrink-0" /> {t('admin')}
           </span>
         );
       case 'seller':
         return (
-          <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-blue-500/20 text-blue-300 border border-blue-500/30 flex items-center gap-1 w-fit shrink-0 whitespace-nowrap">
+          <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-blue-500/10 dark:bg-blue-500/20 text-blue-700 dark:text-blue-300 border border-blue-500/30 flex items-center gap-1 w-fit shrink-0 whitespace-nowrap">
             <UserCheck className="w-3.5 h-3.5 shrink-0" /> {t('seller')}
           </span>
         );
       case 'customer':
         return (
-          <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center gap-1 w-fit max-w-[100px] sm:max-w-[180px] shrink-0 whitespace-nowrap" title={shopName || 'দোকান'}>
+          <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30 flex items-center gap-1 w-fit max-w-[100px] sm:max-w-[180px] shrink-0 whitespace-nowrap" title={shopName || 'দোকান'}>
             <Store className="w-3.5 h-3.5 shrink-0" />
             <span className="truncate">{shopName || 'দোকান'}</span>
           </span>
@@ -439,7 +439,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({
     <div className="space-y-6">
       
       {/* Primary Sub-Tabs Navigation */}
-      <div className="flex border-b border-slate-800 bg-slate-900/80 rounded-2xl p-1.5 gap-2 shadow-md">
+      <div className="flex border border-slate-200 dark:border-slate-800 bg-white/90 dark:bg-slate-900/80 rounded-2xl p-1.5 gap-2 shadow-sm dark:shadow-md">
         <button
           onClick={() => {
             setActiveMainTab('staff');
@@ -447,8 +447,8 @@ export const UserManagement: React.FC<UserManagementProps> = ({
           }}
           className={`flex-1 py-2.5 px-4 rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center gap-2 transition cursor-pointer ${
             activeMainTab === 'staff'
-              ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 shadow-lg'
-              : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
+              ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 shadow-md'
+              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/50'
           }`}
         >
           <ShieldCheck className="w-4 h-4 shrink-0" />
@@ -462,8 +462,8 @@ export const UserManagement: React.FC<UserManagementProps> = ({
           }}
           className={`flex-1 py-2.5 px-4 rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center gap-2 transition cursor-pointer ${
             activeMainTab === 'customers'
-              ? 'bg-gradient-to-r from-emerald-500 to-emerald-600 text-slate-950 shadow-lg'
-              : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
+              ? 'bg-gradient-to-r from-emerald-500 to-emerald-600 text-white dark:text-slate-950 shadow-md'
+              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/50'
           }`}
         >
           <Store className="w-4 h-4 shrink-0" />
@@ -472,13 +472,13 @@ export const UserManagement: React.FC<UserManagementProps> = ({
       </div>
 
       {/* Page Title Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-900 border border-slate-800 p-5 rounded-2xl shadow-lg">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 rounded-2xl shadow-sm dark:shadow-lg">
         <div>
-          <h2 className="text-xl font-bold text-slate-100 flex items-center gap-2">
+          <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
             {activeMainTab === 'staff' ? (
-              <UserPlus className="w-6 h-6 text-amber-400" />
+              <UserPlus className="w-6 h-6 text-amber-500 dark:text-amber-400" />
             ) : (
-              <Store className="w-6 h-6 text-emerald-400" />
+              <Store className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
             )}
             <span>
               {activeMainTab === 'staff' ? 'স্টাফ ও সেলার' : 'নিবন্ধিত দোকান'}
@@ -495,7 +495,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({
             className={`px-4 py-2.5 font-bold text-xs sm:text-sm rounded-xl shadow-md flex items-center justify-center gap-2 active:scale-95 transition cursor-pointer ${
               activeMainTab === 'staff'
                 ? 'bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950'
-                : 'bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-slate-950'
+                : 'bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-white'
             }`}
           >
             <PlusCircle className="w-4 h-4" />
@@ -504,14 +504,14 @@ export const UserManagement: React.FC<UserManagementProps> = ({
             </span>
           </button>
         ) : (
-          <div className="px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-[11px] text-slate-400">
+          <div className="px-3 py-2 bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-[11px] text-slate-600 dark:text-slate-400">
             {t('user_mgmt_desc')}
           </div>
         )}
       </div>
 
       {/* Search and Role Filter Bar */}
-      <div className="bg-slate-900 border border-slate-800 p-4 rounded-2xl flex flex-col md:flex-row items-center justify-between gap-4">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 rounded-2xl flex flex-col md:flex-row items-center justify-between gap-4 shadow-sm dark:shadow-md">
         <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
           {activeMainTab === 'staff' ? (
             <>
@@ -520,7 +520,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                 className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
                   selectedRoleFilter === 'all'
                     ? 'bg-amber-500 text-slate-950 shadow-md'
-                    : 'bg-slate-950 text-slate-400 hover:text-white border border-slate-800'
+                    : 'bg-slate-100 dark:bg-slate-950 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-slate-800'
                 }`}
               >
                 <Users className="w-3.5 h-3.5" />
@@ -530,8 +530,8 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                 onClick={() => setSelectedRoleFilter('seller')}
                 className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
                   selectedRoleFilter === 'seller'
-                    ? 'bg-blue-500 text-slate-950 shadow-md'
-                    : 'bg-slate-950 text-slate-400 hover:text-white border border-slate-800'
+                    ? 'bg-blue-600 text-white shadow-md'
+                    : 'bg-slate-100 dark:bg-slate-950 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-slate-800'
                 }`}
               >
                 <UserCheck className="w-3.5 h-3.5" />
@@ -542,7 +542,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                 className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
                   selectedRoleFilter === 'admin'
                     ? 'bg-amber-500 text-slate-950 shadow-md'
-                    : 'bg-slate-950 text-slate-400 hover:text-white border border-slate-800'
+                    : 'bg-slate-100 dark:bg-slate-950 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-slate-800'
                 }`}
               >
                 <Shield className="w-3.5 h-3.5" />
@@ -550,7 +550,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({
               </button>
             </>
           ) : (
-            <div className="text-xs font-bold text-emerald-400 flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500/10 border border-emerald-500/20 rounded-xl">
+            <div className="text-xs font-bold text-emerald-700 dark:text-emerald-400 flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500/10 border border-emerald-500/20 rounded-xl">
               <Store className="w-4 h-4" />
               <span>মোট নিবন্ধিত দোকানদার: {toBnDigit(customerCount)} জন</span>
             </div>
@@ -559,7 +559,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({
 
         {/* Search input */}
         <div className="relative w-full md:w-72">
-          <Search className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
+          <Search className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
           <input
             type="text"
             placeholder={
@@ -569,7 +569,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({
             }
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-9 pr-3 py-1.5 text-xs text-white focus:outline-none focus:border-amber-500"
+            className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl pl-9 pr-3 py-1.5 text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-amber-500"
           />
         </div>
       </div>
@@ -579,7 +579,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({
       {/* Mobile User Accounts Card View (Visible on small screens) */}
       <div className="grid grid-cols-1 gap-3 md:hidden">
         {filteredUsers.length === 0 ? (
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-8 text-center text-slate-500 text-xs">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-8 text-center text-slate-500 text-xs shadow-sm">
             কোনো ইউজার পাওয়া যায়নি।
           </div>
         ) : (
@@ -598,27 +598,27 @@ export const UserManagement: React.FC<UserManagementProps> = ({
             return (
               <div
                 key={uniqueKey}
-                className="bg-slate-900 border border-slate-800/80 rounded-xl overflow-hidden transition-all duration-200"
+                className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800/80 rounded-xl overflow-hidden shadow-sm dark:shadow-md transition-all duration-200"
               >
                 {/* Header: Name & Role (Toggles expansion) */}
                 <div 
                   onClick={() => toggleExpandUser(usr.id)}
-                  className="flex items-center justify-between p-3 cursor-pointer hover:bg-slate-800/40 active:bg-slate-800/60 transition gap-2"
+                  className="flex items-center justify-between p-3 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/40 active:bg-slate-100 dark:active:bg-slate-800/60 transition gap-2"
                 >
                   <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                    <div className="w-7.5 h-7.5 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center font-bold text-xs shrink-0">
+                    <div className="w-7.5 h-7.5 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center font-bold text-xs shrink-0">
                       {usr.name.charAt(0)}
                     </div>
                     <div className="min-w-0 flex-1">
-                      <div className="font-bold text-slate-100 text-xs sm:text-sm flex items-center gap-1">
+                      <div className="font-bold text-slate-900 dark:text-slate-100 text-xs sm:text-sm flex items-center gap-1">
                         <span className="truncate">{usr.role === 'customer' ? (usr.shopName || usr.name) : usr.name}</span>
-                        <ChevronDown className={`w-3.5 h-3.5 shrink-0 text-slate-500 transition-transform duration-200 ${isExpanded ? 'rotate-180 text-amber-400' : ''}`} />
+                        <ChevronDown className={`w-3.5 h-3.5 shrink-0 text-slate-400 dark:text-slate-500 transition-transform duration-200 ${isExpanded ? 'rotate-180 text-amber-500 dark:text-amber-400' : ''}`} />
                       </div>
                       {usr.role === 'customer' ? (
-                        <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[10px] text-slate-400 mt-0.5">
+                        <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">
                           <span className="truncate">প্রোপাইটার: {usr.name}</span>
                           {(usr.area || custData?.address) && (
-                            <span className="text-slate-500 flex items-center gap-0.5 shrink-0">
+                            <span className="text-slate-400 dark:text-slate-500 flex items-center gap-0.5 shrink-0">
                               <MapPin className="w-2.5 h-2.5 shrink-0" />
                               <span className="truncate max-w-[90px]">{usr.area || custData?.address}</span>
                             </span>
@@ -626,13 +626,13 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                         </div>
                       ) : (
                         usr.shopName && (
-                          <div className="text-[10px] text-emerald-400 font-semibold mt-0.5 truncate">
+                          <div className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold mt-0.5 truncate">
                             দোকান: {usr.shopName}
                           </div>
                         )
                       )}
                       {usr.sellerId && (
-                        <div className="text-[9px] text-amber-400/80 font-mono mt-0.5 truncate">
+                        <div className="text-[9px] text-amber-600 dark:text-amber-400/80 font-mono mt-0.5 truncate">
                           {t('seller_id')}: {usr.sellerId}
                         </div>
                       )}
@@ -644,13 +644,13 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                       custData ? (
                         <span className={`px-2.5 py-1 rounded-lg text-xs font-bold whitespace-nowrap shrink-0 inline-flex items-center justify-center leading-normal ${
                           custData.currentDue > 0
-                            ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30 font-black'
-                            : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-bold'
+                            ? 'bg-rose-500/10 dark:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/20 dark:border-rose-500/30 font-black'
+                            : 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20 font-bold'
                         }`}>
                           ৳&nbsp;{custData.currentDue.toLocaleString('bn-BD')}
                         </span>
                       ) : (
-                        <span className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-slate-800 text-slate-400 border border-slate-700">
+                        <span className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700">
                           ৳ ০
                         </span>
                       )
@@ -664,51 +664,51 @@ export const UserManagement: React.FC<UserManagementProps> = ({
 
                 {/* Expanded Details */}
                 {isExpanded && (
-                  <div className="px-3 pb-3.5 pt-1 border-t border-slate-800/60 bg-slate-950/40 space-y-2.5 text-[11px] animate-fadeIn">
+                  <div className="px-3 pb-3.5 pt-1 border-t border-slate-200 dark:border-slate-800/60 bg-slate-50 dark:bg-slate-950/40 space-y-2.5 text-[11px] animate-fadeIn">
                     <div className="grid grid-cols-1 gap-2">
-                      <div className="flex items-center justify-between bg-slate-900 px-2.5 py-2 rounded-lg border border-slate-800">
-                        <span className="text-slate-400">{t('login_id')} / মোবাইল:</span>
-                        <span className="font-mono text-amber-300 font-bold">
+                      <div className="flex items-center justify-between bg-white dark:bg-slate-900 px-2.5 py-2 rounded-lg border border-slate-200 dark:border-slate-800">
+                        <span className="text-slate-500 dark:text-slate-400">{t('login_id')} / মোবাইল:</span>
+                        <span className="font-mono text-amber-600 dark:text-amber-300 font-bold">
                           {usr.phone || usr.loginId || '—'}
                         </span>
                       </div>
 
-                      <div className="flex items-center justify-between bg-slate-900 px-2.5 py-2 rounded-lg border border-slate-800">
-                        <span className="text-slate-400">{t('password')}:</span>
-                        <span className="font-mono text-slate-300">
+                      <div className="flex items-center justify-between bg-white dark:bg-slate-900 px-2.5 py-2 rounded-lg border border-slate-200 dark:border-slate-800">
+                        <span className="text-slate-500 dark:text-slate-400">{t('password')}:</span>
+                        <span className="font-mono text-slate-700 dark:text-slate-300">
                           {usr.password === '—' || usr.isOffline ? '—' : `•••••••• (${usr.password})`}
                         </span>
                       </div>
 
                       {usr.role === 'customer' && (
                         <>
-                          <div className="flex items-center justify-between bg-slate-900 px-2.5 py-2 rounded-lg border border-slate-800">
-                            <span className="text-slate-400">বর্তমান বকেয়া (Due):</span>
+                          <div className="flex items-center justify-between bg-white dark:bg-slate-900 px-2.5 py-2 rounded-lg border border-slate-200 dark:border-slate-800">
+                            <span className="text-slate-500 dark:text-slate-400">বর্তমান বকেয়া (Due):</span>
                             <span className={`font-mono font-bold whitespace-nowrap ${
-                              (custData?.currentDue || 0) > 0 ? 'text-rose-400 font-black' : 'text-emerald-400'
+                              (custData?.currentDue || 0) > 0 ? 'text-rose-600 dark:text-rose-400 font-black' : 'text-emerald-700 dark:text-emerald-400'
                             }`}>
                               ৳&nbsp;{(custData?.currentDue || 0).toLocaleString('bn-BD')}
                             </span>
                           </div>
 
                           {(usr.area || custData?.address) && (
-                            <div className="flex items-center justify-between bg-slate-900 px-2.5 py-2 rounded-lg border border-slate-800">
-                              <span className="text-slate-400">ঠিকানা / এলাকা:</span>
-                              <span className="text-slate-200 font-semibold">{usr.area || custData?.address}</span>
+                            <div className="flex items-center justify-between bg-white dark:bg-slate-900 px-2.5 py-2 rounded-lg border border-slate-200 dark:border-slate-800">
+                              <span className="text-slate-500 dark:text-slate-400">ঠিকানা / এলাকা:</span>
+                              <span className="text-slate-800 dark:text-slate-200 font-semibold">{usr.area || custData?.address}</span>
                             </div>
                           )}
                         </>
                       )}
 
-                      <div className="flex items-center justify-between bg-slate-900 px-2.5 py-2 rounded-lg border border-slate-800">
-                        <span className="text-slate-400">{t('status')}:</span>
+                      <div className="flex items-center justify-between bg-white dark:bg-slate-900 px-2.5 py-2 rounded-lg border border-slate-200 dark:border-slate-800">
+                        <span className="text-slate-500 dark:text-slate-400">{t('status')}:</span>
                         <span>
                           {usr.isActive ? (
-                            <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                            <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30">
                               {t('active')}
                             </span>
                           ) : (
-                            <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-rose-500/20 text-rose-400 border border-rose-500/30">
+                            <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-rose-500/10 dark:bg-rose-500/20 text-rose-700 dark:text-rose-400 border border-rose-500/30">
                               {t('inactive')}
                             </span>
                           )}
@@ -719,21 +719,21 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                         <div className="space-y-1.5 pt-1">
                           {(!systemConfig || systemConfig.enableTargetSystem !== false) && (
                             <div className="grid grid-cols-2 gap-1.5">
-                              <div className="flex flex-col bg-slate-900 px-2.5 py-1.5 rounded-lg border border-slate-800">
-                                <span className="text-[10px] text-slate-400 flex items-center gap-1">
-                                  <Target className="w-3 h-3 text-amber-400" />
+                              <div className="flex flex-col bg-white dark:bg-slate-900 px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800">
+                                <span className="text-[10px] text-slate-500 dark:text-slate-400 flex items-center gap-1">
+                                  <Target className="w-3 h-3 text-amber-500 dark:text-amber-400" />
                                   টার্গেট (জোড়া)
                                 </span>
-                                <span className="text-amber-300 font-bold text-xs">
+                                <span className="text-amber-600 dark:text-amber-300 font-bold text-xs">
                                   {toBnDigit(sellerData.monthlyTargetPairs || 0)} জোড়া
                                 </span>
                               </div>
-                              <div className="flex flex-col bg-slate-900 px-2.5 py-1.5 rounded-lg border border-slate-800">
-                                <span className="text-[10px] text-slate-400 flex items-center gap-1">
-                                  <Target className="w-3 h-3 text-emerald-400" />
+                              <div className="flex flex-col bg-white dark:bg-slate-900 px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800">
+                                <span className="text-[10px] text-slate-500 dark:text-slate-400 flex items-center gap-1">
+                                  <Target className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
                                   টার্গেট (টাকা)
                                 </span>
-                                <span className="text-emerald-400 font-bold text-xs">
+                                <span className="text-emerald-600 dark:text-emerald-400 font-bold text-xs">
                                   ৳ {toBnDigit(sellerData.monthlyTargetAmount || 0)}
                                 </span>
                               </div>
@@ -741,11 +741,11 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                           )}
 
                           <div className="flex items-center justify-between bg-amber-500/10 px-2.5 py-1.5 rounded-lg border border-amber-500/20">
-                            <span className="text-slate-300 text-[11px] flex items-center gap-1 font-semibold">
-                              <Percent className="w-3 h-3 text-amber-400" />
+                            <span className="text-slate-700 dark:text-slate-300 text-[11px] flex items-center gap-1 font-semibold">
+                              <Percent className="w-3 h-3 text-amber-500 dark:text-amber-400" />
                               কমিশন:
                             </span>
-                            <span className="text-amber-300 font-bold text-xs">
+                            <span className="text-amber-700 dark:text-amber-300 font-bold text-xs">
                               {(sellerData.commissionRatePercent || 0) > 0 || (sellerData.commissionPerPair || 0) > 0 ? (
                                 <>
                                   {(sellerData.commissionRatePercent || 0) > 0 && `${toBnDigit(sellerData.commissionRatePercent)}% সেলস `}
@@ -753,7 +753,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                                     `${(sellerData.commissionRatePercent || 0) > 0 ? '+ ' : ''}৳${toBnDigit(sellerData.commissionPerPair)}/জোড়া`}
                                 </>
                               ) : (
-                                <span className="text-slate-400 text-[11px] font-normal">নির্ধারিত নয়</span>
+                                <span className="text-slate-500 dark:text-slate-400 text-[11px] font-normal">নির্ধারিত নয়</span>
                               )}
                             </span>
                           </div>
@@ -761,19 +761,19 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                       )}
                     </div>
                     {/* Card Actions */}
-                    <div className="pt-2 border-t border-slate-800/40 flex flex-wrap items-center gap-2">
+                    <div className="pt-2 border-t border-slate-200 dark:border-slate-800/40 flex flex-wrap items-center gap-2">
                       {usr.role === 'customer' && custData && (currentUser.role === 'admin' || currentUser.role === 'super_admin') && (
                         <>
                           <button
                             onClick={() => openAdjustDueModal(custData)}
-                            className="flex-1 min-w-[120px] py-1.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer"
+                            className="flex-1 min-w-[120px] py-1.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/30 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer"
                           >
                             <Sliders className="w-3.5 h-3.5" />
                             <span>বকেয়া সমন্বয়</span>
                           </button>
                           <button
                             onClick={() => openCustomerEditModal(custData)}
-                            className="flex-1 min-w-[100px] py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer"
+                            className="flex-1 min-w-[100px] py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer"
                           >
                             <Edit className="w-3.5 h-3.5" />
                             <span>তথ্য এডিট</span>
@@ -784,9 +784,9 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                       {sellerData && (currentUser.role === 'admin' || currentUser.role === 'super_admin') && (!systemConfig || systemConfig.enableTargetSystem !== false) && (
                         <button
                           onClick={() => openSellerEditModal(sellerData)}
-                          className="flex-1 min-w-[130px] py-1.5 bg-slate-800 hover:bg-slate-700 text-amber-400 border border-amber-500/30 rounded-lg text-xs font-semibold transition flex items-center justify-center gap-1.5 cursor-pointer"
+                          className="flex-1 min-w-[130px] py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-amber-600 dark:text-amber-400 border border-amber-500/30 rounded-lg text-xs font-semibold transition flex items-center justify-center gap-1.5 cursor-pointer"
                         >
-                          <Percent className="w-3.5 h-3.5 text-amber-400" />
+                          <Percent className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400" />
                           <span>টার্গেট ও কমিশন সেট</span>
                         </button>
                       )}
@@ -794,7 +794,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                       {!usr.isOffline && (currentUser.role === 'admin' || currentUser.role === 'super_admin' || usr.id === currentUser.id) && (
                         <button
                           onClick={() => setResetTargetUser(usr)}
-                          className="flex-1 min-w-[120px] py-1.5 bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-500/30 rounded-lg text-xs font-semibold transition flex items-center justify-center gap-1.5 cursor-pointer"
+                          className="flex-1 min-w-[120px] py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-amber-700 dark:text-amber-300 border border-amber-500/30 rounded-lg text-xs font-semibold transition flex items-center justify-center gap-1.5 cursor-pointer"
                         >
                           <Key className="w-3.5 h-3.5" />
                           <span>পাসওয়ার্ড পরিবর্তন</span>
@@ -806,8 +806,8 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                           onClick={() => onToggleUserStatus(usr.id, !usr.isActive)}
                           className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold border transition cursor-pointer ${
                             usr.isActive
-                              ? 'bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border-rose-500/30'
-                              : 'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
+                              ? 'bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 border-rose-500/30'
+                              : 'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border-emerald-500/30'
                           }`}
                         >
                           {usr.isActive ? 'ডিজেবল' : 'এনাবল'}
@@ -818,7 +818,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                             <button
                               type="button"
                               onClick={() => setUserToTrash({ user: usr, customerId: custData?.id, custData })}
-                              className="px-2.5 py-1.5 bg-rose-600/20 hover:bg-rose-600/30 text-rose-400 border border-rose-500/40 rounded-lg text-xs font-semibold transition cursor-pointer flex items-center gap-1"
+                              className="px-2.5 py-1.5 bg-rose-600/10 hover:bg-rose-600/20 dark:bg-rose-600/20 dark:hover:bg-rose-600/30 text-rose-600 dark:text-rose-400 border border-rose-500/40 rounded-lg text-xs font-semibold transition cursor-pointer flex items-center gap-1"
                               title={usr.role === 'customer' ? 'দোকান ও একাউন্ট ট্র্যাশে পাঠান' : 'ইউজার একাউন্ট ট্র্যাশে পাঠান'}
                             >
                               <Trash2 className="w-3.5 h-3.5" />
@@ -835,15 +835,15 @@ export const UserManagement: React.FC<UserManagementProps> = ({
       </div>
 
       {/* User Accounts List Table - Replaced with sleek expandable list for desktop */}
-      <div className="hidden md:block bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
-        <div className="bg-slate-950 px-5 py-3 border-b border-slate-800 text-slate-400 font-bold uppercase text-[10px] tracking-wider flex items-center justify-between">
+      <div className="hidden md:block bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm dark:shadow-xl">
+        <div className="bg-slate-50 dark:bg-slate-950 px-5 py-3 border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 font-bold uppercase text-[10px] tracking-wider flex items-center justify-between">
           <span>{activeMainTab === 'staff' ? 'ব্যবহারকারীর নাম (নামে ক্লিক করুন)' : 'দোকানদারের নাম (নামে ক্লিক করুন)'}</span>
           <span className="pr-12">{activeMainTab === 'staff' ? 'রোল (Role)' : 'দোকানের নাম'}</span>
         </div>
         
-        <div className="divide-y divide-slate-800/80 text-slate-200">
+        <div className="divide-y divide-slate-200 dark:divide-slate-800/80 text-slate-800 dark:text-slate-200">
           {filteredUsers.length === 0 ? (
-            <div className="p-8 text-center text-slate-500 text-xs">
+            <div className="p-8 text-center text-slate-400 dark:text-slate-500 text-xs">
               কোনো ইউজার পাওয়া যায়নি।
             </div>
           ) : (
@@ -864,36 +864,36 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                   {/* Row Header */}
                   <div 
                     onClick={() => toggleExpandUser(usr.id)}
-                    className="flex items-center justify-between px-5 py-3.5 cursor-pointer hover:bg-slate-800/50 transition-colors"
+                    className="flex items-center justify-between px-5 py-3.5 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
                   >
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center font-bold text-xs shrink-0">
+                      <div className="w-8 h-8 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center font-bold text-xs shrink-0">
                         {usr.name.charAt(0)}
                       </div>
                       <div>
-                        <div className="font-bold text-slate-100 text-sm flex items-center gap-2 hover:text-amber-400 transition-colors">
+                        <div className="font-bold text-slate-900 dark:text-slate-100 text-sm flex items-center gap-2 hover:text-amber-600 dark:hover:text-amber-400 transition-colors">
                           <span>{usr.role === 'customer' ? (usr.shopName || usr.name) : usr.name}</span>
-                          <ChevronDown className={`w-4 h-4 text-slate-500 transition-transform duration-200 ${isExpanded ? 'rotate-180 text-amber-400' : ''}`} />
+                          <ChevronDown className={`w-4 h-4 text-slate-400 dark:text-slate-500 transition-transform duration-200 ${isExpanded ? 'rotate-180 text-amber-500 dark:text-amber-400' : ''}`} />
                         </div>
                         {usr.role === 'customer' ? (
-                          <div className="flex items-center gap-3 text-xs text-slate-400 mt-0.5">
-                            <span>প্রোপাইটার: <strong className="text-slate-300">{usr.name}</strong></span>
+                          <div className="flex items-center gap-3 text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                            <span>প্রোপাইটার: <strong className="text-slate-700 dark:text-slate-300">{usr.name}</strong></span>
                             {(usr.area || custData?.address) && (
-                              <span className="text-slate-500 flex items-center gap-1">
-                                <MapPin className="w-3 h-3 text-slate-500" />
+                              <span className="text-slate-400 dark:text-slate-500 flex items-center gap-1">
+                                <MapPin className="w-3 h-3 text-slate-400 dark:text-slate-500" />
                                 {usr.area || custData?.address}
                               </span>
                             )}
                           </div>
                         ) : (
                           usr.shopName && (
-                            <div className="text-[11px] text-emerald-400 font-semibold mt-0.5">
+                            <div className="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold mt-0.5">
                               দোকান: {usr.shopName}
                             </div>
                           )
                         )}
                         {usr.sellerId && (
-                          <div className="text-[10px] font-mono text-amber-400/80 mt-0.5">
+                          <div className="text-[10px] font-mono text-amber-600 dark:text-amber-400/80 mt-0.5">
                             সেলার আইডি: {usr.sellerId}
                           </div>
                         )}
@@ -906,14 +906,14 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                           <div className="text-right shrink-0">
                             <span className={`px-2.5 py-1 rounded-lg text-xs font-bold whitespace-nowrap shrink-0 inline-flex items-center leading-normal ${
                               custData.currentDue > 0
-                                ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30 font-black'
-                                : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                                ? 'bg-rose-500/10 dark:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/20 dark:border-rose-500/30 font-black'
+                                : 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20'
                             }`}>
                               ৳&nbsp;{custData.currentDue.toLocaleString('bn-BD')}
                             </span>
                           </div>
                         ) : (
-                          <span className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-800 text-slate-400 border border-slate-700">
+                          <span className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700">
                             ৳ ০
                           </span>
                         )
@@ -925,18 +925,18 @@ export const UserManagement: React.FC<UserManagementProps> = ({
 
                   {/* Expanded Details Panel */}
                   {isExpanded && (
-                    <div className="px-5 py-4 bg-slate-950/50 border-t border-slate-800/60 animate-fadeIn space-y-4">
+                    <div className="px-5 py-4 bg-slate-50 dark:bg-slate-950/50 border-t border-slate-200 dark:border-slate-800/60 animate-fadeIn space-y-4">
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs">
                         <div className="space-y-1">
-                          <div className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">লগইন আইডি / মোবাইল</div>
-                          <div className="font-mono text-amber-300 font-semibold">
+                          <div className="text-[10px] text-slate-500 dark:text-slate-400 uppercase font-bold tracking-wider">লগইন আইডি / মোবাইল</div>
+                          <div className="font-mono text-amber-600 dark:text-amber-300 font-semibold">
                             {usr.phone || usr.loginId || '—'}
                           </div>
                         </div>
 
                         <div className="space-y-1">
-                          <div className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">পাসওয়ার্ড</div>
-                          <div className="font-mono text-slate-300">
+                          <div className="text-[10px] text-slate-500 dark:text-slate-400 uppercase font-bold tracking-wider">পাসওয়ার্ড</div>
+                          <div className="font-mono text-slate-700 dark:text-slate-300">
                             {usr.password === '—' || usr.isOffline ? '—' : `•••••••• (${usr.password})`}
                           </div>
                         </div>
@@ -944,9 +944,9 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                         {usr.role === 'customer' && (
                           <>
                             <div className="space-y-1">
-                              <div className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">বর্তমান বকেয়া (Due)</div>
+                              <div className="text-[10px] text-slate-500 dark:text-slate-400 uppercase font-bold tracking-wider">বর্তমান বকেয়া (Due)</div>
                               <div className={`font-mono text-sm font-bold whitespace-nowrap ${
-                                (custData?.currentDue || 0) > 0 ? 'text-rose-400 font-black' : 'text-emerald-400'
+                                (custData?.currentDue || 0) > 0 ? 'text-rose-600 dark:text-rose-400 font-black' : 'text-emerald-700 dark:text-emerald-400'
                               }`}>
                                 ৳&nbsp;{(custData?.currentDue || 0).toLocaleString('bn-BD')}
                               </div>
@@ -954,22 +954,22 @@ export const UserManagement: React.FC<UserManagementProps> = ({
 
                             {(usr.area || custData?.address) && (
                               <div className="space-y-1">
-                                <div className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">ঠিকানা / এলাকা</div>
-                                <div className="text-slate-200 font-medium">{usr.area || custData?.address}</div>
+                                <div className="text-[10px] text-slate-500 dark:text-slate-400 uppercase font-bold tracking-wider">ঠিকানা / এলাকা</div>
+                                <div className="text-slate-800 dark:text-slate-200 font-medium">{usr.area || custData?.address}</div>
                               </div>
                             )}
                           </>
                         )}
 
                         <div className="space-y-1">
-                          <div className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">স্ট্যাটাস</div>
+                          <div className="text-[10px] text-slate-500 dark:text-slate-400 uppercase font-bold tracking-wider">স্ট্যাটাস</div>
                           <div>
                             {usr.isActive ? (
-                              <span className="px-2.5 py-0.5 inline-block rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                              <span className="px-2.5 py-0.5 inline-block rounded-full text-[10px] font-bold bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30">
                                 সক্রিয় (Active)
                               </span>
                             ) : (
-                              <span className="px-2.5 py-0.5 inline-block rounded-full text-[10px] font-bold bg-rose-500/20 text-rose-400 border border-rose-500/30">
+                              <span className="px-2.5 py-0.5 inline-block rounded-full text-[10px] font-bold bg-rose-500/10 dark:bg-rose-500/20 text-rose-700 dark:text-rose-400 border border-rose-500/30">
                                 নিষ্ক্রিয় (Inactive)
                               </span>
                             )}
@@ -978,27 +978,27 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                       </div>
 
                       {sellerData && (
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs pt-3 border-t border-slate-800/40">
-                          <div className="space-y-1 bg-slate-900/60 p-2 rounded-lg border border-slate-800">
-                            <div className="text-[10px] text-slate-500 uppercase font-bold tracking-wider flex items-center gap-1">
-                              <Target className="w-3.5 h-3.5 text-amber-400" />
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs pt-3 border-t border-slate-200 dark:border-slate-800/40">
+                          <div className="space-y-1 bg-white dark:bg-slate-900/60 p-2 rounded-lg border border-slate-200 dark:border-slate-800">
+                            <div className="text-[10px] text-slate-500 dark:text-slate-400 uppercase font-bold tracking-wider flex items-center gap-1">
+                              <Target className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400" />
                               টার্গেট (জোড়া)
                             </div>
-                            <div className="text-amber-300 font-bold">{toBnDigit(sellerData.monthlyTargetPairs || 0)} জোড়া</div>
+                            <div className="text-amber-600 dark:text-amber-300 font-bold">{toBnDigit(sellerData.monthlyTargetPairs || 0)} জোড়া</div>
                           </div>
-                          <div className="space-y-1 bg-slate-900/60 p-2 rounded-lg border border-slate-800">
-                            <div className="text-[10px] text-slate-500 uppercase font-bold tracking-wider flex items-center gap-1">
-                              <Target className="w-3.5 h-3.5 text-emerald-400" />
+                          <div className="space-y-1 bg-white dark:bg-slate-900/60 p-2 rounded-lg border border-slate-200 dark:border-slate-800">
+                            <div className="text-[10px] text-slate-500 dark:text-slate-400 uppercase font-bold tracking-wider flex items-center gap-1">
+                              <Target className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
                               টার্গেট (টাকায়)
                             </div>
-                            <div className="text-emerald-400 font-bold">৳ {toBnDigit(sellerData.monthlyTargetAmount || 0)}</div>
+                            <div className="text-emerald-600 dark:text-emerald-400 font-bold">৳ {toBnDigit(sellerData.monthlyTargetAmount || 0)}</div>
                           </div>
                           <div className="space-y-1 bg-amber-500/10 p-2 rounded-lg border border-amber-500/20">
-                            <div className="text-[10px] text-amber-400/90 uppercase font-bold tracking-wider flex items-center gap-1">
-                              <Percent className="w-3.5 h-3.5 text-amber-400" />
+                            <div className="text-[10px] text-amber-700 dark:text-amber-400/90 uppercase font-bold tracking-wider flex items-center gap-1">
+                              <Percent className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400" />
                               নির্ধারিত কমিশন
                             </div>
-                            <div className="text-amber-300 font-bold text-xs">
+                            <div className="text-amber-700 dark:text-amber-300 font-bold text-xs">
                               {(sellerData.commissionRatePercent || 0) > 0 || (sellerData.commissionPerPair || 0) > 0 ? (
                                 <>
                                   {(sellerData.commissionRatePercent || 0) > 0 && `${toBnDigit(sellerData.commissionRatePercent)}% সেলস `}
@@ -1006,7 +1006,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                                     `${(sellerData.commissionRatePercent || 0) > 0 ? '+ ' : ''}৳${toBnDigit(sellerData.commissionPerPair)}/জোড়া`}
                                 </>
                               ) : (
-                                <span className="text-slate-400 font-normal">সেট করা নেই</span>
+                                <span className="text-slate-500 dark:text-slate-400 font-normal">সেট করা নেই</span>
                               )}
                             </div>
                           </div>
@@ -1014,19 +1014,19 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                       )}
 
                       {/* Expandable Action Buttons */}
-                      <div className="pt-3 border-t border-slate-800/50 flex items-center justify-end gap-3">
+                      <div className="pt-3 border-t border-slate-200 dark:border-slate-800/50 flex items-center justify-end gap-3">
                         {usr.role === 'customer' && custData && (currentUser.role === 'admin' || currentUser.role === 'super_admin') && (
                           <>
                             <button
                               onClick={() => openAdjustDueModal(custData)}
-                              className="px-3 py-1.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer"
+                              className="px-3 py-1.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/30 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer"
                             >
                               <Sliders className="w-3.5 h-3.5" />
                               <span>বকেয়া সমন্বয় করুন</span>
                             </button>
                             <button
                               onClick={() => openCustomerEditModal(custData)}
-                              className="px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer"
+                              className="px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer"
                             >
                               <Edit className="w-3.5 h-3.5" />
                               <span>দোকানের তথ্য এডিট</span>
@@ -1037,9 +1037,9 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                         {sellerData && (currentUser.role === 'admin' || currentUser.role === 'super_admin') && (!systemConfig || systemConfig.enableTargetSystem !== false) && (
                           <button
                             onClick={() => openSellerEditModal(sellerData)}
-                            className="px-3 py-1.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer"
+                            className="px-3 py-1.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/30 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer"
                           >
-                            <Percent className="w-3.5 h-3.5 text-amber-400" />
+                            <Percent className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400" />
                             <span>টার্গেট ও কমিশন সেট করুন</span>
                           </button>
                         )}
@@ -1047,7 +1047,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                         {!usr.isOffline && (currentUser.role === 'admin' || currentUser.role === 'super_admin' || usr.id === currentUser.id) && (
                           <button
                             onClick={() => setResetTargetUser(usr)}
-                            className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-500/30 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer"
+                            className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-amber-700 dark:text-amber-300 border border-amber-500/30 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer"
                           >
                             <Key className="w-3.5 h-3.5" />
                             <span>পাসওয়ার্ড পরিবর্তন</span>
@@ -1059,8 +1059,8 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                             onClick={() => onToggleUserStatus(usr.id, !usr.isActive)}
                             className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition cursor-pointer ${
                               usr.isActive
-                                ? 'bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border-rose-500/30'
-                                : 'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
+                                ? 'bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 border-rose-500/30'
+                                : 'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border-emerald-500/30'
                             }`}
                           >
                             {usr.isActive ? 'ডিজেবল করুন' : 'এনাবল করুন'}
@@ -1071,7 +1071,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                               <button
                                 type="button"
                                 onClick={() => setUserToTrash({ user: usr, customerId: custData?.id, custData })}
-                                className="px-3 py-1.5 bg-rose-600/20 hover:bg-rose-600/30 text-rose-400 border border-rose-500/40 rounded-lg text-xs font-bold transition cursor-pointer flex items-center gap-1"
+                                className="px-3 py-1.5 bg-rose-600/10 hover:bg-rose-600/20 dark:bg-rose-600/20 dark:hover:bg-rose-600/30 text-rose-600 dark:text-rose-400 border border-rose-500/40 rounded-lg text-xs font-bold transition cursor-pointer flex items-center gap-1"
                                 title={usr.role === 'customer' ? 'দোকান ও একাউন্ট ট্র্যাশে পাঠান' : 'ইউজার একাউন্ট ট্র্যাশে পাঠান'}
                               >
                                 <Trash2 className="w-3.5 h-3.5" />
@@ -1090,11 +1090,11 @@ export const UserManagement: React.FC<UserManagementProps> = ({
 
       {/* Create New User Modal */}
       {showAddModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4 overflow-y-auto">
-          <div className="w-full max-w-lg bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl p-6 space-y-5 my-auto">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-              <h3 className="text-base font-bold text-slate-100 flex items-center gap-2">
-                <UserPlus className="w-5 h-5 text-amber-400" />
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 dark:bg-slate-950/80 backdrop-blur-sm p-4 overflow-y-auto">
+          <div className="w-full max-w-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl p-6 space-y-5 my-auto">
+            <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
+              <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                <UserPlus className="w-5 h-5 text-amber-500 dark:text-amber-400" />
                 <span>
                   {role === 'customer'
                     ? 'নতুন নিবন্ধিত দোকানদার একাউন্ট তৈরি'
@@ -1103,9 +1103,9 @@ export const UserManagement: React.FC<UserManagementProps> = ({
               </h3>
               <button
                 onClick={() => setShowAddModal(false)}
-                className="text-slate-400 hover:text-white p-1"
+                className="text-slate-400 hover:text-slate-700 dark:hover:text-white p-1 cursor-pointer"
               >
-                X
+                ✕
               </button>
             </div>
 
@@ -1113,8 +1113,8 @@ export const UserManagement: React.FC<UserManagementProps> = ({
               
               {/* Role Selection */}
               <div>
-                <label className="block font-semibold text-slate-300 mb-1.5">
-                  একাউন্ট এর রোল (Role) <span className="text-amber-400">*</span>
+                <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                  একাউন্ট এর রোল (Role) <span className="text-amber-500">*</span>
                 </label>
                 <div className="grid grid-cols-3 gap-2">
                   {[
@@ -1130,8 +1130,8 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                         onClick={() => setRole(r.key as UserRole)}
                         className={`p-2.5 rounded-xl border text-center transition cursor-pointer ${
                           isSelected
-                            ? 'bg-amber-500/20 border-amber-500 text-amber-300 font-bold shadow-sm'
-                            : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-slate-200 hover:border-slate-700'
+                            ? 'bg-amber-500/10 dark:bg-amber-500/20 border-amber-500 text-amber-700 dark:text-amber-300 font-bold shadow-sm'
+                            : 'bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:border-slate-300 dark:hover:border-slate-700'
                         }`}
                       >
                         <div className="text-xs">{r.title}</div>
@@ -1144,9 +1144,9 @@ export const UserManagement: React.FC<UserManagementProps> = ({
 
               {/* User Name */}
               <div>
-                <label className="block font-semibold text-slate-300 mb-1">
+                <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">
                   {role === 'customer' ? 'দোকানদার / প্রোপাইটারের নাম' : 'ব্যবহারকারীর নাম'}{' '}
-                  <span className="text-amber-400">*</span>
+                  <span className="text-amber-500">*</span>
                 </label>
                 <input
                   type="text"
@@ -1154,15 +1154,15 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                   placeholder={role === 'customer' ? 'যেমন: মোহাম্মদ রহিম' : 'ব্যবহারকারীর নাম'}
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-700 text-slate-100 p-2.5 rounded-xl focus:outline-none focus:border-amber-400"
+                  className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 p-2.5 rounded-xl focus:outline-none focus:border-amber-500"
                 />
               </div>
 
               {/* Shop Name if Customer */}
               {role === 'customer' && (
                 <div>
-                  <label className="block font-semibold text-slate-300 mb-1">
-                    দোকানের নাম (Shop Name) <span className="text-amber-400">*</span>
+                  <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                    দোকানের নাম (Shop Name) <span className="text-amber-500">*</span>
                   </label>
                   <input
                     type="text"
@@ -1170,7 +1170,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                     placeholder="যেমন: জান্নাত সুজ"
                     value={shopName}
                     onChange={(e) => setShopName(e.target.value)}
-                    className="w-full bg-slate-950 border border-slate-700 text-slate-100 p-2.5 rounded-xl focus:outline-none focus:border-amber-400"
+                    className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 p-2.5 rounded-xl focus:outline-none focus:border-amber-500"
                   />
                 </div>
               )}
@@ -1178,14 +1178,14 @@ export const UserManagement: React.FC<UserManagementProps> = ({
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {/* Login Mobile Number */}
                 <div>
-                  <label className="block font-semibold text-slate-300 mb-1">
+                  <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">
                     {role === 'customer' ? (
                       <>
-                        দোকানদারের মোবাইল নম্বর <span className="text-slate-400 font-normal text-[11px]">(ঐচ্ছিক)</span>
+                        দোকানদারের মোবাইল নম্বর <span className="text-slate-500 dark:text-slate-400 font-normal text-[11px]">(ঐচ্ছিক)</span>
                       </>
                     ) : (
                       <>
-                        লগইন মোবাইল নম্বর <span className="text-amber-400">*</span>
+                        লগইন মোবাইল নম্বর <span className="text-amber-500">*</span>
                       </>
                     )}
                   </label>
@@ -1198,20 +1198,20 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                       setLoginId(e.target.value);
                       setPhone(e.target.value);
                     }}
-                    className="w-full bg-slate-950 border border-slate-700 text-amber-300 font-mono p-2.5 rounded-xl focus:outline-none focus:border-amber-400"
+                    className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-amber-600 dark:text-amber-300 font-mono p-2.5 rounded-xl focus:outline-none focus:border-amber-500"
                   />
                 </div>
 
                 {/* Initial Password */}
                 <div>
-                  <label className="block font-semibold text-slate-300 mb-1">
+                  <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">
                     {role === 'customer' ? (
                       <>
-                        লগইন পাসওয়ার্ড {loginId.trim() ? <span className="text-amber-400">*</span> : <span className="text-slate-400 font-normal text-[11px]">(মোবাইল দিলে প্রযোজ্য)</span>}
+                        লগইন পাসওয়ার্ড {loginId.trim() ? <span className="text-amber-500">*</span> : <span className="text-slate-500 dark:text-slate-400 font-normal text-[11px]">(মোবাইল দিলে প্রযোজ্য)</span>}
                       </>
                     ) : (
                       <>
-                        লগইন পাসওয়ার্ড <span className="text-amber-400">*</span>
+                        লগইন পাসওয়ার্ড <span className="text-amber-500">*</span>
                       </>
                     )}
                   </label>
@@ -1222,14 +1222,14 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     disabled={role === 'customer' && !loginId.trim()}
-                    className="w-full bg-slate-950 border border-slate-700 text-slate-100 font-mono p-2.5 rounded-xl focus:outline-none focus:border-amber-400 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 font-mono p-2.5 rounded-xl focus:outline-none focus:border-amber-500 disabled:opacity-50 disabled:cursor-not-allowed"
                   />
                 </div>
               </div>
 
               {/* Address / Area */}
               <div>
-                <label className="block font-semibold text-slate-300 mb-1">
+                <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">
                   {role === 'customer' ? 'দোকানের ঠিকানা / বাজার / এলাকা' : 'কর্ম এলাকা (Area)'}
                 </label>
                 <input
@@ -1237,28 +1237,28 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                   placeholder={role === 'customer' ? 'যেমন: চকবাজার, ঢাকা' : 'যেমন: সাভার এরিয়া'}
                   value={area}
                   onChange={(e) => setArea(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-700 text-slate-100 p-2.5 rounded-xl focus:outline-none focus:border-amber-400"
+                  className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 p-2.5 rounded-xl focus:outline-none focus:border-amber-500"
                 />
               </div>
 
               {/* Opening Due if Customer */}
               {role === 'customer' && (
                 <div>
-                  <label className="block font-semibold text-slate-300 mb-1">
+                  <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">
                     পূর্বের বাকী / প্রারম্ভিক বকেয়া (Opening Due ৳)
                   </label>
                   <div className="relative">
-                    <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-amber-400 font-bold">৳</span>
+                    <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-amber-500 font-bold">৳</span>
                     <input
                       type="number"
                       min="0"
                       placeholder="0"
                       value={initialDue}
                       onChange={(e) => setInitialDue(e.target.value)}
-                      className="w-full bg-slate-950 border border-slate-700 text-amber-300 font-bold pl-8 pr-3 py-2.5 rounded-xl focus:outline-none focus:border-amber-400"
+                      className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-amber-600 dark:text-amber-300 font-bold pl-8 pr-3 py-2.5 rounded-xl focus:outline-none focus:border-amber-500"
                     />
                   </div>
-                  <p className="text-[10px] text-slate-400 mt-1">
+                  <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-1">
                     দোকানের পূর্বের কোনো খাতার বাকী থাকলে এখানে লিখুন। পরে যেকোনো সময় এটি বাকী খাতা থেকে সমন্বয় করা যাবে।
                   </p>
                 </div>
@@ -1267,8 +1267,8 @@ export const UserManagement: React.FC<UserManagementProps> = ({
               {role === 'customer' && (
                 <div className={`p-3 rounded-xl text-[11px] border ${
                   loginId.trim()
-                    ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-300'
-                    : 'bg-slate-800/80 border-slate-700 text-slate-300'
+                    ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-700 dark:text-emerald-300'
+                    : 'bg-slate-100 dark:bg-slate-800/80 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300'
                 }`}>
                   {loginId.trim() ? (
                     <span><strong>অনলাইন অ্যাকাউন্ট:</strong> দোকানদার এই মোবাইল নম্বর ও পাসওয়ার্ড ব্যবহার করে অনলাইনে ক্যাটালগ লগইন করতে পারবেন।</span>
@@ -1282,7 +1282,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                 <div className="space-y-3">
                   <div className="grid grid-cols-2 gap-2">
                     <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl space-y-2">
-                      <label className="block font-semibold text-slate-300 mb-1 text-[11px] uppercase tracking-wider">
+                      <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1 text-[11px] uppercase tracking-wider">
                         টার্গেট (জোড়া)
                       </label>
                       <input
@@ -1290,11 +1290,11 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                         value={targetPairs}
                         onChange={(e) => setTargetPairs(e.target.value === '' ? '' : Number(e.target.value))}
                         placeholder="যেমন: ১০০০"
-                        className="w-full bg-slate-950 border border-slate-700 text-slate-100 font-mono p-2.5 rounded-xl focus:outline-none focus:border-amber-400"
+                        className="w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 font-mono p-2.5 rounded-xl focus:outline-none focus:border-amber-500"
                       />
                     </div>
                     <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl space-y-2">
-                      <label className="block font-semibold text-slate-300 mb-1 text-[11px] uppercase tracking-wider">
+                      <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1 text-[11px] uppercase tracking-wider">
                         টার্গেট (টাকায়)
                       </label>
                       <input
@@ -1302,7 +1302,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                         value={targetAmount}
                         onChange={(e) => setTargetAmount(e.target.value === '' ? '' : Number(e.target.value))}
                         placeholder="যেমন: ৫০০০০"
-                        className="w-full bg-slate-950 border border-slate-700 text-slate-100 font-mono p-2.5 rounded-xl focus:outline-none focus:border-emerald-400"
+                        className="w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 font-mono p-2.5 rounded-xl focus:outline-none focus:border-emerald-500"
                       />
                     </div>
                   </div>
@@ -1310,16 +1310,16 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                   {/* Commission Setup Section for New Seller */}
                   <div className="p-3.5 bg-amber-500/5 border border-amber-500/20 rounded-xl space-y-3">
                     <div className="flex items-center justify-between">
-                      <label className="font-semibold text-amber-400 text-xs flex items-center gap-1.5">
-                        <Percent className="w-3.5 h-3.5 text-amber-400" />
+                      <label className="font-semibold text-amber-600 dark:text-amber-400 text-xs flex items-center gap-1.5">
+                        <Percent className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400" />
                         সেলস কমিশন নির্ধারণ (Commission Rates)
                       </label>
-                      <span className="text-[10px] text-slate-400 bg-slate-800 px-2 py-0.5 rounded">ঐচ্ছিক</span>
+                      <span className="text-[10px] text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded">ঐচ্ছিক</span>
                     </div>
 
                     <div className="grid grid-cols-2 gap-2">
                       <div>
-                        <label className="block text-slate-300 mb-1 text-[11px] font-medium">
+                        <label className="block text-slate-700 dark:text-slate-300 mb-1 text-[11px] font-medium">
                           কমিশন হার (% সেলসে)
                         </label>
                         <div className="relative">
@@ -1331,13 +1331,13 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                             value={commissionRate}
                             onChange={(e) => setCommissionRate(e.target.value === '' ? '' : Number(e.target.value))}
                             placeholder="যেমন: ২.৫"
-                            className="w-full bg-slate-950 border border-slate-700 text-slate-100 font-mono p-2.5 pr-7 rounded-xl focus:outline-none focus:border-amber-400 text-xs"
+                            className="w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 font-mono p-2.5 pr-7 rounded-xl focus:outline-none focus:border-amber-500 text-xs"
                           />
                           <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-xs">%</span>
                         </div>
                       </div>
                       <div>
-                        <label className="block text-slate-300 mb-1 text-[11px] font-medium">
+                        <label className="block text-slate-700 dark:text-slate-300 mb-1 text-[11px] font-medium">
                           প্রতি জোড়ায় কমিশন (৳)
                         </label>
                         <div className="relative">
@@ -1348,15 +1348,15 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                             value={commissionPerPair}
                             onChange={(e) => setCommissionPerPair(e.target.value === '' ? '' : Number(e.target.value))}
                             placeholder="যেমন: ৫"
-                            className="w-full bg-slate-950 border border-slate-700 text-slate-100 font-mono p-2.5 pr-7 rounded-xl focus:outline-none focus:border-emerald-400 text-xs"
+                            className="w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 font-mono p-2.5 pr-7 rounded-xl focus:outline-none focus:border-emerald-500 text-xs"
                           />
-                          <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-emerald-400 font-bold text-xs">৳</span>
+                          <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-emerald-600 dark:text-emerald-400 font-bold text-xs">৳</span>
                         </div>
                       </div>
                     </div>
 
                     {(Number(commissionRate) > 0 || Number(commissionPerPair) > 0) && (
-                      <div className="text-[11px] bg-slate-900/90 text-amber-300 p-2 rounded-lg border border-amber-500/20">
+                      <div className="text-[11px] bg-slate-100 dark:bg-slate-900/90 text-amber-700 dark:text-amber-300 p-2 rounded-lg border border-amber-500/20">
                         💡 <strong>কমিশন নীতি:</strong>{' '}
                         {Number(commissionRate) > 0 && `মোট বিক্রিত টাকার ওপর ${toBnDigit(commissionRate)}%`}
                         {Number(commissionRate) > 0 && Number(commissionPerPair) > 0 && ' এবং '}
@@ -1372,13 +1372,13 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                 <button
                   type="button"
                   onClick={() => setShowAddModal(false)}
-                  className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl font-semibold"
+                  className="px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl font-semibold cursor-pointer"
                 >
                   বাতিল
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded-xl shadow-md"
+                  className="px-5 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded-xl shadow-md cursor-pointer"
                 >
                   একাউন্ট যুক্ত করুন
                 </button>
@@ -1391,23 +1391,23 @@ export const UserManagement: React.FC<UserManagementProps> = ({
 
       {/* Password Reset Modal */}
       {resetTargetUser && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
-          <div className="w-full max-w-sm bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4">
-            <h3 className="text-sm font-bold text-slate-100 flex items-center gap-2">
-              <Key className="w-4 h-4 text-amber-400" />
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 dark:bg-slate-950/80 backdrop-blur-sm p-4">
+          <div className="w-full max-w-sm bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 space-y-4 shadow-xl">
+            <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+              <Key className="w-4 h-4 text-amber-500 dark:text-amber-400" />
               <span>পাসওয়ার্ড রিসেট: {resetTargetUser.name}</span>
             </h3>
 
             <form onSubmit={handlePasswordResetSubmit} className="space-y-3 text-xs">
               <div>
-                <label className="block font-semibold text-slate-300 mb-1">নতুন পাসওয়ার্ড</label>
+                <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">নতুন পাসওয়ার্ড</label>
                 <input
                   type="text"
                   required
                   placeholder="নতুন পাসওয়ার্ড লিখুন"
                   value={newPasswordInput}
                   onChange={(e) => setNewPasswordInput(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-700 text-slate-100 p-2.5 rounded-xl font-mono focus:outline-none focus:border-amber-400"
+                  className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 p-2.5 rounded-xl font-mono focus:outline-none focus:border-amber-500"
                 />
               </div>
 
@@ -1415,13 +1415,13 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                 <button
                   type="button"
                   onClick={() => setResetTargetUser(null)}
-                  className="px-3 py-1.5 bg-slate-800 text-slate-300 rounded-lg"
+                  className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg cursor-pointer"
                 >
                   বাতিল
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-1.5 bg-amber-500 text-slate-950 font-bold rounded-lg shadow-md"
+                  className="px-4 py-1.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded-lg shadow-md cursor-pointer"
                 >
                   আপডেট করুন
                 </button>
@@ -1433,22 +1433,22 @@ export const UserManagement: React.FC<UserManagementProps> = ({
 
       {/* Edit Seller Target & Commission Modal */}
       {editingSeller && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4 overflow-y-auto">
-          <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-2xl p-5 sm:p-6 space-y-4 my-auto shadow-2xl">
-            <div className="flex items-center justify-between border-b border-slate-800/80 pb-3">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 dark:bg-slate-950/80 backdrop-blur-sm p-4 overflow-y-auto">
+          <div className="w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 sm:p-6 space-y-4 my-auto shadow-2xl">
+            <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800/80 pb-3">
               <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-xl bg-amber-500/20 border border-amber-500/30 text-amber-400 flex items-center justify-center font-bold">
-                  <Percent className="w-4 h-4 text-amber-400" />
+                <div className="w-9 h-9 rounded-xl bg-amber-500/10 dark:bg-amber-500/20 border border-amber-500/30 text-amber-600 dark:text-amber-400 flex items-center justify-center font-bold">
+                  <Percent className="w-4 h-4 text-amber-500 dark:text-amber-400" />
                 </div>
                 <div>
-                  <h3 className="text-sm sm:text-base font-bold text-slate-100 flex items-center gap-2">
+                  <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
                     টার্গেট ও কমিশন নির্ধারণ
                   </h3>
-                  <p className="text-xs text-slate-400 flex items-center gap-1.5 mt-0.5">
-                    <span className="text-amber-400 font-semibold">{editingSeller.name}</span>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1.5 mt-0.5">
+                    <span className="text-amber-600 dark:text-amber-400 font-semibold">{editingSeller.name}</span>
                     {editingSeller.area && (
                       <>
-                        <span className="text-slate-600">•</span>
+                        <span className="text-slate-400 dark:text-slate-600">•</span>
                         <span>{editingSeller.area}</span>
                       </>
                     )}
@@ -1458,7 +1458,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({
               <button
                 type="button"
                 onClick={() => setEditingSeller(null)}
-                className="text-slate-400 hover:text-slate-200 p-1.5 rounded-lg hover:bg-slate-800 transition cursor-pointer"
+                className="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
               >
                 ✕
               </button>
@@ -1466,10 +1466,10 @@ export const UserManagement: React.FC<UserManagementProps> = ({
 
             <form onSubmit={handleUpdateSellerSubmit} className="space-y-4 text-xs">
               {/* Section 1: Monthly Target */}
-              <div className="bg-slate-950/60 p-3.5 rounded-xl border border-slate-800/80 space-y-2.5">
+              <div className="bg-slate-50 dark:bg-slate-950/60 p-3.5 rounded-xl border border-slate-200 dark:border-slate-800/80 space-y-2.5">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-slate-200 flex items-center gap-1.5">
-                    <Target className="w-3.5 h-3.5 text-amber-400" />
+                  <span className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                    <Target className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400" />
                     মাসিক সেলস টার্গেট (Monthly Targets)
                   </span>
                   <span className="text-[10px] text-slate-500">লক্ষ্যমাত্রা</span>
@@ -1477,7 +1477,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({
 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block font-semibold text-slate-300 mb-1 text-[11px]">টার্গেট (জোড়া)</label>
+                    <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1 text-[11px]">টার্গেট (জোড়া)</label>
                     <div className="relative">
                       <input
                         type="number"
@@ -1485,13 +1485,13 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                         placeholder="যেমন: ১০০০"
                         value={editTargetPairs}
                         onChange={(e) => setEditTargetPairs(e.target.value === '' ? '' : Number(e.target.value))}
-                        className="w-full bg-slate-900 border border-slate-700 text-slate-100 p-2.5 pr-10 rounded-xl focus:outline-none focus:border-amber-400 font-mono text-xs"
+                        className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 p-2.5 pr-10 rounded-xl focus:outline-none focus:border-amber-500 font-mono text-xs"
                       />
                       <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-[11px]">জোড়া</span>
                     </div>
                   </div>
                   <div>
-                    <label className="block font-semibold text-slate-300 mb-1 text-[11px]">টার্গেট (টাকায়)</label>
+                    <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1 text-[11px]">টার্গেট (টাকায়)</label>
                     <div className="relative">
                       <input
                         type="number"
@@ -1499,7 +1499,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                         placeholder="যেমন: ৩,০০,০০০"
                         value={editTargetAmount}
                         onChange={(e) => setEditTargetAmount(e.target.value === '' ? '' : Number(e.target.value))}
-                        className="w-full bg-slate-900 border border-slate-700 text-slate-100 p-2.5 pr-8 rounded-xl focus:outline-none focus:border-emerald-400 font-mono text-xs"
+                        className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 p-2.5 pr-8 rounded-xl focus:outline-none focus:border-emerald-500 font-mono text-xs"
                       />
                       <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-[11px]">৳</span>
                     </div>
@@ -1510,18 +1510,18 @@ export const UserManagement: React.FC<UserManagementProps> = ({
               {/* Section 2: Commission Setup */}
               <div className="bg-amber-500/5 p-3.5 rounded-xl border border-amber-500/20 space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-amber-400 flex items-center gap-1.5">
-                    <Percent className="w-3.5 h-3.5 text-amber-400" />
+                  <span className="text-xs font-bold text-amber-600 dark:text-amber-400 flex items-center gap-1.5">
+                    <Percent className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400" />
                     কমিশন কনফিগারেশন (Commission Setup)
                   </span>
-                  <span className="text-[10px] text-amber-300/90 bg-amber-500/10 px-2 py-0.5 rounded-md border border-amber-500/20 font-semibold">
+                  <span className="text-[10px] text-amber-700 dark:text-amber-300/90 bg-amber-500/10 px-2 py-0.5 rounded-md border border-amber-500/20 font-semibold">
                     ইনসেন্টিভ
                   </span>
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block font-semibold text-slate-200 mb-1 text-[11px]">
+                    <label className="block font-semibold text-slate-700 dark:text-slate-200 mb-1 text-[11px]">
                       কমিশন হার (% সেলসে)
                     </label>
                     <div className="relative">
@@ -1533,15 +1533,15 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                         placeholder="যেমন: ২.৫"
                         value={editCommissionRate}
                         onChange={(e) => setEditCommissionRate(e.target.value === '' ? '' : Number(e.target.value))}
-                        className="w-full bg-slate-900 border border-slate-700 text-amber-300 font-bold p-2.5 pr-7 rounded-xl focus:outline-none focus:border-amber-400 font-mono text-xs"
+                        className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-amber-600 dark:text-amber-300 font-bold p-2.5 pr-7 rounded-xl focus:outline-none focus:border-amber-500 font-mono text-xs"
                       />
-                      <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-amber-400 font-bold text-xs">%</span>
+                      <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-amber-600 dark:text-amber-400 font-bold text-xs">%</span>
                     </div>
                     <span className="text-[10px] text-slate-500 mt-1 block">মোট বিক্রিত টাকার ওপর</span>
                   </div>
 
                   <div>
-                    <label className="block font-semibold text-slate-200 mb-1 text-[11px]">
+                    <label className="block font-semibold text-slate-700 dark:text-slate-200 mb-1 text-[11px]">
                       প্রতি জোড়ায় কমিশন (৳)
                     </label>
                     <div className="relative">
@@ -1552,9 +1552,9 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                         placeholder="যেমন: ৫"
                         value={editCommissionPerPair}
                         onChange={(e) => setEditCommissionPerPair(e.target.value === '' ? '' : Number(e.target.value))}
-                        className="w-full bg-slate-900 border border-slate-700 text-emerald-400 font-bold p-2.5 pr-7 rounded-xl focus:outline-none focus:border-emerald-400 font-mono text-xs"
+                        className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-emerald-600 dark:text-emerald-400 font-bold p-2.5 pr-7 rounded-xl focus:outline-none focus:border-emerald-500 font-mono text-xs"
                       />
-                      <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-emerald-400 font-bold text-xs">৳</span>
+                      <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-emerald-600 dark:text-emerald-400 font-bold text-xs">৳</span>
                     </div>
                     <span className="text-[10px] text-slate-500 mt-1 block">প্রতি জোড়া বিক্রয়ের জন্য</span>
                   </div>
@@ -1569,13 +1569,13 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                   const estimatedComm = Math.round((simulatedAmount * cRate / 100) + (simulatedPairs * cPair));
 
                   return (
-                    <div className="bg-slate-950/80 p-2.5 rounded-xl border border-slate-800 space-y-1 text-[11px]">
+                    <div className="bg-white dark:bg-slate-950/80 p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 space-y-1 text-[11px]">
                       <div className="flex items-center justify-between font-semibold">
-                        <span className="text-slate-400 flex items-center gap-1">
-                          <DollarSign className="w-3.5 h-3.5 text-emerald-400" />
+                        <span className="text-slate-600 dark:text-slate-400 flex items-center gap-1">
+                          <DollarSign className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
                           টার্গেট পূর্ণ হলে সম্ভাব্য কমিশন:
                         </span>
-                        <span className="text-emerald-400 font-black text-sm">
+                        <span className="text-emerald-600 dark:text-emerald-400 font-black text-sm">
                           {formatTaka(estimatedComm)}
                         </span>
                       </div>
@@ -1587,11 +1587,11 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                 })()}
               </div>
 
-              <div className="flex justify-end gap-2 pt-2 border-t border-slate-800/80">
+              <div className="flex justify-end gap-2 pt-2 border-t border-slate-200 dark:border-slate-800/80">
                 <button
                   type="button"
                   onClick={() => setEditingSeller(null)}
-                  className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl font-semibold transition cursor-pointer"
+                  className="px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl font-semibold transition cursor-pointer"
                 >
                   বাতিল
                 </button>
@@ -1610,17 +1610,17 @@ export const UserManagement: React.FC<UserManagementProps> = ({
 
       {/* Edit Customer Profile / Info Modal */}
       {editingCust && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
-          <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-              <h3 className="text-sm font-bold text-slate-100 flex items-center gap-2">
-                <Edit className="w-4 h-4 text-emerald-400" />
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 dark:bg-slate-950/80 backdrop-blur-sm p-4">
+          <div className="w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 space-y-4 shadow-xl">
+            <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
+              <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                <Edit className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                 <span>দোকান ও কাস্টমার তথ্য এডিট</span>
               </h3>
               <button
                 type="button"
                 onClick={() => setEditingCust(null)}
-                className="text-slate-400 hover:text-slate-200"
+                className="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 cursor-pointer"
               >
                 ✕
               </button>
@@ -1628,60 +1628,60 @@ export const UserManagement: React.FC<UserManagementProps> = ({
 
             <form onSubmit={handleCustomerEditSubmit} className="space-y-3 text-xs">
               <div>
-                <label className="block font-semibold text-slate-300 mb-1">দোকানের নাম (Shop Name) *</label>
+                <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">দোকানের নাম (Shop Name) *</label>
                 <input
                   type="text"
                   required
                   value={editCustShopName}
                   onChange={(e) => setEditCustShopName(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-700 text-slate-100 p-2.5 rounded-xl focus:outline-none focus:border-amber-400"
+                  className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 p-2.5 rounded-xl focus:outline-none focus:border-amber-500"
                 />
               </div>
 
               <div>
-                <label className="block font-semibold text-slate-300 mb-1">দোকানদার / প্রোপাইটারের নাম *</label>
+                <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">দোকানদার / প্রোপাইটারের নাম *</label>
                 <input
                   type="text"
                   required
                   value={editCustName}
                   onChange={(e) => setEditCustName(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-700 text-slate-100 p-2.5 rounded-xl focus:outline-none focus:border-amber-400"
+                  className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 p-2.5 rounded-xl focus:outline-none focus:border-amber-500"
                 />
               </div>
 
               <div>
-                <label className="block font-semibold text-slate-300 mb-1">মোবাইল নম্বর *</label>
+                <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">মোবাইল নম্বর *</label>
                 <input
                   type="tel"
                   required
                   value={editCustPhone}
                   onChange={(e) => setEditCustPhone(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-700 text-amber-300 font-mono p-2.5 rounded-xl focus:outline-none focus:border-amber-400"
+                  className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-amber-600 dark:text-amber-300 font-mono p-2.5 rounded-xl focus:outline-none focus:border-amber-500"
                 />
               </div>
 
               <div>
-                <label className="block font-semibold text-slate-300 mb-1">ঠিকানা / বাজার / এলাকা</label>
+                <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">ঠিকানা / বাজার / এলাকা</label>
                 <input
                   type="text"
                   value={editCustAddress}
                   onChange={(e) => setEditCustAddress(e.target.value)}
                   placeholder="যেমন: চকবাজার, ঢাকা"
-                  className="w-full bg-slate-950 border border-slate-700 text-slate-100 p-2.5 rounded-xl focus:outline-none focus:border-amber-400"
+                  className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 p-2.5 rounded-xl focus:outline-none focus:border-amber-500"
                 />
               </div>
 
-              <div className="flex justify-end gap-2 pt-2 border-t border-slate-800">
+              <div className="flex justify-end gap-2 pt-2 border-t border-slate-200 dark:border-slate-800">
                 <button
                   type="button"
                   onClick={() => setEditingCust(null)}
-                  className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl font-semibold"
+                  className="px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl font-semibold cursor-pointer"
                 >
                   বাতিল
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold rounded-xl shadow-md"
+                  className="px-5 py-2 bg-emerald-500 hover:bg-emerald-400 text-white dark:text-slate-950 font-bold rounded-xl shadow-md cursor-pointer"
                 >
                   তথ্য সংরক্ষণ করুন
                 </button>
@@ -1693,44 +1693,44 @@ export const UserManagement: React.FC<UserManagementProps> = ({
 
       {/* Adjust Customer Due / Opening Due Modal */}
       {adjustingCust && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
-          <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-              <h3 className="text-sm font-bold text-slate-100 flex items-center gap-2">
-                <Sliders className="w-4 h-4 text-amber-400" />
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 dark:bg-slate-950/80 backdrop-blur-sm p-4">
+          <div className="w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 space-y-4 shadow-xl">
+            <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
+              <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                <Sliders className="w-4 h-4 text-amber-500 dark:text-amber-400" />
                 <span>বকেয়া সমন্বয়: {adjustingCust.shopName}</span>
               </h3>
               <button
                 type="button"
                 onClick={() => setAdjustingCust(null)}
-                className="text-slate-400 hover:text-slate-200"
+                className="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 cursor-pointer"
               >
                 ✕
               </button>
             </div>
 
             <form onSubmit={handleAdjustDueSubmit} className="space-y-4 text-xs">
-              <div className="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-1">
-                <div className="flex justify-between text-slate-400">
+              <div className="bg-slate-50 dark:bg-slate-950 p-3 rounded-xl border border-slate-200 dark:border-slate-800 space-y-1">
+                <div className="flex justify-between text-slate-500 dark:text-slate-400">
                   <span>দোকানদার:</span>
-                  <span className="text-slate-200 font-bold">{adjustingCust.name}</span>
+                  <span className="text-slate-900 dark:text-slate-200 font-bold">{adjustingCust.name}</span>
                 </div>
-                <div className="flex justify-between text-slate-400">
+                <div className="flex justify-between text-slate-500 dark:text-slate-400">
                   <span>বর্তমান বকেয়া:</span>
-                  <span className="text-rose-400 font-black">{formatTaka(adjustingCust.currentDue)}</span>
+                  <span className="text-rose-600 dark:text-rose-400 font-black">{formatTaka(adjustingCust.currentDue)}</span>
                 </div>
               </div>
 
               <div>
-                <label className="block text-slate-300 font-semibold mb-1.5">সমন্বয়ের ধরণ</label>
+                <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1.5">সমন্বয়ের ধরণ</label>
                 <div className="grid grid-cols-2 gap-2">
                   <button
                     type="button"
                     onClick={() => setAdjustCustType('add')}
-                    className={`p-2.5 rounded-xl border text-left transition-all ${
+                    className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer ${
                       adjustCustType === 'add'
-                        ? 'bg-amber-500/20 border-amber-500 text-amber-300 font-bold'
-                        : 'bg-slate-950 border-slate-800 text-slate-400'
+                        ? 'bg-amber-500/10 dark:bg-amber-500/20 border-amber-500 text-amber-700 dark:text-amber-300 font-bold'
+                        : 'bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400'
                     }`}
                   >
                     ➕ পূর্বের বাকী যোগ করুন
@@ -1738,10 +1738,10 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                   <button
                     type="button"
                     onClick={() => setAdjustCustType('set')}
-                    className={`p-2.5 rounded-xl border text-left transition-all ${
+                    className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer ${
                       adjustCustType === 'set'
-                        ? 'bg-amber-500/20 border-amber-500 text-amber-300 font-bold'
-                        : 'bg-slate-950 border-slate-800 text-slate-400'
+                        ? 'bg-amber-500/10 dark:bg-amber-500/20 border-amber-500 text-amber-700 dark:text-amber-300 font-bold'
+                        : 'bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400'
                     }`}
                   >
                     ✏️ মোট বাকী সেট করুন
@@ -1750,11 +1750,11 @@ export const UserManagement: React.FC<UserManagementProps> = ({
               </div>
 
               <div>
-                <label className="block font-semibold text-slate-300 mb-1">
+                <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">
                   {adjustCustType === 'add' ? 'যোগ করার পরিমাণ (টাকা ৳) *' : 'মোট বকেয়া নির্ধারণ (টাকা ৳) *'}
                 </label>
                 <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-amber-400 font-bold">৳</span>
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-amber-500 font-bold">৳</span>
                   <input
                     type="number"
                     min="0"
@@ -1762,7 +1762,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                     placeholder="0"
                     value={adjustCustAmount}
                     onChange={(e) => setAdjustCustAmount(e.target.value)}
-                    className="w-full bg-slate-950 border border-slate-700 text-amber-300 font-black text-base pl-8 pr-3 py-2 rounded-xl focus:outline-none focus:border-amber-400 font-mono"
+                    className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-amber-600 dark:text-amber-300 font-black text-base pl-8 pr-3 py-2 rounded-xl focus:outline-none focus:border-amber-500 font-mono"
                   />
                 </div>
               </div>
@@ -1773,34 +1773,34 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                 const newDue = adjustCustType === 'add' ? adjustingCust.currentDue + inputVal : inputVal;
                 return (
                   <div className="bg-amber-500/10 border border-amber-500/30 p-2.5 rounded-xl flex items-center justify-between">
-                    <span className="text-amber-200">আপডেটের পর মোট বাকী:</span>
-                    <span className="font-mono font-black text-rose-400 text-sm">৳ {newDue.toLocaleString('bn-BD')}</span>
+                    <span className="text-amber-800 dark:text-amber-200">আপডেটের পর মোট বাকী:</span>
+                    <span className="font-mono font-black text-rose-600 dark:text-rose-400 text-sm">৳ {newDue.toLocaleString('bn-BD')}</span>
                   </div>
                 );
               })()}
 
               <div>
-                <label className="block font-semibold text-slate-300 mb-1">নোট / কারণ</label>
+                <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">নোট / কারণ</label>
                 <input
                   type="text"
                   value={adjustCustNote}
                   onChange={(e) => setAdjustCustNote(e.target.value)}
                   placeholder="যেমন: পূর্বের খাতার বাকী"
-                  className="w-full bg-slate-950 border border-slate-700 text-slate-200 p-2 rounded-xl focus:outline-none focus:border-amber-400"
+                  className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-200 p-2 rounded-xl focus:outline-none focus:border-amber-500"
                 />
               </div>
 
-              <div className="flex justify-end gap-2 pt-2 border-t border-slate-800">
+              <div className="flex justify-end gap-2 pt-2 border-t border-slate-200 dark:border-slate-800">
                 <button
                   type="button"
                   onClick={() => setAdjustingCust(null)}
-                  className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl font-semibold"
+                  className="px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl font-semibold cursor-pointer"
                 >
                   বাতিল
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded-xl shadow-md"
+                  className="px-5 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded-xl shadow-md cursor-pointer"
                 >
                   বকেয়া সংরক্ষণ করুন
                 </button>
@@ -1812,44 +1812,44 @@ export const UserManagement: React.FC<UserManagementProps> = ({
 
       {/* MODAL: Move User/Customer to Trash Confirmation */}
       {userToTrash && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fadeIn">
-          <div className="bg-slate-900 border border-slate-700 p-5 rounded-2xl max-w-sm w-full space-y-4 shadow-2xl">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 dark:bg-slate-950/80 backdrop-blur-sm animate-fadeIn">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 p-5 rounded-2xl max-w-sm w-full space-y-4 shadow-2xl">
             <div className="flex items-center gap-3">
-              <div className="p-2.5 bg-rose-500/10 text-rose-400 border border-rose-500/20 rounded-xl">
+              <div className="p-2.5 bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20 rounded-xl">
                 <Trash2 className="w-5 h-5" />
               </div>
               <div>
-                <h4 className="text-sm font-bold text-white">
+                <h4 className="text-sm font-bold text-slate-900 dark:text-white">
                   {userToTrash.user.role === 'customer' ? 'দোকান ট্র্যাশে পাঠানো' : 'ইউজার ট্র্যাশে পাঠানো'}
                 </h4>
-                <p className="text-xs text-slate-400">ট্র্যাশ থেকে যেকোনো সময় রিস্টোর করা যাবে</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400">ট্র্যাশ থেকে যেকোনো সময় রিস্টোর করা যাবে</p>
               </div>
             </div>
 
-            <div className="bg-slate-950 border border-slate-800 p-3 rounded-xl space-y-1.5 text-xs">
+            <div className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-3 rounded-xl space-y-1.5 text-xs">
               <div className="flex justify-between items-center">
-                <span className="text-slate-400">নাম:</span>
-                <span className="font-bold text-white">{userToTrash.user.name}</span>
+                <span className="text-slate-500 dark:text-slate-400">নাম:</span>
+                <span className="font-bold text-slate-900 dark:text-white">{userToTrash.user.name}</span>
               </div>
               {userToTrash.user.shopName && (
                 <div className="flex justify-between items-center">
-                  <span className="text-slate-400">দোকান:</span>
-                  <span className="font-bold text-amber-300">{userToTrash.user.shopName}</span>
+                  <span className="text-slate-500 dark:text-slate-400">দোকান:</span>
+                  <span className="font-bold text-amber-600 dark:text-amber-300">{userToTrash.user.shopName}</span>
                 </div>
               )}
               <div className="flex justify-between items-center">
-                <span className="text-slate-400">মোবাইল:</span>
-                <span className="font-mono text-slate-300">{userToTrash.user.phone || userToTrash.user.loginId}</span>
+                <span className="text-slate-500 dark:text-slate-400">মোবাইল:</span>
+                <span className="font-mono text-slate-700 dark:text-slate-300">{userToTrash.user.phone || userToTrash.user.loginId}</span>
               </div>
-              <div className="flex justify-between items-center border-t border-slate-800 pt-1.5">
-                <span className="text-slate-400">ভূমিকা:</span>
-                <span className="font-bold text-indigo-400">
+              <div className="flex justify-between items-center border-t border-slate-200 dark:border-slate-800 pt-1.5">
+                <span className="text-slate-500 dark:text-slate-400">ভূমিকা:</span>
+                <span className="font-bold text-indigo-600 dark:text-indigo-400">
                   {userToTrash.user.role === 'customer' ? 'দোকানদার/কাস্টমার' : userToTrash.user.role === 'seller' ? 'বিক্রয় প্রতিনিধি' : 'এডমিন'}
                 </span>
               </div>
             </div>
 
-            <div className="text-xs text-slate-300 leading-relaxed bg-rose-950/30 border border-rose-500/20 p-2.5 rounded-xl text-rose-200">
+            <div className="text-xs leading-relaxed bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-500/20 p-2.5 rounded-xl text-rose-700 dark:text-rose-200">
               ⚠️ আপনি কি নিশ্চিতভাবে <strong>{userToTrash.user.shopName || userToTrash.user.name}</strong> ট্র্যাশে পাঠাতে চান? এটি সরাসরি ডিলিট হবে না, ট্র্যাশ (রিসাইকেল বিন) থেকে যেকোনো সময় রিস্টোর করা যাবে।
             </div>
 
@@ -1857,7 +1857,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({
               <button
                 type="button"
                 onClick={() => setUserToTrash(null)}
-                className="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold transition cursor-pointer"
+                className="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-semibold transition cursor-pointer"
               >
                 বাতিল
               </button>

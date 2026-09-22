@@ -235,18 +235,18 @@ export const CashCollectionsModal: React.FC<CashCollectionsModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-950/80 backdrop-blur-sm overflow-y-auto animate-fadeIn">
-      <div className="bg-slate-900 border border-slate-700/80 rounded-2xl w-full max-w-4xl max-h-[92vh] flex flex-col shadow-2xl overflow-hidden my-auto">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700/80 rounded-2xl w-full max-w-4xl max-h-[92vh] flex flex-col shadow-2xl overflow-hidden my-auto">
         
         {/* Modal Header */}
-        <div className="p-4 sm:p-5 border-b border-slate-800 flex items-center justify-between gap-3 bg-slate-900/90 sticky top-0 z-10">
+        <div className="p-4 sm:p-5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between gap-3 bg-white/90 dark:bg-slate-900/90 sticky top-0 z-10">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400 shrink-0">
+            <div className="w-10 h-10 rounded-xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-600 dark:text-emerald-400 shrink-0">
               <Banknote className="w-5 h-5" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="text-base sm:text-lg font-black text-slate-100">জমার খতিয়ান</h2>
-                <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                <h2 className="text-base sm:text-lg font-black text-slate-900 dark:text-slate-100">জমার খতিয়ান</h2>
+                <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30">
                   {periodLabels[period]}
                 </span>
               </div>
@@ -257,14 +257,14 @@ export const CashCollectionsModal: React.FC<CashCollectionsModalProps> = ({
             <button
               onClick={handlePrint}
               title="প্রিন্ট করুন"
-              className="p-2 text-slate-400 hover:text-slate-200 hover:bg-slate-800 rounded-xl transition cursor-pointer hidden sm:flex items-center gap-1.5 text-xs font-semibold"
+              className="p-2 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition cursor-pointer hidden sm:flex items-center gap-1.5 text-xs font-semibold"
             >
               <Printer className="w-4 h-4" />
               <span>প্রিন্ট</span>
             </button>
             <button
               onClick={onClose}
-              className="p-2 text-slate-400 hover:text-slate-200 hover:bg-slate-800 rounded-xl transition cursor-pointer"
+              className="p-2 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition cursor-pointer"
             >
               <X className="w-5 h-5" />
             </button>
@@ -277,43 +277,43 @@ export const CashCollectionsModal: React.FC<CashCollectionsModalProps> = ({
           {/* Summary Stats Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             {/* Total Received */}
-            <div className="bg-emerald-950/30 border border-emerald-500/40 p-3.5 rounded-xl">
+            <div className="bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-500/30 dark:border-emerald-500/40 p-3.5 rounded-xl">
               <div className="flex items-center justify-between">
-                <span className="text-xs text-emerald-300/80 font-medium">মোট আদায়</span>
-                <Wallet className="w-4 h-4 text-emerald-400" />
+                <span className="text-xs text-emerald-700 dark:text-emerald-300/80 font-medium">মোট আদায়</span>
+                <Wallet className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
               </div>
-              <div className="text-xl sm:text-2xl font-black text-emerald-400 mt-1">
+              <div className="text-xl sm:text-2xl font-black text-emerald-700 dark:text-emerald-400 mt-1">
                 {formatTaka(grandTotalCash)}
               </div>
-              <div className="text-[11px] text-emerald-300/70 mt-0.5 flex items-center justify-between">
+              <div className="text-[11px] text-emerald-600 dark:text-emerald-300/70 mt-0.5 flex items-center justify-between">
                 <span>{toBnDigit(allCollections.length)} টি এন্ট্রি</span>
               </div>
             </div>
 
             {/* Memo Cash Received */}
-            <div className="bg-slate-950/60 border border-slate-800 p-3.5 rounded-xl">
+            <div className="bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 p-3.5 rounded-xl">
               <div className="flex items-center justify-between">
-                <span className="text-xs text-slate-400 font-medium">মেমো জমা</span>
-                <ShoppingBag className="w-4 h-4 text-amber-400" />
+                <span className="text-xs text-slate-600 dark:text-slate-400 font-medium">মেমো জমা</span>
+                <ShoppingBag className="w-4 h-4 text-amber-600 dark:text-amber-400" />
               </div>
-              <div className="text-lg sm:text-xl font-bold text-amber-300 mt-1">
+              <div className="text-lg sm:text-xl font-bold text-amber-700 dark:text-amber-300 mt-1">
                 {formatTaka(totalMemoCash)}
               </div>
-              <div className="text-[11px] text-slate-400 mt-0.5">
+              <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
                 {toBnDigit(memoCollections.length)} টি মেমো
               </div>
             </div>
 
             {/* Due Collection Received */}
-            <div className="bg-slate-950/60 border border-slate-800 p-3.5 rounded-xl">
+            <div className="bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 p-3.5 rounded-xl">
               <div className="flex items-center justify-between">
-                <span className="text-xs text-slate-400 font-medium">বাকী জমা</span>
-                <Receipt className="w-4 h-4 text-sky-400" />
+                <span className="text-xs text-slate-600 dark:text-slate-400 font-medium">বাকী জমা</span>
+                <Receipt className="w-4 h-4 text-sky-600 dark:text-sky-400" />
               </div>
-              <div className="text-lg sm:text-xl font-bold text-sky-300 mt-1">
+              <div className="text-lg sm:text-xl font-bold text-sky-700 dark:text-sky-300 mt-1">
                 {formatTaka(totalDueCash)}
               </div>
-              <div className="text-[11px] text-slate-400 mt-0.5">
+              <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
                 {toBnDigit(dueCollections.length)} টি রসিদ
               </div>
             </div>
@@ -323,7 +323,7 @@ export const CashCollectionsModal: React.FC<CashCollectionsModalProps> = ({
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-1">
             
             {/* Period Filters */}
-            <div className="flex items-center gap-1 bg-slate-950 p-1 rounded-xl border border-slate-800 overflow-x-auto">
+            <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-950 p-1 rounded-xl border border-slate-200 dark:border-slate-800 overflow-x-auto">
               {(
                 [
                   { key: 'today', label: 'আজ' },
@@ -340,7 +340,7 @@ export const CashCollectionsModal: React.FC<CashCollectionsModalProps> = ({
                   className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors whitespace-nowrap cursor-pointer ${
                     period === tab.key
                       ? 'bg-emerald-500 text-slate-950 shadow-sm font-bold'
-                      : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-900'
                   }`}
                 >
                   {tab.label}
@@ -355,13 +355,13 @@ export const CashCollectionsModal: React.FC<CashCollectionsModalProps> = ({
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder="খুঁজুন..."
-                className="w-full bg-slate-950 border border-slate-800 text-xs text-slate-100 placeholder-slate-500 rounded-xl pl-9 pr-3 py-2 focus:outline-none focus:border-emerald-500 font-medium"
+                className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 rounded-xl pl-9 pr-3 py-2 focus:outline-none focus:border-emerald-500 font-medium"
               />
-              <Search className="w-4 h-4 text-slate-500 absolute left-3 top-2.5 pointer-events-none" />
+              <Search className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute left-3 top-2.5 pointer-events-none" />
               {searchTerm && (
                 <button
                   onClick={() => setSearchTerm('')}
-                  className="absolute right-2.5 top-2 text-slate-500 hover:text-slate-300 text-xs"
+                  className="absolute right-2.5 top-2 text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 text-xs"
                 >
                   ✕
                 </button>
@@ -370,17 +370,17 @@ export const CashCollectionsModal: React.FC<CashCollectionsModalProps> = ({
           </div>
 
           {/* Type Tabs: All / Memo / Due */}
-          <div className="flex items-center gap-2 border-b border-slate-800 pb-2">
+          <div className="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-2">
             <button
               onClick={() => setActiveTab('all')}
               className={`px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-1.5 ${
                 activeTab === 'all'
-                  ? 'bg-slate-800 text-slate-100 border border-slate-700'
-                  : 'text-slate-400 hover:text-slate-200'
+                  ? 'bg-slate-200 dark:bg-slate-800 text-slate-900 dark:text-slate-100 border border-slate-300 dark:border-slate-700'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
               }`}
             >
               <span>সব জমা</span>
-              <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-slate-950 text-emerald-400 font-mono">
+              <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-slate-100 dark:bg-slate-950 text-emerald-600 dark:text-emerald-400 font-mono">
                 {toBnDigit(allCollections.length)}
               </span>
             </button>
@@ -389,13 +389,13 @@ export const CashCollectionsModal: React.FC<CashCollectionsModalProps> = ({
               onClick={() => setActiveTab('memo')}
               className={`px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-1.5 ${
                 activeTab === 'memo'
-                  ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
-                  : 'text-slate-400 hover:text-slate-200'
+                  ? 'bg-amber-500/20 text-amber-800 dark:text-amber-300 border border-amber-500/30'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
               }`}
             >
               <ShoppingBag className="w-3.5 h-3.5" />
               <span>মেমো</span>
-              <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-slate-950 text-amber-300 font-mono">
+              <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-slate-100 dark:bg-slate-950 text-amber-700 dark:text-amber-300 font-mono">
                 {toBnDigit(memoCollections.length)}
               </span>
             </button>
@@ -404,13 +404,13 @@ export const CashCollectionsModal: React.FC<CashCollectionsModalProps> = ({
               onClick={() => setActiveTab('due_payment')}
               className={`px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-1.5 ${
                 activeTab === 'due_payment'
-                  ? 'bg-sky-500/20 text-sky-300 border border-sky-500/30'
-                  : 'text-slate-400 hover:text-slate-200'
+                  ? 'bg-sky-500/20 text-sky-800 dark:text-sky-300 border border-sky-500/30'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
               }`}
             >
               <Receipt className="w-3.5 h-3.5" />
               <span>বাকী আদায়</span>
-              <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-slate-950 text-sky-300 font-mono">
+              <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-slate-100 dark:bg-slate-950 text-sky-700 dark:text-sky-300 font-mono">
                 {toBnDigit(dueCollections.length)}
               </span>
             </button>
@@ -418,17 +418,17 @@ export const CashCollectionsModal: React.FC<CashCollectionsModalProps> = ({
 
           {/* List Content */}
           {displayedItems.length === 0 ? (
-            <div className="py-12 text-center text-slate-400 border border-dashed border-slate-800 rounded-2xl bg-slate-950/40">
-              <Banknote className="w-10 h-10 mx-auto text-slate-600 mb-2" />
-              <p className="text-sm font-semibold text-slate-300">কোনো জমার রেকর্ড নেই</p>
+            <div className="py-12 text-center text-slate-400 border border-dashed border-slate-200 dark:border-slate-800 rounded-2xl bg-slate-50 dark:bg-slate-950/40">
+              <Banknote className="w-10 h-10 mx-auto text-slate-400 dark:text-slate-600 mb-2" />
+              <p className="text-sm font-semibold text-slate-600 dark:text-slate-300">কোনো জমার রেকর্ড নেই</p>
             </div>
           ) : (
             <div className="space-y-2">
               {/* Desktop Table View */}
-              <div className="hidden md:block overflow-x-auto rounded-xl border border-slate-800 bg-slate-950/60">
+              <div className="hidden md:block overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/60">
                 <table className="w-full text-left text-xs border-collapse">
                   <thead>
-                    <tr className="border-b border-slate-800 bg-slate-900/80 text-slate-400 font-semibold">
+                    <tr className="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/80 text-slate-600 dark:text-slate-400 font-semibold">
                       <th className="py-3 px-3">মেমো / রসিদ</th>
                       <th className="py-3 px-3">তারিখ</th>
                       <th className="py-3 px-3">দোকান</th>
@@ -439,47 +439,47 @@ export const CashCollectionsModal: React.FC<CashCollectionsModalProps> = ({
                       <th className="py-3 px-3 text-center">চালান</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-800/80">
+                  <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80">
                     {displayedItems.map((item) => (
-                      <tr key={item.id} className="hover:bg-slate-800/50 transition-colors">
-                        <td className="py-3 px-3 font-mono font-bold text-slate-200 whitespace-nowrap">
+                      <tr key={item.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                        <td className="py-3 px-3 font-mono font-bold text-slate-800 dark:text-slate-200 whitespace-nowrap">
                           {item.refNo}
                         </td>
-                        <td className="py-3 px-3 text-slate-300 whitespace-nowrap">
+                        <td className="py-3 px-3 text-slate-700 dark:text-slate-300 whitespace-nowrap">
                           <div>{formatBnDate(item.date)}</div>
-                          {item.time && <div className="text-[10px] text-slate-500">{item.time}</div>}
+                          {item.time && <div className="text-[10px] text-slate-400 dark:text-slate-500">{item.time}</div>}
                         </td>
                         <td className="py-3 px-3">
-                          <div className="font-bold text-slate-100">{item.shopName}</div>
+                          <div className="font-bold text-slate-900 dark:text-slate-100">{item.shopName}</div>
                           {item.customerName && item.customerName !== item.shopName && (
-                            <div className="text-[11px] text-slate-400">{item.customerName}</div>
+                            <div className="text-[11px] text-slate-500 dark:text-slate-400">{item.customerName}</div>
                           )}
                         </td>
                         <td className="py-3 px-3 whitespace-nowrap">
                           {item.sourceType === 'memo' ? (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold bg-amber-500/15 text-amber-300 border border-amber-500/30">
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold bg-amber-500/15 text-amber-800 dark:text-amber-300 border border-amber-500/30">
                               মেমো
                             </span>
                           ) : (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold bg-sky-500/15 text-sky-300 border border-sky-500/30">
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold bg-sky-500/15 text-sky-800 dark:text-sky-300 border border-sky-500/30">
                               বাকী
                             </span>
                           )}
                         </td>
-                        <td className="py-3 px-3 text-slate-300 whitespace-nowrap">
+                        <td className="py-3 px-3 text-slate-700 dark:text-slate-300 whitespace-nowrap">
                           {item.collectorName}
                         </td>
-                        <td className="py-3 px-3 text-slate-300 whitespace-nowrap">
-                          <span className="px-2 py-0.5 rounded bg-slate-800 text-slate-300 text-[11px]">
+                        <td className="py-3 px-3 text-slate-700 dark:text-slate-300 whitespace-nowrap">
+                          <span className="px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-[11px] border border-slate-200 dark:border-slate-700">
                             {item.paymentMethod}
                           </span>
                         </td>
                         <td className="py-3 px-3 text-right whitespace-nowrap">
-                          <span className="text-sm font-black text-emerald-400 font-mono">
+                          <span className="text-sm font-black text-emerald-700 dark:text-emerald-400 font-mono">
                             {formatTaka(item.amount)}
                           </span>
                           {item.dueRemaining !== undefined && item.dueRemaining > 0 && (
-                            <div className="text-[10px] text-rose-400">
+                            <div className="text-[10px] text-rose-600 dark:text-rose-400">
                               বাকী: {formatTaka(item.dueRemaining)}
                             </div>
                           )}
@@ -491,14 +491,14 @@ export const CashCollectionsModal: React.FC<CashCollectionsModalProps> = ({
                               onClick={() => {
                                 onSelectOrderForInvoice(item.rawOrder!);
                               }}
-                              className="px-2.5 py-1 bg-amber-500/10 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 rounded-lg text-[11px] font-bold inline-flex items-center gap-1 transition cursor-pointer"
+                              className="px-2.5 py-1 bg-amber-500/10 hover:bg-amber-500/25 text-amber-800 dark:text-amber-300 border border-amber-500/30 rounded-lg text-[11px] font-bold inline-flex items-center gap-1 transition cursor-pointer"
                               title="চালান দেখুন"
                             >
                               <span>চালান</span>
                               <ExternalLink className="w-3 h-3" />
                             </button>
                           ) : (
-                            <span className="text-[11px] text-slate-500 font-mono">
+                            <span className="text-[11px] text-slate-400 dark:text-slate-500 font-mono">
                               —
                             </span>
                           )}
@@ -514,42 +514,42 @@ export const CashCollectionsModal: React.FC<CashCollectionsModalProps> = ({
                 {displayedItems.map((item) => (
                   <div
                     key={item.id}
-                    className="p-3 bg-slate-950/70 border border-slate-800 rounded-xl space-y-2 hover:border-slate-700 transition"
+                    className="p-3 bg-white dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800 rounded-xl space-y-2 hover:border-slate-300 dark:hover:border-slate-700 transition shadow-sm"
                   >
                     <div className="flex items-start justify-between gap-2">
                       <div>
                         <div className="flex items-center gap-1.5 flex-wrap">
-                          <span className="font-mono font-bold text-slate-200 text-xs">{item.refNo}</span>
+                          <span className="font-mono font-bold text-slate-800 dark:text-slate-200 text-xs">{item.refNo}</span>
                           {item.sourceType === 'memo' ? (
-                            <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-500/15 text-amber-300 border border-amber-500/30">
+                            <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-500/15 text-amber-800 dark:text-amber-300 border border-amber-500/30">
                               মেমো
                             </span>
                           ) : (
-                            <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-sky-500/15 text-sky-300 border border-sky-500/30">
+                            <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-sky-500/15 text-sky-800 dark:text-sky-300 border border-sky-500/30">
                               বাকী
                             </span>
                           )}
                         </div>
-                        <div className="font-bold text-slate-100 text-sm mt-1">{item.shopName}</div>
+                        <div className="font-bold text-slate-900 dark:text-slate-100 text-sm mt-1">{item.shopName}</div>
                         {item.customerName && item.customerName !== item.shopName && (
-                          <div className="text-[11px] text-slate-400">{item.customerName}</div>
+                          <div className="text-[11px] text-slate-500 dark:text-slate-400">{item.customerName}</div>
                         )}
                       </div>
 
                       <div className="text-right shrink-0">
-                        <div className="text-base font-black text-emerald-400 font-mono">
+                        <div className="text-base font-black text-emerald-700 dark:text-emerald-400 font-mono">
                           {formatTaka(item.amount)}
                         </div>
-                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-400">
+                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700">
                           {item.paymentMethod}
                         </span>
                       </div>
                     </div>
 
-                    <div className="pt-2 border-t border-slate-850 flex items-center justify-between text-[11px] text-slate-400">
+                    <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400">
                       <div>
                         <span>{formatBnDate(item.date)}</span>
-                        {item.time && <span className="ml-1 text-slate-500">({item.time})</span>}
+                        {item.time && <span className="ml-1 text-slate-400 dark:text-slate-500">({item.time})</span>}
                       </div>
                       <div className="flex items-center gap-2">
                         <span>{item.collectorName}</span>
@@ -557,7 +557,7 @@ export const CashCollectionsModal: React.FC<CashCollectionsModalProps> = ({
                           <button
                             type="button"
                             onClick={() => onSelectOrderForInvoice(item.rawOrder!)}
-                            className="px-2 py-0.5 bg-amber-500/15 hover:bg-amber-500/30 text-amber-300 border border-amber-500/30 rounded text-[10px] font-bold inline-flex items-center gap-1 transition"
+                            className="px-2 py-0.5 bg-amber-500/15 hover:bg-amber-500/30 text-amber-800 dark:text-amber-300 border border-amber-500/30 rounded text-[10px] font-bold inline-flex items-center gap-1 transition"
                           >
                             <span>চালান</span>
                             <ExternalLink className="w-2.5 h-2.5" />
@@ -575,18 +575,18 @@ export const CashCollectionsModal: React.FC<CashCollectionsModalProps> = ({
         </div>
 
         {/* Modal Footer */}
-        <div className="p-3 sm:p-4 border-t border-slate-800 bg-slate-900/95 flex items-center justify-between gap-3 text-xs">
-          <div className="text-slate-400">
-            <span className="font-bold text-slate-200">{toBnDigit(displayedItems.length)} টি এন্ট্রি</span>
+        <div className="p-3 sm:p-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/95 flex items-center justify-between gap-3 text-xs">
+          <div className="text-slate-600 dark:text-slate-400">
+            <span className="font-bold text-slate-800 dark:text-slate-200">{toBnDigit(displayedItems.length)} টি এন্ট্রি</span>
           </div>
           <div className="flex items-center gap-3">
-            <span className="text-slate-400 hidden sm:inline">
-              মোট: <strong className="text-emerald-400 font-mono text-sm">{formatTaka(displayedItems.reduce((s, i) => s + i.amount, 0))}</strong>
+            <span className="text-slate-600 dark:text-slate-400 hidden sm:inline">
+              মোট: <strong className="text-emerald-700 dark:text-emerald-400 font-mono text-sm">{formatTaka(displayedItems.reduce((s, i) => s + i.amount, 0))}</strong>
             </span>
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold rounded-xl transition cursor-pointer"
+              className="px-4 py-1.5 bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-bold rounded-xl transition cursor-pointer"
             >
               বন্ধ
             </button>

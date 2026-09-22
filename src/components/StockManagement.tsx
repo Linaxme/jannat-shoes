@@ -345,11 +345,11 @@ export const StockManagement: React.FC<StockManagementProps> = ({
       {/* Minimal Stock Header */}
       <div className="flex items-center justify-between gap-3 pt-1 pb-1">
         <div className="flex items-center gap-3 flex-1 min-w-0">
-          <span className="text-base sm:text-lg md:text-xl font-black text-amber-400 tracking-wide whitespace-nowrap flex items-center gap-2">
-            <Boxes className="w-5 h-5 text-amber-400" />
+          <span className="text-base sm:text-lg md:text-xl font-black text-amber-600 dark:text-amber-400 tracking-wide whitespace-nowrap flex items-center gap-2">
+            <Boxes className="w-5 h-5 text-amber-600 dark:text-amber-400" />
             স্টক হিসাব
           </span>
-          <div className="h-0.5 bg-gradient-to-r from-amber-500/50 via-slate-800 to-transparent flex-1" />
+          <div className="h-0.5 bg-gradient-to-r from-amber-500/50 via-slate-200 dark:via-slate-800 to-transparent flex-1" />
         </div>
 
         {canEditStock && (
@@ -364,16 +364,16 @@ export const StockManagement: React.FC<StockManagementProps> = ({
       </div>
 
       {/* 3D Dashboard-Style Unified Stock & Valuation Card */}
-      <div className="relative bg-gradient-to-b from-slate-800/90 via-slate-900 to-slate-950 border border-slate-700/60 border-t-slate-600/70 border-b-[3px] border-b-slate-950 p-4 sm:p-5 rounded-2xl shadow-[inset_0_1px_0_0_rgba(255,255,255,0.1),0_8px_24px_-4px_rgba(0,0,0,0.6)]">
+      <div className="relative bg-gradient-to-b from-white via-slate-50 to-slate-100 dark:from-slate-800/90 dark:via-slate-900 dark:to-slate-950 border border-slate-200 dark:border-slate-700/60 dark:border-t-slate-600/70 dark:border-b-[3px] dark:border-b-slate-950 p-4 sm:p-5 rounded-2xl shadow-sm dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.1),0_8px_24px_-4px_rgba(0,0,0,0.6)]">
         {/* Top Status Row inside Stock Card */}
-        <div className="flex items-center justify-between gap-3 flex-wrap pb-3.5 border-b border-slate-800/80">
+        <div className="flex items-center justify-between gap-3 flex-wrap pb-3.5 border-b border-slate-200 dark:border-slate-800/80">
           <div className="flex items-center gap-2.5">
-            <div className="p-2 bg-amber-500/15 text-amber-400 rounded-xl border border-amber-500/30">
+            <div className="p-2 bg-amber-500/15 text-amber-600 dark:text-amber-400 rounded-xl border border-amber-500/30">
               <Boxes className="w-4.5 h-4.5" />
             </div>
             <div className="flex items-center gap-2">
-              <h3 className="text-sm sm:text-base font-bold text-white">মোট মজুদ ওভারভিউ</h3>
-              <span className="px-2 py-0.5 bg-slate-800 text-slate-300 rounded-full text-[11px] font-medium border border-slate-700">
+              <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white">মোট মজুদ ওভারভিউ</h3>
+              <span className="px-2 py-0.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-full text-[11px] font-medium border border-slate-200 dark:border-slate-700">
                 {toBnDigit(products.length)} টি মডেল
               </span>
             </div>
@@ -390,17 +390,17 @@ export const StockManagement: React.FC<StockManagementProps> = ({
                 }}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition cursor-pointer border ${
                   stockAlertFilter === 'low'
-                    ? 'bg-rose-500/30 text-rose-200 border-rose-500 shadow-sm'
-                    : 'bg-rose-500/15 hover:bg-rose-500/25 text-rose-300 border-rose-500/40'
+                    ? 'bg-rose-500/20 text-rose-700 dark:text-rose-200 border-rose-500 shadow-sm'
+                    : 'bg-rose-50 dark:bg-rose-500/15 hover:bg-rose-100 dark:hover:bg-rose-500/25 text-rose-700 dark:text-rose-300 border-rose-300 dark:border-rose-500/40'
                 }`}
                 title="কম স্টক ফিল্টার"
               >
-                <AlertTriangle className="w-3.5 h-3.5 text-rose-400 shrink-0" />
+                <AlertTriangle className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400 shrink-0" />
                 <span>কম স্টক: {toBnDigit(lowStockCount)} টি</span>
               </button>
             ) : (
-              <span className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 rounded-full text-xs font-medium">
-                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+              <span className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-500/30 rounded-full text-xs font-medium">
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
                 <span>স্টক পর্যাপ্ত</span>
               </span>
             )}
@@ -408,10 +408,10 @@ export const StockManagement: React.FC<StockManagementProps> = ({
             <button
               type="button"
               onClick={() => setShowBuyPrice(!showBuyPrice)}
-              className="flex items-center gap-1.5 px-2.5 py-1.5 bg-slate-950/80 hover:bg-slate-950 text-slate-300 border border-slate-800 rounded-xl text-xs font-medium transition cursor-pointer"
+              className="flex items-center gap-1.5 px-2.5 py-1.5 bg-white dark:bg-slate-950/80 hover:bg-slate-50 dark:hover:bg-slate-950 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-medium transition cursor-pointer shadow-xs"
               title={showBuyPrice ? "ক্রয় মূল্য লুকান" : "ক্রয় মূল্য দেখুন"}
             >
-              {showBuyPrice ? <EyeOff className="w-3.5 h-3.5 text-amber-400" /> : <Eye className="w-3.5 h-3.5 text-slate-400" />}
+              {showBuyPrice ? <EyeOff className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" /> : <Eye className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />}
               <span className="hidden xs:inline">{showBuyPrice ? 'লুকান' : 'দেখুন'}</span>
             </button>
           </div>
@@ -420,30 +420,30 @@ export const StockManagement: React.FC<StockManagementProps> = ({
         {/* 3 Balanced Metric Columns */}
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 sm:gap-4 mt-3.5">
           {/* 1. মোট মজুদ */}
-          <div className="bg-slate-950/70 border border-slate-800/90 rounded-xl p-2.5 sm:p-3.5 flex flex-col justify-between">
-            <span className="text-[11px] sm:text-xs font-semibold text-slate-400">মোট মজুদ</span>
-            <div className="text-sm sm:text-lg font-black text-amber-300 font-mono mt-1 truncate">
-              {toBnDigit(totalStockPairs)} <span className="text-[10px] sm:text-xs font-normal text-slate-400">জোড়া</span>
+          <div className="bg-white/80 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800/90 rounded-xl p-2.5 sm:p-3.5 flex flex-col justify-between shadow-xs">
+            <span className="text-[11px] sm:text-xs font-semibold text-slate-600 dark:text-slate-400">মোট মজুদ</span>
+            <div className="text-sm sm:text-lg font-black text-amber-700 dark:text-amber-300 font-mono mt-1 truncate">
+              {toBnDigit(totalStockPairs)} <span className="text-[10px] sm:text-xs font-normal text-slate-500 dark:text-slate-400">জোড়া</span>
             </div>
-            <div className="text-[10px] sm:text-xs text-amber-400/90 font-medium truncate mt-1">
+            <div className="text-[10px] sm:text-xs text-amber-700 dark:text-amber-400/90 font-medium truncate mt-1">
               {pairsToCartonText(totalStockPairs, 12)}
             </div>
           </div>
 
           {/* 2. মোট ক্রয়মূল্য (ইনভেন্টরি মূল্য) */}
-          <div className="bg-slate-950/70 border border-slate-800/90 rounded-xl p-2.5 sm:p-3.5 flex flex-col justify-between">
+          <div className="bg-white/80 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800/90 rounded-xl p-2.5 sm:p-3.5 flex flex-col justify-between shadow-xs">
             <div className="flex items-center justify-between">
-              <span className="text-[11px] sm:text-xs font-semibold text-slate-400">মোট ক্রয়মূল্য</span>
+              <span className="text-[11px] sm:text-xs font-semibold text-slate-600 dark:text-slate-400">মোট ক্রয়মূল্য</span>
               <button
                 type="button"
                 onClick={() => setShowBuyPrice(!showBuyPrice)}
-                className="text-slate-500 hover:text-amber-400 transition cursor-pointer"
+                className="text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 transition cursor-pointer"
                 title={showBuyPrice ? "ক্রয় মূল্য লুকান" : "ক্রয় মূল্য দেখুন"}
               >
-                {showBuyPrice ? <EyeOff className="w-3 h-3 text-amber-400" /> : <Eye className="w-3 h-3" />}
+                {showBuyPrice ? <EyeOff className="w-3 h-3 text-amber-600 dark:text-amber-400" /> : <Eye className="w-3 h-3" />}
               </button>
             </div>
-            <div className="text-sm sm:text-lg font-black text-rose-400 font-mono mt-1 truncate">
+            <div className="text-sm sm:text-lg font-black text-rose-600 dark:text-rose-400 font-mono mt-1 truncate">
               {showBuyPrice ? formatTaka(totalStockValueBuy) : '•••• ৳'}
             </div>
             <div className="text-[10px] sm:text-xs text-slate-500 font-medium truncate mt-1">
@@ -452,17 +452,17 @@ export const StockManagement: React.FC<StockManagementProps> = ({
           </div>
 
           {/* 3. ফ্রি ও বুকড স্টক */}
-          <div className="col-span-2 sm:col-span-1 bg-slate-950/70 border border-slate-800/90 rounded-xl p-2.5 sm:p-3.5 flex flex-col justify-between">
+          <div className="col-span-2 sm:col-span-1 bg-white/80 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800/90 rounded-xl p-2.5 sm:p-3.5 flex flex-col justify-between shadow-xs">
             <div className="flex items-center justify-between">
-              <span className="text-[11px] sm:text-xs font-semibold text-emerald-400">ফ্রি স্টক</span>
-              <span className="text-[10px] font-semibold text-amber-400/90">
+              <span className="text-[11px] sm:text-xs font-semibold text-emerald-700 dark:text-emerald-400">ফ্রি স্টক</span>
+              <span className="text-[10px] font-semibold text-amber-700 dark:text-amber-400/90">
                 বুকড: {toBnDigit(allPendingBookedPairs)}
               </span>
             </div>
-            <div className="text-sm sm:text-lg font-black text-emerald-300 font-mono mt-1 truncate">
-              {toBnDigit(freeStockPairs)} <span className="text-[10px] sm:text-xs font-normal text-slate-400">জোড়া</span>
+            <div className="text-sm sm:text-lg font-black text-emerald-700 dark:text-emerald-300 font-mono mt-1 truncate">
+              {toBnDigit(freeStockPairs)} <span className="text-[10px] sm:text-xs font-normal text-slate-500 dark:text-slate-400">জোড়া</span>
             </div>
-            <div className="text-[10px] sm:text-xs text-emerald-300/80 font-medium truncate mt-1">
+            <div className="text-[10px] sm:text-xs text-emerald-700 dark:text-emerald-300/80 font-medium truncate mt-1">
               {pairsToCartonText(freeStockPairs, 12)}
             </div>
           </div>
@@ -470,8 +470,8 @@ export const StockManagement: React.FC<StockManagementProps> = ({
       </div>
 
       {/* Search Input & Unified Action Controls */}
-      <div className="bg-slate-900/70 border border-slate-800/80 p-3 sm:p-3.5 rounded-2xl shadow-sm space-y-3">
-        <div className="flex items-center gap-2 bg-slate-950 border border-slate-800 rounded-xl px-3 py-2">
+      <div className="bg-white dark:bg-slate-900/70 border border-slate-200 dark:border-slate-800/80 p-3 sm:p-3.5 rounded-2xl shadow-sm space-y-3">
+        <div className="flex items-center gap-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2">
           <Search className="w-4 h-4 text-slate-400 shrink-0" />
           <input
             type="text"
@@ -481,7 +481,7 @@ export const StockManagement: React.FC<StockManagementProps> = ({
               setCurrentPage(1);
             }}
             placeholder="আর্টিকল খুঁজুন..."
-            className="bg-transparent text-xs sm:text-sm text-slate-100 placeholder-slate-500 w-full focus:outline-none"
+            className="bg-transparent text-xs sm:text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 w-full focus:outline-none"
           />
           {searchTerm && (
             <button
@@ -490,7 +490,7 @@ export const StockManagement: React.FC<StockManagementProps> = ({
                 setSearchTerm('');
                 setCurrentPage(1);
               }}
-              className="text-slate-500 hover:text-slate-300 cursor-pointer"
+              className="text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 cursor-pointer"
             >
               <X className="w-3.5 h-3.5" />
             </button>
@@ -507,8 +507,8 @@ export const StockManagement: React.FC<StockManagementProps> = ({
               onClick={() => setShowBuyPrice(!showBuyPrice)}
               className={`p-2 rounded-xl border transition cursor-pointer flex items-center justify-center shrink-0 ${
                 showBuyPrice
-                  ? 'bg-amber-500/10 border-amber-500/30 text-amber-400'
-                  : 'bg-slate-950 border-slate-800 text-slate-500 hover:text-slate-300 hover:border-slate-700'
+                  ? 'bg-amber-500/10 border-amber-500/30 text-amber-700 dark:text-amber-400'
+                  : 'bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-500 hover:text-slate-800 dark:hover:text-slate-300 hover:border-slate-300 dark:hover:border-slate-700'
               }`}
               title={showBuyPrice ? "ক্রয় মূল্য লুকান" : "ক্রয় মূল্য দেখুন"}
             >
@@ -523,19 +523,19 @@ export const StockManagement: React.FC<StockManagementProps> = ({
                   e.stopPropagation();
                   setIsCategoryDropdownOpen((prev) => !prev);
                 }}
-                className={`bg-slate-950 border text-xs rounded-xl px-3 py-2 font-medium flex items-center gap-1.5 transition-all cursor-pointer ${
+                className={`border text-xs rounded-xl px-3 py-2 font-medium flex items-center gap-1.5 transition-all cursor-pointer ${
                   selectedCategoryFilter !== 'সব'
-                    ? 'border-amber-500/80 text-amber-300 bg-amber-500/10 shadow-sm shadow-amber-500/10'
-                    : 'border-slate-800 hover:border-slate-700 text-slate-200'
+                    ? 'border-amber-500/80 text-amber-800 dark:text-amber-300 bg-amber-50 dark:bg-amber-500/10 shadow-sm shadow-amber-500/10'
+                    : 'bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 text-slate-800 dark:text-slate-200'
                 }`}
               >
-                <Filter className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                <Filter className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
                 <span className="truncate max-w-[110px] sm:max-w-none">
                   {selectedCategoryFilter === 'সব' ? 'সব ক্যাটাগরি' : selectedCategoryFilter}
                 </span>
                 <ChevronDown
                   className={`w-3.5 h-3.5 text-slate-400 shrink-0 transition-transform duration-200 ${
-                    isCategoryDropdownOpen ? 'rotate-180 text-amber-400' : ''
+                    isCategoryDropdownOpen ? 'rotate-180 text-amber-600 dark:text-amber-400' : ''
                   }`}
                 />
               </button>
@@ -544,9 +544,9 @@ export const StockManagement: React.FC<StockManagementProps> = ({
               {isCategoryDropdownOpen && (
                 <div
                   onClick={(e) => e.stopPropagation()}
-                  className="absolute left-0 top-full mt-1.5 w-56 max-h-64 overflow-y-auto bg-slate-900 border border-slate-700/90 rounded-2xl shadow-2xl py-1.5 z-50 animate-in fade-in zoom-in-95 duration-150"
+                  className="absolute left-0 top-full mt-1.5 w-56 max-h-64 overflow-y-auto bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700/90 rounded-2xl shadow-2xl py-1.5 z-50 animate-in fade-in zoom-in-95 duration-150"
                 >
-                  <div className="px-3 py-1.5 text-[10px] font-bold tracking-wider text-slate-400 border-b border-slate-800 flex items-center justify-between">
+                  <div className="px-3 py-1.5 text-[10px] font-bold tracking-wider text-slate-500 dark:text-slate-400 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
                     <span>ক্যাটাগরি ফিল্টার</span>
                     {selectedCategoryFilter !== 'সব' && (
                       <button
@@ -556,7 +556,7 @@ export const StockManagement: React.FC<StockManagementProps> = ({
                           setCurrentPage(1);
                           setIsCategoryDropdownOpen(false);
                         }}
-                        className="text-rose-400 hover:text-rose-300 cursor-pointer text-[10px]"
+                        className="text-rose-600 dark:text-rose-400 hover:text-rose-700 dark:hover:text-rose-300 cursor-pointer text-[10px]"
                       >
                         রিসেট
                       </button>
@@ -571,12 +571,12 @@ export const StockManagement: React.FC<StockManagementProps> = ({
                     }}
                     className={`w-full px-3 py-2 text-left text-xs flex items-center justify-between transition-colors cursor-pointer ${
                       selectedCategoryFilter === 'সব'
-                        ? 'bg-amber-500/20 text-amber-300 font-bold'
-                        : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                        ? 'bg-amber-50 dark:bg-amber-500/20 text-amber-800 dark:text-amber-300 font-bold'
+                        : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
                     }`}
                   >
                     <span>সব ক্যাটাগরি</span>
-                    {selectedCategoryFilter === 'সব' && <Check className="w-3.5 h-3.5 text-amber-400" />}
+                    {selectedCategoryFilter === 'সব' && <Check className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />}
                   </button>
                   {categoriesList.map((cat, idx) => {
                     const isSelected = selectedCategoryFilter === cat;
@@ -589,14 +589,14 @@ export const StockManagement: React.FC<StockManagementProps> = ({
                           setCurrentPage(1);
                           setIsCategoryDropdownOpen(false);
                         }}
-                        className={`w-full px-3 py-2 text-left text-xs flex items-center justify-between transition-colors cursor-pointer border-t border-slate-800/40 ${
+                        className={`w-full px-3 py-2 text-left text-xs flex items-center justify-between transition-colors cursor-pointer border-t border-slate-100 dark:border-slate-800/40 ${
                           isSelected
-                            ? 'bg-amber-500/20 text-amber-300 font-bold'
-                            : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                            ? 'bg-amber-50 dark:bg-amber-500/20 text-amber-800 dark:text-amber-300 font-bold'
+                            : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
                         }`}
                       >
                         <span className="truncate">{cat}</span>
-                        {isSelected && <Check className="w-3.5 h-3.5 text-amber-400 shrink-0" />}
+                        {isSelected && <Check className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0" />}
                       </button>
                     );
                   })}
@@ -613,25 +613,25 @@ export const StockManagement: React.FC<StockManagementProps> = ({
               }}
               className={`px-3 py-2 rounded-xl border text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
                 stockAlertFilter === 'low'
-                  ? 'bg-rose-500/20 border-rose-500 text-rose-300 shadow-sm shadow-rose-500/10'
-                  : 'bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700 hover:text-slate-200'
+                  ? 'bg-rose-50 dark:bg-rose-500/20 border-rose-300 dark:border-rose-500 text-rose-700 dark:text-rose-300 shadow-sm shadow-rose-500/10'
+                  : 'bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-700 hover:text-slate-900 dark:hover:text-slate-200'
               }`}
               title="কম স্টক সতর্কতা"
             >
-              <AlertTriangle className={`w-3.5 h-3.5 ${stockAlertFilter === 'low' ? 'text-rose-400' : 'text-slate-400'}`} />
+              <AlertTriangle className={`w-3.5 h-3.5 ${stockAlertFilter === 'low' ? 'text-rose-600 dark:text-rose-400' : 'text-slate-500 dark:text-slate-400'}`} />
               <span className="hidden xs:inline">কম স্টক</span>
             </button>
           </div>
 
           {/* Right: View Mode Switcher */}
-          <div className="flex items-center gap-1 bg-slate-950 p-1 rounded-xl border border-slate-800 shrink-0 ml-auto">
+          <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-950 p-1 rounded-xl border border-slate-200 dark:border-slate-800 shrink-0 ml-auto">
             <button
               type="button"
               onClick={() => setViewMode('table')}
               className={`hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
                 viewMode === 'table'
                   ? 'bg-amber-500 text-slate-950 shadow font-bold'
-                  : 'text-slate-400 hover:text-slate-200'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
               }`}
             >
               <List className="w-4 h-4" />
@@ -643,7 +643,7 @@ export const StockManagement: React.FC<StockManagementProps> = ({
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
                 viewMode === 'grid'
                   ? 'bg-amber-500 text-slate-950 shadow font-bold'
-                  : 'text-slate-400 hover:text-slate-200'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
               }`}
             >
               <Grid2X2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
@@ -655,7 +655,7 @@ export const StockManagement: React.FC<StockManagementProps> = ({
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
                 viewMode === 'card'
                   ? 'bg-amber-500 text-slate-950 shadow font-bold'
-                  : 'text-slate-400 hover:text-slate-200'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
               }`}
             >
               <Rows3 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
@@ -666,9 +666,9 @@ export const StockManagement: React.FC<StockManagementProps> = ({
       </div>
 
       {/* Stock Items Container */}
-      <div ref={productsContainerRef} className="bg-slate-900 border border-slate-800 p-3 sm:p-4 rounded-2xl min-h-[300px]">
+      <div ref={productsContainerRef} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-3 sm:p-4 rounded-2xl min-h-[300px] shadow-sm">
         {filteredProducts.length === 0 ? (
-          <div className="py-20 text-center text-slate-500 text-xs">
+          <div className="py-20 text-center text-slate-400 dark:text-slate-500 text-xs">
             কোনো প্রডাক্ট বা আর্টিকল পাওয়া যায়নি।
           </div>
         ) : (
@@ -685,10 +685,10 @@ export const StockManagement: React.FC<StockManagementProps> = ({
               return (
                 <div 
                   key={p.id} 
-                  className="bg-slate-950/70 border border-slate-800 rounded-xl p-2.5 flex flex-col justify-between hover:border-slate-700 transition-colors relative group"
+                  className="bg-slate-50 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800 rounded-xl p-2.5 flex flex-col justify-between hover:border-slate-300 dark:hover:border-slate-700 transition-colors relative group"
                 >
                   {/* Thumbnail Image */}
-                  <div className="relative aspect-square w-full rounded-lg overflow-hidden border border-slate-800 bg-slate-900 mb-2">
+                  <div className="relative aspect-square w-full rounded-lg overflow-hidden border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 mb-2">
                     <ProductImageDisplay
                       src={p.imageUrl}
                       alt={p.articleCode}
@@ -702,15 +702,15 @@ export const StockManagement: React.FC<StockManagementProps> = ({
                         e.stopPropagation();
                         setPreviewImage({ url: p.imageUrl, articleCode: p.articleCode });
                       }}
-                      className="absolute bottom-1 right-1 bg-slate-950/80 text-amber-300 p-1 rounded-md shadow backdrop-blur-xs cursor-pointer z-10"
+                      className="absolute bottom-1 right-1 bg-white/80 dark:bg-slate-950/80 text-amber-600 dark:text-amber-300 p-1 rounded-md shadow backdrop-blur-xs cursor-pointer z-10"
                       title="ছবি বড় করে দেখুন"
                     >
                       <ZoomIn className="w-3.5 h-3.5" />
                     </button>
 
                     {isLowStock && (
-                      <span className="absolute top-1 left-1 text-[9px] text-rose-300 bg-rose-950/90 border border-rose-500/40 px-1.5 py-0.5 rounded-md font-bold flex items-center gap-0.5">
-                        <AlertTriangle className="w-2.5 h-2.5 text-rose-400" /> স্টক কম
+                      <span className="absolute top-1 left-1 text-[9px] text-rose-700 dark:text-rose-300 bg-rose-100 dark:bg-rose-950/90 border border-rose-300 dark:border-rose-500/40 px-1.5 py-0.5 rounded-md font-bold flex items-center gap-0.5">
+                        <AlertTriangle className="w-2.5 h-2.5 text-rose-600 dark:text-rose-400" /> স্টক কম
                       </span>
                     )}
 
@@ -722,7 +722,7 @@ export const StockManagement: React.FC<StockManagementProps> = ({
                             e.stopPropagation();
                             setActiveMenuProductId(isMenuOpen ? null : p.id);
                           }}
-                          className="p-1 text-slate-300 hover:text-white bg-slate-950/80 hover:bg-slate-900 rounded-lg border border-slate-700 transition-colors cursor-pointer"
+                          className="p-1 text-slate-500 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white bg-white/80 dark:bg-slate-950/80 hover:bg-slate-100 dark:hover:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer"
                           title="অপশনসমূহ"
                         >
                           <MoreVertical className="w-3.5 h-3.5" />
@@ -730,15 +730,15 @@ export const StockManagement: React.FC<StockManagementProps> = ({
 
                         {isMenuOpen && (
                           <div 
-                            className="absolute right-0 mt-1 w-28 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl py-1 z-30 divide-y divide-slate-800 animate-in fade-in zoom-in-95 duration-100"
+                            className="absolute right-0 mt-1 w-28 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-2xl py-1 z-30 divide-y divide-slate-100 dark:divide-slate-800 animate-in fade-in zoom-in-95 duration-100"
                             onClick={(e) => e.stopPropagation()}
                           >
                             <button
                               type="button"
                               onClick={() => handleStartEdit(p)}
-                              className="w-full text-left px-3 py-1.5 text-xs font-medium text-slate-200 hover:bg-slate-800 flex items-center gap-1.5 transition-colors cursor-pointer"
+                              className="w-full text-left px-3 py-1.5 text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-1.5 transition-colors cursor-pointer"
                             >
-                              <Edit2 className="w-3 h-3 text-amber-400" />
+                              <Edit2 className="w-3 h-3 text-amber-600 dark:text-amber-400" />
                               এডিট
                             </button>
                             <button
@@ -747,9 +747,9 @@ export const StockManagement: React.FC<StockManagementProps> = ({
                                 setDeletingProduct(p);
                                 setActiveMenuProductId(null);
                               }}
-                              className="w-full text-left px-3 py-1.5 text-xs font-medium text-rose-400 hover:bg-rose-950/40 flex items-center gap-1.5 transition-colors cursor-pointer"
+                              className="w-full text-left px-3 py-1.5 text-xs font-medium text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 flex items-center gap-1.5 transition-colors cursor-pointer"
                             >
-                              <Trash2 className="w-3 h-3 text-rose-400" />
+                              <Trash2 className="w-3 h-3 text-rose-600 dark:text-rose-400" />
                               ডিলেট
                             </button>
                           </div>
@@ -761,32 +761,32 @@ export const StockManagement: React.FC<StockManagementProps> = ({
                   {/* Info */}
                   <div className="space-y-1 text-xs">
                     <div className="flex items-center justify-between gap-1">
-                      <span className="font-mono font-bold text-amber-300 bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/20 text-[11px] truncate">
+                      <span className="font-mono font-bold text-amber-800 dark:text-amber-300 bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/20 text-[11px] truncate">
                         {p.articleCode}
                       </span>
                       <div className="text-right leading-tight">
-                        <span className="text-[11px] font-black text-emerald-400 block">{formatTaka(p.sellPrice || p.buyPrice)}</span>
-                        <span className="text-[9px] font-bold text-rose-300/80 block">{showBuyPrice ? formatTaka(p.buyPrice) : '•••• ৳'}</span>
+                        <span className="text-[11px] font-black text-emerald-700 dark:text-emerald-400 block">{formatTaka(p.sellPrice || p.buyPrice)}</span>
+                        <span className="text-[9px] font-bold text-rose-600 dark:text-rose-300/80 block">{showBuyPrice ? formatTaka(p.buyPrice) : '•••• ৳'}</span>
                       </div>
                     </div>
 
-                    <div className="text-[10px] text-slate-400 flex items-center justify-between pt-0.5">
-                      <span>সাইজ: <strong className="text-slate-200">{cleanSize}</strong></span>
+                    <div className="text-[10px] text-slate-500 dark:text-slate-400 flex items-center justify-between pt-0.5">
+                      <span>সাইজ: <strong className="text-slate-800 dark:text-slate-200">{cleanSize}</strong></span>
                     </div>
 
                     {/* Stock Details Box */}
-                    <div className="bg-slate-900/90 p-1.5 rounded-lg border border-slate-800 space-y-0.5 text-[10px] mt-1">
-                      <div className="flex justify-between items-center text-slate-300">
+                    <div className="bg-white dark:bg-slate-900/90 p-1.5 rounded-lg border border-slate-200 dark:border-slate-800 space-y-0.5 text-[10px] mt-1">
+                      <div className="flex justify-between items-center text-slate-700 dark:text-slate-300">
                         <span>মজুদ:</span>
-                        <strong className={`font-bold ${isLowStock ? 'text-rose-400' : 'text-slate-200'}`}>
+                        <strong className={`font-bold ${isLowStock ? 'text-rose-600 dark:text-rose-400' : 'text-slate-800 dark:text-slate-200'}`}>
                           {toBnDigit(p.stockPairs)} জোড়া
                         </strong>
                       </div>
-                      <div className="flex justify-between items-center text-slate-400">
+                      <div className="flex justify-between items-center text-slate-500 dark:text-slate-400">
                         <span>বুকড:</span>
-                        <strong className="text-amber-300 font-bold">{toBnDigit(bookedPairs)} জোড়া</strong>
+                        <strong className="text-amber-700 dark:text-amber-300 font-bold">{toBnDigit(bookedPairs)} জোড়া</strong>
                       </div>
-                      <div className="flex justify-between items-center text-emerald-400 border-t border-slate-800/80 pt-0.5 font-semibold">
+                      <div className="flex justify-between items-center text-emerald-700 dark:text-emerald-400 border-t border-slate-100 dark:border-slate-800/80 pt-0.5 font-semibold">
                         <span>ফ্রি স্টক:</span>
                         <strong className="font-extrabold">{toBnDigit(Math.max(0, p.stockPairs - bookedPairs))} জোড়া</strong>
                       </div>
@@ -800,7 +800,7 @@ export const StockManagement: React.FC<StockManagementProps> = ({
                         setRestockProductId(p.id);
                         setAddedPairsInput(p.pairsPerCarton);
                       }}
-                      className="mt-2 w-full py-1 bg-emerald-600/20 hover:bg-emerald-600/40 text-emerald-300 border border-emerald-500/30 rounded-lg text-[11px] font-bold transition-colors flex items-center justify-center gap-1 cursor-pointer"
+                      className="mt-2 w-full py-1 bg-emerald-50 dark:bg-emerald-600/20 hover:bg-emerald-100 dark:hover:bg-emerald-600/40 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-500/30 rounded-lg text-[11px] font-bold transition-colors flex items-center justify-center gap-1 cursor-pointer"
                     >
                       <RefreshCw className="w-3 h-3" />
                       রি-স্টক
@@ -824,12 +824,12 @@ export const StockManagement: React.FC<StockManagementProps> = ({
               return (
                 <div 
                   key={p.id} 
-                  className="bg-slate-950/70 border border-slate-800 rounded-xl p-3 flex flex-col justify-between gap-3 hover:border-slate-700 transition-colors relative"
+                  className="bg-slate-50 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800 rounded-xl p-3 flex flex-col justify-between gap-3 hover:border-slate-300 dark:hover:border-slate-700 transition-colors relative"
                 >
                   <div className="flex items-start gap-3">
                     {/* Product Image Thumbnail */}
                     <div 
-                      className="relative flex-shrink-0 cursor-pointer group rounded-xl overflow-hidden border border-slate-700 bg-slate-900 shadow-sm w-16 h-16 sm:w-20 sm:h-20"
+                      className="relative flex-shrink-0 cursor-pointer group rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-sm w-16 h-16 sm:w-20 sm:h-20"
                       onClick={() => setPreviewImage({ url: p.imageUrl, articleCode: p.articleCode })}
                       title="ছবি বড় করে দেখতে ক্লিক করুন"
                     >
@@ -840,7 +840,7 @@ export const StockManagement: React.FC<StockManagementProps> = ({
                         category={p.category}
                         size="sm"
                       />
-                      <div className="absolute bottom-1 right-1 bg-slate-950/80 text-amber-300 p-1 rounded-md shadow backdrop-blur-xs z-10">
+                      <div className="absolute bottom-1 right-1 bg-white/80 dark:bg-slate-950/80 text-amber-600 dark:text-amber-300 p-1 rounded-md shadow backdrop-blur-xs z-10">
                         <ZoomIn className="w-3.5 h-3.5" />
                       </div>
                     </div>
@@ -848,20 +848,20 @@ export const StockManagement: React.FC<StockManagementProps> = ({
                     {/* Info */}
                     <div className="flex-1 min-w-0 space-y-1.5">
                       <div className="flex items-center justify-between gap-1 pr-6">
-                        <span className="font-mono font-bold text-amber-300 bg-amber-500/10 px-2 py-0.5 rounded-md border border-amber-500/20 text-xs truncate">
+                        <span className="font-mono font-bold text-amber-800 dark:text-amber-300 bg-amber-500/10 px-2 py-0.5 rounded-md border border-amber-500/20 text-xs truncate">
                           {p.articleCode}
                         </span>
                       </div>
 
-                      <div className="text-[11px] text-slate-300 space-y-0.5">
-                        <div>সাইজ: <strong className="text-white font-bold">{cleanSize}</strong></div>
-                        <div>বিক্রয় মূল্য: <strong className="text-emerald-400 font-extrabold">{formatTaka(p.sellPrice || p.buyPrice)}</strong></div>
-                        <div>ক্রয় মূল্য: <strong className="text-rose-300 font-bold">{showBuyPrice ? formatTaka(p.buyPrice) : '•••• ৳'}</strong></div>
+                      <div className="text-[11px] text-slate-700 dark:text-slate-300 space-y-0.5">
+                        <div>সাইজ: <strong className="text-slate-900 dark:text-white font-bold">{cleanSize}</strong></div>
+                        <div>বিক্রয় মূল্য: <strong className="text-emerald-700 dark:text-emerald-400 font-extrabold">{formatTaka(p.sellPrice || p.buyPrice)}</strong></div>
+                        <div>ক্রয় মূল্য: <strong className="text-rose-600 dark:text-rose-300 font-bold">{showBuyPrice ? formatTaka(p.buyPrice) : '•••• ৳'}</strong></div>
                       </div>
 
                       {isLowStock && (
-                        <span className="inline-flex items-center gap-0.5 text-[9px] text-rose-300 bg-rose-500/20 px-1.5 py-0.5 rounded-full border border-rose-500/30 font-bold">
-                          <AlertTriangle className="w-3 h-3 text-rose-400" /> কম স্টক
+                        <span className="inline-flex items-center gap-0.5 text-[9px] text-rose-700 dark:text-rose-300 bg-rose-100 dark:bg-rose-500/20 px-1.5 py-0.5 rounded-full border border-rose-300 dark:border-rose-500/30 font-bold">
+                          <AlertTriangle className="w-3 h-3 text-rose-600 dark:text-rose-400" /> কম স্টক
                         </span>
                       )}
                     </div>
@@ -875,7 +875,7 @@ export const StockManagement: React.FC<StockManagementProps> = ({
                             e.stopPropagation();
                             setActiveMenuProductId(isMenuOpen ? null : p.id);
                           }}
-                          className="p-1.5 text-slate-400 hover:text-white bg-slate-900/80 hover:bg-slate-800 rounded-lg border border-slate-700/60 transition-colors cursor-pointer"
+                          className="p-1.5 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white bg-white dark:bg-slate-900/80 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700/60 transition-colors cursor-pointer"
                           title="অপশনসমূহ"
                         >
                           <MoreVertical className="w-4 h-4" />
@@ -884,15 +884,15 @@ export const StockManagement: React.FC<StockManagementProps> = ({
                         {/* Dropdown Menu */}
                         {isMenuOpen && (
                           <div 
-                            className="absolute right-0 mt-1 w-32 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl py-1 z-30 divide-y divide-slate-800 animate-in fade-in zoom-in-95 duration-100"
+                            className="absolute right-0 mt-1 w-32 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-2xl py-1 z-30 divide-y divide-slate-100 dark:divide-slate-800 animate-in fade-in zoom-in-95 duration-100"
                             onClick={(e) => e.stopPropagation()}
                           >
                             <button
                               type="button"
                               onClick={() => handleStartEdit(p)}
-                              className="w-full text-left px-3 py-2 text-xs font-medium text-slate-200 hover:bg-slate-800 flex items-center gap-2 transition-colors cursor-pointer"
+                              className="w-full text-left px-3 py-2 text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-2 transition-colors cursor-pointer"
                             >
-                              <Edit2 className="w-3.5 h-3.5 text-amber-400" />
+                              <Edit2 className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
                               এডিট
                             </button>
                             <button
@@ -901,9 +901,9 @@ export const StockManagement: React.FC<StockManagementProps> = ({
                                 setDeletingProduct(p);
                                 setActiveMenuProductId(null);
                               }}
-                              className="w-full text-left px-3 py-2 text-xs font-medium text-rose-400 hover:bg-rose-950/40 flex items-center gap-2 transition-colors cursor-pointer"
+                              className="w-full text-left px-3 py-2 text-xs font-medium text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 flex items-center gap-2 transition-colors cursor-pointer"
                             >
-                              <Trash2 className="w-3.5 h-3.5 text-rose-400" />
+                              <Trash2 className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400" />
                               ডিলেট
                             </button>
                           </div>
@@ -914,22 +914,22 @@ export const StockManagement: React.FC<StockManagementProps> = ({
                   </div>
 
                   {/* Bottom Row: Stock Quantity & Action */}
-                  <div className="space-y-1.5 pt-2.5 border-t border-slate-800/80 text-xs mt-auto">
+                  <div className="space-y-1.5 pt-2.5 border-t border-slate-200 dark:border-slate-800/80 text-xs mt-auto">
                     <div className="flex items-center justify-between">
-                      <span className="text-slate-400 text-[11px]">মোট মজুদ (Physical):</span>
-                      <strong className={`font-bold ${isLowStock ? 'text-rose-400' : 'text-slate-200'}`}>
+                      <span className="text-slate-500 dark:text-slate-400 text-[11px]">মোট মজুদ (Physical):</span>
+                      <strong className={`font-bold ${isLowStock ? 'text-rose-600 dark:text-rose-400' : 'text-slate-800 dark:text-slate-200'}`}>
                         {toBnDigit(p.stockPairs)} জোড়া / {pairsToCartonText(p.stockPairs, p.pairsPerCarton)}
                       </strong>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-slate-400 text-[11px]">বুকড (Reserved):</span>
-                      <strong className="text-amber-300 font-bold">
+                      <span className="text-slate-500 dark:text-slate-400 text-[11px]">বুকড (Reserved):</span>
+                      <strong className="text-amber-700 dark:text-amber-300 font-bold">
                         {toBnDigit(bookedPairs)} জোড়া
                       </strong>
                     </div>
-                    <div className="flex items-center justify-between pt-1 border-t border-slate-800/60">
-                      <span className="text-emerald-400 text-[11px] font-semibold">কার্যকর ফ্রি স্টক:</span>
-                      <strong className="text-emerald-400 font-extrabold">
+                    <div className="flex items-center justify-between pt-1 border-t border-slate-100 dark:border-slate-800/60">
+                      <span className="text-emerald-700 dark:text-emerald-400 text-[11px] font-semibold">কার্যকর ফ্রি স্টক:</span>
+                      <strong className="text-emerald-700 dark:text-emerald-400 font-extrabold">
                         {toBnDigit(Math.max(0, p.stockPairs - bookedPairs))} জোড়া / {pairsToCartonText(Math.max(0, p.stockPairs - bookedPairs), p.pairsPerCarton)}
                       </strong>
                     </div>
@@ -941,7 +941,7 @@ export const StockManagement: React.FC<StockManagementProps> = ({
                             setRestockProductId(p.id);
                             setAddedPairsInput(p.pairsPerCarton);
                           }}
-                          className="w-full px-3 py-1.5 bg-emerald-600/30 hover:bg-emerald-600 text-emerald-200 border border-emerald-500/40 rounded-xl text-xs font-semibold transition-colors flex items-center justify-center gap-1.5 shadow-xs cursor-pointer"
+                          className="w-full px-3 py-1.5 bg-emerald-50 dark:bg-emerald-600/30 hover:bg-emerald-100 dark:hover:bg-emerald-600 text-emerald-800 dark:text-emerald-200 border border-emerald-300 dark:border-emerald-500/40 rounded-xl text-xs font-semibold transition-colors flex items-center justify-center gap-1.5 shadow-xs cursor-pointer"
                         >
                           <RefreshCw className="w-3.5 h-3.5" />
                           রি-স্টক
@@ -960,7 +960,7 @@ export const StockManagement: React.FC<StockManagementProps> = ({
           <div className="overflow-x-auto no-scrollbar overflow-y-visible">
             <table className="w-full text-left text-xs whitespace-nowrap">
               <thead>
-                <tr className="border-b border-slate-800 text-slate-400 font-medium pb-2">
+                <tr className="border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 font-medium pb-2">
                   <th className="pb-3 pr-4">আর্টিকল ও ছবি</th>
                   <th className="pb-3 px-3">সাইজ</th>
                   <th className="pb-3 px-3 text-right">ক্রয় মূল্য {showBuyPrice ? '(৳)' : '(গোপন)'}</th>
@@ -971,7 +971,7 @@ export const StockManagement: React.FC<StockManagementProps> = ({
                   {canEditStock && <th className="pb-3 pl-3 text-right">অ্যাকশন</th>}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800/80">
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80">
                 {paginatedProducts.map((p) => {
                   const isLowStock = p.stockPairs <= p.minStockAlert;
                   const cleanSize = p.sizeRange ? p.sizeRange.replace(/\(.*?\)/g, '').trim() : '৩৯-৪৪';
@@ -979,13 +979,13 @@ export const StockManagement: React.FC<StockManagementProps> = ({
                   const bookedPairs = getBookedPairs(p.id);
 
                   return (
-                    <tr key={p.id} className="hover:bg-slate-800/40 transition-colors">
+                    <tr key={p.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
                       
                       {/* Article Code & Image */}
                       <td className="py-3 pr-4">
                         <div className="flex items-center gap-3">
                           <div 
-                            className="relative group cursor-pointer flex-shrink-0 w-12 h-12 rounded-xl overflow-hidden border border-slate-800 bg-slate-950 shadow-sm"
+                            className="relative group cursor-pointer flex-shrink-0 w-12 h-12 rounded-xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 shadow-sm"
                             onClick={() => setPreviewImage({ url: p.imageUrl, articleCode: p.articleCode })}
                             title="ছবি দেখতে ক্লিক করুন"
                           >
@@ -1002,7 +1002,7 @@ export const StockManagement: React.FC<StockManagementProps> = ({
                             </div>
                           </div>
                           <div>
-                            <span className="font-mono font-bold text-amber-300 bg-amber-500/10 px-2.5 py-1 rounded-lg border border-amber-500/20 text-xs">
+                            <span className="font-mono font-bold text-amber-800 dark:text-amber-300 bg-amber-500/10 px-2.5 py-1 rounded-lg border border-amber-500/20 text-xs">
                               {p.articleCode}
                             </span>
                           </div>
@@ -1010,51 +1010,51 @@ export const StockManagement: React.FC<StockManagementProps> = ({
                       </td>
 
                       {/* Size */}
-                      <td className="py-3 px-3 text-slate-200 font-bold">
+                      <td className="py-3 px-3 text-slate-800 dark:text-slate-200 font-bold">
                         {cleanSize}
                       </td>
 
                       {/* Buy Price */}
-                      <td className="py-3 px-3 text-right font-bold text-rose-300">
-                        {showBuyPrice ? formatTaka(p.buyPrice) : <span className="text-slate-500 font-mono">•••• ৳</span>}
+                      <td className="py-3 px-3 text-right font-bold text-rose-600 dark:text-rose-300">
+                        {showBuyPrice ? formatTaka(p.buyPrice) : <span className="text-slate-400 dark:text-slate-500 font-mono">•••• ৳</span>}
                       </td>
 
                       {/* Sell Price */}
-                      <td className="py-3 px-3 text-right font-bold text-emerald-400">
+                      <td className="py-3 px-3 text-right font-bold text-emerald-700 dark:text-emerald-400">
                         {formatTaka(p.sellPrice || p.buyPrice)}
                       </td>
 
                       {/* Stock Quantity */}
                       <td className="py-3 px-3 text-center">
-                        <div className={`font-bold text-sm ${isLowStock ? 'text-rose-400' : 'text-slate-100'}`}>
+                        <div className={`font-bold text-sm ${isLowStock ? 'text-rose-600 dark:text-rose-400' : 'text-slate-900 dark:text-slate-100'}`}>
                           {toBnDigit(p.stockPairs)} জোড়া
                         </div>
-                        <div className="text-[10px] text-slate-400">
+                        <div className="text-[10px] text-slate-500 dark:text-slate-400">
                           ({pairsToCartonText(p.stockPairs, p.pairsPerCarton)})
                         </div>
                         {isLowStock && (
-                          <span className="inline-flex items-center gap-0.5 text-[9px] text-rose-300 bg-rose-500/20 px-1.5 py-0.2 rounded-full border border-rose-500/30 mt-0.5 font-bold">
-                            <AlertTriangle className="w-3 h-3 text-rose-400" /> কম স্টক
+                          <span className="inline-flex items-center gap-0.5 text-[9px] text-rose-700 dark:text-rose-300 bg-rose-100 dark:bg-rose-500/20 px-1.5 py-0.2 rounded-full border border-rose-300 dark:border-rose-500/30 mt-0.5 font-bold">
+                            <AlertTriangle className="w-3 h-3 text-rose-600 dark:text-rose-400" /> কম স্টক
                           </span>
                         )}
                       </td>
 
                       {/* Booked Quantity */}
                       <td className="py-3 px-3 text-center">
-                        <div className="font-bold text-sm text-amber-300">
+                        <div className="font-bold text-sm text-amber-700 dark:text-amber-300">
                           {toBnDigit(bookedPairs)} জোড়া
                         </div>
-                        <div className="text-[10px] text-slate-400">
+                        <div className="text-[10px] text-slate-500 dark:text-slate-400">
                           ({pairsToCartonText(bookedPairs, p.pairsPerCarton)})
                         </div>
                       </td>
 
                       {/* Net Available Free Stock */}
                       <td className="py-3 px-3 text-center">
-                        <div className="font-bold text-sm text-emerald-400">
+                        <div className="font-bold text-sm text-emerald-700 dark:text-emerald-400">
                           {toBnDigit(Math.max(0, p.stockPairs - bookedPairs))} জোড়া
                         </div>
-                        <div className="text-[10px] text-slate-400">
+                        <div className="text-[10px] text-slate-500 dark:text-slate-400">
                           ({pairsToCartonText(Math.max(0, p.stockPairs - bookedPairs), p.pairsPerCarton)})
                         </div>
                       </td>
@@ -1068,7 +1068,7 @@ export const StockManagement: React.FC<StockManagementProps> = ({
                                 setRestockProductId(p.id);
                                 setAddedPairsInput(p.pairsPerCarton);
                               }}
-                              className="px-2.5 py-1.5 bg-emerald-600/30 hover:bg-emerald-600 text-emerald-200 border border-emerald-500/40 rounded-xl text-xs font-semibold transition-colors flex items-center gap-1 cursor-pointer"
+                              className="px-2.5 py-1.5 bg-emerald-50 dark:bg-emerald-600/30 hover:bg-emerald-100 dark:hover:bg-emerald-600 text-emerald-800 dark:text-emerald-200 border border-emerald-300 dark:border-emerald-500/40 rounded-xl text-xs font-semibold transition-colors flex items-center gap-1 cursor-pointer"
                             >
                               <RefreshCw className="w-3.5 h-3.5" />
                               রি-স্টক
@@ -1081,7 +1081,7 @@ export const StockManagement: React.FC<StockManagementProps> = ({
                                 e.stopPropagation();
                                 setActiveMenuProductId(isMenuOpen ? null : p.id);
                               }}
-                              className="p-1.5 text-slate-400 hover:text-white bg-slate-950 hover:bg-slate-800 rounded-xl border border-slate-700/80 transition-colors cursor-pointer"
+                              className="p-1.5 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-slate-950 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700/80 transition-colors cursor-pointer"
                               title="অপশনসমূহ"
                             >
                               <MoreVertical className="w-4 h-4" />
@@ -1090,15 +1090,15 @@ export const StockManagement: React.FC<StockManagementProps> = ({
                             {/* Dropdown Menu */}
                             {isMenuOpen && (
                               <div 
-                                className="absolute right-0 top-9 w-32 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl py-1 z-30 divide-y divide-slate-800 animate-in fade-in zoom-in-95 duration-100"
+                                className="absolute right-0 top-9 w-32 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-2xl py-1 z-30 divide-y divide-slate-100 dark:divide-slate-800 animate-in fade-in zoom-in-95 duration-100"
                                 onClick={(e) => e.stopPropagation()}
                               >
                                 <button
                                   type="button"
                                   onClick={() => handleStartEdit(p)}
-                                  className="w-full text-left px-3 py-2 text-xs font-medium text-slate-200 hover:bg-slate-800 flex items-center gap-2 transition-colors cursor-pointer"
+                                  className="w-full text-left px-3 py-2 text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-2 transition-colors cursor-pointer"
                                 >
-                                  <Edit2 className="w-3.5 h-3.5 text-amber-400" />
+                                  <Edit2 className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
                                   এডিট করুন
                                 </button>
                                 <button
@@ -1107,9 +1107,9 @@ export const StockManagement: React.FC<StockManagementProps> = ({
                                     setDeletingProduct(p);
                                     setActiveMenuProductId(null);
                                   }}
-                                  className="w-full text-left px-3 py-2 text-xs font-medium text-rose-400 hover:bg-rose-950/40 flex items-center gap-2 transition-colors cursor-pointer"
+                                  className="w-full text-left px-3 py-2 text-xs font-medium text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 flex items-center gap-2 transition-colors cursor-pointer"
                                 >
-                                  <Trash2 className="w-3.5 h-3.5 text-rose-400" />
+                                  <Trash2 className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400" />
                                   ডিলেট করুন
                                 </button>
                               </div>
@@ -1131,12 +1131,12 @@ export const StockManagement: React.FC<StockManagementProps> = ({
 
       {/* Pagination & Summary Bar */}
       {filteredProducts.length > 0 && (
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-slate-900/80 border border-slate-800/90 px-3.5 py-2.5 rounded-2xl shadow-sm">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800/90 px-3.5 py-2.5 rounded-2xl shadow-sm">
           {/* Left: Summary */}
-          <div className="flex items-center gap-2 text-xs text-slate-400">
-            <span>মোট: <strong className="text-slate-200 font-mono font-bold">{toBnDigit(filteredProducts.length)}</strong> টি</span>
+          <div className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-400">
+            <span>মোট: <strong className="text-slate-900 dark:text-slate-200 font-mono font-bold">{toBnDigit(filteredProducts.length)}</strong> টি</span>
             {itemsPerPage !== 'all' && filteredProducts.length > itemsPerPage && (
-              <span className="text-slate-500 font-mono text-[11px]">
+              <span className="text-slate-400 dark:text-slate-500 font-mono text-[11px]">
                 ({toBnDigit(startIndex + 1)} - {toBnDigit(Math.min(endIndex, filteredProducts.length))})
               </span>
             )}
@@ -1145,7 +1145,7 @@ export const StockManagement: React.FC<StockManagementProps> = ({
           {/* Right: Per page switcher & Page navigation */}
           <div className="flex items-center gap-2.5 flex-wrap justify-center sm:justify-end">
             {/* Items Per Page Selector */}
-            <div className="flex items-center gap-1 bg-slate-950 p-1 rounded-xl border border-slate-800 text-xs shadow-inner">
+            <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-950 p-1 rounded-xl border border-slate-200 dark:border-slate-800 text-xs shadow-inner">
               <span className="text-[10px] text-slate-500 px-1 font-medium hidden xs:inline">প্রতি পেজে:</span>
               {([50, 100, 200, 'all'] as const).map((opt) => (
                 <button
@@ -1158,7 +1158,7 @@ export const StockManagement: React.FC<StockManagementProps> = ({
                   className={`px-2 py-0.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
                     itemsPerPage === opt
                       ? 'bg-amber-500 text-slate-950 font-bold shadow-sm'
-                      : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-900'
                   }`}
                 >
                   {opt === 'all' ? 'সব' : toBnDigit(opt)}
@@ -1168,18 +1168,18 @@ export const StockManagement: React.FC<StockManagementProps> = ({
 
             {/* Page navigation buttons */}
             {itemsPerPage !== 'all' && totalPages > 1 && (
-              <div className="flex items-center gap-1 bg-slate-950 p-1 rounded-xl border border-slate-800 shadow-inner">
+              <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-950 p-1 rounded-xl border border-slate-200 dark:border-slate-800 shadow-inner">
                 <button
                   type="button"
                   disabled={safeCurrentPage <= 1}
                   onClick={() => handlePageChange(Math.max(1, safeCurrentPage - 1))}
-                  className="p-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-slate-800 disabled:opacity-30 disabled:hover:bg-transparent disabled:cursor-not-allowed transition cursor-pointer"
+                  className="p-1.5 rounded-lg text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-800 disabled:opacity-30 disabled:hover:bg-transparent disabled:cursor-not-allowed transition cursor-pointer"
                   title="আগের পেজ"
                 >
                   <ChevronLeft className="w-3.5 h-3.5" />
                 </button>
 
-                <span className="text-xs font-mono font-bold text-amber-300 px-1.5">
+                <span className="text-xs font-mono font-bold text-amber-700 dark:text-amber-300 px-1.5">
                   {toBnDigit(safeCurrentPage)} / {toBnDigit(totalPages)}
                 </span>
 
@@ -1187,7 +1187,7 @@ export const StockManagement: React.FC<StockManagementProps> = ({
                   type="button"
                   disabled={safeCurrentPage >= totalPages}
                   onClick={() => handlePageChange(Math.min(totalPages, safeCurrentPage + 1))}
-                  className="p-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-slate-800 disabled:opacity-30 disabled:hover:bg-transparent disabled:cursor-not-allowed transition cursor-pointer"
+                  className="p-1.5 rounded-lg text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-800 disabled:opacity-30 disabled:hover:bg-transparent disabled:cursor-not-allowed transition cursor-pointer"
                   title="পরের পেজ"
                 >
                   <ChevronRight className="w-3.5 h-3.5" />
@@ -1200,38 +1200,38 @@ export const StockManagement: React.FC<StockManagementProps> = ({
 
       {/* Add New Product Modal */}
       {showAddModal && (
-        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-slate-900 border border-slate-700 rounded-2xl max-w-md w-full p-5 space-y-4 shadow-2xl">
-            <h3 className="text-base font-bold text-white border-b border-slate-800 pb-2">
+        <div className="fixed inset-0 z-50 bg-slate-950/60 dark:bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl max-w-md w-full p-5 space-y-4 shadow-2xl">
+            <h3 className="text-base font-bold text-slate-900 dark:text-white border-b border-slate-100 dark:border-slate-800 pb-2">
               নতুন জুতার স্টক যোগ করুন
             </h3>
 
             <form onSubmit={handleCreateProduct} className="space-y-3 text-xs">
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-slate-300 font-semibold mb-1">আর্টিকল কোড *</label>
+                  <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">আর্টিকল কোড *</label>
                   <input
                     type="text"
                     required
                     value={articleCode}
                     onChange={(e) => setArticleCode(e.target.value)}
                     placeholder="যেমন: M-105"
-                    className="w-full bg-slate-950 border border-slate-700 text-amber-300 font-mono font-bold rounded-xl px-3 py-2 focus:outline-none"
+                    className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 text-amber-700 dark:text-amber-300 font-mono font-bold rounded-xl px-3 py-2 focus:outline-none focus:border-amber-500"
                   />
                 </div>
                 <div>
-                  <label className="block text-slate-300 font-semibold mb-1">ক্যাটাগরি</label>
+                  <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">ক্যাটাগরি</label>
                   <div className="relative">
                     <button
                       type="button"
                       onClick={() => setShowAddCatDropdown(!showAddCatDropdown)}
-                      className="w-full bg-slate-950 border border-slate-700 text-slate-100 rounded-xl px-3 py-2 flex items-center justify-between text-left focus:outline-none focus:border-amber-500 cursor-pointer text-xs"
+                      className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 rounded-xl px-3 py-2 flex items-center justify-between text-left focus:outline-none focus:border-amber-500 cursor-pointer text-xs"
                     >
                       <span className="truncate">{category || 'ক্যাটাগরি নির্বাচন'}</span>
-                      <ChevronDown className={`w-3.5 h-3.5 text-slate-400 shrink-0 transition-transform duration-200 ${showAddCatDropdown ? 'rotate-180 text-amber-400' : ''}`} />
+                      <ChevronDown className={`w-3.5 h-3.5 text-slate-400 shrink-0 transition-transform duration-200 ${showAddCatDropdown ? 'rotate-180 text-amber-500' : ''}`} />
                     </button>
                     {showAddCatDropdown && (
-                      <div className="absolute left-0 right-0 top-full mt-1 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl py-1 z-50 max-h-48 overflow-y-auto">
+                      <div className="absolute left-0 right-0 top-full mt-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-2xl py-1 z-50 max-h-48 overflow-y-auto">
                         {categoriesList.map((cat, idx) => {
                           const isSelected = category === cat;
                           return (
@@ -1243,11 +1243,11 @@ export const StockManagement: React.FC<StockManagementProps> = ({
                                 setShowAddCatDropdown(false);
                               }}
                               className={`w-full px-3 py-2 text-left text-xs flex items-center justify-between cursor-pointer transition-colors ${
-                                isSelected ? 'bg-amber-500/20 text-amber-300 font-bold' : 'text-slate-200 hover:bg-slate-800'
+                                isSelected ? 'bg-amber-50 dark:bg-amber-500/20 text-amber-800 dark:text-amber-300 font-bold' : 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800'
                               }`}
                             >
                               <span className="truncate">{cat}</span>
-                              {isSelected && <Check className="w-3.5 h-3.5 text-amber-400 shrink-0" />}
+                              {isSelected && <Check className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0" />}
                             </button>
                           );
                         })}
@@ -1259,60 +1259,60 @@ export const StockManagement: React.FC<StockManagementProps> = ({
 
               <div className="grid grid-cols-3 gap-3">
                 <div>
-                  <label className="block text-slate-300 font-semibold mb-1">সাইজ</label>
+                  <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">সাইজ</label>
                   <input
                     type="text"
                     value={sizeRange}
                     onChange={(e) => setSizeRange(e.target.value)}
                     placeholder="যেমন: ৩৯-৪৪"
-                    className="w-full bg-slate-950 border border-slate-700 text-slate-100 rounded-xl px-3 py-2 focus:outline-none"
+                    className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-xl px-3 py-2 focus:outline-none focus:border-amber-500"
                   />
                 </div>
                 <div>
-                  <label className="block text-rose-300 font-semibold mb-1">ক্রয় মূল্য (৳)</label>
+                  <label className="block text-rose-600 dark:text-rose-300 font-semibold mb-1">ক্রয় মূল্য (৳)</label>
                   <input
                     type="number"
                     min="0"
                     value={buyPrice}
                     onChange={(e) => setBuyPrice(e.target.value === '' ? '' : parseFloat(e.target.value))}
                     placeholder="০"
-                    className="w-full bg-slate-950 border border-slate-700 text-rose-300 font-bold rounded-xl px-3 py-2 focus:outline-none"
+                    className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 text-rose-600 dark:text-rose-300 font-bold rounded-xl px-3 py-2 focus:outline-none focus:border-rose-500"
                   />
                 </div>
                 <div>
-                  <label className="block text-emerald-400 font-semibold mb-1">বিক্রয় মূল্য (৳)</label>
+                  <label className="block text-emerald-700 dark:text-emerald-400 font-semibold mb-1">বিক্রয় মূল্য (৳)</label>
                   <input
                     type="number"
                     min="0"
                     value={sellPrice}
                     onChange={(e) => setSellPrice(e.target.value === '' ? '' : parseFloat(e.target.value))}
                     placeholder="০"
-                    className="w-full bg-slate-950 border border-slate-700 text-emerald-400 font-bold rounded-xl px-3 py-2 focus:outline-none"
+                    className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 text-emerald-700 dark:text-emerald-400 font-bold rounded-xl px-3 py-2 focus:outline-none focus:border-emerald-500"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-amber-300 font-semibold mb-1">প্রাথমিক মজুদ (জোড়া)</label>
+                <label className="block text-amber-800 dark:text-amber-300 font-semibold mb-1">প্রাথমিক মজুদ (জোড়া)</label>
                 <input
                   type="number"
                   value={initialStockPairs}
                   onChange={(e) => setInitialStockPairs(e.target.value === '' ? '' : parseInt(e.target.value))}
                   placeholder="০"
-                  className="w-full bg-slate-950 border border-slate-700 text-amber-300 font-bold rounded-xl px-3 py-2 focus:outline-none"
+                  className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 text-amber-800 dark:text-amber-300 font-bold rounded-xl px-3 py-2 focus:outline-none focus:border-amber-500"
                 />
               </div>
 
               {/* Image Upload Section */}
-              <div className="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-2.5">
+              <div className="bg-slate-50 dark:bg-slate-950 p-3 rounded-xl border border-slate-200 dark:border-slate-800 space-y-2.5">
                 <div className="flex items-center justify-between">
-                  <label className="text-sky-300 font-semibold flex items-center gap-1.5 text-xs">
+                  <label className="text-sky-700 dark:text-sky-300 font-semibold flex items-center gap-1.5 text-xs">
                     <ImageIcon className="w-4 h-4" />
                     পণ্যের ছবি সংযুক্তকরণ
                   </label>
                   {imageUrl && (
-                    <span className="text-[11px] text-emerald-400 font-semibold flex items-center gap-1">
-                      <span className="w-2 h-2 rounded-full bg-emerald-400"></span> ছবি যুক্ত হয়েছে
+                    <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1">
+                      <span className="w-2 h-2 rounded-full bg-emerald-500"></span> ছবি যুক্ত হয়েছে
                     </span>
                   )}
                 </div>
@@ -1333,7 +1333,7 @@ export const StockManagement: React.FC<StockManagementProps> = ({
                     <button
                       type="button"
                       onClick={() => setImageUrl('')}
-                      className="px-2.5 py-2 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 rounded-xl text-xs font-semibold transition cursor-pointer flex items-center gap-1"
+                      className="px-2.5 py-2 bg-rose-50 dark:bg-rose-500/10 hover:bg-rose-100 dark:hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-500/30 rounded-xl text-xs font-semibold transition cursor-pointer flex items-center gap-1"
                       title="ছবি মুছে ফেলুন"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
@@ -1343,10 +1343,10 @@ export const StockManagement: React.FC<StockManagementProps> = ({
                 </div>
 
                 {imageUrl && (
-                  <div className="mt-2 flex items-center gap-3 p-2 bg-slate-900/90 rounded-xl border border-slate-800">
+                  <div className="mt-2 flex items-center gap-3 p-2 bg-white dark:bg-slate-900/90 rounded-xl border border-slate-200 dark:border-slate-800">
                     <div 
                       onClick={() => setPreviewImage({ url: imageUrl, articleCode: articleCode || 'নতুন প্রোডাক্ট' })}
-                      className="relative w-14 h-14 rounded-lg overflow-hidden border border-slate-700 cursor-pointer group shrink-0 bg-slate-950"
+                      className="relative w-14 h-14 rounded-lg overflow-hidden border border-slate-200 dark:border-slate-700 cursor-pointer group shrink-0 bg-slate-100 dark:bg-slate-950"
                       title="বড় করে দেখতে ক্লিক করুন"
                     >
                       <img 
@@ -1359,18 +1359,18 @@ export const StockManagement: React.FC<StockManagementProps> = ({
                       </div>
                     </div>
                     <div className="text-xs space-y-0.5 min-w-0">
-                      <p className="text-slate-200 font-bold truncate">ছবি প্রিভিউ</p>
-                      <p className="text-[11px] text-slate-400">ক্লিক করে বড় সাইজে দেখতে পারবেন</p>
+                      <p className="text-slate-800 dark:text-slate-200 font-bold truncate">ছবি প্রিভিউ</p>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400">ক্লিক করে বড় সাইজে দেখতে পারবেন</p>
                     </div>
                   </div>
                 )}
               </div>
 
-              <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-800">
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
                 <button
                   type="button"
                   onClick={() => setShowAddModal(false)}
-                  className="px-4 py-2 bg-slate-800 text-slate-300 rounded-xl font-medium cursor-pointer"
+                  className="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-xl font-medium cursor-pointer"
                 >
                   বাতিল
                 </button>
@@ -1389,38 +1389,38 @@ export const StockManagement: React.FC<StockManagementProps> = ({
 
       {/* Edit Product Modal */}
       {editingProduct && (
-        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-slate-900 border border-slate-700 rounded-2xl max-w-md w-full p-5 space-y-4 shadow-2xl">
-            <h3 className="text-base font-bold text-white border-b border-slate-800 pb-2 flex items-center gap-2">
-              <Edit2 className="w-4 h-4 text-amber-400" />
+        <div className="fixed inset-0 z-50 bg-slate-950/60 dark:bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl max-w-md w-full p-5 space-y-4 shadow-2xl">
+            <h3 className="text-base font-bold text-slate-900 dark:text-white border-b border-slate-100 dark:border-slate-800 pb-2 flex items-center gap-2">
+              <Edit2 className="w-4 h-4 text-amber-500 dark:text-amber-400" />
               স্টক এডিট করুন ({editingProduct.articleCode})
             </h3>
 
             <form onSubmit={handleSaveEdit} className="space-y-3 text-xs">
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-slate-300 font-semibold mb-1">আর্টিকল কোড *</label>
+                  <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">আর্টিকল কোড *</label>
                   <input
                     type="text"
                     required
                     value={editArticleCode}
                     onChange={(e) => setEditArticleCode(e.target.value)}
-                    className="w-full bg-slate-950 border border-slate-700 text-amber-300 font-mono font-bold rounded-xl px-3 py-2 focus:outline-none"
+                    className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 text-amber-700 dark:text-amber-300 font-mono font-bold rounded-xl px-3 py-2 focus:outline-none focus:border-amber-500"
                   />
                 </div>
                 <div>
-                  <label className="block text-slate-300 font-semibold mb-1">ক্যাটাগরি</label>
+                  <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">ক্যাটাগরি</label>
                   <div className="relative">
                     <button
                       type="button"
                       onClick={() => setShowEditCatDropdown(!showEditCatDropdown)}
-                      className="w-full bg-slate-950 border border-slate-700 text-slate-100 rounded-xl px-3 py-2 flex items-center justify-between text-left focus:outline-none focus:border-amber-500 cursor-pointer text-xs"
+                      className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 rounded-xl px-3 py-2 flex items-center justify-between text-left focus:outline-none focus:border-amber-500 cursor-pointer text-xs"
                     >
                       <span className="truncate">{editCategory || 'ক্যাটাগরি নির্বাচন'}</span>
-                      <ChevronDown className={`w-3.5 h-3.5 text-slate-400 shrink-0 transition-transform duration-200 ${showEditCatDropdown ? 'rotate-180 text-amber-400' : ''}`} />
+                      <ChevronDown className={`w-3.5 h-3.5 text-slate-400 shrink-0 transition-transform duration-200 ${showEditCatDropdown ? 'rotate-180 text-amber-500' : ''}`} />
                     </button>
                     {showEditCatDropdown && (
-                      <div className="absolute left-0 right-0 top-full mt-1 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl py-1 z-50 max-h-48 overflow-y-auto">
+                      <div className="absolute left-0 right-0 top-full mt-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-2xl py-1 z-50 max-h-48 overflow-y-auto">
                         {categoriesList.map((cat, idx) => {
                           const isSelected = editCategory === cat;
                           return (
@@ -1432,11 +1432,11 @@ export const StockManagement: React.FC<StockManagementProps> = ({
                                 setShowEditCatDropdown(false);
                               }}
                               className={`w-full px-3 py-2 text-left text-xs flex items-center justify-between cursor-pointer transition-colors ${
-                                isSelected ? 'bg-amber-500/20 text-amber-300 font-bold' : 'text-slate-200 hover:bg-slate-800'
+                                isSelected ? 'bg-amber-50 dark:bg-amber-500/20 text-amber-800 dark:text-amber-300 font-bold' : 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800'
                               }`}
                             >
                               <span className="truncate">{cat}</span>
-                              {isSelected && <Check className="w-3.5 h-3.5 text-amber-400 shrink-0" />}
+                              {isSelected && <Check className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0" />}
                             </button>
                           );
                         })}
@@ -1448,59 +1448,59 @@ export const StockManagement: React.FC<StockManagementProps> = ({
 
               <div className="grid grid-cols-3 gap-3">
                 <div>
-                  <label className="block text-slate-300 font-semibold mb-1">সাইজ</label>
+                  <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">সাইজ</label>
                   <input
                     type="text"
                     value={editSizeRange}
                     onChange={(e) => setEditSizeRange(e.target.value)}
-                    className="w-full bg-slate-950 border border-slate-700 text-slate-100 rounded-xl px-3 py-2 focus:outline-none"
+                    className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-xl px-3 py-2 focus:outline-none focus:border-amber-500"
                   />
                 </div>
                 <div>
-                  <label className="block text-rose-300 font-semibold mb-1">ক্রয় মূল্য (৳)</label>
+                  <label className="block text-rose-600 dark:text-rose-300 font-semibold mb-1">ক্রয় মূল্য (৳)</label>
                   <input
                     type="number"
                     min="0"
                     value={editBuyPrice}
                     onChange={(e) => setEditBuyPrice(e.target.value === '' ? '' : parseFloat(e.target.value))}
                     placeholder="০"
-                    className="w-full bg-slate-950 border border-slate-700 text-rose-300 font-bold rounded-xl px-3 py-2 focus:outline-none"
+                    className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 text-rose-600 dark:text-rose-300 font-bold rounded-xl px-3 py-2 focus:outline-none focus:border-rose-500"
                   />
                 </div>
                 <div>
-                  <label className="block text-emerald-400 font-semibold mb-1">বিক্রয় মূল্য (৳)</label>
+                  <label className="block text-emerald-700 dark:text-emerald-400 font-semibold mb-1">বিক্রয় মূল্য (৳)</label>
                   <input
                     type="number"
                     min="0"
                     value={editSellPrice}
                     onChange={(e) => setEditSellPrice(e.target.value === '' ? '' : parseFloat(e.target.value))}
                     placeholder="০"
-                    className="w-full bg-slate-950 border border-slate-700 text-emerald-400 font-bold rounded-xl px-3 py-2 focus:outline-none"
+                    className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 text-emerald-700 dark:text-emerald-400 font-bold rounded-xl px-3 py-2 focus:outline-none focus:border-emerald-500"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-amber-300 font-semibold mb-1">বর্তমান মজুদ (জোড়া)</label>
+                <label className="block text-amber-800 dark:text-amber-300 font-semibold mb-1">বর্তমান মজুদ (জোড়া)</label>
                 <input
                   type="number"
                   value={editStockPairs}
                   onChange={(e) => setEditStockPairs(e.target.value === '' ? '' : parseInt(e.target.value))}
                   placeholder="০"
-                  className="w-full bg-slate-950 border border-slate-700 text-amber-300 font-bold rounded-xl px-3 py-2 focus:outline-none"
+                  className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 text-amber-800 dark:text-amber-300 font-bold rounded-xl px-3 py-2 focus:outline-none focus:border-amber-500"
                 />
               </div>
 
               {/* Edit Image Upload Section */}
-              <div className="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-2.5">
+              <div className="bg-slate-50 dark:bg-slate-950 p-3 rounded-xl border border-slate-200 dark:border-slate-800 space-y-2.5">
                 <div className="flex items-center justify-between">
-                  <label className="text-sky-300 font-semibold flex items-center gap-1.5 text-xs">
+                  <label className="text-sky-700 dark:text-sky-300 font-semibold flex items-center gap-1.5 text-xs">
                     <ImageIcon className="w-4 h-4" />
                     পণ্যের ছবি পরিবর্তন
                   </label>
                   {editImageUrl && (
-                    <span className="text-[11px] text-emerald-400 font-semibold flex items-center gap-1">
-                      <span className="w-2 h-2 rounded-full bg-emerald-400"></span> ছবি রয়েছে
+                    <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1">
+                      <span className="w-2 h-2 rounded-full bg-emerald-500"></span> ছবি রয়েছে
                     </span>
                   )}
                 </div>
@@ -1521,7 +1521,7 @@ export const StockManagement: React.FC<StockManagementProps> = ({
                     <button
                       type="button"
                       onClick={() => setEditImageUrl('')}
-                      className="px-2.5 py-2 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 rounded-xl text-xs font-semibold transition cursor-pointer flex items-center gap-1"
+                      className="px-2.5 py-2 bg-rose-50 dark:bg-rose-500/10 hover:bg-rose-100 dark:hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-500/30 rounded-xl text-xs font-semibold transition cursor-pointer flex items-center gap-1"
                       title="ছবি মুছে ফেলুন"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
@@ -1531,10 +1531,10 @@ export const StockManagement: React.FC<StockManagementProps> = ({
                 </div>
 
                 {editImageUrl && (
-                  <div className="mt-2 flex items-center gap-3 p-2 bg-slate-900/90 rounded-xl border border-slate-800">
+                  <div className="mt-2 flex items-center gap-3 p-2 bg-white dark:bg-slate-900/90 rounded-xl border border-slate-200 dark:border-slate-800">
                     <div 
                       onClick={() => setPreviewImage({ url: editImageUrl, articleCode: editArticleCode })}
-                      className="relative w-14 h-14 rounded-lg overflow-hidden border border-slate-700 cursor-pointer group shrink-0 bg-slate-950"
+                      className="relative w-14 h-14 rounded-lg overflow-hidden border border-slate-200 dark:border-slate-700 cursor-pointer group shrink-0 bg-slate-100 dark:bg-slate-950"
                       title="বড় করে দেখতে ক্লিক করুন"
                     >
                       <img 
@@ -1547,18 +1547,18 @@ export const StockManagement: React.FC<StockManagementProps> = ({
                       </div>
                     </div>
                     <div className="text-xs space-y-0.5 min-w-0">
-                      <p className="text-slate-200 font-bold truncate">ছবি প্রিভিউ</p>
-                      <p className="text-[11px] text-slate-400">ক্লিক করে বড় সাইজে দেখতে পারবেন</p>
+                      <p className="text-slate-800 dark:text-slate-200 font-bold truncate">ছবি প্রিভিউ</p>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400">ক্লিক করে বড় সাইজে দেখতে পারবেন</p>
                     </div>
                   </div>
                 )}
               </div>
 
-              <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-800">
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
                 <button
                   type="button"
                   onClick={() => setEditingProduct(null)}
-                  className="px-4 py-2 bg-slate-800 text-slate-300 rounded-xl font-medium cursor-pointer"
+                  className="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-xl font-medium cursor-pointer"
                 >
                   বাতিল
                 </button>
@@ -1577,26 +1577,26 @@ export const StockManagement: React.FC<StockManagementProps> = ({
 
       {/* Delete Confirmation Modal */}
       {deletingProduct && (
-        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-slate-900 border border-slate-700 rounded-2xl max-w-sm w-full p-5 space-y-4 shadow-2xl">
-            <h3 className="text-base font-bold text-rose-400 flex items-center gap-2">
+        <div className="fixed inset-0 z-50 bg-slate-950/60 dark:bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl max-w-sm w-full p-5 space-y-4 shadow-2xl">
+            <h3 className="text-base font-bold text-rose-600 dark:text-rose-400 flex items-center gap-2">
               <Trash2 className="w-5 h-5" />
               পণ্য ট্র্যাশে পাঠানো
             </h3>
 
             <div className="space-y-3 text-xs">
-              <p className="text-slate-300 leading-relaxed">
-                আপনি কি নিশ্চিত যে আর্টিকল <span className="font-bold text-amber-300 font-mono px-1.5 py-0.5 bg-amber-500/10 rounded border border-amber-500/20">{deletingProduct.articleCode}</span> ({deletingProduct.name}) ট্র্যাশে পাঠাতে চান?
+              <p className="text-slate-700 dark:text-slate-300 leading-relaxed">
+                আপনি কি নিশ্চিত যে আর্টিকল <span className="font-bold text-amber-800 dark:text-amber-300 font-mono px-1.5 py-0.5 bg-amber-500/10 rounded border border-amber-500/20">{deletingProduct.articleCode}</span> ({deletingProduct.name}) ট্র্যাশে পাঠাতে চান?
               </p>
-              <p className="text-[11px] text-emerald-400/90 bg-emerald-500/10 border border-emerald-500/20 p-2 rounded-xl">
+              <p className="text-[11px] text-emerald-800 dark:text-emerald-400/90 bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 p-2 rounded-xl">
                 ✓ এটি সরাসরি নষ্ট হবে না। রিসাইকেল বিন (ট্র্যাশ) থেকে যেকোনো সময় পুনরায় সক্রিয় স্টকে রিস্টোর করতে পারবেন।
               </p>
 
-              <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-800">
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
                 <button
                   type="button"
                   onClick={() => setDeletingProduct(null)}
-                  className="px-4 py-2 bg-slate-800 text-slate-300 rounded-xl font-medium cursor-pointer"
+                  className="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-xl font-medium cursor-pointer"
                 >
                   বাতিল
                 </button>
@@ -1615,28 +1615,28 @@ export const StockManagement: React.FC<StockManagementProps> = ({
 
       {/* Restock & Adjustment Modal */}
       {restockProductId && (
-        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-slate-900 border border-slate-700 rounded-2xl max-w-sm w-full p-5 space-y-4 shadow-2xl">
-            <h3 className="text-base font-bold text-white flex items-center gap-2">
-              <RefreshCw className="w-4 h-4 text-emerald-400" />
+        <div className="fixed inset-0 z-50 bg-slate-950/60 dark:bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl max-w-sm w-full p-5 space-y-4 shadow-2xl">
+            <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+              <RefreshCw className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
               স্টক অ্যাডজাস্টমেন্ট (রিটার্ন / ড্যামেজ)
             </h3>
 
             <div className="space-y-3 text-xs">
-              <p className="text-slate-300">
-                আর্টিকল: <span className="font-bold text-amber-300 font-mono">{products.find((p) => p.id === restockProductId)?.articleCode}</span>
+              <p className="text-slate-700 dark:text-slate-300">
+                আর্টিকল: <span className="font-bold text-amber-800 dark:text-amber-300 font-mono">{products.find((p) => p.id === restockProductId)?.articleCode}</span>
               </p>
 
               <div>
-                <label className="block text-slate-300 font-medium mb-1">জুতার পরিমাণ (জোড়া)</label>
+                <label className="block text-slate-700 dark:text-slate-300 font-medium mb-1">জুতার পরিমাণ (জোড়া)</label>
                 <input
                   type="number"
                   value={addedPairsInput}
                   onChange={(e) => setAddedPairsInput(e.target.value === '' ? '' : parseInt(e.target.value))}
                   placeholder="যেমন: ১২ (যোগ) বা -২ (বাদ)"
-                  className="w-full bg-slate-950 border border-slate-700 text-emerald-400 font-bold rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-emerald-500"
+                  className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 text-emerald-700 dark:text-emerald-400 font-bold rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-emerald-500"
                 />
-                <p className="text-[10px] text-slate-400 mt-1">
+                <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-1">
                   * নতুন স্টক বা রিটার্ন হলে সংখ্যা দিন (যেমন: ১২)<br/>
                   * ড্যামেজ বা বাদ দিতে মাইনাস দিন (যেমন: -২)
                 </p>
@@ -1645,7 +1645,7 @@ export const StockManagement: React.FC<StockManagementProps> = ({
               <div className="flex items-center justify-end gap-2 pt-2">
                 <button
                   onClick={() => setRestockProductId(null)}
-                  className="px-4 py-2 bg-slate-800 text-slate-300 rounded-xl font-medium cursor-pointer transition-colors hover:bg-slate-700"
+                  className="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-xl font-medium cursor-pointer transition-colors hover:bg-slate-200 dark:hover:bg-slate-700"
                 >
                   বাতিল
                 </button>
@@ -1664,31 +1664,31 @@ export const StockManagement: React.FC<StockManagementProps> = ({
       {/* Image Preview Lightbox Modal */}
       {previewImage && (
         <div 
-          className="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200"
+          className="fixed inset-0 z-50 bg-slate-950/70 dark:bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200"
           onClick={() => setPreviewImage(null)}
         >
           <div 
-            className="relative bg-slate-900 border border-slate-700 rounded-2xl max-w-2xl w-full p-4 space-y-3 shadow-2xl overflow-hidden"
+            className="relative bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl max-w-2xl w-full p-4 space-y-3 shadow-2xl overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
               <div className="flex items-center gap-2">
                 {previewImage.articleCode && (
-                  <span className="font-mono font-bold text-amber-300 bg-amber-500/10 px-2.5 py-1 rounded-lg border border-amber-500/20 text-xs">
+                  <span className="font-mono font-bold text-amber-800 dark:text-amber-300 bg-amber-500/10 px-2.5 py-1 rounded-lg border border-amber-500/20 text-xs">
                     {previewImage.articleCode}
                   </span>
                 )}
               </div>
               <button
                 onClick={() => setPreviewImage(null)}
-                className="text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 rounded-full w-8 h-8 flex items-center justify-center font-bold text-sm transition-colors cursor-pointer"
+                className="text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-full w-8 h-8 flex items-center justify-center font-bold text-sm transition-colors cursor-pointer"
                 title="বন্ধ করুন"
               >
                 X
               </button>
             </div>
 
-            <div className="flex items-center justify-center bg-slate-950 rounded-xl overflow-hidden min-h-[250px] max-h-[70vh] border border-slate-800 p-2">
+            <div className="flex items-center justify-center bg-slate-100 dark:bg-slate-950 rounded-xl overflow-hidden min-h-[250px] max-h-[70vh] border border-slate-200 dark:border-slate-800 p-2">
               <ProductImageDisplay
                 src={previewImage.url}
                 alt={previewImage.articleCode || 'পণ্যের ছবি'}
@@ -1698,13 +1698,13 @@ export const StockManagement: React.FC<StockManagementProps> = ({
               />
             </div>
 
-            <div className="flex items-center justify-between text-xs text-slate-400 pt-1">
+            <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 pt-1">
               <span>বন্ধ করতে স্ক্রিনের যেকোনো জায়গায় ক্লিক করুন</span>
               <a 
                 href={previewImage.url} 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className="text-sky-400 hover:text-sky-300 hover:underline flex items-center gap-1 font-medium"
+                className="text-sky-600 dark:text-sky-400 hover:text-sky-700 dark:hover:text-sky-300 hover:underline flex items-center gap-1 font-medium"
               >
                 মূল ছবি নতুন ট্যাবে খুলুন ↗
               </a>

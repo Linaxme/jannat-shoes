@@ -1193,7 +1193,7 @@ export default function App() {
   };
 
   return (
-      <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-slate-950 text-slate-100 font-sans antialiased pb-12 selection:bg-amber-500 selection:text-slate-950">
+      <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-slate-100 dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans antialiased pb-12 selection:bg-amber-500 selection:text-slate-950 transition-colors duration-200">
         
         {/* Login Screen Modal Overlay if requested or not logged in */}
         {(!currentUser && isLoginModalOpen) && (
@@ -1212,10 +1212,10 @@ export default function App() {
 
       {/* Toast Notification */}
       {toast && (
-        <div className="fixed bottom-5 right-5 z-50 bg-slate-900 border border-amber-400/80 text-white px-4 py-3 rounded-xl shadow-xl flex items-center gap-3 text-xs sm:text-sm font-semibold animate-bounce">
-          <CheckCircle2 className="w-5 h-5 text-emerald-400" />
+        <div className="fixed bottom-5 right-5 z-50 bg-white dark:bg-slate-900 border border-amber-500 text-slate-900 dark:text-white px-4 py-3 rounded-xl shadow-2xl flex items-center gap-3 text-xs sm:text-sm font-semibold animate-bounce">
+          <CheckCircle2 className="w-5 h-5 text-emerald-500" />
           <span>{toast}</span>
-          <button onClick={() => setToast(null)} className="ml-2 text-slate-400 hover:text-white">
+          <button onClick={() => setToast(null)} className="ml-2 text-slate-400 hover:text-slate-700 dark:hover:text-white cursor-pointer">
             <X className="w-4 h-4" />
           </button>
         </div>
