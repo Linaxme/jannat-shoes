@@ -14,10 +14,11 @@ import {
   Zap,
   PhoneCall,
   Copy,
-  X
+  X,
+  Trash2
 } from 'lucide-react';
 import { UITheme, UserAccount, SystemConfig } from '../types';
-import { saveDocumentToFirestore } from '../lib/firestoreService';
+import { saveDocumentToFirestore, deleteDocumentFromFirestore } from '../lib/firestoreService';
 import { collection, getDocs, db } from '../lib/firebase';
 
 interface SMSPanelProps {
@@ -88,7 +89,7 @@ export const SMSPanel: React.FC<SMSPanelProps> = ({
 
   // Custom modal and status states
   const [confirmState, setConfirmState] = useState<{
-    type: 'approve' | 'reject' | null;
+    type: 'approve' | 'reject' | 'delete' | null;
     req: TopUpRequest | null;
   }>({ type: null, req: null });
   const [formError, setFormError] = useState<string | null>(null);
@@ -241,6 +242,16 @@ export const SMSPanel: React.FC<SMSPanelProps> = ({
     setConfirmState({ type: 'reject', req });
   };
 
+  const triggerDelete = (req: TopUpRequest) => {
+    setActionError(null);
+    setActionSuccess(null);
+    if (currentUser?.role !== 'super_admin') {
+      setActionError('মুছে ফেলার অনুমতি শুধুমাত্র সুপার এডমিনের রয়েছে!');
+      return;
+    }
+    setConfirmState({ type: 'delete', req });
+  };
+
   const handleApproveConfirm = async () => {
     const req = confirmState.req;
     if (!req) return;
@@ -280,6 +291,21 @@ export const SMSPanel: React.FC<SMSPanelProps> = ({
     } catch (err) {
       console.error(err);
       setActionError('বাতিল করতে সমস্যা হয়েছে।');
+    }
+  };
+
+  const handleDeleteConfirm = async () => {
+    const req = confirmState.req;
+    if (!req) return;
+
+    try {
+      await deleteDocumentFromFirestore('smsTopupRequests', req.id);
+      setActionSuccess(`রিকোয়েস্ট ${req.id} সফলভাবে মুছে ফেলা হয়েছে।`);
+      setConfirmState({ type: null, req: null });
+      await fetchTopupRequests();
+    } catch (err) {
+      console.error(err);
+      setActionError('মুছে ফেলতে সমস্যা হয়েছে।');
     }
   };
 
@@ -791,26 +817,33 @@ export const SMSPanel: React.FC<SMSPanelProps> = ({
                     </td>
                     {currentUser?.role === 'super_admin' && (
                       <td className="py-2 px-2 text-right">
-                        {req.status === 'pending' ? (
-                          <div className="flex justify-end gap-1">
-                            <button
-                              onClick={() => triggerApprove(req)}
-                              className="px-1.5 py-0.5 bg-emerald-600 hover:bg-emerald-700 text-white text-[9px] font-bold rounded flex items-center gap-0.5 cursor-pointer"
-                              title="অনুমোদন করুন"
-                            >
-                              <Check className="w-2.5 h-2.5" />
-                            </button>
-                            <button
-                              onClick={() => triggerReject(req)}
-                              className="px-1.5 py-0.5 bg-rose-600 hover:bg-rose-700 text-white text-[9px] font-bold rounded flex items-center gap-0.5 cursor-pointer"
-                              title="বাতিল করুন"
-                            >
-                              <XCircle className="w-2.5 h-2.5" />
-                            </button>
-                          </div>
-                        ) : (
-                          <span className="text-[9px] text-slate-500 font-semibold uppercase">Done</span>
-                        )}
+                        <div className="flex items-center justify-end gap-1">
+                          {req.status === 'pending' && (
+                            <>
+                              <button
+                                onClick={() => triggerApprove(req)}
+                                className="px-1.5 py-0.5 bg-emerald-600 hover:bg-emerald-700 text-white text-[9px] font-bold rounded flex items-center gap-0.5 cursor-pointer"
+                                title="অনুমোদন করুন"
+                              >
+                                <Check className="w-2.5 h-2.5" />
+                              </button>
+                              <button
+                                onClick={() => triggerReject(req)}
+                                className="px-1.5 py-0.5 bg-rose-600 hover:bg-rose-700 text-white text-[9px] font-bold rounded flex items-center gap-0.5 cursor-pointer"
+                                title="বাতিল করুন"
+                              >
+                                <XCircle className="w-2.5 h-2.5" />
+                              </button>
+                            </>
+                          )}
+                          <button
+                            onClick={() => triggerDelete(req)}
+                            className="p-1 text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 rounded transition-colors cursor-pointer"
+                            title="মুছে ফেলুন"
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </button>
+                        </div>
                       </td>
                     )}
                   </tr>
@@ -826,15 +859,33 @@ export const SMSPanel: React.FC<SMSPanelProps> = ({
         <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-sm w-full p-6 space-y-4 shadow-xl">
             <div className="flex items-start gap-3">
-              <div className={`p-2 rounded-xl ${confirmState.type === 'approve' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400'}`}>
-                {confirmState.type === 'approve' ? <Check className="w-6 h-6" /> : <XCircle className="w-6 h-6" />}
+              <div className={`p-2 rounded-xl ${
+                confirmState.type === 'approve' 
+                  ? 'bg-emerald-500/10 text-emerald-400' 
+                  : 'bg-rose-500/10 text-rose-400'
+              }`}>
+                {confirmState.type === 'approve' ? (
+                  <Check className="w-6 h-6" />
+                ) : confirmState.type === 'delete' ? (
+                  <Trash2 className="w-6 h-6" />
+                ) : (
+                  <XCircle className="w-6 h-6" />
+                )}
               </div>
               <div>
                 <h4 className="text-sm font-bold text-white">
-                  {confirmState.type === 'approve' ? 'রিকোয়েস্ট অনুমোদন করুন' : 'রিকোয়েস্ট বাতিল করুন'}
+                  {confirmState.type === 'approve' 
+                    ? 'রিকোয়েস্ট অনুমোদন করুন' 
+                    : confirmState.type === 'delete'
+                    ? 'হিস্টোরি রেকর্ড মুছে ফেলুন'
+                    : 'রিকোয়েস্ট বাতিল করুন'}
                 </h4>
                 <p className="text-xs text-slate-400 mt-1 leading-relaxed">
-                  আপনি কি ট্রানজেকশন আইডি <strong className="text-amber-400 font-mono">{confirmState.req.transactionId}</strong> থেকে আসা <strong className="text-white">৳{confirmState.req.amount}</strong> মূল্যের রিকোয়েস্টটি {confirmState.type === 'approve' ? 'অনুমোদন' : 'বাতিল'} করতে চান?
+                  {confirmState.type === 'delete' ? (
+                    <>আপনি কি ট্রানজেকশন আইডি <strong className="text-amber-400 font-mono">{confirmState.req.transactionId}</strong> এর হিস্টোরি রেকর্ডটি স্থায়ীভাবে মুছে ফেলতে চান?</>
+                  ) : (
+                    <>আপনি কি ট্রানজেকশন আইডি <strong className="text-amber-400 font-mono">{confirmState.req.transactionId}</strong> থেকে আসা <strong className="text-white">৳{confirmState.req.amount}</strong> মূল্যের রিকোয়েস্টটি {confirmState.type === 'approve' ? 'অনুমোদন' : 'বাতিল'} করতে চান?</>
+                  )}
                 </p>
               </div>
             </div>
@@ -847,7 +898,13 @@ export const SMSPanel: React.FC<SMSPanelProps> = ({
                 ফিরে যান
               </button>
               <button
-                onClick={confirmState.type === 'approve' ? handleApproveConfirm : handleRejectConfirm}
+                onClick={
+                  confirmState.type === 'approve' 
+                    ? handleApproveConfirm 
+                    : confirmState.type === 'delete'
+                    ? handleDeleteConfirm
+                    : handleRejectConfirm
+                }
                 className={`px-4 py-1.5 text-white font-bold text-xs rounded-xl cursor-pointer transition-colors ${
                   confirmState.type === 'approve' ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-rose-600 hover:bg-rose-700'
                 }`}
