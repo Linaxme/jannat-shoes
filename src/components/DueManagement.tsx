@@ -18,7 +18,6 @@ import {
   Edit,
   Sliders,
   Wallet,
-  Coins,
   ArrowRight,
   ChevronDown,
   ChevronRight,
@@ -451,28 +450,23 @@ export const DueManagement: React.FC<DueManagementProps> = ({
       {/* 3D Key Metrics Cards in 2 Rows (2 Columns) */}
       <div className="grid grid-cols-2 gap-3.5 sm:gap-5">
         
-        {/* Card 1: মোট বকেয়া (Total Market Due) */}
+        {/* Card 1: মোট বকেয়া (Total Due) */}
         <div 
           onClick={() => {
             setViewMode('customer_wise');
             setActiveDueFilter('due');
           }}
-          className="relative bg-gradient-to-b from-white via-slate-50 to-slate-100 dark:from-slate-800/90 dark:via-slate-900 dark:to-slate-950 border border-slate-200/80 dark:border-slate-700/60 border-t-slate-100 dark:border-t-slate-600/70 border-b-[3px] border-b-slate-300 dark:border-b-slate-950 hover:border-rose-400 dark:hover:border-rose-500/50 p-4 sm:p-5 rounded-2xl flex flex-col justify-between cursor-pointer transition-all duration-200 hover:-translate-y-1 hover:shadow-lg active:translate-y-0 active:border-b-2 shadow-sm group"
+          className="bg-white dark:bg-slate-900/80 border border-slate-200/90 dark:border-slate-800 hover:border-rose-500/50 dark:hover:border-rose-500/50 p-4 sm:p-5 rounded-2xl flex flex-col justify-between cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:shadow-sm shadow-xs group"
         >
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-1">
-              <p className="text-xs sm:text-sm font-semibold text-slate-600 dark:text-slate-400 tracking-wide">মোট বকেয়া</p>
-              <ChevronRight className="w-3.5 h-3.5 text-rose-500 dark:text-rose-400/70 group-hover:translate-x-0.5 transition" />
-            </div>
-            <div className="p-2 sm:p-2.5 bg-rose-50 dark:bg-gradient-to-b dark:from-rose-500/25 dark:to-rose-500/5 text-rose-600 dark:text-rose-400 rounded-full shrink-0 border border-rose-200 dark:border-rose-500/30">
-              <Receipt className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
-            </div>
+          <div className="flex items-center justify-between">
+            <p className="text-xs sm:text-sm font-semibold text-slate-600 dark:text-slate-400">মোট বকেয়া</p>
+            <ChevronRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-rose-600 dark:group-hover:text-rose-400 group-hover:translate-x-0.5 transition" />
           </div>
-          <div className="mt-3">
-            <h3 className="text-xl sm:text-2xl font-black text-rose-600 dark:text-rose-400 font-mono truncate drop-shadow-sm">
+          <div className="mt-2.5">
+            <h3 className="text-xl sm:text-2xl font-black text-rose-600 dark:text-rose-400 font-mono truncate">
               {formatTaka(totalMarketDue)}
             </h3>
-            <div className="mt-2 pt-2 border-t border-slate-200 dark:border-slate-800/60 text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 truncate">
+            <div className="mt-2 pt-2 border-t border-slate-100 dark:border-slate-800/70 text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 truncate">
               {toBnDigit(dueCustomersCount)} জন বকেয়া কাস্টমার
             </div>
           </div>
@@ -481,22 +475,17 @@ export const DueManagement: React.FC<DueManagementProps> = ({
         {/* Card 2: মোট আদায় (Total Collection) */}
         <div
           onClick={() => setViewMode('logs')}
-          className="relative bg-gradient-to-b from-white via-slate-50 to-slate-100 dark:from-slate-800/90 dark:via-slate-900 dark:to-slate-950 border border-slate-200/80 dark:border-slate-700/60 border-t-slate-100 dark:border-t-slate-600/70 border-b-[3px] border-b-slate-300 dark:border-b-slate-950 hover:border-emerald-400 dark:hover:border-emerald-500/50 p-4 sm:p-5 rounded-2xl flex flex-col justify-between cursor-pointer transition-all duration-200 hover:-translate-y-1 hover:shadow-lg active:translate-y-0 active:border-b-2 shadow-sm group"
+          className="bg-white dark:bg-slate-900/80 border border-slate-200/90 dark:border-slate-800 hover:border-emerald-500/50 dark:hover:border-emerald-500/50 p-4 sm:p-5 rounded-2xl flex flex-col justify-between cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:shadow-sm shadow-xs group"
         >
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-1">
-              <p className="text-xs sm:text-sm font-semibold text-slate-600 dark:text-slate-400 tracking-wide">মোট আদায়</p>
-              <ChevronRight className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400/70 group-hover:translate-x-0.5 transition" />
-            </div>
-            <div className="p-2 sm:p-2.5 bg-emerald-50 dark:bg-gradient-to-b dark:from-emerald-500/25 dark:to-emerald-500/5 text-emerald-600 dark:text-emerald-400 rounded-full shrink-0 border border-emerald-200 dark:border-emerald-500/30">
-              <DollarSign className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
-            </div>
+          <div className="flex items-center justify-between">
+            <p className="text-xs sm:text-sm font-semibold text-slate-600 dark:text-slate-400">মোট আদায়</p>
+            <ChevronRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 group-hover:translate-x-0.5 transition" />
           </div>
-          <div className="mt-3">
-            <h3 className="text-xl sm:text-2xl font-black text-emerald-600 dark:text-emerald-400 font-mono truncate drop-shadow-sm">
+          <div className="mt-2.5">
+            <h3 className="text-xl sm:text-2xl font-black text-emerald-600 dark:text-emerald-400 font-mono truncate">
               {formatTaka(totalCollectionAmount)}
             </h3>
-            <div className="mt-2 pt-2 border-t border-slate-200 dark:border-slate-800/60 text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 truncate">
+            <div className="mt-2 pt-2 border-t border-slate-100 dark:border-slate-800/70 text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 truncate">
               {toBnDigit(paymentLogs.length)} টি রসিদ এন্ট্রি
             </div>
           </div>
@@ -508,22 +497,17 @@ export const DueManagement: React.FC<DueManagementProps> = ({
             setViewMode('customer_wise');
             setActiveDueFilter('advance');
           }}
-          className="relative bg-gradient-to-b from-white via-slate-50 to-slate-100 dark:from-slate-800/90 dark:via-slate-900 dark:to-slate-950 border border-slate-200/80 dark:border-slate-700/60 border-t-slate-100 dark:border-t-slate-600/70 border-b-[3px] border-b-slate-300 dark:border-b-slate-950 hover:border-emerald-400 dark:hover:border-emerald-500/50 p-4 sm:p-5 rounded-2xl flex flex-col justify-between cursor-pointer transition-all duration-200 hover:-translate-y-1 hover:shadow-lg active:translate-y-0 active:border-b-2 shadow-sm group"
+          className="bg-white dark:bg-slate-900/80 border border-slate-200/90 dark:border-slate-800 hover:border-emerald-500/50 dark:hover:border-emerald-500/50 p-4 sm:p-5 rounded-2xl flex flex-col justify-between cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:shadow-sm shadow-xs group"
         >
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-1">
-              <p className="text-xs sm:text-sm font-semibold text-slate-600 dark:text-slate-400 tracking-wide">অগ্রিম জমা</p>
-              <ChevronRight className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400/70 group-hover:translate-x-0.5 transition" />
-            </div>
-            <div className="p-2 sm:p-2.5 bg-emerald-50 dark:bg-gradient-to-b dark:from-emerald-500/25 dark:to-emerald-500/5 text-emerald-600 dark:text-emerald-400 rounded-full shrink-0 border border-emerald-200 dark:border-emerald-500/30">
-              <Coins className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
-            </div>
+          <div className="flex items-center justify-between">
+            <p className="text-xs sm:text-sm font-semibold text-slate-600 dark:text-slate-400">অগ্রিম জমা</p>
+            <ChevronRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 group-hover:translate-x-0.5 transition" />
           </div>
-          <div className="mt-3">
-            <h3 className="text-xl sm:text-2xl font-black text-emerald-600 dark:text-emerald-300 font-mono truncate drop-shadow-sm">
+          <div className="mt-2.5">
+            <h3 className="text-xl sm:text-2xl font-black text-emerald-600 dark:text-emerald-300 font-mono truncate">
               {formatTaka(totalAdvanceCredit)}
             </h3>
-            <div className="mt-2 pt-2 border-t border-slate-200 dark:border-slate-800/60 text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 truncate">
+            <div className="mt-2 pt-2 border-t border-slate-100 dark:border-slate-800/70 text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 truncate">
               {toBnDigit(advanceCustomersCount)} জন অগ্রিম পার্টি
             </div>
           </div>
@@ -535,23 +519,18 @@ export const DueManagement: React.FC<DueManagementProps> = ({
             setViewMode('customer_wise');
             setActiveDueFilter('all');
           }}
-          className="relative bg-gradient-to-b from-white via-slate-50 to-slate-100 dark:from-slate-800/90 dark:via-slate-900 dark:to-slate-950 border border-slate-200/80 dark:border-slate-700/60 border-t-slate-100 dark:border-t-slate-600/70 border-b-[3px] border-b-slate-300 dark:border-b-slate-950 hover:border-amber-400 dark:hover:border-amber-500/50 p-4 sm:p-5 rounded-2xl flex flex-col justify-between cursor-pointer transition-all duration-200 hover:-translate-y-1 hover:shadow-lg active:translate-y-0 active:border-b-2 shadow-sm group"
+          className="bg-white dark:bg-slate-900/80 border border-slate-200/90 dark:border-slate-800 hover:border-amber-500/50 dark:hover:border-amber-500/50 p-4 sm:p-5 rounded-2xl flex flex-col justify-between cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:shadow-sm shadow-xs group"
         >
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-1">
-              <p className="text-xs sm:text-sm font-semibold text-slate-600 dark:text-slate-400 tracking-wide">মোট পার্টি</p>
-              <ChevronRight className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400/70 group-hover:translate-x-0.5 transition" />
-            </div>
-            <div className="p-2 sm:p-2.5 bg-amber-50 dark:bg-gradient-to-b dark:from-amber-500/25 dark:to-amber-500/5 text-amber-600 dark:text-amber-400 rounded-full shrink-0 border border-amber-200 dark:border-amber-500/30">
-              <Store className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
-            </div>
+          <div className="flex items-center justify-between">
+            <p className="text-xs sm:text-sm font-semibold text-slate-600 dark:text-slate-400">মোট পার্টি</p>
+            <ChevronRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-amber-600 dark:group-hover:text-amber-400 group-hover:translate-x-0.5 transition" />
           </div>
-          <div className="mt-3">
-            <h3 className="text-xl sm:text-2xl font-black text-amber-600 dark:text-amber-300 font-mono truncate drop-shadow-sm">
+          <div className="mt-2.5">
+            <h3 className="text-xl sm:text-2xl font-black text-amber-600 dark:text-amber-300 font-mono truncate">
               {toBnDigit(dueCustomersCount + advanceCustomersCount)}{' '}
               <span className="text-xs font-normal text-slate-500 dark:text-slate-400">জন</span>
             </h3>
-            <div className="mt-2 pt-2 border-t border-slate-200 dark:border-slate-800/60 text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 truncate">
+            <div className="mt-2 pt-2 border-t border-slate-100 dark:border-slate-800/70 text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 truncate">
               মোট রেজিস্টার্ড: {toBnDigit(customers.length)} জন
             </div>
           </div>

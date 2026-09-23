@@ -61,28 +61,28 @@ export const Navigation: React.FC<NavigationProps> = ({
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
 
-            // Elevated center button for POS / New Memo
+            // Center button for POS / New Memo
             if ((tab as any).isCenterAction) {
               return (
                 <button
                   key={tab.id}
                   type="button"
                   onClick={() => onSelectTab(tab.id)}
-                  className="flex flex-col items-center justify-center -mt-5 group cursor-pointer focus:outline-none"
+                  className="flex-1 flex flex-col items-center justify-center py-1 px-1 rounded-xl cursor-pointer group focus:outline-none"
                   title="নতুন বিক্রয় মেমো তৈরি করুন"
                 >
                   <div
-                    className={`w-12 h-12 rounded-2xl flex items-center justify-center shadow-lg transition-all duration-200 ${
+                    className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-200 ${
                       isActive
-                        ? 'bg-amber-400 text-slate-950 shadow-amber-400/40 ring-4 ring-amber-500/20 scale-105'
-                        : 'bg-gradient-to-tr from-amber-500 to-amber-400 text-slate-950 shadow-amber-500/30 hover:scale-105 active:scale-95'
+                        ? 'bg-amber-500 text-slate-950 font-bold shadow-sm'
+                        : 'bg-amber-500/20 text-amber-600 dark:text-amber-400 group-hover:bg-amber-500/30'
                     }`}
                   >
-                    <Icon className="w-5 h-5 stroke-[2.3]" />
+                    <Icon className="w-5 h-5 stroke-[2.2]" />
                   </div>
                   <span
-                    className={`text-[10px] font-extrabold mt-1 tracking-tight transition-colors ${
-                      isActive ? 'text-amber-700 dark:text-amber-400' : 'text-slate-700 dark:text-slate-300'
+                    className={`text-[10px] tracking-tight mt-0.5 ${
+                      isActive ? 'font-bold text-amber-600 dark:text-amber-400' : 'font-medium text-slate-600 dark:text-slate-400'
                     }`}
                   >
                     {tab.label}
