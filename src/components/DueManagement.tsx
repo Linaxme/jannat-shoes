@@ -385,22 +385,42 @@ export const DueManagement: React.FC<DueManagementProps> = ({
   return (
     <div className="space-y-6 sm:space-y-7" onClick={() => setIsSellerDropdownOpen(false)}>
       
-      {/* Top Bar - Clean Dashboard-Style Header */}
-      <div className="flex items-center justify-between gap-2 flex-wrap bg-white/80 dark:bg-slate-900/70 border border-slate-200 dark:border-slate-800/80 p-2 sm:p-2.5 rounded-2xl shadow-sm">
-        <div className="flex items-center gap-2 flex-wrap">
-          <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800/90 rounded-xl shadow-inner">
-            <Receipt className="w-4 h-4 text-amber-600 dark:text-amber-400" />
-            <span className="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-100">বাকী খাতা</span>
+      {/* Page Header & View Mode Switcher */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="flex items-center justify-between sm:justify-start gap-3 w-full sm:w-auto">
+          <div className="flex items-center gap-2.5">
+            <div className="w-10 h-10 rounded-2xl bg-amber-500/10 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center border border-amber-500/20 shadow-xs shrink-0">
+              <Receipt className="w-5 h-5" />
+            </div>
+            <div>
+              <h1 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white tracking-tight">
+                বাকী খাতা
+              </h1>
+            </div>
           </div>
 
-          {/* View Mode Tabs styled like Dashboard */}
-          <div className="flex items-center bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800/90 p-1 rounded-xl shadow-inner gap-1 text-xs">
+          {/* Action button on mobile (placed cleanly on right of title) */}
+          {(currentUser?.role === 'admin' || currentUser?.role === 'super_admin' || !currentUser?.role) && (
+            <button
+              type="button"
+              onClick={() => openAdjustDueModal()}
+              className="sm:hidden px-3 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold rounded-xl shadow-xs flex items-center gap-1.5 transition active:scale-95 cursor-pointer shrink-0"
+            >
+              <PlusCircle className="w-4 h-4" />
+              <span>পূর্বের বাকী</span>
+            </button>
+          )}
+        </div>
+
+        <div className="flex items-center justify-between sm:justify-end gap-2.5 w-full sm:w-auto">
+          {/* View Mode Tabs: কাস্টমার | সেলার | ইতিহাস */}
+          <div className="flex items-center bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-1 rounded-xl gap-1 text-xs w-full sm:w-auto shadow-xs">
             <button
               type="button"
               onClick={() => setViewMode('customer_wise')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
+              className={`flex-1 sm:flex-none px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
                 viewMode === 'customer_wise'
-                  ? 'bg-amber-500 text-slate-950 shadow-sm'
+                  ? 'bg-amber-500 text-slate-950 shadow-xs'
                   : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-800/60'
               }`}
             >
@@ -410,9 +430,9 @@ export const DueManagement: React.FC<DueManagementProps> = ({
             <button
               type="button"
               onClick={() => setViewMode('seller_wise')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
+              className={`flex-1 sm:flex-none px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
                 viewMode === 'seller_wise'
-                  ? 'bg-amber-500 text-slate-950 shadow-sm'
+                  ? 'bg-amber-500 text-slate-950 shadow-xs'
                   : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-800/60'
               }`}
             >
@@ -422,9 +442,9 @@ export const DueManagement: React.FC<DueManagementProps> = ({
             <button
               type="button"
               onClick={() => setViewMode('logs')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
+              className={`flex-1 sm:flex-none px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
                 viewMode === 'logs'
-                  ? 'bg-amber-500 text-slate-950 shadow-sm'
+                  ? 'bg-amber-500 text-slate-950 shadow-xs'
                   : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-800/60'
               }`}
             >
@@ -432,19 +452,19 @@ export const DueManagement: React.FC<DueManagementProps> = ({
               <span>{t('history')}</span>
             </button>
           </div>
-        </div>
 
-        {/* Right side: Add Initial Due */}
-        {(currentUser?.role === 'admin' || currentUser?.role === 'super_admin' || !currentUser?.role) && (
-          <button
-            type="button"
-            onClick={() => openAdjustDueModal()}
-            className="px-3 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold rounded-xl shadow-sm flex items-center gap-1.5 transition-all cursor-pointer"
-          >
-            <PlusCircle className="w-4 h-4" />
-            <span>পূর্বের বাকী যুক্ত</span>
-          </button>
-        )}
+          {/* Action button on desktop */}
+          {(currentUser?.role === 'admin' || currentUser?.role === 'super_admin' || !currentUser?.role) && (
+            <button
+              type="button"
+              onClick={() => openAdjustDueModal()}
+              className="hidden sm:flex px-3.5 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs sm:text-sm font-bold rounded-xl shadow-xs items-center gap-1.5 transition active:scale-95 cursor-pointer shrink-0"
+            >
+              <PlusCircle className="w-4 h-4" />
+              <span>পূর্বের বাকী যুক্ত</span>
+            </button>
+          )}
+        </div>
       </div>
 
       {/* 3D Key Metrics Cards in 2 Rows (2 Columns) */}
