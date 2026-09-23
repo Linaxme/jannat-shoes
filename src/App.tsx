@@ -636,7 +636,7 @@ export default function App() {
     if (target.customerId && target.dueAmount > 0 && target.deliveryStatus === 'delivered') {
       const cust = customers.find((c) => c.id === target.customerId);
       if (cust) {
-        const adjustedDue = Math.max(0, cust.currentDue - target.dueAmount);
+        const adjustedDue = (cust.currentDue || 0) - target.dueAmount;
         const updatedC = { ...cust, currentDue: adjustedDue };
         setCustomers((prev) => prev.map((c) => (c.id === cust.id ? updatedC : c)));
         saveDocumentToFirestore('customers', cust.id, updatedC);
@@ -807,7 +807,7 @@ export default function App() {
     if (targetOrder.customerId) {
       const updatedCustomers = customers.map((c) => {
         if (c.id === targetOrder.customerId) {
-          const updatedCurrentDue = Math.max(0, (c.currentDue || 0) + newDueAmount);
+          const updatedCurrentDue = (c.currentDue || 0) + newDueAmount;
           const updatedC = { ...c, currentDue: updatedCurrentDue };
           saveDocumentToFirestore('customers', c.id, updatedC);
           return updatedC;
@@ -978,6 +978,35 @@ export default function App() {
         const orderData: Order = item.originalData;
         await saveDocumentToFirestore('orders', orderData.id, orderData);
         setOrders((prev) => sortOrdersByRecency([orderData, ...prev.filter((o) => o.id !== orderData.id)]));
+
+        // Re-deduct physical stock if this was a delivered order
+        if (orderData.deliveryStatus === 'delivered' && orderData.items && orderData.items.length > 0) {
+          const updatedProducts = products.map((p) => {
+            const it = orderData.items.find((i) => i.productId === p.id);
+            if (it) {
+              const updatedStock = Math.max(0, p.stockPairs - it.totalPairs);
+              const updatedP = { ...p, stockPairs: updatedStock };
+              saveDocumentToFirestore('products', p.id, updatedP);
+              return updatedP;
+            }
+            return p;
+          });
+          setProducts(updatedProducts);
+        }
+
+        // Re-apply customer due if this order had unpaid balance
+        if (orderData.customerId && orderData.dueAmount > 0 && orderData.deliveryStatus === 'delivered') {
+          const updatedCustomers = customers.map((c) => {
+            if (c.id === orderData.customerId) {
+              const updatedDue = (c.currentDue || 0) + orderData.dueAmount;
+              const updatedC = { ...c, currentDue: updatedDue };
+              saveDocumentToFirestore('customers', c.id, updatedC);
+              return updatedC;
+            }
+            return c;
+          });
+          setCustomers(updatedCustomers);
+        }
       } else if (item.itemType === 'product') {
         const productData: ShoeProduct = item.originalData;
         await saveDocumentToFirestore('products', productData.id, productData);

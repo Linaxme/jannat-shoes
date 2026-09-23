@@ -480,38 +480,38 @@ export const SMSPanel: React.FC<SMSPanelProps> = ({
 
     if (checkoutStep === 'confirm_pack') {
       return (
-        <div className="fixed inset-0 bg-black/75 backdrop-blur-sm text-slate-800 z-50 overflow-y-auto flex items-center justify-center p-3 sm:p-4 animate-fadeIn">
-          <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-[360px] overflow-hidden my-auto p-5 space-y-4">
+        <div className="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 overflow-y-auto flex items-center justify-center p-3 sm:p-4 animate-fadeIn">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 w-full max-w-[360px] overflow-hidden my-auto p-5 space-y-4 text-slate-800 dark:text-slate-100">
             {/* Header */}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center">
+                <div className="w-8 h-8 rounded-full bg-emerald-100 dark:bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
                   <Smartphone className="w-4 h-4" />
                 </div>
-                <h3 className="text-sm font-bold text-slate-900">প্যাক নিশ্চিতকরণ</h3>
+                <h3 className="text-sm font-bold text-slate-900 dark:text-white">প্যাক নিশ্চিতকরণ</h3>
               </div>
               <button 
                 type="button"
                 onClick={closeCheckout}
-                className="w-7 h-7 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-500 hover:text-slate-800 transition-colors cursor-pointer"
+                className="w-7 h-7 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 flex items-center justify-center text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white transition-colors cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
             {/* Pack summary card */}
-            <div className="bg-slate-50 border border-slate-200 rounded-xl p-3.5 space-y-2.5">
+            <div className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-3.5 space-y-2.5">
               <div className="flex items-center justify-between text-xs">
-                <span className="text-slate-500 font-medium">প্যাকেজ</span>
-                <span className="font-bold text-slate-800">{selectedPackage.label}</span>
+                <span className="text-slate-500 dark:text-slate-400 font-medium">প্যাকেজ</span>
+                <span className="font-bold text-slate-800 dark:text-slate-200">{selectedPackage.label}</span>
               </div>
               <div className="flex items-center justify-between text-xs">
-                <span className="text-slate-500 font-medium">মূল্য</span>
+                <span className="text-slate-500 dark:text-slate-400 font-medium">মূল্য</span>
                 <span className="font-black text-[#e2136e] font-mono text-base">৳{selectedPackage.amount}</span>
               </div>
               <div className="flex items-center justify-between text-xs">
-                <span className="text-slate-500 font-medium">রেট</span>
-                <span className="font-medium text-slate-600 font-mono">{selectedPackage.rate}</span>
+                <span className="text-slate-500 dark:text-slate-400 font-medium">রেট</span>
+                <span className="font-medium text-slate-600 dark:text-slate-300 font-mono">{selectedPackage.rate}</span>
               </div>
             </div>
 
@@ -520,7 +520,7 @@ export const SMSPanel: React.FC<SMSPanelProps> = ({
               <button
                 type="button"
                 onClick={closeCheckout}
-                className="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition-colors cursor-pointer"
+                className="w-full py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs rounded-xl transition-colors cursor-pointer"
               >
                 বাতিল
               </button>
