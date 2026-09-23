@@ -1,5 +1,5 @@
 import { db, collection, getDocs, doc, setDoc, deleteDoc, writeBatch, query, where, orderBy } from './firebase';
-import { ShoeProduct, Customer, SalesRep, Order, DuePaymentLog, UserAccount, SystemConfig, TrashItem } from '../types';
+import { ShoeProduct, Customer, SalesRep, Order, DuePaymentLog, UserAccount, SystemConfig, TrashItem, SMSLog } from '../types';
 import { INITIAL_USER_ACCOUNTS, DEFAULT_SYSTEM_CONFIG } from '../data/initialData';
 
 export async function deleteDocumentFromFirestore(collectionName: string, id: string) {
@@ -38,7 +38,8 @@ export async function fetchFirestoreData() {
       paymentLogsSnap,
       usersSnap,
       configSnap,
-      trashSnap
+      trashSnap,
+      smsLogsSnap
     ] = await Promise.all([
       getDocs(collection(db, 'products')),
       getDocs(collection(db, 'customers')),
@@ -47,7 +48,8 @@ export async function fetchFirestoreData() {
       getDocs(collection(db, 'paymentLogs')),
       getDocs(collection(db, 'userAccounts')),
       getDocs(collection(db, 'systemConfig')),
-      getDocs(collection(db, 'trash'))
+      getDocs(collection(db, 'trash')),
+      getDocs(collection(db, 'smsLogs'))
     ]);
 
     const products: ShoeProduct[] = productsSnap.docs.map(d => ({ id: d.id, ...d.data() } as ShoeProduct));
@@ -58,6 +60,7 @@ export async function fetchFirestoreData() {
     const userAccounts: UserAccount[] = usersSnap.docs.map(d => ({ id: d.id, ...d.data() } as UserAccount));
     const systemConfigs: SystemConfig[] = configSnap.docs.map(d => ({ id: d.id, ...d.data() } as SystemConfig));
     const trashItems: TrashItem[] = trashSnap.docs.map(d => ({ id: d.id, ...d.data() } as TrashItem));
+    const smsLogs: SMSLog[] = smsLogsSnap.docs.map(d => ({ id: d.id, ...d.data() } as SMSLog));
     const systemConfig = systemConfigs.length > 0 ? systemConfigs[0] : DEFAULT_SYSTEM_CONFIG;
 
     if (userAccounts.length === 0) {
@@ -81,6 +84,7 @@ export async function fetchFirestoreData() {
       userAccounts: userAccounts.length > 0 ? userAccounts : INITIAL_USER_ACCOUNTS,
       systemConfig,
       trashItems,
+      smsLogs,
       isSeeded: false
     };
   } catch (err) {
@@ -94,6 +98,7 @@ export async function fetchFirestoreData() {
       userAccounts: INITIAL_USER_ACCOUNTS,
       systemConfig: DEFAULT_SYSTEM_CONFIG,
       trashItems: [],
+      smsLogs: [],
       isSeeded: false
     };
   }

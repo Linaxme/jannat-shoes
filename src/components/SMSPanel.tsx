@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { 
   MessageSquare, 
   RefreshCw, 
@@ -15,9 +15,16 @@ import {
   PhoneCall,
   Copy,
   X,
-  Trash2
+  Trash2,
+  Eye,
+  RotateCw,
+  Search,
+  Filter,
+  Clock,
+  User,
+  FileText
 } from 'lucide-react';
-import { UITheme, UserAccount, SystemConfig } from '../types';
+import { UITheme, UserAccount, SystemConfig, SMSLog } from '../types';
 import { saveDocumentToFirestore, deleteDocumentFromFirestore } from '../lib/firestoreService';
 import { collection, getDocs, db } from '../lib/firebase';
 
@@ -26,6 +33,11 @@ interface SMSPanelProps {
   currentUser: UserAccount | null;
   systemConfig: SystemConfig;
   onUpdateSystemConfig: (newConfig: SystemConfig) => void;
+  smsLogs?: SMSLog[];
+  onTriggerTestSMS?: (phone: string, message?: string) => Promise<boolean>;
+  onRetrySMS?: (log: SMSLog) => Promise<boolean>;
+  onDeleteLog?: (logId: string) => Promise<void>;
+  onClearAllLogs?: () => Promise<void>;
 }
 
 interface TopUpRequest {
@@ -49,8 +61,39 @@ const SMS_PACKAGES = [
 export const SMSPanel: React.FC<SMSPanelProps> = ({ 
   currentUser,
   systemConfig,
-  onUpdateSystemConfig
+  onUpdateSystemConfig,
+  smsLogs = [],
+  onTriggerTestSMS,
+  onRetrySMS,
+  onDeleteLog,
+  onClearAllLogs,
 }) => {
+  const isSuperAdmin = currentUser?.role === 'super_admin';
+
+  // Primary Tab state: Super Admin defaults to 'logs'; regular admins and others to 'recharge'
+  const [activeSubTab, setActiveSubTab] = useState<'logs' | 'recharge'>(() => isSuperAdmin ? 'logs' : 'recharge');
+
+  // Logs state
+  const [logsList, setLogsList] = useState<SMSLog[]>(smsLogs || []);
+  const [isLoadingLogs, setIsLoadingLogs] = useState<boolean>(false);
+  const [searchLogQuery, setSearchLogQuery] = useState<string>('');
+  const [logStatusFilter, setLogStatusFilter] = useState<'all' | 'success' | 'failed'>('all');
+  const [logTypeFilter, setLogTypeFilter] = useState<string>('all');
+  const [selectedMessageLog, setSelectedMessageLog] = useState<SMSLog | null>(null);
+  const [retryingLogId, setRetryingLogId] = useState<string | null>(null);
+  const [copiedLogMsg, setCopiedLogMsg] = useState<boolean>(false);
+
+  // Test SMS Modal state
+  const [isTestModalOpen, setIsTestModalOpen] = useState<boolean>(false);
+  const [testPhoneNumber, setTestPhoneNumber] = useState<string>('01826990490');
+  const [testMsgText, setTestMsgText] = useState<string>('মেসার্স জান্নাত সুজ: টেস্ট এসএমএস সফল হয়েছে।');
+  const [isSendingTest, setIsSendingTest] = useState<boolean>(false);
+  const [testStatusMsg, setTestStatusMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+  // Clear all logs modal
+  const [isClearLogsModalOpen, setIsClearLogsModalOpen] = useState<boolean>(false);
+  const [isClearingLogs, setIsClearingLogs] = useState<boolean>(false);
+
   const [senderNumber, setSenderNumber] = useState<string>('');
   const [transactionId, setTransactionId] = useState<string>('');
   const [amount, setAmount] = useState<number>(500);
@@ -95,6 +138,118 @@ export const SMSPanel: React.FC<SMSPanelProps> = ({
   const [formError, setFormError] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [actionSuccess, setActionSuccess] = useState<string | null>(null);
+
+  const fetchSMSLogs = async () => {
+    setIsLoadingLogs(true);
+    try {
+      const snap = await getDocs(collection(db, 'smsLogs'));
+      const list: SMSLog[] = snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as SMSLog));
+      list.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+      setLogsList(list);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsLoadingLogs(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!isSuperAdmin) return;
+    if (smsLogs && smsLogs.length > 0) {
+      setLogsList(smsLogs);
+    } else {
+      fetchSMSLogs();
+    }
+  }, [smsLogs, isSuperAdmin]);
+
+  const handleRetry = async (log: SMSLog) => {
+    if (!onRetrySMS) return;
+    setRetryingLogId(log.id);
+    try {
+      const success = await onRetrySMS(log);
+      if (success) {
+        setSuccessMsg(`মেমো #${log.memoNo || log.phone} এ SMS পুনরায় সফলভাবে পাঠানো হয়েছে`);
+        await fetchSMSLogs();
+      }
+    } finally {
+      setRetryingLogId(null);
+    }
+  };
+
+  const handleSendTest = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!testPhoneNumber.trim()) {
+      setTestStatusMsg({ type: 'error', text: 'সঠিক মোবাইল নম্বর দিন!' });
+      return;
+    }
+    setIsSendingTest(true);
+    setTestStatusMsg(null);
+    try {
+      if (onTriggerTestSMS) {
+        const success = await onTriggerTestSMS(testPhoneNumber.trim(), testMsgText.trim());
+        if (success) {
+          setTestStatusMsg({ type: 'success', text: 'টেস্ট SMS সফলভাবে পাঠানো হয়েছে!' });
+          setTimeout(() => {
+            setIsTestModalOpen(false);
+            setTestStatusMsg(null);
+          }, 1200);
+          await fetchSMSLogs();
+        } else {
+          setTestStatusMsg({ type: 'error', text: 'এসএমএস পাঠানো যায়নি। লগ দেখুন।' });
+        }
+      }
+    } catch (err: any) {
+      setTestStatusMsg({ type: 'error', text: err?.message || 'ত্রুটি হয়েছে' });
+    } finally {
+      setIsSendingTest(false);
+    }
+  };
+
+  const handleDeleteIndividualLog = async (logId: string) => {
+    if (onDeleteLog) {
+      await onDeleteLog(logId);
+      setLogsList(prev => prev.filter(l => l.id !== logId));
+    } else {
+      await deleteDocumentFromFirestore('smsLogs', logId);
+      setLogsList(prev => prev.filter(l => l.id !== logId));
+    }
+  };
+
+  const handleClearAllLogsConfirm = async () => {
+    setIsClearingLogs(true);
+    try {
+      if (onClearAllLogs) {
+        await onClearAllLogs();
+      } else {
+        for (const l of logsList) {
+          await deleteDocumentFromFirestore('smsLogs', l.id);
+        }
+      }
+      setLogsList([]);
+      setIsClearLogsModalOpen(false);
+      setSuccessMsg('সবগুলো SMS লগ সফলভাবে মুছে ফেলা হয়েছে');
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsClearingLogs(false);
+    }
+  };
+
+  const filteredLogs = useMemo(() => {
+    return logsList.filter(log => {
+      if (logStatusFilter !== 'all' && log.status !== logStatusFilter) return false;
+      if (logTypeFilter !== 'all' && log.type !== logTypeFilter) return false;
+      if (searchLogQuery.trim()) {
+        const q = searchLogQuery.toLowerCase().trim();
+        const matchesPhone = log.phone?.toLowerCase().includes(q);
+        const matchesName = log.recipientName?.toLowerCase().includes(q);
+        const matchesMemo = log.memoNo?.toLowerCase().includes(q);
+        const matchesMsg = log.message?.toLowerCase().includes(q);
+        return matchesPhone || matchesName || matchesMemo || matchesMsg;
+      }
+      return true;
+    });
+  }, [logsList, logStatusFilter, logTypeFilter, searchLogQuery]);
 
   const fetchTopupRequests = async () => {
     setIsLoadingRequests(true);
@@ -635,8 +790,310 @@ export const SMSPanel: React.FC<SMSPanelProps> = ({
         </div>
       )}
 
-      {/* Super Admin settings */}
-      {currentUser?.role === 'super_admin' ? (
+      {/* Sub Tabs: Super Admin can toggle between SMS Delivery Logs & Packages/Recharge */}
+      {isSuperAdmin && (
+        <div className="flex items-center gap-1.5 p-1 bg-slate-900/80 border border-slate-800/80 rounded-xl">
+          <button
+            type="button"
+            onClick={() => setActiveSubTab('logs')}
+            className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+              activeSubTab === 'logs'
+                ? 'bg-amber-500 text-slate-950 shadow-sm'
+                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
+            }`}
+          >
+            <History className="w-3.5 h-3.5" />
+            <span>এসএমএস সেন্ডিং ও ডেলিভারি লগ</span>
+            <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-mono font-bold ${
+              activeSubTab === 'logs' ? 'bg-slate-950/20 text-slate-950' : 'bg-slate-800 text-slate-400'
+            }`}>
+              {logsList.length}
+            </span>
+          </button>
+          
+          <button
+            type="button"
+            onClick={() => setActiveSubTab('recharge')}
+            className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+              activeSubTab === 'recharge'
+                ? 'bg-amber-500 text-slate-950 shadow-sm'
+                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
+            }`}
+          >
+            <Zap className="w-3.5 h-3.5" />
+            <span>প্যাকেজ ও রিচার্জ</span>
+            {requestsList.filter(r => r.status === 'pending').length > 0 && (
+              <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-rose-500 text-white font-mono font-bold">
+                {requestsList.filter(r => r.status === 'pending').length}
+              </span>
+            )}
+          </button>
+        </div>
+      )}
+
+      {/* SMS Logs Section - Super Admin Only */}
+      {isSuperAdmin && activeSubTab === 'logs' && (
+        <div className="bg-slate-900/50 border border-slate-800/80 rounded-xl p-3.5 sm:p-4 shadow-2xs space-y-3">
+          {/* Action & Filter Toolbar */}
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 pb-2 border-b border-slate-800/60">
+            {/* Search */}
+            <div className="relative flex-1 min-w-[200px]">
+              <Search className="w-3.5 h-3.5 text-slate-500 absolute left-2.5 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                value={searchLogQuery}
+                onChange={(e) => setSearchLogQuery(e.target.value)}
+                placeholder="নম্বর / মেমো / নাম..."
+                className="w-full bg-slate-950 border border-slate-700/80 text-slate-200 rounded-lg pl-8 pr-7 py-1.5 text-xs focus:outline-none focus:border-amber-500 placeholder:text-slate-500 font-medium"
+              />
+              {searchLogQuery && (
+                <button
+                  type="button"
+                  onClick={() => setSearchLogQuery('')}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 cursor-pointer"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              )}
+            </div>
+
+            {/* Filter Buttons & Actions */}
+            <div className="flex items-center gap-1.5 flex-wrap">
+              {/* Status Filters */}
+              <div className="flex items-center bg-slate-950 p-0.5 rounded-lg border border-slate-800 text-[11px] font-bold">
+                <button
+                  type="button"
+                  onClick={() => setLogStatusFilter('all')}
+                  className={`px-2 py-1 rounded cursor-pointer transition-colors ${
+                    logStatusFilter === 'all' ? 'bg-slate-800 text-white' : 'text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  সব ({logsList.length})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setLogStatusFilter('success')}
+                  className={`px-2 py-1 rounded cursor-pointer transition-colors ${
+                    logStatusFilter === 'success' ? 'bg-emerald-500/20 text-emerald-400' : 'text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  সফল ({logsList.filter(l => l.status === 'success').length})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setLogStatusFilter('failed')}
+                  className={`px-2 py-1 rounded cursor-pointer transition-colors ${
+                    logStatusFilter === 'failed' ? 'bg-rose-500/20 text-rose-400' : 'text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  ব্যর্থ ({logsList.filter(l => l.status === 'failed').length})
+                </button>
+              </div>
+
+              {/* Category Filter */}
+              <select
+                value={logTypeFilter}
+                onChange={(e) => setLogTypeFilter(e.target.value)}
+                className="bg-slate-950 border border-slate-800 text-slate-300 rounded-lg px-2 py-1.5 text-[11px] font-bold focus:outline-none focus:border-amber-500 cursor-pointer"
+              >
+                <option value="all">সকল ধরন</option>
+                <option value="order_placed">বুকিং অর্ডার</option>
+                <option value="order_delivery">ডেলিভারি মেমো</option>
+                <option value="payment_received">বকেয়া জমা</option>
+                <option value="due_reminder">বকেয়া তাগদা</option>
+                <option value="manual_test">টেস্ট মেসেজ</option>
+              </select>
+
+              {/* Test SMS Button */}
+              <button
+                type="button"
+                onClick={() => {
+                  setTestStatusMsg(null);
+                  setIsTestModalOpen(true);
+                }}
+                className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold px-2.5 py-1.5 rounded-lg text-[11px] flex items-center gap-1 transition-colors cursor-pointer shadow-xs"
+              >
+                <Send className="w-3 h-3" />
+                <span>টেস্ট SMS</span>
+              </button>
+
+              {/* Refresh Logs Button */}
+              <button
+                type="button"
+                onClick={fetchSMSLogs}
+                disabled={isLoadingLogs}
+                className="p-1.5 bg-slate-950 hover:bg-slate-800 border border-slate-800 rounded-lg text-slate-400 hover:text-slate-200 cursor-pointer transition-colors"
+                title="রিফ্রেশ"
+              >
+                <RefreshCw className={`w-3 h-3 ${isLoadingLogs ? 'animate-spin' : ''}`} />
+              </button>
+
+              {/* Clear All Logs (Super Admin only) */}
+              {isSuperAdmin && logsList.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setIsClearLogsModalOpen(true)}
+                  className="p-1.5 bg-slate-950 hover:bg-rose-500/10 border border-slate-800 hover:border-rose-500/30 rounded-lg text-slate-500 hover:text-rose-400 cursor-pointer transition-colors"
+                  title="লগ মুছুন"
+                >
+                  <Trash2 className="w-3 h-3" />
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Logs List Table */}
+          {isLoadingLogs ? (
+            <div className="py-10 text-center text-slate-500 text-xs">
+              <RefreshCw className="w-4 h-4 animate-spin mx-auto mb-1 text-amber-500" />
+              <span>লগ লোড হচ্ছে...</span>
+            </div>
+          ) : filteredLogs.length === 0 ? (
+            <div className="py-10 text-center text-slate-500 text-xs">
+              <span>কোনো SMS লগ রেকর্ড পাওয়া যায়নি</span>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs text-slate-300">
+                <thead className="bg-slate-950/70 border-b border-slate-800 text-[10.5px] uppercase font-bold text-slate-400">
+                  <tr>
+                    <th className="py-2.5 px-2">তারিখ ও সময়</th>
+                    <th className="py-2.5 px-2">ধরন</th>
+                    <th className="py-2.5 px-2">প্রাপক ও নম্বর</th>
+                    <th className="py-2.5 px-2">মেমো/রশিদ</th>
+                    <th className="py-2.5 px-2 text-center">স্ট্যাটাস</th>
+                    <th className="py-2.5 px-2 text-right">অ্যাকশন</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-800/40">
+                  {filteredLogs.map((log) => {
+                    const isRetrying = retryingLogId === log.id;
+                    const typeColor = 
+                      log.type === 'order_delivery' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' :
+                      log.type === 'order_placed' ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' :
+                      log.type === 'payment_received' ? 'bg-purple-500/10 text-purple-400 border-purple-500/20' :
+                      log.type === 'due_reminder' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' :
+                      'bg-slate-700/30 text-slate-300 border-slate-700/50';
+
+                    return (
+                      <tr key={log.id} className="hover:bg-slate-800/20 transition-colors">
+                        {/* তারিখ ও সময় */}
+                        <td className="py-2 px-2 whitespace-nowrap">
+                          <div className="font-mono text-[11px] text-slate-300">{log.date}</div>
+                          <div className="text-[9.5px] text-slate-500">{log.time}</div>
+                        </td>
+
+                        {/* ধরন */}
+                        <td className="py-2 px-2 whitespace-nowrap">
+                          <span className={`px-1.5 py-0.5 rounded text-[9.5px] font-bold border ${typeColor}`}>
+                            {log.typeLabel || log.type}
+                          </span>
+                        </td>
+
+                        {/* প্রাপক ও মোবাইল */}
+                        <td className="py-2 px-2">
+                          <div className="font-bold text-slate-200 text-xs truncate max-w-[120px]">
+                            {log.recipientName || 'অজানা প্রাপক'}
+                          </div>
+                          <div className="font-mono text-[10.5px] text-slate-400 select-all">
+                            {log.phone || 'নম্বর নেই'}
+                          </div>
+                        </td>
+
+                        {/* মেমো / রশিদ নং */}
+                        <td className="py-2 px-2 whitespace-nowrap">
+                          {log.memoNo ? (
+                            <span className="font-mono text-[10.5px] text-amber-400 font-bold select-all">
+                              {log.memoNo}
+                            </span>
+                          ) : (
+                            <span className="text-slate-600 text-[10px]">—</span>
+                          )}
+                        </td>
+
+                        {/* স্ট্যাটাস */}
+                        <td className="py-2 px-2 text-center whitespace-nowrap">
+                          {log.status === 'success' ? (
+                            <div className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[9.5px] font-bold">
+                              <CheckCircle2 className="w-2.5 h-2.5" />
+                              <span>সফল ({log.cost || 1} SMS)</span>
+                            </div>
+                          ) : (
+                            <div className="inline-flex flex-col items-center">
+                              <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-rose-500/10 border border-rose-500/20 text-rose-400 text-[9.5px] font-bold">
+                                <XCircle className="w-2.5 h-2.5" />
+                                <span>ব্যর্থ</span>
+                              </span>
+                              {log.errorMessage && (
+                                <span className="text-[8.5px] text-rose-400/90 font-medium max-w-[110px] truncate block mt-0.5" title={log.errorMessage}>
+                                  {log.errorMessage}
+                                </span>
+                              )}
+                            </div>
+                          )}
+                        </td>
+
+                        {/* অ্যাকশন বাটন */}
+                        <td className="py-2 px-2 text-right whitespace-nowrap">
+                          <div className="flex items-center justify-end gap-1">
+                            {/* বার্তা দেখুন */}
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setCopiedLogMsg(false);
+                                setSelectedMessageLog(log);
+                              }}
+                              className="p-1 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded transition-colors cursor-pointer"
+                              title="সম্পূর্ণ বার্তা দেখুন"
+                            >
+                              <Eye className="w-3 h-3" />
+                            </button>
+
+                            {/* পুনরায় পাঠান (Retry) */}
+                            {onRetrySMS && (
+                              <button
+                                type="button"
+                                disabled={isRetrying}
+                                onClick={() => handleRetry(log)}
+                                className={`p-1 rounded transition-colors cursor-pointer ${
+                                  log.status === 'failed' 
+                                    ? 'bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30' 
+                                    : 'bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-slate-200'
+                                }`}
+                                title="পুনরায় পাঠান"
+                              >
+                                <RotateCw className={`w-3 h-3 ${isRetrying ? 'animate-spin' : ''}`} />
+                              </button>
+                            )}
+
+                            {/* ডিলিট (Super Admin) */}
+                            {isSuperAdmin && (
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteIndividualLog(log.id)}
+                                className="p-1 text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 rounded transition-colors cursor-pointer"
+                                title="মুছে ফেলুন"
+                              >
+                                <Trash2 className="w-3 h-3" />
+                              </button>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Package & Recharge Section */}
+      {(!isSuperAdmin || activeSubTab === 'recharge') && (
+        <div className="space-y-4">
+          {/* Super Admin settings */}
+          {currentUser?.role === 'super_admin' ? (
         <div className="bg-slate-900/50 border border-slate-800/80 rounded-xl p-3.5 sm:p-4 shadow-2xs space-y-3">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-amber-400">সুপার এডমিন নিয়ন্ত্রণ</span>
@@ -853,6 +1310,218 @@ export const SMSPanel: React.FC<SMSPanelProps> = ({
           </div>
         )}
       </div>
+    </div>
+  )}
+
+      {/* View Full SMS Message Modal */}
+      {selectedMessageLog && (
+        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-5 space-y-4 shadow-xl">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400">
+                  <MessageSquare className="w-3.5 h-3.5" />
+                </div>
+                <div>
+                  <h4 className="text-sm font-bold text-white">এসএমএস বিবরণ</h4>
+                  <span className="text-[10px] text-slate-400 font-mono">{selectedMessageLog.date} {selectedMessageLog.time}</span>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSelectedMessageLog(null)}
+                className="p-1 text-slate-400 hover:text-white rounded-lg cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="space-y-2 text-xs">
+              <div className="flex justify-between py-1 border-b border-slate-800/60 text-slate-300">
+                <span className="text-slate-400">প্রাপক:</span>
+                <span className="font-bold text-white">{selectedMessageLog.recipientName || 'অজানা'}</span>
+              </div>
+              <div className="flex justify-between py-1 border-b border-slate-800/60 text-slate-300">
+                <span className="text-slate-400">মোবাইল:</span>
+                <span className="font-mono font-bold text-amber-400 select-all">{selectedMessageLog.phone}</span>
+              </div>
+              {selectedMessageLog.memoNo && (
+                <div className="flex justify-between py-1 border-b border-slate-800/60 text-slate-300">
+                  <span className="text-slate-400">মেমো / ভাউচার:</span>
+                  <span className="font-mono text-white select-all">{selectedMessageLog.memoNo}</span>
+                </div>
+              )}
+              <div className="flex justify-between py-1 border-b border-slate-800/60 text-slate-300">
+                <span className="text-slate-400">স্ট্যাটাস:</span>
+                <span className={selectedMessageLog.status === 'success' ? 'text-emerald-400 font-bold' : 'text-rose-400 font-bold'}>
+                  {selectedMessageLog.status === 'success' ? `সফল (${selectedMessageLog.cost || 1} SMS)` : `ব্যর্থ: ${selectedMessageLog.errorMessage || 'ত্রুটি'}`}
+                </span>
+              </div>
+            </div>
+
+            {/* Message Body */}
+            <div className="space-y-1.5">
+              <span className="text-[10.5px] font-bold text-slate-300 block">বার্তার বিষয়বস্তু:</span>
+              <div className="bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-slate-200 font-mono leading-relaxed select-all">
+                {selectedMessageLog.message}
+              </div>
+              <div className="flex justify-between text-[10px] text-slate-500 font-mono">
+                <span>অক্ষর: {selectedMessageLog.message.length} টি</span>
+                <span>প্রেরক: {selectedMessageLog.senderName || 'এডমিন'}</span>
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-2 pt-2 border-t border-slate-800">
+              <button
+                type="button"
+                onClick={() => {
+                  navigator.clipboard?.writeText(selectedMessageLog.message);
+                  setCopiedLogMsg(true);
+                  setTimeout(() => setCopiedLogMsg(false), 2000);
+                }}
+                className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold rounded-xl transition-colors cursor-pointer flex items-center gap-1.5"
+              >
+                {copiedLogMsg ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                <span>{copiedLogMsg ? 'কপি হয়েছে' : 'বার্তা কপি'}</span>
+              </button>
+              {onRetrySMS && (
+                <button
+                  type="button"
+                  disabled={retryingLogId === selectedMessageLog.id}
+                  onClick={() => handleRetry(selectedMessageLog)}
+                  className="px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-slate-950 text-xs font-bold rounded-xl transition-colors cursor-pointer flex items-center gap-1.5"
+                >
+                  <RotateCw className={`w-3.5 h-3.5 ${retryingLogId === selectedMessageLog.id ? 'animate-spin' : ''}`} />
+                  <span>পুনরায় পাঠান</span>
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Test SMS Modal */}
+      {isTestModalOpen && (
+        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-sm w-full p-5 space-y-4 shadow-xl">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400">
+                  <Send className="w-3.5 h-3.5" />
+                </div>
+                <h4 className="text-sm font-bold text-white">টেস্ট SMS পাঠান</h4>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsTestModalOpen(false)}
+                className="p-1 text-slate-400 hover:text-white rounded-lg cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSendTest} className="space-y-3">
+              <div>
+                <label className="text-[11px] font-bold text-slate-300 block mb-1">প্রাপকের মোবাইল নম্বর:</label>
+                <input
+                  type="text"
+                  value={testPhoneNumber}
+                  onChange={(e) => setTestPhoneNumber(e.target.value)}
+                  placeholder="018XXXXXXXX"
+                  className="w-full bg-slate-950 border border-slate-700 text-slate-100 rounded-xl px-3 py-2 text-xs font-mono font-bold focus:outline-none focus:border-amber-500"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="text-[11px] font-bold text-slate-300 block mb-1">টেস্ট বার্তা:</label>
+                <textarea
+                  rows={3}
+                  value={testMsgText}
+                  onChange={(e) => setTestMsgText(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-700 text-slate-100 rounded-xl p-2.5 text-xs focus:outline-none focus:border-amber-500 leading-relaxed resize-none"
+                  required
+                />
+              </div>
+
+              {testStatusMsg && (
+                <div className={`p-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 ${
+                  testStatusMsg.type === 'success' 
+                    ? 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-400' 
+                    : 'bg-rose-500/10 border border-rose-500/20 text-rose-400'
+                }`}>
+                  {testStatusMsg.type === 'success' ? <CheckCircle2 className="w-3.5 h-3.5 flex-shrink-0" /> : <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0" />}
+                  <span>{testStatusMsg.text}</span>
+                </div>
+              )}
+
+              <div className="flex justify-end gap-2 pt-2 border-t border-slate-800">
+                <button
+                  type="button"
+                  onClick={() => setIsTestModalOpen(false)}
+                  className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold rounded-xl cursor-pointer"
+                >
+                  বাতিল
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSendingTest}
+                  className="px-4 py-1.5 bg-amber-500 hover:bg-amber-600 text-slate-950 text-xs font-bold rounded-xl transition-colors cursor-pointer flex items-center gap-1 disabled:opacity-50"
+                >
+                  {isSendingTest ? (
+                    <>
+                      <RefreshCw className="w-3 h-3 animate-spin" />
+                      <span>পাঠানো হচ্ছে...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Send className="w-3 h-3" />
+                      <span>এসএমএস পাঠান</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Clear All Logs Modal */}
+      {isClearLogsModalOpen && (
+        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-sm w-full p-5 space-y-4 shadow-xl">
+            <div className="flex items-start gap-3">
+              <div className="p-2 rounded-xl bg-rose-500/10 text-rose-400">
+                <Trash2 className="w-5 h-5" />
+              </div>
+              <div>
+                <h4 className="text-sm font-bold text-white">সবগুলো SMS লগ মুছুন</h4>
+                <p className="text-xs text-slate-400 mt-1 leading-relaxed">
+                  আপনি কি নিশ্চিত যে আপনি সকল SMS সেন্ডিং হিস্ট্রি ও ডেলিভারি লগ মুছে ফেলতে চান? এটি আর ফিরিয়ে আনা যাবে না।
+                </p>
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setIsClearLogsModalOpen(false)}
+                className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-xs rounded-xl cursor-pointer"
+              >
+                ফিরে যান
+              </button>
+              <button
+                type="button"
+                disabled={isClearingLogs}
+                onClick={handleClearAllLogsConfirm}
+                className="px-4 py-1.5 bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs rounded-xl cursor-pointer disabled:opacity-50"
+              >
+                {isClearingLogs ? 'মুছে ফেলা হচ্ছে...' : 'সব মুছুন'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Custom Confirmation Modal */}
       {confirmState.req && (

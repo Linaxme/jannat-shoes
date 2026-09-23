@@ -1,10 +1,24 @@
 import { formatTaka, toBnDigit } from './formatters';
 
-export type SMSType = 'order_delivery' | 'payment_received' | 'due_reminder' | 'order_placed';
+export type SMSType = 'order_delivery' | 'payment_received' | 'due_reminder' | 'order_placed' | 'manual_test';
 
 export interface SMSPayload {
   phone: string;
   message: string;
+}
+
+export function cleanPhoneNumber(rawPhone: string): string {
+  let cleaned = String(rawPhone || '').replace(/\D/g, '');
+  if (cleaned.startsWith('880')) {
+    return cleaned;
+  }
+  if (cleaned.startsWith('0')) {
+    return '88' + cleaned;
+  }
+  if (cleaned.length === 10 && cleaned.startsWith('1')) {
+    return '880' + cleaned;
+  }
+  return cleaned;
 }
 
 export function generateSMSMessage(type: SMSType, data: any): string {
@@ -40,12 +54,15 @@ export function generateSMSMessage(type: SMSType, data: any): string {
   } else if (type === 'due_reminder') {
     const currentDue = data?.currentDue !== undefined ? formatTaka(data.currentDue) : 'N/A';
     return `প্রিয় গ্রাহক, আপনার বকেয়া টাকার পরিমাণ: ${currentDue}। দ্রুত পরিশোধের বিনীত অনুরোধ রইল — মেসার্স জান্নাত সুজ।`;
+  } else if (type === 'manual_test') {
+    return data?.message || `টেস্ট এসএমএস: মেসার্স জান্নাত সুজ সফটওয়্যার থেকে এসএমএস সিস্টেম সক্রিয় রয়েছে।`;
   }
   return '';
 }
 
 export async function sendAutoSMS(phone: string, message: string): Promise<{ success: boolean; error?: string }> {
-  if (!phone) {
+  const targetPhone = String(phone || '').trim();
+  if (!targetPhone) {
     return { success: false, error: 'মোবাইল নম্বর পাওয়া যায়নি!' };
   }
 
@@ -55,22 +72,22 @@ export async function sendAutoSMS(phone: string, message: string): Promise<{ suc
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ phone, message, to: phone }),
+      body: JSON.stringify({ phone: targetPhone, message, to: targetPhone }),
     });
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => null);
-      return { success: false, error: errorData?.error || errorData?.message || 'সার্ভার সাড়া দেয়নি।' };
+      return { success: false, error: errorData?.error || errorData?.message || `সার্ভার সাড়া দেয়নি (কোড: ${response.status})` };
     }
 
     const result = await response.json();
     if (result.success) {
       return { success: true };
     } else {
-      return { success: false, error: result.error || 'এসএমএস পাঠাতে সমস্যা হয়েছে।' };
+      return { success: false, error: result.error || 'এসএমএস গেটওয়ে রেসপন্স ত্রুটি' };
     }
   } catch (err: any) {
     console.error('SMS send fetch error:', err);
-    return { success: false, error: err.message || 'নেটওয়ার্ক সংযোগ ত্রুটি।' };
+    return { success: false, error: err.message || 'নেটওয়ার্ক সংযোগ ত্রুটি' };
   }
 }

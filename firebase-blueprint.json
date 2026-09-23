@@ -136,6 +136,27 @@
         "invoiceFooterNote": { "type": "string", "description": "Terms and notes printed on invoice" }
       },
       "required": ["companyName", "phone"]
+    },
+    "SMSLog": {
+      "title": "SMSLog",
+      "description": "Log entry for SMS notifications and delivery status",
+      "type": "object",
+      "properties": {
+        "timestamp": { "type": "number", "description": "Creation timestamp in ms" },
+        "date": { "type": "string", "description": "Date formatted YYYY-MM-DD" },
+        "time": { "type": "string", "description": "Local time string" },
+        "type": { "type": "string", "description": "SMS purpose category" },
+        "typeLabel": { "type": "string", "description": "Bengali human-readable label" },
+        "phone": { "type": "string", "description": "Recipient mobile number" },
+        "recipientName": { "type": "string", "description": "Name of the recipient" },
+        "memoNo": { "type": "string", "description": "Associated memo or receipt number" },
+        "message": { "type": "string", "description": "Actual SMS text content" },
+        "status": { "type": "string", "description": "Delivery status success or failed" },
+        "cost": { "type": "number", "description": "SMS credits consumed" },
+        "errorMessage": { "type": "string", "description": "Error details if failed" },
+        "senderName": { "type": "string", "description": "User who initiated the SMS" }
+      },
+      "required": ["timestamp", "date", "phone", "message", "status"]
     }
   },
   "firestore": {
@@ -166,6 +187,10 @@
     "/systemConfig/{configId}": {
       "schema": "SystemConfig",
       "description": "Application configuration"
+    },
+    "/smsLogs/{smsLogId}": {
+      "schema": "SMSLog",
+      "description": "SMS sending log and delivery reports"
     }
   }
 }

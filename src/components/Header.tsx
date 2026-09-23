@@ -244,7 +244,7 @@ export const Header: React.FC<HeaderProps> = ({
               className={`md:hidden flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl font-bold text-xs transition-all duration-150 cursor-pointer relative border ${
                 isDrawerTabActive || isDrawerOpen
                   ? 'bg-amber-500 text-slate-950 border-amber-500 shadow-md shadow-amber-500/20'
-                  : 'bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-850 text-slate-800 dark:text-slate-200 border-slate-300 dark:border-slate-800'
+                  : 'bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 border-slate-300 dark:border-slate-800'
               }`}
               title={t('menu_desc')}
             >

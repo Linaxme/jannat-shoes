@@ -9,6 +9,7 @@ import {
   SystemConfig,
   TrashItem,
   ConfirmDeliveryData,
+  SMSLog,
 } from './types';
 import {
   INITIAL_PRODUCTS,
@@ -85,6 +86,7 @@ export default function App() {
   const [userAccounts, setUserAccounts] = useState<UserAccount[]>(INITIAL_USER_ACCOUNTS);
   const [systemConfig, setSystemConfig] = useState<SystemConfig>(DEFAULT_SYSTEM_CONFIG);
   const [trashItems, setTrashItems] = useState<TrashItem[]>([]);
+  const [smsLogs, setSmsLogs] = useState<SMSLog[]>([]);
 
   // PWA Install Prompt State
   const [deferredInstallPrompt, setDeferredInstallPrompt] = useState<any>(null);
@@ -175,6 +177,9 @@ export default function App() {
       if (res.systemConfig) {
         setSystemConfig(res.systemConfig);
       }
+      if (res.smsLogs) {
+        setSmsLogs(res.smsLogs.sort((a, b) => b.timestamp - a.timestamp));
+      }
       setIsLoadingCloud(false);
     }
     loadData();
@@ -195,26 +200,66 @@ export default function App() {
     }, 4000);
   };
 
-  // Automatic SMS Sender Helper
+  // Automatic SMS Sender Helper with Firestore Logging
   const triggerAutomaticSMS = async (
     type: SMSType,
     phone: string,
-    data: any
+    data: any,
+    meta?: { recipientName?: string; memoNo?: string; senderName?: string; customMessage?: string }
   ): Promise<boolean> => {
+    const rawPhone = (phone || '').trim();
+    const recipientName = meta?.recipientName || data?.customerName || '';
+    const memoNo = meta?.memoNo || data?.memoNo || '';
+    const senderName = meta?.senderName || currentUser?.name || 'এডমিন';
+
+    const typeLabels: Record<SMSType, string> = {
+      order_placed: 'বুকিং অর্ডার',
+      order_delivery: 'ডেলিভারি মেমো',
+      payment_received: 'বকেয়া জমা',
+      due_reminder: 'বকেয়া তাগদা',
+      manual_test: 'টেস্ট মেসেজ',
+    };
+
+    const typeLabel = typeLabels[type] || 'অন্যান্য বার্তা';
+    const now = new Date();
+    const dateStr = getLocalDateStr(now);
+    const timeStr = now.toLocaleTimeString('bn-BD', { hour: '2-digit', minute: '2-digit' });
+
     if (systemConfig?.enableSMS === false) {
       if (type === 'due_reminder') {
         triggerToast('SMS ফিচারটি বন্ধ রয়েছে (সিস্টেম সেটিং থেকে অফ করা)');
       }
       return false;
     }
-    if (!phone) {
+
+    const message = meta?.customMessage || generateSMSMessage(type, data);
+
+    if (!rawPhone) {
       triggerToast(t('toast_phone_not_found'));
+      const failLog: SMSLog = {
+        id: `sms-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+        timestamp: Date.now(),
+        date: dateStr,
+        time: timeStr,
+        type,
+        typeLabel,
+        phone: 'নম্বর নেই',
+        recipientName,
+        memoNo,
+        message: message || 'বার্তার বিবরণ পাওয়া যায়নি',
+        status: 'failed',
+        cost: 0,
+        errorMessage: 'গ্রাহকের মোবাইল নম্বর দেওয়া ছিল না',
+        senderName,
+      };
+      setSmsLogs((prev) => [failLog, ...prev]);
+      saveDocumentToFirestore('smsLogs', failLog.id, failLog);
       return false;
     }
-    const message = generateSMSMessage(type, data);
+
     if (!message) return false;
 
-    // Calculate SMS Cost dynamically based on Unicode standards (encouraging longer messages to consume more balance)
+    // Calculate SMS Cost dynamically based on Unicode standards
     const isUnicode = /[^\u0000-\u007F]/.test(message);
     const len = message.length;
     let smsCost = 1;
@@ -227,31 +272,133 @@ export default function App() {
     const currentBalance = systemConfig.smsBalance ?? 50;
     if (currentBalance < smsCost) {
       triggerToast(t('toast_insufficient_sms_balance').replace('{{required}}', smsCost.toString()).replace('{{current}}', currentBalance.toString()));
+      const failLog: SMSLog = {
+        id: `sms-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+        timestamp: Date.now(),
+        date: dateStr,
+        time: timeStr,
+        type,
+        typeLabel,
+        phone: rawPhone,
+        recipientName,
+        memoNo,
+        message,
+        status: 'failed',
+        cost: 0,
+        errorMessage: `অপর্যাপ্ত ব্যালেন্স (প্রয়োজন: ${smsCost}, অবশিষ্ট: ${currentBalance})`,
+        senderName,
+      };
+      setSmsLogs((prev) => [failLog, ...prev]);
+      saveDocumentToFirestore('smsLogs', failLog.id, failLog);
       return false;
     }
 
     triggerToast(t('toast_sending_sms'));
     try {
-      const res = await sendAutoSMS(phone, message);
+      const res = await sendAutoSMS(rawPhone, message);
       if (res.success) {
-        // Deduct SMS counts and increment total sent count in the local database balance
         const newBalance = Math.max(0, currentBalance - smsCost);
         const newTotalSent = (systemConfig.totalSentSms ?? 0) + smsCost;
         const updatedConfig = { ...systemConfig, smsBalance: newBalance, totalSentSms: newTotalSent };
         setSystemConfig(updatedConfig);
         await saveDocumentToFirestore('systemConfig', systemConfig.id, updatedConfig);
 
+        const successLog: SMSLog = {
+          id: `sms-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+          timestamp: Date.now(),
+          date: dateStr,
+          time: timeStr,
+          type,
+          typeLabel,
+          phone: rawPhone,
+          recipientName,
+          memoNo,
+          message,
+          status: 'success',
+          cost: smsCost,
+          senderName,
+        };
+        setSmsLogs((prev) => [successLog, ...prev]);
+        await saveDocumentToFirestore('smsLogs', successLog.id, successLog);
+
         triggerToast(t('toast_sms_sent_success').replace('{{cost}}', smsCost.toString()));
         return true;
       } else {
+        const failLog: SMSLog = {
+          id: `sms-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+          timestamp: Date.now(),
+          date: dateStr,
+          time: timeStr,
+          type,
+          typeLabel,
+          phone: rawPhone,
+          recipientName,
+          memoNo,
+          message,
+          status: 'failed',
+          cost: 0,
+          errorMessage: res.error || 'অজানা গেটওয়ে ত্রুটি',
+          senderName,
+        };
+        setSmsLogs((prev) => [failLog, ...prev]);
+        await saveDocumentToFirestore('smsLogs', failLog.id, failLog);
+
         triggerToast(t('toast_sms_failed').replace('{{error}}', res.error || 'অজানা ত্রুটি'));
         return false;
       }
     } catch (err: any) {
       console.error(err);
+      const failLog: SMSLog = {
+        id: `sms-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+        timestamp: Date.now(),
+        date: dateStr,
+        time: timeStr,
+        type,
+        typeLabel,
+        phone: rawPhone,
+        recipientName,
+        memoNo,
+        message,
+        status: 'failed',
+        cost: 0,
+        errorMessage: err.message || 'সার্ভার সংযোগ ত্রুটি',
+        senderName,
+      };
+      setSmsLogs((prev) => [failLog, ...prev]);
+      saveDocumentToFirestore('smsLogs', failLog.id, failLog);
+
       triggerToast(t('toast_sms_server_error'));
       return false;
     }
+  };
+
+  const handleRetrySMS = async (log: SMSLog): Promise<boolean> => {
+    return await triggerAutomaticSMS(log.type, log.phone, {}, {
+      recipientName: log.recipientName,
+      memoNo: log.memoNo,
+      customMessage: log.message,
+      senderName: currentUser?.name || 'এডমিন',
+    });
+  };
+
+  const handleTriggerTestSMS = async (testPhone: string, testMsg?: string): Promise<boolean> => {
+    return await triggerAutomaticSMS('manual_test', testPhone, {}, {
+      recipientName: 'টেস্ট প্রাপক',
+      customMessage: testMsg,
+      senderName: currentUser?.name || 'এডমিন',
+    });
+  };
+
+  const handleDeleteSMSLog = async (logId: string) => {
+    await deleteDocumentFromFirestore('smsLogs', logId);
+    setSmsLogs((prev) => prev.filter((l) => l.id !== logId));
+  };
+
+  const handleClearAllSMSLogs = async () => {
+    for (const l of smsLogs) {
+      await deleteDocumentFromFirestore('smsLogs', l.id);
+    }
+    setSmsLogs([]);
   };
 
   // Auth Handlers
@@ -580,17 +727,27 @@ export default function App() {
       setCustomers(updatedCustomers);
     }
 
+    const recipientPhone = (newOrder.customerPhone || customers.find((c) => c.id === newOrder.customerId)?.phone || '').trim();
+
     if (newOrder.deliveryStatus === 'booked') {
       triggerToast(t('toast_order_booked').replace('{{memoNo}}', newOrder.memoNo));
       // Automatically send SMS for booked order
-      triggerAutomaticSMS('order_placed', newOrder.customerPhone || '', newOrder);
+      triggerAutomaticSMS('order_placed', recipientPhone, newOrder, {
+        recipientName: newOrder.customerName,
+        memoNo: newOrder.memoNo,
+        senderName: newOrder.sellerName,
+      });
       // Switch tab to pending list
       setActiveTab('pending');
     } else {
       setSelectedInvoiceOrder(newOrder);
       triggerToast(t('toast_memo_created').replace('{{memoNo}}', newOrder.memoNo));
       // Automatically send SMS for direct delivery/sales memo
-      triggerAutomaticSMS('order_delivery', newOrder.customerPhone || '', newOrder);
+      triggerAutomaticSMS('order_delivery', recipientPhone, newOrder, {
+        recipientName: newOrder.customerName,
+        memoNo: newOrder.memoNo,
+        senderName: newOrder.sellerName,
+      });
     }
     setPosPreSelectedCustomerId('');
   };
@@ -663,8 +820,13 @@ export default function App() {
     setSelectedInvoiceOrder(updatedOrder);
     triggerToast(t('toast_delivery_confirmed').replace('{{memoNo}}', updatedOrder.memoNo));
 
-    // Automatically send SMS
-    triggerAutomaticSMS('order_delivery', targetOrder.customerPhone || '', updatedOrder);
+    // Automatically send SMS with fallback
+    const recipientPhone = (targetOrder.customerPhone || customers.find((c) => c.id === targetOrder.customerId)?.phone || '').trim();
+    triggerAutomaticSMS('order_delivery', recipientPhone, updatedOrder, {
+      recipientName: targetOrder.customerName,
+      memoNo: updatedOrder.memoNo,
+      senderName: currentUser?.name || updatedOrder.sellerName,
+    });
   };
 
   // 1.2 Update Pending Order or Sales History Memo (e.g. add/remove items, adjust price or commission)
@@ -737,7 +899,11 @@ export default function App() {
     const targetCust = customers.find((c) => c.id === newLog.customerId);
     if (targetCust) {
       // Automatically send SMS
-      triggerAutomaticSMS('payment_received', targetCust.phone, newLog);
+      triggerAutomaticSMS('payment_received', targetCust.phone || '', newLog, {
+        recipientName: targetCust.name,
+        memoNo: newLog.receiptNo,
+        senderName: newLog.sellerName || currentUser?.name || 'এডমিন',
+      });
     }
   };
 
@@ -1494,6 +1660,11 @@ export default function App() {
               currentUser={currentUser}
               systemConfig={systemConfig}
               onUpdateSystemConfig={handleUpdateSystemConfig}
+              smsLogs={smsLogs}
+              onRetrySMS={handleRetrySMS}
+              onTriggerTestSMS={handleTriggerTestSMS}
+              onDeleteLog={handleDeleteSMSLog}
+              onClearAllLogs={handleClearAllSMSLogs}
             />
           )
         )}

@@ -221,3 +221,20 @@ export interface TrashItem {
   originalData: any; // complete snapshot to allow exact restoration
 }
 
+export interface SMSLog {
+  id: string;
+  timestamp: number;
+  date: string;
+  time: string;
+  type: 'order_placed' | 'order_delivery' | 'payment_received' | 'due_reminder' | 'manual_test';
+  typeLabel: string;
+  phone: string;
+  recipientName?: string;
+  memoNo?: string;
+  message: string;
+  status: 'success' | 'failed';
+  cost: number;
+  errorMessage?: string;
+  senderName?: string;
+}
+
