@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import { Customer, UserAccount, SalesRep, Order, UITheme, SystemConfig } from '../types';
 import { formatTaka, toBnDigit } from '../utils/formatters';
+import { normalizeBDPhoneNumber } from '../utils/phoneUtils';
 import { useLanguage } from '../contexts/LanguageContext';
 import * as XLSX from 'xlsx';
 
@@ -302,13 +303,14 @@ export const ShopManagement: React.FC<ShopManagementProps> = ({
 
     setIsSubmitting(true);
     try {
+      const cleanPhone = normalizeBDPhoneNumber(editPhone.trim()) || editPhone.trim();
       const selectedSeller = sellers.find((s) => s.id === editSellerId);
       const updatedCustomer: Customer = {
         id: editingShop.linkedCustomer?.id || editingShop.id,
         name: editProprietorName.trim(),
         shopName: editShopName.trim(),
         address: editAddress.trim() || 'ঢাকা',
-        phone: editPhone.trim(),
+        phone: cleanPhone,
         assignedSellerId: editSellerId || editingShop.assignedSellerId,
         assignedSellerName: selectedSeller ? selectedSeller.name : editingShop.assignedSellerName,
         currentDue: editingShop.currentDue,
@@ -321,9 +323,9 @@ export const ShopManagement: React.FC<ShopManagementProps> = ({
           ...editingShop.linkedUserAccount,
           name: editProprietorName.trim(),
           shopName: editShopName.trim(),
-          phone: editPhone.trim(),
+          phone: cleanPhone,
           area: editAddress.trim(),
-          loginId: editPhone.trim() || editingShop.linkedUserAccount.loginId,
+          loginId: cleanPhone || editingShop.linkedUserAccount.loginId,
           sellerId: editSellerId || editingShop.assignedSellerId,
         };
       }
@@ -356,10 +358,12 @@ export const ShopManagement: React.FC<ShopManagementProps> = ({
     }
 
     // Check for duplicate shop phone
-    const cleanPhone = formPhone.replace(/\D/g, '');
-    if (cleanPhone && cleanPhone.length > 0) {
+    const normalizedFormPhone = normalizeBDPhoneNumber(formPhone.trim());
+    const finalFormPhone = normalizedFormPhone || formPhone.trim();
+    const cleanPhoneDigits = normalizedFormPhone || formPhone.replace(/\D/g, '');
+    if (cleanPhoneDigits && cleanPhoneDigits.length > 0) {
       const isDuplicate = unifiedShops.some(
-        (s) => s.phone && s.phone.replace(/\D/g, '') === cleanPhone
+        (s) => s.phone && (normalizeBDPhoneNumber(s.phone) === cleanPhoneDigits || s.phone.replace(/\D/g, '') === cleanPhoneDigits)
       );
       if (isDuplicate) {
         setFormError('এই মোবাইল নম্বর দিয়ে ইতিমধ্যে একটি দোকান নিবন্ধিত আছে।');
@@ -371,7 +375,7 @@ export const ShopManagement: React.FC<ShopManagementProps> = ({
     try {
       const now = Date.now();
       const initialDueNum = Math.max(0, parseFloat(formInitialDue) || 0);
-      const isOffline = !cleanPhone;
+      const isOffline = !cleanPhoneDigits;
 
       // 1. New Customer Record
       const newCustomer: Customer = {
@@ -379,7 +383,7 @@ export const ShopManagement: React.FC<ShopManagementProps> = ({
         name: formProprietorName.trim(),
         shopName: formShopName.trim(),
         address: formAddress.trim() || 'ঢাকা',
-        phone: formPhone.trim(),
+        phone: finalFormPhone,
         assignedSellerId: currentUser?.sellerId || currentUser?.id || '',
         assignedSellerName: currentUser?.name || 'প্রধান শাখা',
         currentDue: initialDueNum,
@@ -391,10 +395,10 @@ export const ShopManagement: React.FC<ShopManagementProps> = ({
         id: `usr_${now}`,
         name: formProprietorName.trim(),
         shopName: formShopName.trim(),
-        loginId: isOffline ? '' : formPhone.trim(),
+        loginId: isOffline ? '' : finalFormPhone,
         password: isOffline ? '—' : (formPassword.trim() || '123456'),
         role: 'customer',
-        phone: formPhone.trim(),
+        phone: finalFormPhone,
         area: formAddress.trim() || 'ঢাকা',
         isActive: true,
         createdAt: new Date().toISOString().split('T')[0],

@@ -1,3 +1,5 @@
+import { normalizeBDPhoneNumber } from './phoneUtils';
+
 // Format numbers into Bengali digits or comma separated Taka
 export function formatTaka(amount: number | string | undefined | null): string {
   const val = typeof amount === 'number' ? amount : parseFloat(String(amount || 0));
@@ -73,6 +75,8 @@ export function getLocalDateStr(date: Date = new Date()): string {
 // Clean and normalize phone numbers for consistent comparison
 export function normalizePhoneNumber(phone?: string | null): string {
   if (!phone) return '';
+  const clean = normalizeBDPhoneNumber(String(phone));
+  if (clean) return clean;
   const enPhone = toEnDigit(String(phone));
   const digits = enPhone.replace(/\D/g, '');
   if (digits.startsWith('880')) {

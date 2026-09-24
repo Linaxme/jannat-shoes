@@ -1,4 +1,5 @@
 import { formatTaka, toBnDigit } from './formatters';
+import { normalizeBDPhoneNumber, formatPhoneForGateway, isValidBDPhone } from './phoneUtils';
 
 export type SMSType = 'order_delivery' | 'payment_received' | 'due_reminder' | 'order_placed' | 'manual_test';
 
@@ -8,17 +9,7 @@ export interface SMSPayload {
 }
 
 export function cleanPhoneNumber(rawPhone: string): string {
-  let cleaned = String(rawPhone || '').replace(/\D/g, '');
-  if (cleaned.startsWith('880')) {
-    return cleaned;
-  }
-  if (cleaned.startsWith('0')) {
-    return '88' + cleaned;
-  }
-  if (cleaned.length === 10 && cleaned.startsWith('1')) {
-    return '880' + cleaned;
-  }
-  return cleaned;
+  return normalizeBDPhoneNumber(rawPhone);
 }
 
 export function generateSMSMessage(type: SMSType, data: any): string {
@@ -60,10 +51,21 @@ export function generateSMSMessage(type: SMSType, data: any): string {
   return '';
 }
 
-export async function sendAutoSMS(phone: string, message: string): Promise<{ success: boolean; error?: string }> {
+export async function sendAutoSMS(phone: string, message: string): Promise<{ success: boolean; error?: string; formattedPhone?: string }> {
   const targetPhone = String(phone || '').trim();
   if (!targetPhone) {
     return { success: false, error: 'মোবাইল নম্বর পাওয়া যায়নি!' };
+  }
+
+  // Auto-clean and format phone number (handles Bengali digits, spaces, dashes, +88, etc.)
+  const normalized11Digits = normalizeBDPhoneNumber(targetPhone);
+  const gatewayFormatted = formatPhoneForGateway(targetPhone);
+
+  if (!normalized11Digits || !isValidBDPhone(normalized11Digits)) {
+    return { 
+      success: false, 
+      error: `মোবাইল নম্বর সঠিক নয় ("${targetPhone}")। ১১ ডিজিটের সঠিক নম্বর দিন (যেমন: 018XXXXXXXX)।` 
+    };
   }
 
   try {
@@ -72,7 +74,13 @@ export async function sendAutoSMS(phone: string, message: string): Promise<{ suc
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ phone: targetPhone, message, to: targetPhone }),
+      body: JSON.stringify({ 
+        phone: gatewayFormatted || normalized11Digits, 
+        rawPhone: targetPhone,
+        cleanPhone: normalized11Digits,
+        message, 
+        to: gatewayFormatted || normalized11Digits 
+      }),
     });
 
     if (!response.ok) {
@@ -82,7 +90,7 @@ export async function sendAutoSMS(phone: string, message: string): Promise<{ suc
 
     const result = await response.json();
     if (result.success) {
-      return { success: true };
+      return { success: true, formattedPhone: normalized11Digits };
     } else {
       return { success: false, error: result.error || 'এসএমএস গেটওয়ে রেসপন্স ত্রুটি' };
     }

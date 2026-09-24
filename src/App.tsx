@@ -47,6 +47,7 @@ const TrashManagement = lazy(() => import('./components/TrashManagement').then(m
 
 import { fetchFirestoreData, seedFirestoreData, saveDocumentToFirestore, deleteDocumentFromFirestore, clearAllDatabaseData } from './lib/firestoreService';
 import { generateSMSMessage, sendAutoSMS, SMSType } from './utils/smsService';
+import { normalizeBDPhoneNumber, formatPhoneForDisplay } from './utils/phoneUtils';
 import { OrderItem } from './types';
 import { normalizePhoneNumber, compareOrdersNewestFirst, getLocalDateStr } from './utils/formatters';
 
@@ -234,7 +235,10 @@ export default function App() {
 
     const message = meta?.customMessage || generateSMSMessage(type, data);
 
-    if (!rawPhone) {
+    const normalizedPhone = normalizeBDPhoneNumber(rawPhone);
+    const displayPhone = normalizedPhone || rawPhone;
+
+    if (!rawPhone || !normalizedPhone) {
       triggerToast(t('toast_phone_not_found'));
       const failLog: SMSLog = {
         id: `sms-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
@@ -243,13 +247,13 @@ export default function App() {
         time: timeStr,
         type,
         typeLabel,
-        phone: 'নম্বর নেই',
+        phone: rawPhone || 'নম্বর নেই',
         recipientName,
         memoNo,
         message: message || 'বার্তার বিবরণ পাওয়া যায়নি',
         status: 'failed',
         cost: 0,
-        errorMessage: 'গ্রাহকের মোবাইল নম্বর দেওয়া ছিল না',
+        errorMessage: rawPhone ? `মোবাইল নম্বর সঠিক নয় ("${rawPhone}")` : 'গ্রাহকের মোবাইল নম্বর দেওয়া ছিল না',
         senderName,
       };
       setSmsLogs((prev) => [failLog, ...prev]);
@@ -279,7 +283,7 @@ export default function App() {
         time: timeStr,
         type,
         typeLabel,
-        phone: rawPhone,
+        phone: displayPhone,
         recipientName,
         memoNo,
         message,
@@ -295,7 +299,7 @@ export default function App() {
 
     triggerToast(t('toast_sending_sms'));
     try {
-      const res = await sendAutoSMS(rawPhone, message);
+      const res = await sendAutoSMS(normalizedPhone, message);
       if (res.success) {
         const newBalance = Math.max(0, currentBalance - smsCost);
         const newTotalSent = (systemConfig.totalSentSms ?? 0) + smsCost;
@@ -310,7 +314,7 @@ export default function App() {
           time: timeStr,
           type,
           typeLabel,
-          phone: rawPhone,
+          phone: res.formattedPhone || normalizedPhone,
           recipientName,
           memoNo,
           message,
@@ -331,7 +335,7 @@ export default function App() {
           time: timeStr,
           type,
           typeLabel,
-          phone: rawPhone,
+          phone: normalizedPhone,
           recipientName,
           memoNo,
           message,
@@ -355,7 +359,7 @@ export default function App() {
         time: timeStr,
         type,
         typeLabel,
-        phone: rawPhone,
+        phone: normalizedPhone,
         recipientName,
         memoNo,
         message,
@@ -1089,26 +1093,27 @@ export default function App() {
 
     // Also create UserAccount so the shop appears under "নিবন্ধিত দোকান" in User Management
     const phoneVal = newCust.phone?.trim() || '';
-    const phoneClean = phoneVal.replace(/\D/g, '');
+    const phoneClean = normalizeBDPhoneNumber(phoneVal) || phoneVal.replace(/\D/g, '');
+    const finalPhone = phoneClean || phoneVal;
     const existingUser = userAccounts.find(
       (u) =>
         (phoneClean && (
-          (u.phone && (u.phone || "").replace(/\D/g, '') === phoneClean) ||
-          (u.loginId || "").replace(/\D/g, '') === phoneClean
+          (u.phone && (normalizeBDPhoneNumber(u.phone) === phoneClean || (u.phone || "").replace(/\D/g, '') === phoneClean)) ||
+          (u.loginId && (normalizeBDPhoneNumber(u.loginId) === phoneClean || (u.loginId || "").replace(/\D/g, '') === phoneClean))
         )) ||
         (u.shopName && (u.shopName || "").trim().toLowerCase() === (newCust.shopName || "").trim().toLowerCase())
     );
 
     if (!existingUser) {
-      const isOffline = !phoneVal;
+      const isOffline = !finalPhone;
       const newUserAcc: UserAccount = {
         id: `usr_${Date.now()}`,
         name: newCust.name,
         shopName: newCust.shopName,
-        loginId: isOffline ? '' : phoneVal,
+        loginId: isOffline ? '' : finalPhone,
         password: isOffline ? '—' : '123456',
         role: 'customer',
-        phone: phoneVal,
+        phone: finalPhone,
         area: newCust.address,
         isActive: true,
         createdAt: new Date().toISOString().split('T')[0],
@@ -1147,11 +1152,11 @@ export default function App() {
   const getVisibleOrders = () => {
     if (!currentUser) return [];
     if (currentUser.role === 'customer') {
-      const userPhoneDigits = (currentUser.phone || currentUser.loginId || '').replace(/\D/g, '');
+      const userPhoneDigits = normalizeBDPhoneNumber(currentUser.phone || currentUser.loginId || '') || (currentUser.phone || currentUser.loginId || '').replace(/\D/g, '');
       const userShopLower = (currentUser.shopName || currentUser.name || '').toLowerCase().trim();
 
       return orders.filter((o) => {
-        const oPhoneDigits = (o.phone || o.customerPhone || '').replace(/\D/g, '');
+        const oPhoneDigits = normalizeBDPhoneNumber(o.phone || o.customerPhone || '') || (o.phone || o.customerPhone || '').replace(/\D/g, '');
         const oShopLower = (o.shopName || '').toLowerCase().trim();
 
         const phoneMatch = Boolean(
@@ -1303,13 +1308,13 @@ export default function App() {
     address: string;
     password?: string;
   }): Promise<UserAccount> => {
-    const cleanPhone = data.phone.trim();
+    const cleanPhone = normalizeBDPhoneNumber(data.phone.trim()) || data.phone.trim();
     const phoneDigits = cleanPhone.replace(/\D/g, '');
 
     // 1. Check if Customer record exists in customers state
     let targetCustomer = customers.find(
       (c) =>
-        (c.phone && (c.phone || "").replace(/\D/g, '') === phoneDigits) ||
+        (phoneDigits && (normalizeBDPhoneNumber(c.phone) === phoneDigits || (c.phone || "").replace(/\D/g, '') === phoneDigits)) ||
         (c.shopName && (c.shopName || "").trim().toLowerCase() === (data.shopName || "").trim().toLowerCase())
     );
 
@@ -1345,8 +1350,12 @@ export default function App() {
     // 2. Check if UserAccount exists in userAccounts state
     let existingUser = userAccounts.find(
       (u) =>
-        (u.phone && (u.phone || "").replace(/\D/g, '') === phoneDigits) ||
-        (u.loginId || "").replace(/\D/g, '') === phoneDigits ||
+        (phoneDigits && (
+          normalizeBDPhoneNumber(u.phone) === phoneDigits || 
+          (u.phone || "").replace(/\D/g, '') === phoneDigits ||
+          normalizeBDPhoneNumber(u.loginId) === phoneDigits ||
+          (u.loginId || "").replace(/\D/g, '') === phoneDigits
+        )) ||
         (u.shopName && (u.shopName || "").trim().toLowerCase() === (data.shopName || "").trim().toLowerCase())
     );
 

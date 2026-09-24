@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { UserAccount, UserRole } from '../types';
 import { Phone, Lock, Eye, EyeOff, LogIn, AlertCircle, Footprints, X, ShoppingBag, Store, User, MapPin, UserPlus, CheckCircle2, Mail } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
+import { normalizeBDPhoneNumber, convertBnToEnDigits, isValidBDPhone } from '../utils/phoneUtils';
 
 interface LoginModalProps {
   userAccounts: UserAccount[];
@@ -47,8 +48,9 @@ export const LoginModal: React.FC<LoginModalProps> = ({
     e.preventDefault();
     setErrorMsg(null);
 
-    const identifier = loginIdentifier.trim().toLowerCase();
-    const cleanPhone = loginIdentifier.replace(/\D/g, '');
+    const enIdentifier = convertBnToEnDigits(loginIdentifier.trim());
+    const identifier = enIdentifier.toLowerCase();
+    const cleanPhone = normalizeBDPhoneNumber(loginIdentifier) || enIdentifier.replace(/\D/g, '');
     const password = loginPassword.trim();
 
     if (!identifier || !password) {
@@ -61,12 +63,12 @@ export const LoginModal: React.FC<LoginModalProps> = ({
     setTimeout(() => {
       // Find matching user by Phone, Email, or loginId
       const foundUser = userAccounts.find((u) => {
-        const uPhone = (u.phone || '').replace(/\D/g, '');
+        const uPhone = normalizeBDPhoneNumber(u.phone || '') || (u.phone || '').replace(/\D/g, '');
         const uLogin = (u.loginId || '').toLowerCase().trim();
         const uEmail = (u.email || '').toLowerCase().trim();
 
         const matchesIdentifier =
-          (cleanPhone.length >= 10 && uPhone.includes(cleanPhone)) ||
+          (cleanPhone.length >= 10 && (uPhone.includes(cleanPhone) || cleanPhone.includes(uPhone))) ||
           uLogin === identifier ||
           uEmail === identifier ||
           (u.phone && u.phone.trim() === loginIdentifier.trim());
@@ -108,9 +110,9 @@ export const LoginModal: React.FC<LoginModalProps> = ({
       return;
     }
 
-    const cleanPhone = regPhone.trim().replace(/\D/g, '');
-    if (cleanPhone.length < 11) {
-      setErrorMsg('১১ ডিজিটের সঠিক মোবাইল নম্বর প্রদান করুন।');
+    const cleanPhone = normalizeBDPhoneNumber(regPhone.trim());
+    if (!cleanPhone || !isValidBDPhone(cleanPhone)) {
+      setErrorMsg('১১ ডিজিটের সঠিক মোবাইল নম্বর প্রদান করুন (যেমন: 018XXXXXXXX)।');
       return;
     }
 
@@ -124,7 +126,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
       const registeredUser = await onRegisterShopkeeper({
         shopName: regShopName.trim(),
         name: regName.trim(),
-        phone: regPhone.trim(),
+        phone: cleanPhone,
         address: regAddress.trim() || 'ঢাকা',
         password: regPassword.trim(),
       });

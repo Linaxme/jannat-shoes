@@ -33,13 +33,45 @@ const SMS_API_URL = 'https://sms.ocs-api.top/api/send-sms';
 const SMS_API_KEY = process.env.SMS_API_KEY || 'WNULRXBVbfMWJLXQkd99TMVKqY7vXeVpYTMVl9Xu';
 const SMS_SENDER_ID = '8809617626047';
 
+const BN_TO_EN_MAP: Record<string, string> = {
+  '০': '0', '১': '1', '২': '2', '৩': '3', '৪': '4',
+  '৫': '5', '৬': '6', '৭': '7', '৮': '8', '৯': '9',
+};
+
 function formatPhoneNumber(rawPhone: string): string {
-  let cleaned = rawPhone.replace(/\D/g, '');
+  if (!rawPhone) return '';
+  // 1. Convert Bengali numerals to English 0-9
+  const enStr = String(rawPhone).replace(/[০-৯]/g, (ch) => BN_TO_EN_MAP[ch] || ch);
+
+  // 2. Handle multiple numbers if separated by slash, comma, or, বা
+  const segments = enStr.split(/[/,;|\n\r]+|\s+(?:or|বা|\/)\s+/i);
+
+  for (const seg of segments) {
+    const digitsOnly = seg.replace(/\D/g, '');
+    if (!digitsOnly) continue;
+
+    // Standard 11 digits with 01[3-9] (supports +88, 88, 0088 prefixes)
+    const match = digitsOnly.match(/(?:0088|88)?(01[3-9]\d{8})/);
+    if (match && match[1]) {
+      return '88' + match[1];
+    }
+
+    // 10 digits missing leading 0
+    const match10 = digitsOnly.match(/(?:00880|880)?(1[3-9]\d{8})/);
+    if (match10 && match10[1]) {
+      return '880' + match10[1];
+    }
+  }
+
+  let cleaned = enStr.replace(/\D/g, '');
   if (cleaned.startsWith('880')) {
     return cleaned;
   }
   if (cleaned.startsWith('0')) {
     return '88' + cleaned;
+  }
+  if (cleaned.length === 10 && cleaned.startsWith('1')) {
+    return '880' + cleaned;
   }
   return '880' + cleaned;
 }
@@ -57,12 +89,11 @@ app.post('/api/send-otp', async (req, res) => {
       return res.status(400).json({ success: false, error: 'ফোন নম্বর প্রদান করুন।' });
     }
 
-    const cleanPhone = phone.replace(/\D/g, '');
-    if (cleanPhone.length < 11) {
-      return res.status(400).json({ success: false, error: 'সঠিক ১১ ডিজিটের মোবাইল নম্বর দিন।' });
-    }
-
     const formattedNumber = formatPhoneNumber(phone);
+    const cleanPhone = formattedNumber.replace(/^88/, '');
+    if (cleanPhone.length !== 11 || !cleanPhone.startsWith('01')) {
+      return res.status(400).json({ success: false, error: 'সঠিক ১১ ডিজিটের মোবাইল নম্বর দিন (যেমন: 018XXXXXXXX)।' });
+    }
 
     // Generate 6-digit OTP (or fixed for testing super admin if needed)
     const generatedOtp = Math.floor(100000 + Math.random() * 900000).toString();
@@ -120,7 +151,8 @@ app.post('/api/verify-otp', async (req, res) => {
       return res.status(400).json({ success: false, error: 'ফোন নম্বর এবং ওটিপি কোড প্রয়োজন।' });
     }
 
-    const cleanPhone = phone.replace(/\D/g, '');
+    const formattedNumber = formatPhoneNumber(phone);
+    const cleanPhone = formattedNumber.replace(/^88/, '');
     const entry = otpStore.get(cleanPhone);
 
     if (!entry) {
@@ -164,6 +196,12 @@ app.post('/api/send-sms', async (req, res) => {
     }
 
     const formattedNumber = formatPhoneNumber(phone);
+    if (!formattedNumber || formattedNumber.length !== 13 || !formattedNumber.startsWith('8801')) {
+      return res.status(400).json({ 
+        success: false, 
+        error: `মোবাইল নম্বরটি সঠিক ফরম্যাটে নেই ("${phone}")। ১১ ডিজিটের সঠিক মোবাইল নম্বর দিন (যেমন: 018XXXXXXXX)।` 
+      });
+    }
 
     const smsResponse = await fetch(SMS_API_URL, {
       method: 'POST',

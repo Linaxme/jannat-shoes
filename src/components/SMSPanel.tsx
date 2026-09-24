@@ -27,6 +27,7 @@ import {
 import { UITheme, UserAccount, SystemConfig, SMSLog } from '../types';
 import { saveDocumentToFirestore, deleteDocumentFromFirestore } from '../lib/firestoreService';
 import { collection, getDocs, db } from '../lib/firebase';
+import { normalizeBDPhoneNumber, isValidBDPhone } from '../utils/phoneUtils';
 
 interface SMSPanelProps {
   activeTheme: UITheme;
@@ -178,15 +179,16 @@ export const SMSPanel: React.FC<SMSPanelProps> = ({
 
   const handleSendTest = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!testPhoneNumber.trim()) {
-      setTestStatusMsg({ type: 'error', text: 'সঠিক মোবাইল নম্বর দিন!' });
+    const cleanTestPhone = normalizeBDPhoneNumber(testPhoneNumber.trim());
+    if (!cleanTestPhone || !isValidBDPhone(cleanTestPhone)) {
+      setTestStatusMsg({ type: 'error', text: 'সঠিক ১১ ডিজিটের মোবাইল নম্বর দিন (যেমন: 018XXXXXXXX)!' });
       return;
     }
     setIsSendingTest(true);
     setTestStatusMsg(null);
     try {
       if (onTriggerTestSMS) {
-        const success = await onTriggerTestSMS(testPhoneNumber.trim(), testMsgText.trim());
+        const success = await onTriggerTestSMS(cleanTestPhone, testMsgText.trim());
         if (success) {
           setTestStatusMsg({ type: 'success', text: 'টেস্ট SMS সফলভাবে পাঠানো হয়েছে!' });
           setTimeout(() => {

@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { ShoeProduct, Customer, SalesRep, OrderItem, Order, UserAccount, SystemConfig } from '../types';
 import { formatTaka, toBnDigit, getLocalDateStr } from '../utils/formatters';
+import { normalizeBDPhoneNumber, convertBnToEnDigits } from '../utils/phoneUtils';
 import { ProductImageDisplay } from './Shoe2DPlaceholder';
 import {
   ShoppingBag,
@@ -77,10 +78,10 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
   const customerSuggestions = useMemo(() => {
     if (!customerSearchQuery.trim()) return [];
     const q = customerSearchQuery.trim().toLowerCase();
-    const cleanQ = q.replace(/\D/g, '');
+    const cleanQ = normalizeBDPhoneNumber(q) || convertBnToEnDigits(q).replace(/\D/g, '');
 
     return customers.filter((c) => {
-      const cPhone = (c.phone || '').replace(/\D/g, '');
+      const cPhone = normalizeBDPhoneNumber(c.phone || '') || (c.phone || '').replace(/\D/g, '');
       const phoneMatch = cleanQ.length > 0 && cPhone.includes(cleanQ);
       const nameMatch = (c.name || '').toLowerCase().includes(q);
       const shopMatch = (c.shopName || '').toLowerCase().includes(q);
@@ -91,9 +92,12 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
 
   // If user types a full 11-digit phone number, auto-select if exact match exists
   useEffect(() => {
-    const clean = customerSearchQuery.replace(/\D/g, '');
+    const clean = normalizeBDPhoneNumber(customerSearchQuery) || convertBnToEnDigits(customerSearchQuery).replace(/\D/g, '');
     if (clean.length === 11) {
-      const exactMatch = customers.find((c) => (c.phone || '').replace(/\D/g, '') === clean);
+      const exactMatch = customers.find((c) => {
+        const cPhone = normalizeBDPhoneNumber(c.phone || '') || (c.phone || '').replace(/\D/g, '');
+        return cPhone === clean;
+      });
       if (exactMatch && exactMatch.id !== selectedCustomerId) {
         setSelectedCustomerId(exactMatch.id);
         setShowCustomerDropdown(false);
@@ -497,12 +501,14 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
 
     const initialDueVal = Math.max(0, Number(newOpeningDue) || 0);
 
+    const cleanNewPhone = normalizeBDPhoneNumber(newPhone.trim()) || newPhone.trim();
+
     const newCust: Customer = {
       id: `c-${Date.now()}`,
       name: newCustName.trim(),
       shopName: newShopName.trim(),
       address: newAddress.trim() || 'ঢাকা',
-      phone: newPhone.trim() || '',
+      phone: cleanNewPhone,
       assignedSellerId: sellerId,
       assignedSellerName: sellerName,
       currentDue: initialDueVal,
@@ -594,7 +600,7 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
           <button
             type="button"
             onClick={() => {
-              setNewPhone(customerSearchQuery.replace(/\D/g, ''));
+              setNewPhone(normalizeBDPhoneNumber(customerSearchQuery) || customerSearchQuery.replace(/\D/g, ''));
               setShowAddCustomerModal(true);
             }}
             className="text-[11px] text-amber-700 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-300 flex items-center gap-1 font-bold bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 px-2.5 py-1 rounded-lg transition-colors cursor-pointer"
