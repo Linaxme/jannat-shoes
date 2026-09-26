@@ -10,6 +10,17 @@ const PORT = 3000;
 
 app.use(express.json());
 
+// CORS & Preflight handling
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(200);
+  }
+  next();
+});
+
 // In-memory OTP storage with expiration
 interface OtpEntry {
   otp: string;
@@ -187,15 +198,16 @@ app.post('/api/verify-otp', async (req, res) => {
   }
 });
 
-// 4. Send Custom Transactional / Customer SMS
-app.post('/api/send-sms', async (req, res) => {
+// 4. Send Custom Transactional / Customer SMS (Supports POST & GET)
+app.all(['/api/send-sms', '/api/send-sms/'], async (req, res) => {
   try {
-    const { phone, message } = req.body;
+    const phone = req.body?.phone || req.query?.phone || req.query?.number || req.body?.to;
+    const message = req.body?.message || req.query?.message;
     if (!phone || !message) {
       return res.status(400).json({ success: false, error: 'মোবাইল নম্বর ও বার্তা প্রদান করুন।' });
     }
 
-    const formattedNumber = formatPhoneNumber(phone);
+    const formattedNumber = formatPhoneNumber(String(phone));
     if (!formattedNumber || formattedNumber.length !== 13 || !formattedNumber.startsWith('8801')) {
       return res.status(400).json({ 
         success: false, 
@@ -214,7 +226,7 @@ app.post('/api/send-sms', async (req, res) => {
         api_key: SMS_API_KEY,
         senderid: SMS_SENDER_ID,
         number: formattedNumber,
-        message: message,
+        message: String(message),
       }),
     });
 

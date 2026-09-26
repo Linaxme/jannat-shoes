@@ -51,6 +51,64 @@ export function generateSMSMessage(type: SMSType, data: any): string {
   return '';
 }
 
+export const SMS_GATEWAY_URL = 'https://sms.ocs-api.top/api/send-sms';
+export const SMS_API_KEY = 'WNULRXBVbfMWJLXQkd99TMVKqY7vXeVpYTMVl9Xu';
+export const SMS_SENDER_ID = '8809617626047';
+
+async function sendDirectToGateway(number: string, message: string): Promise<{ success: boolean; error?: string }> {
+  try {
+    // 1. Direct POST to SMS Gateway (Cloudflare-backed with CORS * enabled)
+    const res = await fetch(SMS_GATEWAY_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+      body: JSON.stringify({
+        api_key: SMS_API_KEY,
+        senderid: SMS_SENDER_ID,
+        number: number,
+        message: message,
+      }),
+    });
+
+    const data = await res.json().catch(() => null);
+    if (res.ok && data) {
+      const isSent = data?.results?.[0]?.status === 'sent' || 
+                     (data?.message && String(data.message).toLowerCase().includes('success')) ||
+                     data?.results?.[0]?.gateway?.ErrorCode === 0 ||
+                     data?.results?.[0]?.gateway?.Data?.[0]?.MessageErrorDescription === 'Success';
+      if (isSent) {
+        return { success: true };
+      }
+      return { success: false, error: data?.message || data?.results?.[0]?.message || 'এসএমএস গেটওয়ে রেসপন্স ত্রুটি' };
+    }
+  } catch (postErr) {
+    console.warn('Direct POST to gateway had an error, trying GET fallback...', postErr);
+  }
+
+  // 2. Direct GET Fallback (Requires zero preflight OPTIONS request)
+  try {
+    const getUrl = `${SMS_GATEWAY_URL}?api_key=${encodeURIComponent(SMS_API_KEY)}&senderid=${encodeURIComponent(SMS_SENDER_ID)}&number=${encodeURIComponent(number)}&message=${encodeURIComponent(message)}`;
+    const resGet = await fetch(getUrl);
+    const dataGet = await resGet.json().catch(() => null);
+    if (resGet.ok && dataGet) {
+      const isSent = dataGet?.results?.[0]?.status === 'sent' || 
+                     (dataGet?.message && String(dataGet.message).toLowerCase().includes('success')) ||
+                     dataGet?.results?.[0]?.gateway?.ErrorCode === 0 ||
+                     dataGet?.results?.[0]?.gateway?.Data?.[0]?.MessageErrorDescription === 'Success';
+      if (isSent) {
+        return { success: true };
+      }
+      return { success: false, error: dataGet?.message || 'এসএমএস গেটওয়ে রেসপন্স ত্রুটি' };
+    }
+    return { success: false, error: dataGet?.message || `সার্ভার সাড়া দেয়নি (কোড: ${resGet.status})` };
+  } catch (getErr: any) {
+    console.error('Direct GET to gateway failed:', getErr);
+    return { success: false, error: getErr?.message || 'নেটওয়ার্ক সংযোগ ত্রুটি' };
+  }
+}
+
 export async function sendAutoSMS(phone: string, message: string): Promise<{ success: boolean; error?: string; formattedPhone?: string }> {
   const targetPhone = String(phone || '').trim();
   if (!targetPhone) {
@@ -68,6 +126,12 @@ export async function sendAutoSMS(phone: string, message: string): Promise<{ suc
     };
   }
 
+  const recipientGatewayPhone = gatewayFormatted || ('88' + normalized11Digits);
+
+  // Strategy 1: Attempt Internal Express Backend Server proxy (/api/send-sms)
+  let backendFailed = false;
+  let backendError = '';
+
   try {
     const response = await fetch('/api/send-sms', {
       method: 'POST',
@@ -75,27 +139,42 @@ export async function sendAutoSMS(phone: string, message: string): Promise<{ suc
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ 
-        phone: gatewayFormatted || normalized11Digits, 
+        phone: recipientGatewayPhone, 
         rawPhone: targetPhone,
         cleanPhone: normalized11Digits,
         message, 
-        to: gatewayFormatted || normalized11Digits 
+        to: recipientGatewayPhone 
       }),
     });
 
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => null);
-      return { success: false, error: errorData?.error || errorData?.message || `সার্ভার সাড়া দেয়নি (কোড: ${response.status})` };
-    }
-
-    const result = await response.json();
-    if (result.success) {
-      return { success: true, formattedPhone: normalized11Digits };
+    if (response.ok) {
+      const result = await response.json().catch(() => null);
+      if (result && result.success) {
+        return { success: true, formattedPhone: normalized11Digits };
+      } else {
+        backendFailed = true;
+        backendError = result?.error || 'সার্ভার রেসপন্স ত্রুটি';
+      }
     } else {
-      return { success: false, error: result.error || 'এসএমএস গেটওয়ে রেসপন্স ত্রুটি' };
+      backendFailed = true;
+      const errorData = await response.json().catch(() => null);
+      backendError = errorData?.error || errorData?.message || `সার্ভার সাড়া দেয়নি (কোড: ${response.status})`;
     }
   } catch (err: any) {
-    console.error('SMS send fetch error:', err);
-    return { success: false, error: err.message || 'নেটওয়ার্ক সংযোগ ত্রুটি' };
+    backendFailed = true;
+    backendError = err?.message || 'সার্ভার সংযোগ ত্রুটি';
   }
+
+  // Strategy 2: If internal server responded with 405/404/500 or was unreachable, immediately fallback to Direct SMS Gateway
+  if (backendFailed) {
+    console.info(`Internal /api/send-sms failed (${backendError}). Switching to direct SMS gateway fallback...`);
+    const directResult = await sendDirectToGateway(recipientGatewayPhone, message);
+    if (directResult.success) {
+      return { success: true, formattedPhone: normalized11Digits };
+    } else {
+      return { success: false, error: directResult.error || backendError || 'এসএমএস পাঠাতে ব্যর্থ হয়েছে' };
+    }
+  }
+
+  return { success: true, formattedPhone: normalized11Digits };
 }
