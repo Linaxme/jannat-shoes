@@ -134,11 +134,22 @@ export default function App() {
 
       const res = await fetchFirestoreData();
 
+      const loadedOrders = sortOrdersByRecency(res.orders || []);
+      const loadedPayments = res.paymentLogs || [];
+      const reconciledCustomers = (res.customers || []).map((c) => {
+        const trueDue = calculateCustomerBalance(c.id, c, loadedOrders, loadedPayments);
+        if (Math.abs(Number(c.currentDue || 0) - trueDue) > 0.01) {
+          saveDocumentToFirestore('customers', c.id, { ...c, currentDue: trueDue });
+          return { ...c, currentDue: trueDue };
+        }
+        return c;
+      });
+
       setProducts(res.products || []);
-      setCustomers(res.customers || []);
+      setCustomers(reconciledCustomers);
       setSellers(res.sellers || []);
-      setOrders(sortOrdersByRecency(res.orders || []));
-      setPaymentLogs(res.paymentLogs || []);
+      setOrders(loadedOrders);
+      setPaymentLogs(loadedPayments);
       setTrashItems(res.trashItems || []);
 
       if (res.userAccounts && res.userAccounts.length > 0) {
@@ -688,11 +699,17 @@ export default function App() {
     setIsLoadingCloud(true);
     await seedFirestoreData();
     const res = await fetchFirestoreData();
+    const loadedOrders = sortOrdersByRecency(res.orders || []);
+    const loadedPayments = res.paymentLogs || [];
+    const reconciledCustomers = (res.customers || []).map((c) => {
+      const trueDue = calculateCustomerBalance(c.id, c, loadedOrders, loadedPayments);
+      return { ...c, currentDue: trueDue };
+    });
     setProducts(res.products);
-    setCustomers(res.customers);
+    setCustomers(reconciledCustomers);
     setSellers(res.sellers);
-    setOrders(sortOrdersByRecency(res.orders));
-    setPaymentLogs(res.paymentLogs);
+    setOrders(loadedOrders);
+    setPaymentLogs(loadedPayments);
     if (res.userAccounts) setUserAccounts(res.userAccounts);
     setIsLoadingCloud(false);
     triggerToast(t('toast_data_reloaded'));
@@ -1610,6 +1627,7 @@ export default function App() {
             customers={getVisibleCustomers()}
             sellers={allSellers}
             paymentLogs={getVisiblePaymentLogs()}
+            orders={orders}
             activeTheme={activeTheme}
             currentUser={currentUser}
             onRecordPayment={handleRecordPayment}

@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
-import { Customer, SalesRep, DuePaymentLog, UITheme, UserAccount } from '../types';
+import { Customer, SalesRep, DuePaymentLog, UITheme, UserAccount, Order } from '../types';
 import { formatTaka, toBnDigit, formatBnDate, getLocalDateStr } from '../utils/formatters';
+import { calculateCustomerBalance } from '../utils/customerLedger';
 import { useLanguage } from '../contexts/LanguageContext';
 import {
   Receipt,
@@ -29,6 +30,7 @@ interface DueManagementProps {
   customers: Customer[];
   sellers: SalesRep[];
   paymentLogs: DuePaymentLog[];
+  orders?: Order[];
   activeTheme: UITheme;
   currentUser?: UserAccount | null;
   onRecordPayment: (newLog: DuePaymentLog) => void;
@@ -47,6 +49,7 @@ export const DueManagement: React.FC<DueManagementProps> = ({
   customers,
   sellers,
   paymentLogs,
+  orders,
   activeTheme,
   currentUser,
   onRecordPayment,
@@ -75,11 +78,23 @@ export const DueManagement: React.FC<DueManagementProps> = ({
   const [adjustCustomerSearch, setAdjustCustomerSearch] = useState<string>('');
   const [isAdjustCustDropdownOpen, setIsAdjustCustDropdownOpen] = useState<boolean>(false);
 
+  // Compute live ledger-backed customers balance
+  const displayCustomers = useMemo(() => {
+    if (!orders || orders.length === 0) return customers;
+    return customers.map((c) => {
+      const liveBal = calculateCustomerBalance(c.id, c, orders, paymentLogs);
+      if (Math.abs((c.currentDue || 0) - liveBal) > 0.01) {
+        return { ...c, currentDue: liveBal };
+      }
+      return c;
+    });
+  }, [customers, orders, paymentLogs]);
+
   const openAdjustDueModal = (targetCust?: Customer) => {
     if (targetCust) {
       setAdjustCustomerId(targetCust.id);
     } else {
-      setAdjustCustomerId(customers[0]?.id || '');
+      setAdjustCustomerId(displayCustomers[0]?.id || customers[0]?.id || '');
     }
     setAdjustAmount('');
     setAdjustType('add');
@@ -90,7 +105,7 @@ export const DueManagement: React.FC<DueManagementProps> = ({
 
   const handleSaveAdjustDue = (e: React.FormEvent) => {
     e.preventDefault();
-    const target = customers.find((c) => c.id === adjustCustomerId);
+    const target = displayCustomers.find((c) => c.id === adjustCustomerId);
     if (!target) {
       alert('অনুগ্রহ করে একজন কাস্টমার বা দোকান নির্বাচন করুন!');
       return;
@@ -103,15 +118,34 @@ export const DueManagement: React.FC<DueManagementProps> = ({
     }
 
     let newDue = target.currentDue;
-    if (adjustType === 'add') {
-      newDue = target.currentDue + val;
+    let newInitialDue = target.initialDue || 0;
+    if (orders && orders.length > 0) {
+      const custOrders = orders.filter((o) => o.customerId === target.id && o.status !== ('trashed' as any));
+      const ordersNet = custOrders.reduce((sum, o) => sum + (Number(o.grandTotal || 0) - Number(o.paidAmount || 0)), 0);
+      const custPays = paymentLogs.filter((p) => p.customerId === target.id);
+      const paysNet = custPays.reduce((sum, p) => sum + (Number(p.amountPaid || (p as any).amount || 0) + Number(p.discountAmount || (p as any).discount || 0)), 0);
+
+      if (adjustType === 'add') {
+        newDue = target.currentDue + val;
+        newInitialDue = (target.initialDue || 0) + val;
+      } else {
+        newDue = val;
+        newInitialDue = val - (ordersNet - paysNet);
+      }
     } else {
-      newDue = val;
+      if (adjustType === 'add') {
+        newDue = target.currentDue + val;
+        newInitialDue = (target.initialDue || 0) + val;
+      } else {
+        newDue = val;
+        newInitialDue = val;
+      }
     }
 
     const updatedCust: Customer = {
       ...target,
       currentDue: newDue,
+      initialDue: newInitialDue,
     };
 
     if (onUpdateCustomer) {
@@ -167,7 +201,7 @@ export const DueManagement: React.FC<DueManagementProps> = ({
   };
 
   // Filter customers with active balance (due > 0 OR advance < 0)
-  const dueCustomers = customers
+  const dueCustomers = displayCustomers
     .filter((c) => {
       // Must have either Due (> 0) or Advance Credit (< 0)
       if (c.currentDue === 0) return false;
@@ -198,16 +232,17 @@ export const DueManagement: React.FC<DueManagementProps> = ({
     .sort((a, b) => b.id.localeCompare(a.id));
 
   // Financial aggregates
-  const totalMarketDue = customers.reduce((sum, c) => sum + (c.currentDue > 0 ? c.currentDue : 0), 0);
-  const totalAdvanceCredit = customers.reduce((sum, c) => sum + (c.currentDue < 0 ? Math.abs(c.currentDue) : 0), 0);
-  const dueCustomersCount = customers.filter((c) => c.currentDue > 0).length;
-  const advanceCustomersCount = customers.filter((c) => c.currentDue < 0).length;
+  const totalMarketDue = displayCustomers.reduce((sum, c) => sum + (c.currentDue > 0 ? c.currentDue : 0), 0);
+  const totalAdvanceCredit = displayCustomers.reduce((sum, c) => sum + (c.currentDue < 0 ? Math.abs(c.currentDue) : 0), 0);
+  const netMarketDue = Math.max(0, totalMarketDue - totalAdvanceCredit);
+  const dueCustomersCount = displayCustomers.filter((c) => c.currentDue > 0).length;
+  const advanceCustomersCount = displayCustomers.filter((c) => c.currentDue < 0).length;
   const totalCollectionAmount = paymentLogs.reduce((sum, p) => sum + (p.amountPaid || 0), 0);
 
   // Calculate Due Grouped by Seller / Admin (active due and advance balance)
   const sellerWiseDue = useMemo(() => {
     const list = sellers.map((seller) => {
-      const sellerCusts = customers.filter((c) => isCustomerOfSeller(c, seller) && c.currentDue !== 0);
+      const sellerCusts = displayCustomers.filter((c) => isCustomerOfSeller(c, seller) && c.currentDue !== 0);
       const sellerTotalDue = sellerCusts.reduce((sum, c) => sum + (c.currentDue > 0 ? c.currentDue : 0), 0);
       const sellerTotalAdvance = sellerCusts.reduce((sum, c) => sum + (c.currentDue < 0 ? Math.abs(c.currentDue) : 0), 0);
       return {
@@ -220,7 +255,7 @@ export const DueManagement: React.FC<DueManagementProps> = ({
     });
 
     // Check if there are unassigned / open customers with due not matched to any seller/admin
-    const unassignedCusts = customers.filter(
+    const unassignedCusts = displayCustomers.filter(
       (c) =>
         c.currentDue !== 0 &&
         !sellers.some((seller) => isCustomerOfSeller(c, seller))
@@ -243,7 +278,7 @@ export const DueManagement: React.FC<DueManagementProps> = ({
     }
 
     return list.sort((a, b) => b.totalDue - a.totalDue);
-  }, [sellers, customers]);
+  }, [sellers, displayCustomers]);
 
   // Handle Payment Form Submission
   const handleSavePayment = (e: React.FormEvent) => {
@@ -484,10 +519,15 @@ export const DueManagement: React.FC<DueManagementProps> = ({
           </div>
           <div className="mt-2.5">
             <h3 className="text-xl sm:text-2xl font-black text-rose-600 dark:text-rose-400 font-mono truncate">
-              {formatTaka(totalMarketDue)}
+              {formatTaka(netMarketDue)}
             </h3>
-            <div className="mt-2 pt-2 border-t border-slate-100 dark:border-slate-800/70 text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 truncate">
-              {toBnDigit(dueCustomersCount)} জন বকেয়া কাস্টমার
+            <div className="mt-2 pt-2 border-t border-slate-100 dark:border-slate-800/70 text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 flex items-center justify-between truncate">
+              <span>{toBnDigit(dueCustomersCount)} জন বকেয়া কাস্টমার</span>
+              {totalAdvanceCredit > 0 && (
+                <span className="text-slate-400 dark:text-slate-500 text-[10px]">
+                  (গ্রস: {formatTaka(totalMarketDue)})
+                </span>
+              )}
             </div>
           </div>
         </div>
@@ -1326,7 +1366,7 @@ export const DueManagement: React.FC<DueManagementProps> = ({
                 {/* Custom Searchable Customer Selector */}
                 <div className="relative">
                   {(() => {
-                    const chosenCust = customers.find((c) => c.id === adjustCustomerId);
+                    const chosenCust = displayCustomers.find((c) => c.id === adjustCustomerId);
                     return (
                       <button
                         type="button"
@@ -1361,7 +1401,7 @@ export const DueManagement: React.FC<DueManagementProps> = ({
                       </div>
 
                       <div className="max-h-48 overflow-y-auto space-y-0.5 divide-y divide-slate-100 dark:divide-slate-800/40">
-                        {customers
+                        {displayCustomers
                           .filter((c) => {
                             if (!adjustCustomerSearch.trim()) return true;
                             const q = adjustCustomerSearch.toLowerCase();
@@ -1405,7 +1445,7 @@ export const DueManagement: React.FC<DueManagementProps> = ({
 
               {/* Selected Customer Snapshot */}
               {(() => {
-                const target = customers.find((c) => c.id === adjustCustomerId);
+                const target = displayCustomers.find((c) => c.id === adjustCustomerId);
                 if (!target) return null;
 
                 const inputVal = Number(adjustAmount) || 0;
@@ -1488,7 +1528,7 @@ export const DueManagement: React.FC<DueManagementProps> = ({
 
               {/* Real-time Calculation Summary */}
               {(() => {
-                const target = customers.find((c) => c.id === adjustCustomerId);
+                const target = displayCustomers.find((c) => c.id === adjustCustomerId);
                 if (!target) return null;
                 const inputVal = Number(adjustAmount) || 0;
                 const finalDue = adjustType === 'add' ? target.currentDue + inputVal : inputVal;

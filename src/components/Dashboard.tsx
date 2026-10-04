@@ -229,7 +229,10 @@ export const Dashboard: React.FC<DashboardProps> = ({
   const filteredCollectedCash = filteredMemoCash + filteredDueCash;
   const filteredNewDue = filteredDeliveredOrders.reduce((sum, o) => sum + o.dueAmount, 0);
 
-  const totalMarketDue = customers.reduce((sum, c) => sum + c.currentDue, 0);
+  const totalPositiveDue = customers.reduce((sum, c) => sum + (c.currentDue > 0 ? c.currentDue : 0), 0);
+  const totalAdvanceCredit = customers.reduce((sum, c) => sum + (c.currentDue < 0 ? Math.abs(c.currentDue) : 0), 0);
+  const netMarketDue = Math.max(0, totalPositiveDue - totalAdvanceCredit);
+  const dueCustomersCount = customers.filter((c) => c.currentDue > 0).length;
   const totalStockPairs = products.reduce((sum, p) => sum + p.stockPairs, 0);
   const freeStockPairs = Math.max(0, totalStockPairs - allPendingBookedPairs);
 
@@ -654,10 +657,15 @@ export const Dashboard: React.FC<DashboardProps> = ({
             </div>
             <div className="mt-2.5">
               <h3 className="text-xl sm:text-2xl font-black text-rose-700 dark:text-rose-400 font-mono truncate">
-                {formatTaka(totalMarketDue)}
+                {formatTaka(netMarketDue)}
               </h3>
-              <div className="mt-2 pt-2 border-t border-slate-100 dark:border-slate-800/70 text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 truncate">
-                {toBnDigit(customers.length)} টি দোকান
+              <div className="mt-2 pt-2 border-t border-slate-100 dark:border-slate-800/70 text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 flex items-center justify-between gap-1 truncate">
+                <span>{toBnDigit(dueCustomersCount)} টি দোকান</span>
+                {totalAdvanceCredit > 0 && (
+                  <span className="text-emerald-600 dark:text-emerald-400 font-bold shrink-0">
+                    অগ্রিম: {formatTaka(totalAdvanceCredit)}
+                  </span>
+                )}
               </div>
             </div>
           </div>

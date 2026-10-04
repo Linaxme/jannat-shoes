@@ -133,7 +133,7 @@ export const SellerTracking: React.FC<SellerTrackingProps> = ({
       });
 
       const assignedCustomersCount = assignedCustomers.length;
-      const totalCustomerDue = assignedCustomers.reduce((sum, c) => sum + (c.currentDue || 0), 0);
+      const totalCustomerDue = assignedCustomers.reduce((sum, c) => sum + (c.currentDue > 0 ? c.currentDue : 0), 0);
 
       // Due collected by this seller or admin for the selected filter period
       const collectedPayments = filteredPaymentLogs.filter((p) => {

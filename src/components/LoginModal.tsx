@@ -67,11 +67,19 @@ export const LoginModal: React.FC<LoginModalProps> = ({
         const uLogin = (u.loginId || '').toLowerCase().trim();
         const uEmail = (u.email || '').toLowerCase().trim();
 
+        const phoneMatches =
+          cleanPhone.length >= 10 &&
+          uPhone.length >= 10 &&
+          (uPhone === cleanPhone ||
+            uPhone.slice(-10) === cleanPhone.slice(-10) ||
+            uPhone.includes(cleanPhone) ||
+            cleanPhone.includes(uPhone));
+
         const matchesIdentifier =
-          (cleanPhone.length >= 10 && (uPhone.includes(cleanPhone) || cleanPhone.includes(uPhone))) ||
-          uLogin === identifier ||
-          uEmail === identifier ||
-          (u.phone && u.phone.trim() === loginIdentifier.trim());
+          phoneMatches ||
+          (Boolean(uLogin) && uLogin === identifier) ||
+          (Boolean(uEmail) && uEmail === identifier) ||
+          (Boolean(u.phone && u.phone.trim()) && u.phone.trim() === loginIdentifier.trim());
 
         return matchesIdentifier;
       });
