@@ -53,6 +53,7 @@ export interface Customer {
   assignedSellerName: string;
   sellerId?: string;
   sellerName?: string;
+  initialDue?: number; // প্রারম্ভিক বকেয়া
   currentDue: number; // বর্তমান মোট বাকী (টাকা)
   creditLimit: number; // সর্বোচ্চ বাকীর সীমা
   lastDueReminderDate?: string; // YYYY-MM-DD format, tracks the last date a due reminder was sent

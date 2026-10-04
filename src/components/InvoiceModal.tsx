@@ -1,20 +1,41 @@
-import React, { useRef, useState } from 'react';
-import { Order } from '../types';
+import React, { useRef, useState, useMemo } from 'react';
+import { Order, Customer, DuePaymentLog } from '../types';
 import { formatTaka, toBnDigit, formatBnDate } from '../utils/formatters';
+import { getOrderAccurateBalances } from '../utils/customerLedger';
 import { Printer, X, CheckCircle2, PhoneCall, MapPin, Store, Download, Loader2, Share2, FileText, Image as ImageIcon } from 'lucide-react';
 import jsPDF from 'jspdf';
 import { toCanvas, toPng } from 'html-to-image';
 
 interface InvoiceModalProps {
   order: Order | null;
+  customers?: Customer[];
+  orders?: Order[];
+  paymentLogs?: DuePaymentLog[];
   onClose: () => void;
 }
 
-export const InvoiceModal: React.FC<InvoiceModalProps> = ({ order, onClose }) => {
+export const InvoiceModal: React.FC<InvoiceModalProps> = ({ 
+  order, 
+  customers = [],
+  orders = [],
+  paymentLogs = [],
+  onClose 
+}) => {
   const memoRef = useRef<HTMLDivElement>(null);
   const [isDownloading, setIsDownloading] = useState(false);
   const [downloadType, setDownloadType] = useState<'image' | 'pdf' | null>(null);
   const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
+
+  const accurateBalances = useMemo(() => {
+    if (order && order.customerId && orders && orders.length > 0) {
+      const cust = customers?.find((c) => c.id === order.customerId);
+      return getOrderAccurateBalances(order.id, order.customerId, cust, orders, paymentLogs || []);
+    }
+    return {
+      previousDue: order?.previousDue || 0,
+      totalNetDue: order?.totalNetDue || 0,
+    };
+  }, [order, customers, orders, paymentLogs]);
 
   if (!order) return null;
 
@@ -152,7 +173,7 @@ export const InvoiceModal: React.FC<InvoiceModalProps> = ({ order, onClose }) =>
     const paidAmount = order.paidAmount || 0;
     const finalDueAmount = Math.max(0, finalGrandTotal - paidAmount);
     const finalOverpaid = Math.max(0, paidAmount - finalGrandTotal);
-    const previousDue = order.previousDue || 0;
+    const previousDue = accurateBalances.previousDue;
     const finalTotalNetDue = previousDue + finalDueAmount - finalOverpaid;
 
     let itemsText = '';
@@ -350,7 +371,7 @@ export const InvoiceModal: React.FC<InvoiceModalProps> = ({ order, onClose }) =>
               const paidAmount = order.paidAmount || 0;
               const finalDueAmount = Math.max(0, finalGrandTotal - paidAmount);
               const finalOverpaid = Math.max(0, paidAmount - finalGrandTotal);
-              const previousDue = order.previousDue || 0;
+              const previousDue = accurateBalances.previousDue;
               const finalTotalNetDue = previousDue + finalDueAmount - finalOverpaid;
 
               return (

@@ -48,6 +48,7 @@ const TrashManagement = lazy(() => import('./components/TrashManagement').then(m
 import { fetchFirestoreData, seedFirestoreData, saveDocumentToFirestore, deleteDocumentFromFirestore, clearAllDatabaseData } from './lib/firestoreService';
 import { generateSMSMessage, sendAutoSMS, SMSType } from './utils/smsService';
 import { normalizeBDPhoneNumber, formatPhoneForDisplay } from './utils/phoneUtils';
+import { calculateCustomerBalance } from './utils/customerLedger';
 import { OrderItem } from './types';
 import { normalizePhoneNumber, compareOrdersNewestFirst, getLocalDateStr } from './utils/formatters';
 
@@ -636,15 +637,14 @@ export default function App() {
       setProducts(updatedProducts);
     }
 
-    // 2. Adjust customer due ONLY if this order was already delivered and has unpaid balance
-    if (target.customerId && target.dueAmount > 0 && target.deliveryStatus === 'delivered') {
+    // 2. Adjust customer due accurately using true customer ledger
+    if (target.customerId) {
       const cust = customers.find((c) => c.id === target.customerId);
-      if (cust) {
-        const adjustedDue = (cust.currentDue || 0) - target.dueAmount;
-        const updatedC = { ...cust, currentDue: adjustedDue };
-        setCustomers((prev) => prev.map((c) => (c.id === cust.id ? updatedC : c)));
-        saveDocumentToFirestore('customers', cust.id, updatedC);
-      }
+      const remainingOrders = orders.filter((o) => o.id !== orderId);
+      const updatedDue = calculateCustomerBalance(target.customerId, cust, remainingOrders, paymentLogs);
+      const updatedC = { ...(cust || ({} as Customer)), currentDue: updatedDue };
+      setCustomers((prev) => prev.map((c) => (c.id === target.customerId ? updatedC : c)));
+      saveDocumentToFirestore('customers', target.customerId, updatedC);
     }
 
     // 3. Remove order from state and Cloud Firestore
@@ -718,11 +718,14 @@ export default function App() {
       setProducts(updatedProducts);
     }
 
-    // Update customer due ONLY if the order is delivered immediately (direct sales memo)
-    if (newOrder.deliveryStatus === 'delivered') {
+    // Update customer due accurately based on full ledger balance
+    if (newOrder.customerId) {
+      const targetCust = customers.find((c) => c.id === newOrder.customerId);
+      const allOrdersUpdated = [newOrder, ...orders.filter((o) => o.id !== newOrder.id)];
+      const trueCurrentDue = calculateCustomerBalance(newOrder.customerId, targetCust, allOrdersUpdated, paymentLogs);
       const updatedCustomers = customers.map((c) => {
         if (c.id === newOrder.customerId) {
-          const updatedC = { ...c, currentDue: newOrder.totalNetDue };
+          const updatedC = { ...c, currentDue: trueCurrentDue };
           saveDocumentToFirestore('customers', c.id, updatedC);
           return updatedC;
         }
@@ -805,14 +808,14 @@ export default function App() {
     });
     setProducts(updatedProducts);
 
-    // Reconcile Customer Due
-    // Since the order was not delivered before, its due amount was NOT added to currentDue.
-    // We now add the NEW remaining due amount to the customer's total balance.
+    // Reconcile Customer Due accurately based on full ledger balance
     if (targetOrder.customerId) {
+      const targetCust = customers.find((c) => c.id === targetOrder.customerId);
+      const allOrdersUpdated = [updatedOrder, ...orders.filter((o) => o.id !== orderId)];
+      const trueCurrentDue = calculateCustomerBalance(targetOrder.customerId, targetCust, allOrdersUpdated, paymentLogs);
       const updatedCustomers = customers.map((c) => {
         if (c.id === targetOrder.customerId) {
-          const updatedCurrentDue = (c.currentDue || 0) + newDueAmount;
-          const updatedC = { ...c, currentDue: updatedCurrentDue };
+          const updatedC = { ...c, currentDue: trueCurrentDue };
           saveDocumentToFirestore('customers', c.id, updatedC);
           return updatedC;
         }
@@ -867,11 +870,14 @@ export default function App() {
     setOrders((prev) => sortOrdersByRecency([updatedOrder, ...prev.filter((o) => o.id !== updatedOrder.id)]));
     await saveDocumentToFirestore('orders', updatedOrder.id, updatedOrder);
 
-    // Update customer due ONLY if the order is delivered
-    if (updatedOrder.deliveryStatus === 'delivered') {
+    // Update customer due accurately based on full ledger balance
+    if (updatedOrder.customerId) {
+      const targetCust = customers.find((c) => c.id === updatedOrder.customerId);
+      const allOrdersUpdated = [updatedOrder, ...orders.filter((o) => o.id !== updatedOrder.id)];
+      const trueCurrentDue = calculateCustomerBalance(updatedOrder.customerId, targetCust, allOrdersUpdated, paymentLogs);
       const updatedCustomers = customers.map((c) => {
         if (c.id === updatedOrder.customerId) {
-          const updatedC = { ...c, currentDue: updatedOrder.totalNetDue };
+          const updatedC = { ...c, currentDue: trueCurrentDue };
           saveDocumentToFirestore('customers', c.id, updatedC);
           return updatedC;
         }
@@ -885,18 +891,23 @@ export default function App() {
 
   // 2. Record Due Payment Handler
   const handleRecordPayment = async (newLog: DuePaymentLog) => {
-    setPaymentLogs((prev) => [newLog, ...prev]);
+    const updatedPaymentLogs = [newLog, ...paymentLogs];
+    setPaymentLogs(updatedPaymentLogs);
     await saveDocumentToFirestore('paymentLogs', newLog.id, newLog);
 
-    const updatedCustomers = customers.map((c) => {
-      if (c.id === newLog.customerId) {
-        const updatedC = { ...c, currentDue: newLog.remainingDue };
-        saveDocumentToFirestore('customers', c.id, updatedC);
-        return updatedC;
-      }
-      return c;
-    });
-    setCustomers(updatedCustomers);
+    if (newLog.customerId) {
+      const targetCust = customers.find((c) => c.id === newLog.customerId);
+      const trueCurrentDue = calculateCustomerBalance(newLog.customerId, targetCust, orders, updatedPaymentLogs);
+      const updatedCustomers = customers.map((c) => {
+        if (c.id === newLog.customerId) {
+          const updatedC = { ...c, currentDue: trueCurrentDue };
+          saveDocumentToFirestore('customers', c.id, updatedC);
+          return updatedC;
+        }
+        return c;
+      });
+      setCustomers(updatedCustomers);
+    }
 
     triggerToast(t('toast_payment_updated').replace('{{amount}}', newLog.amountPaid.toLocaleString('bn-BD')));
 
@@ -998,11 +1009,13 @@ export default function App() {
           setProducts(updatedProducts);
         }
 
-        // Re-apply customer due if this order had unpaid balance
-        if (orderData.customerId && orderData.dueAmount > 0 && orderData.deliveryStatus === 'delivered') {
+        // Re-apply customer due accurately using true customer ledger
+        if (orderData.customerId) {
+          const targetCust = customers.find((c) => c.id === orderData.customerId);
+          const restoredOrders = [orderData, ...orders];
+          const updatedDue = calculateCustomerBalance(orderData.customerId, targetCust, restoredOrders, paymentLogs);
           const updatedCustomers = customers.map((c) => {
             if (c.id === orderData.customerId) {
-              const updatedDue = (c.currentDue || 0) + orderData.dueAmount;
               const updatedC = { ...c, currentDue: updatedDue };
               saveDocumentToFirestore('customers', c.id, updatedC);
               return updatedC;
@@ -1430,6 +1443,9 @@ export default function App() {
         <Suspense fallback={null}>
           <InvoiceModal
             order={selectedInvoiceOrder}
+            customers={customers}
+            orders={orders}
+            paymentLogs={paymentLogs}
             onClose={() => setSelectedInvoiceOrder(null)}
           />
         </Suspense>
@@ -1550,6 +1566,8 @@ export default function App() {
             products={products}
             customers={getVisibleCustomers()}
             sellers={allSellers}
+            orders={orders}
+            paymentLogs={paymentLogs}
             currentUser={currentUser}
             activeTheme={activeTheme}
             systemConfig={systemConfig}

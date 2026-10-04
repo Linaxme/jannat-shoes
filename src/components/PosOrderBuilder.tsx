@@ -1,7 +1,8 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { ShoeProduct, Customer, SalesRep, OrderItem, Order, UserAccount, SystemConfig } from '../types';
+import { ShoeProduct, Customer, SalesRep, OrderItem, Order, UserAccount, SystemConfig, DuePaymentLog } from '../types';
 import { formatTaka, toBnDigit, getLocalDateStr } from '../utils/formatters';
 import { normalizeBDPhoneNumber, convertBnToEnDigits } from '../utils/phoneUtils';
+import { calculateCustomerBalance } from '../utils/customerLedger';
 import { ProductImageDisplay } from './Shoe2DPlaceholder';
 import {
   ShoppingBag,
@@ -30,6 +31,8 @@ interface PosOrderBuilderProps {
   products: ShoeProduct[];
   customers: Customer[];
   sellers: SalesRep[];
+  orders?: Order[];
+  paymentLogs?: DuePaymentLog[];
   currentUser?: UserAccount | null;
   activeTheme?: any;
   systemConfig?: SystemConfig;
@@ -42,6 +45,8 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
   products,
   customers,
   sellers,
+  orders = [],
+  paymentLogs = [],
   currentUser,
   systemConfig,
   preSelectedCustomerId,
@@ -217,7 +222,13 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
   const totalCommission = cartItems.reduce((sum, item) => sum + (item.totalPairs * (item.commissionPerPair || 0)), 0);
   const subTotal = grossTotal - totalCommission;
   const grandTotal = Math.max(0, subTotal - discountNum);
-  const previousDue = selectedCustomer?.currentDue || 0;
+  const previousDue = useMemo(() => {
+    if (!selectedCustomer) return 0;
+    if (orders && orders.length > 0) {
+      return calculateCustomerBalance(selectedCustomer.id, selectedCustomer, orders, paymentLogs);
+    }
+    return selectedCustomer.currentDue || 0;
+  }, [selectedCustomer, orders, paymentLogs]);
   const newDueAmount = Math.max(0, grandTotal - paidAmountNum);
   const overpaidAmount = Math.max(0, paidAmountNum - grandTotal);
   const totalNetDue = previousDue + newDueAmount - overpaidAmount;
@@ -737,18 +748,18 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
             <div className="flex items-center gap-3 shrink-0">
               <div className="text-right bg-white dark:bg-slate-900/90 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 flex items-center gap-2">
                 <span className="text-[11px] text-slate-500 dark:text-slate-400">
-                  {selectedCustomer.currentDue < 0 ? 'এডভান্স:' : 'বকেয়া:'}
+                  {previousDue < 0 ? 'এডভান্স:' : 'বকেয়া:'}
                 </span>
                 <span className={`font-bold text-sm ${
-                  selectedCustomer.currentDue > 0
+                  previousDue > 0
                     ? 'text-rose-600 dark:text-rose-400'
-                    : selectedCustomer.currentDue < 0
+                    : previousDue < 0
                     ? 'text-emerald-600 dark:text-emerald-400'
                     : 'text-slate-700 dark:text-slate-300'
                 }`}>
-                  {selectedCustomer.currentDue < 0
-                    ? `+${formatTaka(Math.abs(selectedCustomer.currentDue))}`
-                    : formatTaka(selectedCustomer.currentDue)}
+                  {previousDue < 0
+                    ? `+${formatTaka(Math.abs(previousDue))}`
+                    : formatTaka(previousDue)}
                 </span>
               </div>
               <button
