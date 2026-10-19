@@ -33,6 +33,7 @@ import { EditPendingOrderModal } from './EditPendingOrderModal';
 
 interface SalesHistoryProps {
   orders: Order[];
+  allOrders?: Order[];
   products?: ShoeProduct[];
   activeTheme: UITheme;
   onSelectOrderForInvoice: (order: Order) => void;
@@ -45,6 +46,7 @@ interface SalesHistoryProps {
 
 export const SalesHistory: React.FC<SalesHistoryProps> = ({
   orders,
+  allOrders,
   products = [],
   activeTheme,
   onSelectOrderForInvoice,
@@ -1337,6 +1339,7 @@ export const SalesHistory: React.FC<SalesHistoryProps> = ({
         <EditPendingOrderModal
           order={editingOrder}
           products={products}
+          orders={allOrders || orders}
           isSalesHistory={true}
           title={`বিক্রয় মেমো এডিট (মেমো #${editingOrder.memoNo})`}
           onClose={() => setEditingOrder(null)}

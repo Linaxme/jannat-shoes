@@ -3,6 +3,7 @@ import { ShoeProduct, Customer, SalesRep, OrderItem, Order, UserAccount, SystemC
 import { formatTaka, toBnDigit, getLocalDateStr } from '../utils/formatters';
 import { normalizeBDPhoneNumber, convertBnToEnDigits } from '../utils/phoneUtils';
 import { calculateCustomerBalance } from '../utils/customerLedger';
+import { generateNextMemoNo } from '../utils/serialGenerator';
 import { ProductImageDisplay } from './Shoe2DPlaceholder';
 import {
   ShoppingBag,
@@ -76,6 +77,8 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
       setSelectedCustomerId(preSelectedCustomerId);
     }
   }, [preSelectedCustomerId]);
+
+  const nextSequentialMemoNo = useMemo(() => generateNextMemoNo(orders), [orders]);
   const [customerSearchQuery, setCustomerSearchQuery] = useState<string>('');
   const [showCustomerDropdown, setShowCustomerDropdown] = useState<boolean>(false);
 
@@ -188,7 +191,63 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
 
   // Form error and submission state
   const [formError, setFormError] = useState<string | null>(null);
+  const [stockError, setStockError] = useState<string | null>(null);
   const [isSubmittingOrder, setIsSubmittingOrder] = useState<boolean>(false);
+
+  const isSameProduct = (item: { productId?: string; articleCode?: string }, prod: ShoeProduct): boolean => {
+    if (item.productId && prod.id && item.productId === prod.id) return true;
+    const itemCode = (item.articleCode || '').trim().toLowerCase();
+    const prodCode = (prod.articleCode || '').trim().toLowerCase();
+    return Boolean(itemCode && prodCode && itemCode === prodCode);
+  };
+
+  const isOrderBooked = (order: Order): boolean => {
+    return (
+      order.deliveryStatus === 'booked' ||
+      (order.orderType === 'sample_booking' && order.deliveryStatus !== 'delivered')
+    );
+  };
+
+  // Calculate booked pairs in pending orders for a product
+  const getBookedPairs = (prod: ShoeProduct | string): number => {
+    const targetProd =
+      typeof prod === 'string'
+        ? products.find((p) => p.id === prod || (p.articleCode || '').trim().toLowerCase() === prod.trim().toLowerCase())
+        : prod;
+
+    return (orders || []).reduce((sum, order) => {
+      if (!isOrderBooked(order)) return sum;
+      const orderProdPairs = (order.items || [])
+        .filter((i) =>
+          targetProd
+            ? isSameProduct(i, targetProd)
+            : i.productId === prod
+        )
+        .reduce((iSum, i) => iSum + (Number(i.totalPairs) || 0), 0);
+      return sum + orderProdPairs;
+    }, 0);
+  };
+
+  // Calculate pairs currently in this memo's cart for a product
+  const getCartPairs = (prod: ShoeProduct): number => {
+    return cartItems
+      .filter((item) => isSameProduct(item, prod))
+      .reduce((sum, item) => sum + (Number(item.totalPairs) || 0), 0);
+  };
+
+  // Calculate available free stock from global orders (physical stock minus booked pairs)
+  const getFreeStock = (prod: ShoeProduct): number => {
+    const physicalStock = Number(prod.stockPairs) || 0;
+    const booked = getBookedPairs(prod);
+    return Math.max(0, physicalStock - booked);
+  };
+
+  // Calculate remaining free stock after subtracting current memo cart pairs
+  const getRemainingFreeStock = (prod: ShoeProduct): number => {
+    const freeStock = getFreeStock(prod);
+    const inCart = getCartPairs(prod);
+    return Math.max(0, freeStock - inCart);
+  };
 
   // Quick New Customer Modal
   const [showAddCustomerModal, setShowAddCustomerModal] = useState<boolean>(false);
@@ -202,16 +261,18 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
   const selectedCustomer = customers.find((c) => c.id === selectedCustomerId);
 
   // Suggestions for auto-complete
-  const suggestions = products.filter((p) => {
-    if (!productSearchInput.trim()) return false;
-    const q = productSearchInput.toLowerCase();
-    return (
-      (p.articleCode || "").toLowerCase().includes(q) ||
-      (p.name || "").toLowerCase().includes(q) ||
-      (p.sizeRange || "").toLowerCase().includes(q) ||
-      (p.brand || "").toLowerCase().includes(q)
-    );
-  });
+  const suggestions = useMemo(() => {
+    if (!productSearchInput.trim()) return products.slice(0, 12);
+    const q = productSearchInput.toLowerCase().trim();
+    return products.filter((p) => {
+      return (
+        (p.articleCode || "").toLowerCase().includes(q) ||
+        (p.name || "").toLowerCase().includes(q) ||
+        (p.sizeRange || "").toLowerCase().includes(q) ||
+        (p.brand || "").toLowerCase().includes(q)
+      );
+    });
+  }, [products, productSearchInput]);
 
   // Cart Calculations
   const discountNum = typeof discount === 'number' ? discount : parseFloat(discount) || 0;
@@ -235,6 +296,17 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
 
   // Handle Select Suggestion
   const handleSelectSuggestion = (p: ShoeProduct) => {
+    const totalStock = Number(p.stockPairs) || 0;
+    const bookedPairs = getBookedPairs(p) + getCartPairs(p);
+    const remainingFree = getRemainingFreeStock(p);
+    if (remainingFree <= 0) {
+      setStockError(
+        `"${p.articleCode}" মেমো করা যাবে না (মোট স্টক: ${toBnDigit(totalStock)} জোড়া, বুকড: ${toBnDigit(bookedPairs)} জোড়া, ফ্রি স্টক: ০ জোড়া)`
+      );
+      setShowSuggestions(false);
+      return;
+    }
+    setStockError(null);
     setSelectedProduct(p);
     setProductSearchInput(`${p.articleCode} - ${p.name}`);
     setEntryPricePerPair(p.sellPrice || p.buyPrice || '');
@@ -244,57 +316,72 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
 
   // Add Item to Cart
   const handleAddProductToMemo = () => {
+    setStockError(null);
+    setFormError(null);
     let prod = selectedProduct;
 
     if (!prod && productSearchInput.trim()) {
-      const match = products.find(
+      const q = productSearchInput.trim().toLowerCase();
+      const matches = products.filter(
         (p) =>
-          (p.articleCode || "").toLowerCase() === productSearchInput.trim().toLowerCase() ||
-          (p.name || "").toLowerCase().includes(productSearchInput.trim().toLowerCase())
+          (p.articleCode || "").toLowerCase() === q ||
+          `${(p.articleCode || "").toLowerCase()} - ${(p.name || "").toLowerCase()}` === q ||
+          (p.name || "").toLowerCase().includes(q)
       );
-      if (match) prod = match;
+      prod = matches.find((p) => getRemainingFreeStock(p) > 0) || matches[0] || null;
     }
 
     if (!prod) {
-      alert('অনুগ্রহ করে সঠিক প্রোডাক্ট নাম বা আর্টিকল কোড নির্বাচন করুন!');
+      setStockError('অনুগ্রহ করে সঠিক প্রোডাক্ট নাম বা আর্টিকল কোড নির্বাচন করুন!');
       return;
     }
 
-    const qtyNumber = typeof entryQty === 'number' ? entryQty : parseInt(entryQty as string) || 0;
+    const totalStock = Number(prod.stockPairs) || 0;
+    const bookedPairs = getBookedPairs(prod);
+    const currentCartPairs = getCartPairs(prod);
+    const freeStock = getFreeStock(prod);
+    const remainingFree = getRemainingFreeStock(prod);
+
+    if (remainingFree <= 0) {
+      setStockError(
+        `"${prod.articleCode}" মেমো করা যাবে না (মোট স্টক: ${toBnDigit(totalStock)} জোড়া, বুকড: ${toBnDigit(bookedPairs + currentCartPairs)} জোড়া, ফ্রি স্টক: ০ জোড়া)`
+      );
+      return;
+    }
+
+    const qtyNumber = typeof entryQty === 'number' ? entryQty : parseInt(convertBnToEnDigits(String(entryQty))) || 0;
     if (qtyNumber <= 0) {
-      alert('অনুগ্রহ করে জোড়ার পরিমাণ লিখুন!');
+      setStockError('অনুগ্রহ করে জোড়া বা ডজনের পরিমাণ লিখুন!');
       return;
     }
 
-    const parsedPrice = typeof entryPricePerPair === 'number' ? entryPricePerPair : parseFloat(entryPricePerPair as string);
+    const parsedPrice = typeof entryPricePerPair === 'number' ? entryPricePerPair : parseFloat(convertBnToEnDigits(String(entryPricePerPair)));
     const price = !isNaN(parsedPrice) && parsedPrice > 0 ? parsedPrice : (prod.sellPrice || prod.buyPrice || 0);
 
-    const parsedCommission = typeof entryCommissionPerPair === 'number' ? entryCommissionPerPair : parseFloat(entryCommissionPerPair as string);
+    const parsedCommission = typeof entryCommissionPerPair === 'number' ? entryCommissionPerPair : parseFloat(convertBnToEnDigits(String(entryCommissionPerPair)));
     const commission = !isNaN(parsedCommission) && parsedCommission > 0 ? parsedCommission : 0;
     const netUnitPrice = Math.max(0, price - commission);
 
-    const calculatedPairs = entryUnitType === 'cartons' ? qtyNumber * prod.pairsPerCarton : qtyNumber;
+    const pairsPerCarton = Number(prod.pairsPerCarton) || 12;
+    const calculatedPairs = entryUnitType === 'cartons' ? qtyNumber * pairsPerCarton : qtyNumber;
     const itemTotalCommission = calculatedPairs * commission;
     const itemGrossAmount = calculatedPairs * price;
 
     const existingIndex = cartItems.findIndex(
-      (item) => item.productId === prod!.id && item.unitType === entryUnitType
+      (item) => isSameProduct(item, prod!) && item.unitType === entryUnitType
     );
-    
-    // Check total existing pairs in POS cart for this product
-    const currentCartPairs = cartItems
-      .filter((item) => item.productId === prod!.id)
-      .reduce((sum, item) => sum + item.totalPairs, 0);
 
-    if (currentCartPairs + calculatedPairs > prod.stockPairs) {
-      alert(`দুঃখিত, পর্যাপ্ত স্টক নেই! বর্তমানে স্টক আছে ${toBnDigit(prod.stockPairs)} জোড়া।`);
+    if (calculatedPairs > remainingFree) {
+      setStockError(
+        `"${prod.articleCode}" এর মোট স্টক ${toBnDigit(totalStock)} জোড়া, বুকড ${toBnDigit(bookedPairs + currentCartPairs)} জোড়া, ফ্রি স্টক আছে ${toBnDigit(remainingFree)} জোড়া (আপনি দিচ্ছেন ${toBnDigit(calculatedPairs)} জোড়া)।`
+      );
       return;
     }
 
     if (existingIndex > -1) {
       const updated = [...cartItems];
       const newQty = updated[existingIndex].quantityInput + qtyNumber;
-      const newPairs = entryUnitType === 'cartons' ? newQty * prod.pairsPerCarton : newQty;
+      const newPairs = entryUnitType === 'cartons' ? newQty * pairsPerCarton : newQty;
       const effectiveComm = commission > 0 ? commission : (updated[existingIndex].commissionPerPair || 0);
       const effectiveNet = Math.max(0, price - effectiveComm);
       updated[existingIndex] = {
@@ -337,27 +424,35 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
 
   // Update Cart Quantity
   const handleUpdateQty = (index: number, newQtyInput: number) => {
+    setStockError(null);
+    setFormError(null);
     if (newQtyInput <= 0) {
       handleRemoveItem(index);
       return;
     }
     const updated = [...cartItems];
     const item = updated[index];
-    const product = products.find((p) => p.id === item.productId);
+    const product = products.find((p) => isSameProduct(item, p));
     
     if (!product) return;
 
-    const pairsPerCarton = product ? product.pairsPerCarton : 12;
+    const pairsPerCarton = Number(product.pairsPerCarton) || 12;
 
     const newPairs = item.unitType === 'cartons' ? newQtyInput * pairsPerCarton : newQtyInput;
     
     // Check total pairs for this product across all POS cart items (excluding the old quantity of THIS item)
     const otherCartPairs = cartItems
-      .filter((c, i) => c.productId === item.productId && i !== index)
-      .reduce((sum, c) => sum + c.totalPairs, 0);
+      .filter((c, i) => isSameProduct(c, product) && i !== index)
+      .reduce((sum, c) => sum + (Number(c.totalPairs) || 0), 0);
 
-    if (otherCartPairs + newPairs > product.stockPairs) {
-      alert(`দুঃখিত, পর্যাপ্ত স্টক নেই! বর্তমানে স্টক আছে ${toBnDigit(product.stockPairs)} জোড়া।`);
+    const freeStock = getFreeStock(product);
+    const totalStock = Number(product.stockPairs) || 0;
+    const bookedPairs = getBookedPairs(product);
+
+    if (otherCartPairs + newPairs > freeStock) {
+      setStockError(
+        `"${product.articleCode}" এর মোট স্টক ${toBnDigit(totalStock)} জোড়া, বুকড ${toBnDigit(bookedPairs)} জোড়া, ফ্রি স্টক ${toBnDigit(freeStock)} জোড়া। এর বেশি মেমো করা যাবে না!`
+      );
       return;
     }
 
@@ -415,6 +510,7 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
   // Submit Order
   const handleSubmitOrder = async () => {
     setFormError(null);
+    setStockError(null);
 
     if (cartItems.length === 0) {
       setFormError('অনুগ্রহ করে প্রথমে অন্তত একটি প্রোডাক্ট মেমোতে যোগ করুন!');
@@ -425,11 +521,45 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
       return;
     }
 
+    // Strict Stock Validation across all cart items before order submission
+    const pairsByProduct: Record<string, { totalPairs: number; articleCode: string; prod: ShoeProduct | undefined }> = {};
+    for (const item of cartItems) {
+      const matchedProd = products.find((p) => isSameProduct(item, p));
+      const key = matchedProd ? matchedProd.id : (item.productId || item.articleCode);
+      if (!pairsByProduct[key]) {
+        pairsByProduct[key] = { totalPairs: 0, articleCode: item.articleCode, prod: matchedProd };
+      }
+      pairsByProduct[key].totalPairs += Number(item.totalPairs) || 0;
+    }
+
+    for (const info of Object.values(pairsByProduct)) {
+      const prod = info.prod;
+      if (!prod) {
+        setFormError(`দুঃখিত, "${info.articleCode}" স্টকে পাওয়া যায়নি!`);
+        return;
+      }
+      const totalStock = Number(prod.stockPairs) || 0;
+      const bookedPairs = getBookedPairs(prod);
+      const freeStock = getFreeStock(prod);
+      if (freeStock <= 0) {
+        setFormError(
+          `"${prod.articleCode}" মেমো করা যাবে না (মোট স্টক: ${toBnDigit(totalStock)} জোড়া, বুকড: ${toBnDigit(bookedPairs)} জোড়া, ফ্রি স্টক: ০ জোড়া)।`
+        );
+        return;
+      }
+      if (info.totalPairs > freeStock) {
+        setFormError(
+          `"${prod.articleCode}" এর মোট স্টক ${toBnDigit(totalStock)} জোড়া, বুকড ${toBnDigit(bookedPairs)} জোড়া, ফ্রি স্টক ${toBnDigit(freeStock)} জোড়া (মেমোতে দেওয়া হয়েছে ${toBnDigit(info.totalPairs)} জোড়া)।`
+        );
+        return;
+      }
+    }
+
     setIsSubmittingOrder(true);
     try {
       const todayStr = getLocalDateStr(new Date());
       const nowTime = new Date().toLocaleTimeString('bn-BD', { hour: '2-digit', minute: '2-digit' });
-      const memoNo = `MEMO-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
+      const memoNo = generateNextMemoNo(orders);
 
       let status: 'পরিশোধিত' | 'আংশিক বাকী' | 'সম্পূর্ণ বাকী' = 'পরিশোধিত';
       if (paidAmountNum === 0) {
@@ -540,10 +670,13 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
       
       {/* Minimal Header like Dashboard */}
       <div className="flex items-center justify-between gap-3 pt-1 pb-1">
-        <div className="flex items-center gap-3 flex-1 min-w-0">
+        <div className="flex items-center gap-2.5 flex-1 min-w-0">
           <span className="text-base sm:text-lg md:text-xl font-black text-amber-600 dark:text-amber-400 tracking-wide whitespace-nowrap flex items-center gap-2">
             <ShoppingBag className="w-5 h-5 text-amber-600 dark:text-amber-400" />
             বিক্রয় ও অর্ডার বুকিং
+          </span>
+          <span className="px-2 py-0.5 rounded-md bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 font-mono text-[11px] sm:text-xs font-bold border border-amber-300 dark:border-amber-700/50 shrink-0">
+            #{nextSequentialMemoNo}
           </span>
           <div className="h-0.5 bg-gradient-to-r from-amber-500/50 via-slate-200 dark:via-slate-800 to-transparent flex-1" />
         </div>
@@ -816,65 +949,83 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
             {/* Suggestions Overlay Dropdown */}
             {showSuggestions && suggestions.length > 0 && (
               <div className="absolute z-30 left-0 right-0 mt-1 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700/90 rounded-xl shadow-2xl max-h-64 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800/80">
-                {suggestions.map((p) => (
-                  <div
-                    key={p.id}
-                    onClick={() => handleSelectSuggestion(p)}
-                    className="p-2.5 hover:bg-slate-50 dark:hover:bg-slate-800/90 cursor-pointer flex items-center justify-between gap-3 text-xs transition-colors"
-                  >
-                    <div className="flex items-center gap-2.5 min-w-0">
-                      <div className="w-9 h-9 rounded-lg overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-900 flex-shrink-0">
-                        <ProductImageDisplay
-                          src={p.imageUrl}
-                          alt={p.articleCode}
-                          articleCode={p.articleCode}
-                          category={p.category}
-                          size="xs"
-                          showLabel={false}
-                        />
-                      </div>
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-1.5 flex-wrap">
-                          <span className="font-bold text-amber-700 dark:text-amber-300 font-mono text-xs">{p.articleCode}</span>
-                          <span className="text-slate-900 dark:text-slate-200 font-medium truncate">{p.name}</span>
+                {suggestions.map((p) => {
+                  const totalStock = Number(p.stockPairs) || 0;
+                  const bookedPairs = getBookedPairs(p) + getCartPairs(p);
+                  const remainingFree = getRemainingFreeStock(p);
+                  return (
+                    <div
+                      key={p.id}
+                      onClick={() => handleSelectSuggestion(p)}
+                      className={`p-2.5 cursor-pointer flex items-center justify-between gap-3 text-xs transition-colors ${
+                        remainingFree <= 0
+                          ? 'opacity-65 bg-rose-50/40 dark:bg-rose-950/20 hover:bg-rose-50 dark:hover:bg-rose-950/30'
+                          : 'hover:bg-slate-50 dark:hover:bg-slate-800/90'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <div className="w-9 h-9 rounded-lg overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-900 flex-shrink-0">
+                          <ProductImageDisplay
+                            src={p.imageUrl}
+                            alt={p.articleCode}
+                            articleCode={p.articleCode}
+                            category={p.category}
+                            size="xs"
+                            showLabel={false}
+                          />
                         </div>
-                        <div className="flex items-center gap-2 mt-0.5 text-[11px] flex-wrap">
-                          <span className="px-1.5 py-0.5 bg-amber-50 dark:bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-500/30 rounded font-semibold text-[10px]">
-                            সাইজ: {p.sizeRange || '৩৯-৪৪'}
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span className="font-bold text-amber-700 dark:text-amber-300 font-mono text-xs">{p.articleCode}</span>
+                            <span className="text-slate-900 dark:text-slate-200 font-medium truncate">{p.name}</span>
+                          </div>
+                          <div className="flex items-center gap-2 mt-0.5 text-[11px] flex-wrap">
+                            <span className="px-1.5 py-0.5 bg-amber-50 dark:bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-500/30 rounded font-semibold text-[10px]">
+                              সাইজ: {p.sizeRange || '৩৯-৪৪'}
+                            </span>
+                            {p.category && (
+                              <span className="text-slate-500 dark:text-slate-400 text-[10px] hidden sm:inline">• {p.category}</span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="text-right shrink-0 font-mono tabular-nums">
+                        <div className="font-bold text-emerald-600 dark:text-emerald-400 text-xs">৳{p.sellPrice}/জোড়া</div>
+                        <div className="text-[10px] text-slate-600 dark:text-slate-300 flex items-center justify-end gap-1.5 mt-0.5">
+                          <span>মোট: <strong className="text-slate-800 dark:text-slate-200">{toBnDigit(totalStock)}</strong></span>
+                          <span>·</span>
+                          <span>বুকড: <strong className="text-amber-600 dark:text-amber-400">{toBnDigit(bookedPairs)}</strong></span>
+                          <span>·</span>
+                          <span className={remainingFree > 0 ? 'text-emerald-600 dark:text-emerald-400 font-bold' : 'text-rose-600 dark:text-rose-400 font-bold'}>
+                            ফ্রি: {toBnDigit(remainingFree)}
                           </span>
-                          {p.category && (
-                            <span className="text-slate-500 dark:text-slate-400 text-[10px] hidden sm:inline">• {p.category}</span>
-                          )}
                         </div>
                       </div>
                     </div>
-                    <div className="text-right shrink-0">
-                      <div className="font-bold text-emerald-600 dark:text-emerald-400 text-xs">৳{p.sellPrice}/জোড়া</div>
-                      <div className="text-[11px] text-slate-600 dark:text-slate-300">
-                        স্টক: <span className="text-amber-600 dark:text-amber-400 font-bold">{toBnDigit(p.stockPairs)}</span> জোড়া
-                      </div>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
 
             {/* Selected Product Size & Stock Quick Badge */}
             {selectedProduct && (
-              <div className="mt-2 px-2.5 py-1.5 bg-slate-50 dark:bg-slate-950/90 border border-amber-200 dark:border-amber-500/30 rounded-xl flex items-center justify-between text-xs">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-slate-500 dark:text-slate-400 text-[11px]">সাইজ:</span>
-                  <span className="px-2 py-0.5 rounded-md bg-amber-100 dark:bg-amber-500/20 text-amber-800 dark:text-amber-300 font-bold border border-amber-200 dark:border-amber-500/30 text-xs">
-                    {selectedProduct.sizeRange || '৩৯-৪৪'}
+              <div className="mt-2 px-2.5 py-1.5 bg-slate-50 dark:bg-slate-950/90 border border-amber-200 dark:border-amber-500/30 rounded-xl flex items-center justify-between gap-2 text-xs flex-wrap">
+                <div className="flex items-center gap-2 flex-wrap font-mono tabular-nums">
+                  <span className="px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-500/20 text-amber-800 dark:text-amber-300 font-bold border border-amber-200 dark:border-amber-500/30 text-[11px] font-sans">
+                    সাইজ: {selectedProduct.sizeRange || '৩৯-৪৪'}
                   </span>
-                  <span className="text-slate-500 dark:text-slate-400 text-[11px] ml-1">স্টক:</span>
-                  <span className="text-emerald-600 dark:text-emerald-400 font-bold text-xs">
-                    {toBnDigit(selectedProduct.stockPairs)} জোড়া
+                  <span className="text-slate-600 dark:text-slate-400 text-[11px]">
+                    মোট: <strong className="text-slate-900 dark:text-slate-100">{toBnDigit(Number(selectedProduct.stockPairs) || 0)}</strong>
+                  </span>
+                  <span className="text-slate-400">·</span>
+                  <span className="text-slate-600 dark:text-slate-400 text-[11px]">
+                    বুকড: <strong className="text-amber-600 dark:text-amber-400">{toBnDigit(getBookedPairs(selectedProduct) + getCartPairs(selectedProduct))}</strong>
+                  </span>
+                  <span className="text-slate-400">·</span>
+                  <span className="text-slate-600 dark:text-slate-400 text-[11px]">
+                    ফ্রি: <strong className={getRemainingFreeStock(selectedProduct) > 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}>{toBnDigit(getRemainingFreeStock(selectedProduct))} জোড়া</strong>
                   </span>
                 </div>
-                <span className="text-[10px] text-slate-500 dark:text-slate-400">
-                  (প্রতি ডজন {toBnDigit(selectedProduct.pairsPerCarton || 12)} জোড়া)
-                </span>
               </div>
             )}
           </div>
@@ -910,7 +1061,10 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
               type="number"
               min="1"
               value={entryQty}
-              onChange={(e) => setEntryQty(e.target.value === '' ? '' : parseInt(e.target.value))}
+              onChange={(e) => {
+                setStockError(null);
+                setEntryQty(e.target.value === '' ? '' : parseInt(e.target.value));
+              }}
               placeholder="পরিমাণ"
               className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs sm:text-sm text-amber-700 dark:text-amber-300 font-bold rounded-xl px-3 py-2.5 focus:outline-none focus:border-amber-500"
             />
@@ -966,12 +1120,34 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
           </div>
         )}
 
+        {/* Stock Validation Error Message */}
+        {stockError && (
+          <div className="p-2.5 bg-rose-50 dark:bg-rose-500/15 border border-rose-200 dark:border-rose-500/40 rounded-xl text-xs text-rose-600 dark:text-rose-300 font-bold flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 text-rose-500 dark:text-rose-400 shrink-0" />
+              <span>{stockError}</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setStockError(null)}
+              className="text-rose-400 hover:text-rose-600 dark:hover:text-rose-200 p-0.5 cursor-pointer"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        )}
+
         {/* Add Button */}
         <div className="pt-1 text-right">
           <button
             type="button"
             onClick={handleAddProductToMemo}
-            className="w-full sm:w-auto bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-5 py-2 rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-sm transition cursor-pointer"
+            disabled={Boolean(selectedProduct && getRemainingFreeStock(selectedProduct) <= 0)}
+            className={`w-full sm:w-auto font-bold px-5 py-2 rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-sm transition ${
+              selectedProduct && getRemainingFreeStock(selectedProduct) <= 0
+                ? 'bg-slate-200 dark:bg-slate-800 text-slate-400 dark:text-slate-500 cursor-not-allowed'
+                : 'bg-amber-500 hover:bg-amber-400 text-slate-950 cursor-pointer'
+            }`}
           >
             <Plus className="w-4 h-4 stroke-[2.5]" />
             যোগ করুন

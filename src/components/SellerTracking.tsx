@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { SalesRep, Order, Customer, DuePaymentLog, User } from '../types';
-import { Users, TrendingUp, ShoppingCart, ShieldCheck, DollarSign, Wallet, CheckCircle2, Percent, Target } from 'lucide-react';
+import { Users, TrendingUp, ShoppingCart, ShieldCheck, DollarSign, Wallet, CheckCircle2, Percent, Target, Search, Store, ArrowDownLeft } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { toBnDigit, formatTaka, getLocalDateStr } from '../utils/formatters';
 
@@ -23,6 +23,11 @@ export const SellerTracking: React.FC<SellerTrackingProps> = ({
 }) => {
   const { t } = useLanguage();
   const [dateFilter, setDateFilter] = useState<'today' | '7days' | 'month' | 'all'>('month');
+
+  // Customer breakdown modal state
+  const [selectedSellerForCustomers, setSelectedSellerForCustomers] = useState<any | null>(null);
+  const [customerModalFilter, setCustomerModalFilter] = useState<'all' | 'due' | 'advance'>('all');
+  const [customerModalSearch, setCustomerModalSearch] = useState<string>('');
 
   // Edit target & commission modal state
   const [editingSeller, setEditingSeller] = useState<SalesRep | null>(null);
@@ -134,6 +139,10 @@ export const SellerTracking: React.FC<SellerTrackingProps> = ({
 
       const assignedCustomersCount = assignedCustomers.length;
       const totalCustomerDue = assignedCustomers.reduce((sum, c) => sum + (c.currentDue > 0 ? c.currentDue : 0), 0);
+      const totalCustomerAdvance = assignedCustomers.reduce((sum, c) => sum + (c.currentDue < 0 ? Math.abs(c.currentDue) : 0), 0);
+      const netCustomerDue = Math.max(0, totalCustomerDue - totalCustomerAdvance);
+      const dueCustomersCount = assignedCustomers.filter((c) => c.currentDue > 0).length;
+      const advanceCustomersCount = assignedCustomers.filter((c) => c.currentDue < 0).length;
 
       // Due collected by this seller or admin for the selected filter period
       const collectedPayments = filteredPaymentLogs.filter((p) => {
@@ -161,6 +170,7 @@ export const SellerTracking: React.FC<SellerTrackingProps> = ({
       return {
         ...seller,
         isAdminSeller,
+        assignedCustomers,
         totalOrders: sellerOrders.length,
         totalPairsSold,
         totalRevenue,
@@ -169,6 +179,10 @@ export const SellerTracking: React.FC<SellerTrackingProps> = ({
         activeCustomersCount,
         assignedCustomersCount,
         totalCustomerDue,
+        totalCustomerAdvance,
+        netCustomerDue,
+        dueCustomersCount,
+        advanceCustomersCount,
         totalCollectedAmount,
         commissionRatePercent: commRate,
         commissionPerPair: commPerPair,
@@ -182,9 +196,34 @@ export const SellerTracking: React.FC<SellerTrackingProps> = ({
   // Overall totals
   const totalTeamRevenue = sellerStats.reduce((sum, s) => sum + s.totalRevenue, 0);
   const totalTeamPairs = sellerStats.reduce((sum, s) => sum + s.totalPairsSold, 0);
-  const totalTeamDue = sellerStats.reduce((sum, s) => sum + s.totalCustomerDue, 0);
-  const totalTeamCollected = sellerStats.reduce((sum, s) => sum + s.totalCollectedAmount, 0);
   const totalTeamCommission = sellerStats.reduce((sum, s) => sum + s.periodCommission, 0);
+  const totalTeamGrossDue = sellerStats.reduce((sum, s) => sum + s.totalCustomerDue, 0);
+  const totalTeamAdvance = sellerStats.reduce((sum, s) => sum + s.totalCustomerAdvance, 0);
+  const totalTeamNetDue = Math.max(0, totalTeamGrossDue - totalTeamAdvance);
+  const totalTeamCollected = sellerStats.reduce((sum, s) => sum + s.totalCollectedAmount, 0);
+  const totalTeamDueCount = sellerStats.reduce((sum, s) => sum + s.dueCustomersCount, 0);
+  const totalTeamAdvanceCount = sellerStats.reduce((sum, s) => sum + s.advanceCustomersCount, 0);
+
+  // Filtered customers for selected seller modal
+  const modalCustomers = useMemo(() => {
+    if (!selectedSellerForCustomers) return [];
+    let list: Customer[] = selectedSellerForCustomers.assignedCustomers || [];
+    if (customerModalFilter === 'due') {
+      list = list.filter((c) => c.currentDue > 0);
+    } else if (customerModalFilter === 'advance') {
+      list = list.filter((c) => c.currentDue < 0);
+    }
+    if (customerModalSearch.trim()) {
+      const q = customerModalSearch.trim().toLowerCase();
+      list = list.filter((c) =>
+        (c.name || '').toLowerCase().includes(q) ||
+        (c.shopName || '').toLowerCase().includes(q) ||
+        (c.phone || '').includes(q) ||
+        (c.address || '').toLowerCase().includes(q)
+      );
+    }
+    return list;
+  }, [selectedSellerForCustomers, customerModalFilter, customerModalSearch]);
 
   return (
     <div className="space-y-6">
@@ -221,55 +260,69 @@ export const SellerTracking: React.FC<SellerTrackingProps> = ({
       </div>
 
       {/* Top Overview Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3.5">
-        <div className="bg-slate-900/80 border border-slate-800/90 rounded-2xl p-4 shadow-sm hover:border-slate-700 transition">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+        <div className="bg-slate-900/80 border border-slate-800/90 rounded-2xl p-3.5 shadow-sm hover:border-slate-700 transition">
           <div className="flex items-center justify-between text-xs font-bold text-slate-400 mb-2">
             <span>মোট সেলস</span>
             <div className="w-6 h-6 rounded-lg bg-blue-500/15 border border-blue-500/30 flex items-center justify-center text-blue-400">
               <ShoppingCart className="w-3.5 h-3.5" />
             </div>
           </div>
-          <p className="text-lg sm:text-xl font-black text-emerald-400 font-mono tracking-tight">{formatTaka(totalTeamRevenue)}</p>
+          <p className="text-base sm:text-lg font-black text-emerald-400 font-mono tracking-tight">{formatTaka(totalTeamRevenue)}</p>
         </div>
 
-        <div className="bg-slate-900/80 border border-slate-800/90 rounded-2xl p-4 shadow-sm hover:border-slate-700 transition">
+        <div className="bg-slate-900/80 border border-slate-800/90 rounded-2xl p-3.5 shadow-sm hover:border-slate-700 transition">
           <div className="flex items-center justify-between text-xs font-bold text-slate-400 mb-2">
             <span>মোট জোড়া</span>
             <div className="w-6 h-6 rounded-lg bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400">
               <TrendingUp className="w-3.5 h-3.5" />
             </div>
           </div>
-          <p className="text-lg sm:text-xl font-black text-amber-400 font-mono tracking-tight">{toBnDigit(totalTeamPairs)} <span className="text-xs font-normal text-slate-400">জোড়া</span></p>
+          <p className="text-base sm:text-lg font-black text-amber-400 font-mono tracking-tight">{toBnDigit(totalTeamPairs)} <span className="text-xs font-normal text-slate-400">জোড়া</span></p>
         </div>
 
-        <div className="bg-slate-900/80 border border-slate-800/90 rounded-2xl p-4 shadow-sm hover:border-slate-700 transition">
+        <div className="bg-slate-900/80 border border-slate-800/90 rounded-2xl p-3.5 shadow-sm hover:border-slate-700 transition">
           <div className="flex items-center justify-between text-xs font-bold text-slate-400 mb-2">
             <span>অর্জিত কমিশন</span>
             <div className="w-6 h-6 rounded-lg bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400">
               <Percent className="w-3.5 h-3.5" />
             </div>
           </div>
-          <p className="text-lg sm:text-xl font-black text-amber-300 font-mono tracking-tight">{formatTaka(totalTeamCommission)}</p>
+          <p className="text-base sm:text-lg font-black text-amber-300 font-mono tracking-tight">{formatTaka(totalTeamCommission)}</p>
         </div>
 
-        <div className="bg-slate-900/80 border border-slate-800/90 rounded-2xl p-4 shadow-sm hover:border-slate-700 transition">
+        <div className="bg-slate-900/80 border border-slate-800/90 rounded-2xl p-3.5 shadow-sm hover:border-slate-700 transition">
           <div className="flex items-center justify-between text-xs font-bold text-slate-400 mb-2">
             <span>আওতাধীন বাকী</span>
             <div className="w-6 h-6 rounded-lg bg-rose-500/15 border border-rose-500/30 flex items-center justify-center text-rose-400">
               <Wallet className="w-3.5 h-3.5" />
             </div>
           </div>
-          <p className="text-lg sm:text-xl font-black text-rose-400 font-mono tracking-tight">{formatTaka(totalTeamDue)}</p>
+          <p className="text-base sm:text-lg font-black text-rose-400 font-mono tracking-tight">{formatTaka(totalTeamNetDue)}</p>
+          {totalTeamAdvance > 0 && (
+            <p className="text-[10px] text-slate-500 font-mono mt-1">গ্রস: {formatTaka(totalTeamGrossDue)}</p>
+          )}
         </div>
 
-        <div className="bg-slate-900/80 border border-slate-800/90 rounded-2xl p-4 shadow-sm hover:border-slate-700 transition">
+        <div className="bg-slate-900/80 border border-slate-800/90 rounded-2xl p-3.5 shadow-sm hover:border-slate-700 transition">
+          <div className="flex items-center justify-between text-xs font-bold text-slate-400 mb-2">
+            <span>অগ্রিম জমা</span>
+            <div className="w-6 h-6 rounded-lg bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400">
+              <ArrowDownLeft className="w-3.5 h-3.5" />
+            </div>
+          </div>
+          <p className="text-base sm:text-lg font-black text-amber-300 font-mono tracking-tight">{formatTaka(totalTeamAdvance)}</p>
+          <p className="text-[10px] text-slate-500 mt-1">{toBnDigit(totalTeamAdvanceCount)} টি দোকান</p>
+        </div>
+
+        <div className="bg-slate-900/80 border border-slate-800/90 rounded-2xl p-3.5 shadow-sm hover:border-slate-700 transition">
           <div className="flex items-center justify-between text-xs font-bold text-slate-400 mb-2">
             <span>আদায়কৃত বাকী</span>
             <div className="w-6 h-6 rounded-lg bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
               <DollarSign className="w-3.5 h-3.5" />
             </div>
           </div>
-          <p className="text-lg sm:text-xl font-black text-emerald-400 font-mono tracking-tight">{formatTaka(totalTeamCollected)}</p>
+          <p className="text-base sm:text-lg font-black text-emerald-400 font-mono tracking-tight">{formatTaka(totalTeamCollected)}</p>
         </div>
       </div>
 
@@ -306,15 +359,27 @@ export const SellerTracking: React.FC<SellerTrackingProps> = ({
                       </span>
                     )}
                   </div>
-                  <p className="text-xs text-slate-400 flex items-center gap-1 mt-1">
-                    <Users className="w-3 h-3 text-slate-500" /> {toBnDigit(stat.assignedCustomersCount)} টি দোকান
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedSellerForCustomers(stat);
+                      setCustomerModalFilter('all');
+                      setCustomerModalSearch('');
+                    }}
+                    className="text-xs text-slate-400 hover:text-amber-400 flex items-center gap-1 mt-1 transition cursor-pointer group/shop"
+                    title="দোকান ও বাকী/অগ্রিম হিসাব দেখুন"
+                  >
+                    <Users className="w-3 h-3 text-slate-500 group-hover/shop:text-amber-400" />
+                    <span className="underline decoration-slate-600 underline-offset-2">
+                      {toBnDigit(stat.assignedCustomersCount)} টি দোকান
+                    </span>
                     {stat.area && stat.area !== 'প্রধান শাখা (এডমিন ও সেলার)' && (
                       <>
                         <span className="text-slate-600">•</span>
                         <span>{stat.area}</span>
                       </>
                     )}
-                  </p>
+                  </button>
                 </div>
               </div>
             </div>
@@ -349,15 +414,30 @@ export const SellerTracking: React.FC<SellerTrackingProps> = ({
               </div>
             </div>
 
-            {/* Dues and Collection row */}
-            <div className="grid grid-cols-2 gap-2.5 mb-3">
-              <div className="bg-rose-950/20 rounded-xl p-2.5 border border-rose-900/30">
-                <p className="text-[10px] text-rose-400/90 font-bold uppercase mb-0.5">আওতাধীন বাকী</p>
-                <p className="text-sm font-bold text-rose-400">{formatTaka(stat.totalCustomerDue)}</p>
+            {/* Dues, Advance and Collection row */}
+            <div className="grid grid-cols-3 gap-2 mb-3">
+              <div className="bg-rose-950/20 rounded-xl p-2.5 border border-rose-900/30 flex flex-col justify-between">
+                <div>
+                  <p className="text-[10px] text-rose-400/90 font-bold uppercase mb-0.5">নিট বাকী</p>
+                  <p className="text-sm font-bold text-rose-400 font-mono truncate">{formatTaka(stat.netCustomerDue)}</p>
+                </div>
+                {stat.totalCustomerAdvance > 0 && (
+                  <p className="text-[9px] text-slate-500 font-mono mt-0.5 truncate">গ্রস: {formatTaka(stat.totalCustomerDue)}</p>
+                )}
               </div>
-              <div className="bg-emerald-950/20 rounded-xl p-2.5 border border-emerald-900/30">
-                <p className="text-[10px] text-emerald-400/90 font-bold uppercase mb-0.5">আদায়কৃত বাকী</p>
-                <p className="text-sm font-bold text-emerald-400">{formatTaka(stat.totalCollectedAmount)}</p>
+              <div className="bg-amber-500/10 rounded-xl p-2.5 border border-amber-500/20 flex flex-col justify-between">
+                <div>
+                  <p className="text-[10px] text-amber-400/90 font-bold uppercase mb-0.5">অগ্রিম জমা</p>
+                  <p className="text-sm font-bold text-amber-300 font-mono truncate">{formatTaka(stat.totalCustomerAdvance)}</p>
+                </div>
+                <p className="text-[9px] text-slate-500 mt-0.5 truncate">{toBnDigit(stat.advanceCustomersCount)} দোকান</p>
+              </div>
+              <div className="bg-emerald-950/20 rounded-xl p-2.5 border border-emerald-900/30 flex flex-col justify-between">
+                <div>
+                  <p className="text-[10px] text-emerald-400/90 font-bold uppercase mb-0.5">আদায়কৃত</p>
+                  <p className="text-sm font-bold text-emerald-400 font-mono truncate">{formatTaka(stat.totalCollectedAmount)}</p>
+                </div>
+                <p className="text-[9px] text-slate-500 mt-0.5 truncate">ক্যাশ আদায়</p>
               </div>
             </div>
 
@@ -457,18 +537,33 @@ export const SellerTracking: React.FC<SellerTrackingProps> = ({
               <span>অ্যাক্টিভ কাস্টমার: {toBnDigit(stat.activeCustomersCount)}</span>
             </div>
 
-            {/* Quick Set Target & Commission Button for Admin */}
-            {onUpdateSeller && currentUser && (currentUser.role === 'admin' || currentUser.role === 'super_admin') && (
-              <div className="pt-2.5 mt-2.5 border-t border-slate-800/60 flex justify-end">
+            {/* Action Buttons */}
+            <div className="pt-2.5 mt-2.5 border-t border-slate-800/60 flex items-center justify-between gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedSellerForCustomers(stat);
+                  setCustomerModalFilter('all');
+                  setCustomerModalSearch('');
+                }}
+                className="py-1.5 px-3 bg-slate-800/90 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 cursor-pointer flex-1 justify-center border border-slate-700/60"
+              >
+                <Store className="w-3.5 h-3.5 text-amber-400" />
+                <span>দোকান ও হিসাব ({toBnDigit(stat.assignedCustomersCount)})</span>
+              </button>
+
+              {onUpdateSeller && currentUser && (currentUser.role === 'admin' || currentUser.role === 'super_admin') && (
                 <button
+                  type="button"
                   onClick={() => openSellerEditModal(stat)}
-                  className="w-full py-1.5 px-3 bg-slate-800/80 hover:bg-slate-700 text-amber-300 border border-amber-500/25 rounded-xl text-xs font-semibold transition flex items-center justify-center gap-1.5 cursor-pointer"
+                  className="py-1.5 px-3 bg-slate-800/80 hover:bg-slate-700 text-amber-300 border border-amber-500/25 rounded-xl text-xs font-semibold transition flex items-center justify-center gap-1.5 cursor-pointer"
+                  title="টার্গেট ও কমিশন পরিবর্তন"
                 >
                   <Percent className="w-3.5 h-3.5 text-amber-400" />
-                  <span>টার্গেট ও কমিশন পরিবর্তন করুন</span>
+                  <span>টার্গেট</span>
                 </button>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         ))}
 
@@ -478,6 +573,122 @@ export const SellerTracking: React.FC<SellerTrackingProps> = ({
           </div>
         )}
       </div>
+
+      {/* Customer Breakdown Modal for Selected Seller */}
+      {selectedSellerForCustomers && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4 overflow-y-auto">
+          <div className="w-full max-w-xl bg-slate-900 border border-slate-800 rounded-2xl p-5 sm:p-6 space-y-4 my-auto shadow-2xl max-h-[90vh] flex flex-col">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+              <div>
+                <h3 className="text-base font-bold text-slate-100 flex items-center gap-2">
+                  <Store className="w-4 h-4 text-amber-400" />
+                  {selectedSellerForCustomers.name} - আওতাধীন দোকান
+                </h3>
+                <p className="text-xs text-slate-400 mt-1 flex items-center gap-2 flex-wrap">
+                  <span>নিট বাকী: <strong className="text-rose-400 font-mono">{formatTaka(selectedSellerForCustomers.netCustomerDue)}</strong></span>
+                  <span>•</span>
+                  <span>অগ্রিম জমা: <strong className="text-amber-300 font-mono">{formatTaka(selectedSellerForCustomers.totalCustomerAdvance)}</strong></span>
+                  {selectedSellerForCustomers.totalCustomerAdvance > 0 && (
+                    <>
+                      <span>•</span>
+                      <span className="text-slate-500">(গ্রস বাকী: {formatTaka(selectedSellerForCustomers.totalCustomerDue)})</span>
+                    </>
+                  )}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSelectedSellerForCustomers(null)}
+                className="text-slate-400 hover:text-slate-200 p-1.5 rounded-lg hover:bg-slate-800 transition cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Filter pills & search */}
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
+              <div className="flex items-center gap-1 bg-slate-950 p-1 rounded-xl border border-slate-800">
+                <button
+                  type="button"
+                  onClick={() => setCustomerModalFilter('all')}
+                  className={`px-3 py-1 rounded-lg text-xs font-bold transition cursor-pointer ${
+                    customerModalFilter === 'all' ? 'bg-amber-500 text-slate-950 shadow-sm' : 'text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  সকল ({toBnDigit(selectedSellerForCustomers.assignedCustomers.length)})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCustomerModalFilter('due')}
+                  className={`px-3 py-1 rounded-lg text-xs font-bold transition cursor-pointer ${
+                    customerModalFilter === 'due' ? 'bg-rose-500 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  বকেয়া ({toBnDigit(selectedSellerForCustomers.dueCustomersCount)})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCustomerModalFilter('advance')}
+                  className={`px-3 py-1 rounded-lg text-xs font-bold transition cursor-pointer ${
+                    customerModalFilter === 'advance' ? 'bg-amber-500 text-slate-950 shadow-sm' : 'text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  অগ্রিম ({toBnDigit(selectedSellerForCustomers.advanceCustomersCount)})
+                </button>
+              </div>
+
+              <div className="relative flex-1">
+                <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+                <input
+                  type="text"
+                  placeholder="দোকান বা মোবাইল সার্চ..."
+                  value={customerModalSearch}
+                  onChange={(e) => setCustomerModalSearch(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-800 text-slate-200 pl-8 pr-3 py-1.5 rounded-xl text-xs focus:outline-none focus:border-amber-400"
+                />
+              </div>
+            </div>
+
+            {/* List */}
+            <div className="overflow-y-auto flex-1 divide-y divide-slate-800/80 pr-1 space-y-1">
+              {modalCustomers.length === 0 ? (
+                <div className="py-8 text-center text-slate-500 text-xs">
+                  কোনো দোকান পাওয়া যায়নি।
+                </div>
+              ) : (
+                modalCustomers.map((cust: Customer) => (
+                  <div key={cust.id} className="py-2.5 flex items-center justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="text-xs font-bold text-slate-100 truncate">{cust.shopName || cust.name}</p>
+                      <p className="text-[11px] text-slate-400 flex items-center gap-1.5 mt-0.5">
+                        <span>{cust.name}</span>
+                        {cust.phone && <span>• {cust.phone}</span>}
+                        {cust.address && <span>• {cust.address}</span>}
+                      </p>
+                    </div>
+
+                    <div className="text-right shrink-0">
+                      {cust.currentDue > 0 ? (
+                        <div className="px-2.5 py-1 rounded-lg bg-rose-500/10 border border-rose-500/30 text-rose-400 font-mono font-bold text-xs">
+                          বাকী: {formatTaka(cust.currentDue)}
+                        </div>
+                      ) : cust.currentDue < 0 ? (
+                        <div className="px-2.5 py-1 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-300 font-mono font-bold text-xs">
+                          অগ্রিম: {formatTaka(Math.abs(cust.currentDue))}
+                        </div>
+                      ) : (
+                        <div className="px-2.5 py-1 rounded-lg bg-slate-800/80 border border-slate-700/50 text-slate-400 font-semibold text-[11px]">
+                          পরিশোধিত
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Edit Seller Target & Commission Modal */}
       {editingSeller && (

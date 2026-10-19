@@ -636,9 +636,15 @@ export default function App() {
     // 1. If the order was already delivered, restore product inventory stock
     if (target.deliveryStatus === 'delivered' && target.items && target.items.length > 0) {
       const updatedProducts = products.map((p) => {
-        const orderedItem = target.items.find((i) => i.productId === p.id);
-        if (orderedItem) {
-          const restoredStock = p.stockPairs + (orderedItem.totalPairs || 0);
+        const orderedPairs = (target.items || [])
+          .filter(
+            (i) =>
+              i.productId === p.id ||
+              (p.articleCode && (i.articleCode || '').trim().toLowerCase() === p.articleCode.trim().toLowerCase())
+          )
+          .reduce((sum, i) => sum + (Number(i.totalPairs) || 0), 0);
+        if (orderedPairs > 0) {
+          const restoredStock = p.stockPairs + orderedPairs;
           const updatedP = { ...p, stockPairs: restoredStock };
           saveDocumentToFirestore('products', p.id, updatedP);
           return updatedP;
@@ -723,9 +729,15 @@ export default function App() {
     // If direct sale, deduct stock immediately. If sample booking, stock remains reserved as booked.
     if (newOrder.deliveryStatus === 'delivered') {
       const updatedProducts = products.map((p) => {
-        const orderedItem = newOrder.items.find((i) => i.productId === p.id);
-        if (orderedItem) {
-          const updatedStock = Math.max(0, p.stockPairs - orderedItem.totalPairs);
+        const orderedPairs = (newOrder.items || [])
+          .filter(
+            (i) =>
+              i.productId === p.id ||
+              (p.articleCode && (i.articleCode || '').trim().toLowerCase() === p.articleCode.trim().toLowerCase())
+          )
+          .reduce((sum, i) => sum + (Number(i.totalPairs) || 0), 0);
+        if (orderedPairs > 0) {
+          const updatedStock = Math.max(0, p.stockPairs - orderedPairs);
           const updatedP = { ...p, stockPairs: updatedStock };
           saveDocumentToFirestore('products', p.id, updatedP);
           return updatedP;
@@ -781,6 +793,18 @@ export default function App() {
     const targetOrder = orders.find((o) => o.id === orderId);
     if (!targetOrder) return;
 
+    // Validate physical stock availability before confirming delivery
+    for (const item of targetOrder.items || []) {
+      const prod = products.find((p) => p.id === item.productId);
+      const totalOrderedForProd = (targetOrder.items || [])
+        .filter((i) => i.productId === item.productId)
+        .reduce((sum, i) => sum + (Number(i.totalPairs) || 0), 0);
+      if (prod && totalOrderedForProd > (Number(prod.stockPairs) || 0)) {
+        triggerToast(`দুঃখিত, "${item.articleCode}" স্টকে আছে ${prod.stockPairs} জোড়া, ডেলিভারির জন্য পর্যাপ্ত স্টক নেই!`);
+        return;
+      }
+    }
+
     const todayStr = getLocalDateStr(new Date());
     const deliveryDate = deliveryData?.deliveryDate || todayStr;
     const collectedCash = deliveryData ? Math.max(0, deliveryData.collectedAtDelivery) : 0;
@@ -814,9 +838,15 @@ export default function App() {
 
     // Deduct physical stock now
     const updatedProducts = products.map((p) => {
-      const orderedItem = updatedOrder.items.find((i) => i.productId === p.id);
-      if (orderedItem) {
-        const updatedStock = Math.max(0, p.stockPairs - orderedItem.totalPairs);
+      const orderedPairs = (updatedOrder.items || [])
+        .filter(
+          (i) =>
+            i.productId === p.id ||
+            (p.articleCode && (i.articleCode || '').trim().toLowerCase() === p.articleCode.trim().toLowerCase())
+        )
+        .reduce((sum, i) => sum + (Number(i.totalPairs) || 0), 0);
+      if (orderedPairs > 0) {
+        const updatedStock = Math.max(0, p.stockPairs - orderedPairs);
         const updatedP = { ...p, stockPairs: updatedStock };
         saveDocumentToFirestore('products', p.id, updatedP);
         return updatedP;
@@ -1426,25 +1456,28 @@ export default function App() {
     return targetUser;
   };
 
+  // Enforce mandatory login: If user is not authenticated, block all data access and show login only
+  if (!currentUser) {
+    return (
+      <div className="min-h-screen w-full bg-slate-950 flex items-center justify-center p-4">
+        <Suspense fallback={<div className="text-slate-400 text-sm">লোড হচ্ছে...</div>}>
+          <LoginModal
+            userAccounts={userAccounts}
+            onLoginSuccess={(user) => {
+              handleLoginSuccess(user);
+              setIsLoginModalOpen(false);
+            }}
+            onRegisterShopkeeper={handleRegisterShopkeeper}
+          />
+        </Suspense>
+      </div>
+    );
+  }
+
   return (
       <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-slate-100 dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans antialiased pb-12 selection:bg-amber-500 selection:text-slate-950 transition-colors duration-200">
         
-        {/* Login Screen Modal Overlay if requested or not logged in */}
-        {(!currentUser && isLoginModalOpen) && (
-          <Suspense fallback={null}>
-            <LoginModal
-              userAccounts={userAccounts}
-              onLoginSuccess={(user) => {
-                handleLoginSuccess(user);
-                setIsLoginModalOpen(false);
-              }}
-              onRegisterShopkeeper={handleRegisterShopkeeper}
-              onClose={() => setIsLoginModalOpen(false)}
-            />
-          </Suspense>
-        )}
-
-      {/* Toast Notification */}
+        {/* Toast Notification */}
       {toast && (
         <div className="fixed bottom-5 right-5 z-50 bg-white dark:bg-slate-900 border border-amber-500 text-slate-900 dark:text-white px-4 py-3 rounded-xl shadow-2xl flex items-center gap-3 text-xs sm:text-sm font-semibold animate-bounce">
           <CheckCircle2 className="w-5 h-5 text-emerald-500" />
@@ -1597,6 +1630,7 @@ export default function App() {
         {activeTab === 'pending' && (
           <PendingOrders
             orders={getVisibleOrders()}
+            allOrders={orders}
             products={products}
             activeTheme={activeTheme}
             onSelectOrderForInvoice={setSelectedInvoiceOrder}
@@ -1611,7 +1645,7 @@ export default function App() {
         {activeTab === 'stock' && (
           <StockManagement
             products={products}
-            orders={getVisibleOrders()}
+            orders={orders}
             activeTheme={activeTheme}
             currentUser={currentUser}
             systemConfig={systemConfig}
@@ -1658,6 +1692,7 @@ export default function App() {
         {activeTab === 'sales' && (
           <SalesHistory
             orders={getVisibleOrders()}
+            allOrders={orders}
             products={products}
             activeTheme={activeTheme}
             onSelectOrderForInvoice={setSelectedInvoiceOrder}

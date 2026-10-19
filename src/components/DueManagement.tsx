@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { Customer, SalesRep, DuePaymentLog, UITheme, UserAccount, Order } from '../types';
 import { formatTaka, toBnDigit, formatBnDate, getLocalDateStr } from '../utils/formatters';
 import { calculateCustomerBalance } from '../utils/customerLedger';
+import { generateNextReceiptNo } from '../utils/serialGenerator';
 import { useLanguage } from '../contexts/LanguageContext';
 import {
   Receipt,
@@ -295,7 +296,7 @@ export const DueManagement: React.FC<DueManagementProps> = ({
     const prevDue = selectedCustForPayment.currentDue;
     const remDue = prevDue - paidVal; // allows negative value representing advance credit
     const todayStr = getLocalDateStr(new Date());
-    const receiptNo = `REC-${new Date().getFullYear()}-${Math.floor(100 + Math.random() * 900)}`;
+    const receiptNo = generateNextReceiptNo(paymentLogs);
 
     const newLog: DuePaymentLog = {
       id: `pay-${Date.now()}`,

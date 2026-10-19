@@ -1,0 +1,6 @@
+{
+  "summary": "Implementation plan for enforcing real-time Free Stock calculation (Total Stock minus Booked Stock) across POS memo creation, pending order editing, and stock views so that booked items preserve total physical stock while reducing free stock to zero and blocking over-booking in subsequent memos.",
+  "updatedAt": "2026-10-19T11:35:13.314854531Z",
+  "requestFeedback": true,
+  "userFacing": true
+}

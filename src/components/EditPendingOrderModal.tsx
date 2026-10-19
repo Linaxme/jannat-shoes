@@ -6,6 +6,7 @@ import { X, Trash2, Plus, Save, AlertCircle, ShoppingBag, Search, Check, Chevron
 interface EditPendingOrderModalProps {
   order: Order;
   products?: ShoeProduct[];
+  orders?: Order[];
   title?: string;
   isSalesHistory?: boolean;
   onClose: () => void;
@@ -15,6 +16,7 @@ interface EditPendingOrderModalProps {
 export const EditPendingOrderModal: React.FC<EditPendingOrderModalProps> = ({
   order,
   products = [],
+  orders = [],
   title,
   isSalesHistory = false,
   onClose,
@@ -28,7 +30,7 @@ export const EditPendingOrderModal: React.FC<EditPendingOrderModalProps> = ({
       const qty = item.quantityInput || item.totalPairs || (item as any).pairQty || 1;
       const totalPairs = item.totalPairs || (unitType === 'cartons' ? qty * 12 : qty);
       const netUnitPrice = item.netUnitPrice ?? Math.max(0, unitSellPrice - comm);
-      const totalCommission = item.totalCommission ?? (totalPairs * comm);
+      const totalCommission = totalPairs * comm;
       const totalAmount = item.totalAmount ?? (totalPairs * netUnitPrice);
 
       return {
@@ -53,6 +55,7 @@ export const EditPendingOrderModal: React.FC<EditPendingOrderModalProps> = ({
   const [paidAmount, setPaidAmount] = useState<number | string>(order.paidAmount > 0 ? order.paidAmount : '');
   const [paymentMethod, setPaymentMethod] = useState(order.paymentMethod || 'নগদ ক্যাশ');
   const [notes, setNotes] = useState<string>(order.notes || '');
+  const [modalError, setModalError] = useState<string | null>(null);
 
   // Add Product Form State
   const [showAddProductSection, setShowAddProductSection] = useState<boolean>(false);
@@ -64,6 +67,63 @@ export const EditPendingOrderModal: React.FC<EditPendingOrderModalProps> = ({
   const [newPrice, setNewPrice] = useState<number | string>('');
   const [newCommission, setNewCommission] = useState<number | string>('');
   const [itemToRemoveIndex, setItemToRemoveIndex] = useState<number | null>(null);
+
+  const isSameProduct = (item: { productId?: string; articleCode?: string }, prod: ShoeProduct): boolean => {
+    if (item.productId && prod.id && item.productId === prod.id) return true;
+    const itemCode = (item.articleCode || '').trim().toLowerCase();
+    const prodCode = (prod.articleCode || '').trim().toLowerCase();
+    return Boolean(itemCode && prodCode && itemCode === prodCode);
+  };
+
+  const isOrderBooked = (o: Order): boolean => {
+    return (
+      o.deliveryStatus === 'booked' ||
+      (o.orderType === 'sample_booking' && o.deliveryStatus !== 'delivered')
+    );
+  };
+
+  const getOtherBookedPairs = (prod: ShoeProduct): number => {
+    return (orders || []).reduce((sum, o) => {
+      if (o.id === order.id || !isOrderBooked(o)) return sum;
+      const oPairs = (o.items || [])
+        .filter((i) => isSameProduct(i, prod))
+        .reduce((iSum, i) => iSum + (Number(i.totalPairs) || 0), 0);
+      return sum + oPairs;
+    }, 0);
+  };
+
+  // Calculate max available pairs for a product considering other pending orders and original order items
+  const getMaxAllowedPairs = (productIdOrProd: string | ShoeProduct): number => {
+    const prod =
+      typeof productIdOrProd === 'string'
+        ? products.find(
+            (p) =>
+              p.id === productIdOrProd ||
+              (p.articleCode || '').trim().toLowerCase() === productIdOrProd.trim().toLowerCase()
+          )
+        : productIdOrProd;
+    if (!prod) return 0;
+    const physicalStock = Number(prod.stockPairs) || 0;
+    const otherBookedPairs = getOtherBookedPairs(prod);
+
+    if (order.deliveryStatus === 'delivered') {
+      const originalOrderPairs = (order.items || [])
+        .filter((i) => isSameProduct(i, prod))
+        .reduce((s, i) => s + (Number(i.totalPairs) || 0), 0);
+      return Math.max(0, physicalStock + originalOrderPairs - otherBookedPairs);
+    }
+    return Math.max(0, physicalStock - otherBookedPairs);
+  };
+
+  const getCurrentMemoPairs = (prod: ShoeProduct): number => {
+    return items
+      .filter((item) => isSameProduct(item, prod))
+      .reduce((sum, item) => sum + (Number(item.totalPairs) || 0), 0);
+  };
+
+  const getRemainingFreePairs = (prod: ShoeProduct): number => {
+    return Math.max(0, getMaxAllowedPairs(prod) - getCurrentMemoPairs(prod));
+  };
 
   // Filter products for search
   const filteredProducts = useMemo(() => {
@@ -79,6 +139,17 @@ export const EditPendingOrderModal: React.FC<EditPendingOrderModalProps> = ({
   }, [products, productSearchInput]);
 
   const handleSelectProduct = (prod: ShoeProduct) => {
+    const totalStock = Number(prod.stockPairs) || 0;
+    const bookedCount = getOtherBookedPairs(prod) + getCurrentMemoPairs(prod);
+    const remainingFree = getRemainingFreePairs(prod);
+    if (remainingFree <= 0) {
+      setModalError(
+        `"${prod.articleCode}" মেমোতে যুক্ত করা যাবে না (মোট স্টক: ${toBnDigit(totalStock)} জোড়া, বুকড: ${toBnDigit(bookedCount)} জোড়া, ফ্রি স্টক: ০ জোড়া)`
+      );
+      setShowProductDropdown(false);
+      return;
+    }
+    setModalError(null);
     setSelectedProduct(prod);
     setProductSearchInput(`${prod.articleCode} - ${prod.name}`);
     setNewPrice(prod.sellPrice || 0);
@@ -88,19 +159,40 @@ export const EditPendingOrderModal: React.FC<EditPendingOrderModalProps> = ({
   };
 
   const handleAddProductToOrder = () => {
+    setModalError(null);
     if (!selectedProduct) {
-      alert('অনুগ্রহ করে প্রথমে তালিকা থেকে একটি পণ্য নির্বাচন করুন!');
+      setModalError('অনুগ্রহ করে প্রথমে তালিকা থেকে একটি পণ্য নির্বাচন করুন!');
       return;
     }
 
     const qtyNum = Math.max(1, parseInt(String(newQuantity)) || 1);
     const priceNum = Math.max(0, parseFloat(String(newPrice)) || 0);
     const commNum = Math.max(0, parseFloat(String(newCommission)) || 0);
-    const pairsPerCarton = selectedProduct.pairsPerCarton || 12;
+    const pairsPerCarton = Number(selectedProduct.pairsPerCarton) || 12;
     const totalPairs = newUnitType === 'cartons' ? qtyNum * pairsPerCarton : qtyNum;
     const netRate = Math.max(0, priceNum - commNum);
     const totalCommission = totalPairs * commNum;
     const totalAmount = totalPairs * priceNum;
+
+    const currentPairsInMemo = getCurrentMemoPairs(selectedProduct);
+    const maxAllowed = getMaxAllowedPairs(selectedProduct);
+    const remainingFree = getRemainingFreePairs(selectedProduct);
+    const totalStock = Number(selectedProduct.stockPairs) || 0;
+    const bookedCount = getOtherBookedPairs(selectedProduct) + currentPairsInMemo;
+
+    if (remainingFree <= 0) {
+      setModalError(
+        `"${selectedProduct.articleCode}" স্টকে নেই (মোট স্টক: ${toBnDigit(totalStock)} জোড়া, বুকড: ${toBnDigit(bookedCount)} জোড়া, ফ্রি স্টক: ০ জোড়া)`
+      );
+      return;
+    }
+
+    if (currentPairsInMemo + totalPairs > maxAllowed) {
+      setModalError(
+        `"${selectedProduct.articleCode}" এর ফ্রি স্টক আছে ${toBnDigit(remainingFree)} জোড়া। এর বেশি মেমো করা যাবে না!`
+      );
+      return;
+    }
 
     // Check if already in items with same unit type
     const existingIndex = items.findIndex(
@@ -155,11 +247,25 @@ export const EditPendingOrderModal: React.FC<EditPendingOrderModalProps> = ({
 
   // Handle quantity change for existing item
   const handleQuantityChange = (index: number, newQty: number) => {
+    setModalError(null);
     const qty = Math.max(1, newQty);
     const updated = [...items];
     const item = updated[index];
-    const pairsPerCarton = 12;
+    const prod = products.find((p) => isSameProduct(item, p));
+    const pairsPerCarton = Number(prod?.pairsPerCarton) || 12;
     const totalPairs = item.unitType === 'cartons' ? qty * pairsPerCarton : qty;
+
+    if (prod) {
+      const otherPairs = items
+        .filter((it, idx) => isSameProduct(it, prod) && idx !== index)
+        .reduce((sum, it) => sum + (Number(it.totalPairs) || 0), 0);
+      const maxAllowed = getMaxAllowedPairs(prod);
+      if (otherPairs + totalPairs > maxAllowed) {
+        setModalError(`দুঃখিত, "${item.articleCode}" এর সর্বোচ্চ অনুমোদিত ফ্রি স্টক ${toBnDigit(maxAllowed)} জোড়া। এর বেশি মেমো করা যাবে না!`);
+        return;
+      }
+    }
+
     const comm = item.commissionPerPair || 0;
     const netUnitPrice = Math.max(0, item.unitSellPrice - comm);
     const totalCommission = totalPairs * comm;
@@ -214,11 +320,6 @@ export const EditPendingOrderModal: React.FC<EditPendingOrderModalProps> = ({
 
   // Remove item
   const handleRemoveItem = (index: number) => {
-    if (items.length <= 1) {
-      if (!confirm('সতর্কতা: এটি এই মেমোর একমাত্র পণ্য। আপনি কি এটি বাদ দিতে চান? সংরক্ষণ করতে হলে অন্তত ১টি পণ্য থাকতে হবে।')) {
-        return;
-      }
-    }
     setItems(items.filter((_, idx) => idx !== index));
   };
 
@@ -239,9 +340,31 @@ export const EditPendingOrderModal: React.FC<EditPendingOrderModalProps> = ({
   const status = dueAmount === 0 ? 'পরিশোধিত' : paidAmountNum > 0 ? 'আংশিক বাকী' : 'সম্পূর্ণ বাকী';
 
   const handleSave = () => {
+    setModalError(null);
     if (items.length === 0) {
-      alert('অর্ডারে কোনো পণ্য নেই! অনুগ্রহ করে অন্তত একটি পণ্য যোগ করুন।');
+      setModalError('অর্ডারে কোনো পণ্য নেই! অনুগ্রহ করে অন্তত একটি পণ্য যোগ করুন।');
       return;
+    }
+
+    // Final stock check before saving
+    const pairsByProd: Record<string, { total: number; articleCode: string; prod: ShoeProduct | undefined }> = {};
+    for (const it of items) {
+      const matchedProd = products.find((p) => isSameProduct(it, p));
+      const key = matchedProd ? matchedProd.id : (it.productId || it.articleCode);
+      if (!pairsByProd[key]) {
+        pairsByProd[key] = { total: 0, articleCode: it.articleCode, prod: matchedProd };
+      }
+      pairsByProd[key].total += Number(it.totalPairs) || 0;
+    }
+
+    for (const info of Object.values(pairsByProd)) {
+      if (info.prod) {
+        const maxAllowed = getMaxAllowedPairs(info.prod);
+        if (info.total > maxAllowed) {
+          setModalError(`দুঃখিত, "${info.articleCode}" এর অনুমোদিত স্টক আছে ${toBnDigit(maxAllowed)} জোড়া, কিন্তু মেমোতে ${toBnDigit(info.total)} জোড়া দেওয়া হয়েছে!`);
+          return;
+        }
+      }
     }
 
     const updatedOrder: Order = {
@@ -294,6 +417,21 @@ export const EditPendingOrderModal: React.FC<EditPendingOrderModalProps> = ({
 
         {/* Modal Body */}
         <div className="p-4 sm:p-5 overflow-y-auto space-y-4 flex-1 text-xs">
+          {modalError && (
+            <div className="p-3 bg-rose-50 dark:bg-rose-500/15 border border-rose-200 dark:border-rose-500/40 rounded-xl text-xs text-rose-600 dark:text-rose-300 font-bold flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 text-rose-500 dark:text-rose-400 shrink-0" />
+                <span>{modalError}</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setModalError(null)}
+                className="text-rose-400 hover:text-rose-600 dark:hover:text-rose-200 p-0.5 cursor-pointer"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          )}
           
           {/* Section Header: Items & Add Product Button */}
           <div className="flex items-center justify-between gap-2 flex-wrap pb-1">
@@ -367,29 +505,46 @@ export const EditPendingOrderModal: React.FC<EditPendingOrderModalProps> = ({
                     {filteredProducts.length === 0 ? (
                       <div className="p-3 text-center text-slate-500">কোনো পণ্য পাওয়া যায়নি</div>
                     ) : (
-                      filteredProducts.map((prod) => (
-                        <div
-                          key={prod.id}
-                          onClick={() => handleSelectProduct(prod)}
-                          className="p-2.5 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer flex items-center justify-between gap-2 transition-colors"
-                        >
-                          <div className="min-w-0 flex-1">
-                            <div className="flex items-center gap-1.5 flex-wrap">
-                              <span className="font-bold text-amber-700 dark:text-amber-300 font-mono text-xs">{prod.articleCode}</span>
-                              <span className="text-slate-900 dark:text-slate-200 font-medium truncate">{prod.name}</span>
+                      filteredProducts.map((prod) => {
+                        const totalStock = Number(prod.stockPairs) || 0;
+                        const bookedCount = getOtherBookedPairs(prod) + getCurrentMemoPairs(prod);
+                        const remainingFree = getRemainingFreePairs(prod);
+                        return (
+                          <div
+                            key={prod.id}
+                            onClick={() => handleSelectProduct(prod)}
+                            className={`p-2.5 cursor-pointer flex items-center justify-between gap-2 transition-colors ${
+                              remainingFree <= 0
+                                ? 'opacity-65 bg-rose-50/40 dark:bg-rose-950/20 hover:bg-rose-50 dark:hover:bg-rose-950/30'
+                                : 'hover:bg-slate-100 dark:hover:bg-slate-800'
+                            }`}
+                          >
+                            <div className="min-w-0 flex-1">
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                <span className="font-bold text-amber-700 dark:text-amber-300 font-mono text-xs">{prod.articleCode}</span>
+                                <span className="text-slate-900 dark:text-slate-200 font-medium truncate">{prod.name}</span>
+                              </div>
+                              <div className="flex items-center gap-2 mt-0.5 text-[11px]">
+                                <span className="px-1.5 py-0.5 bg-amber-50 dark:bg-amber-500/15 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-500/30 rounded font-semibold text-[10px]">
+                                  সাইজ: {prod.sizeRange || '৩৯-৪৪'}
+                                </span>
+                              </div>
                             </div>
-                            <div className="flex items-center gap-2 mt-0.5 text-[11px]">
-                              <span className="px-1.5 py-0.5 bg-amber-50 dark:bg-amber-500/15 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-500/30 rounded font-semibold text-[10px]">
-                                সাইজ: {prod.sizeRange || '৩৯-৪৪'}
-                              </span>
+                            <div className="text-right shrink-0 font-mono tabular-nums">
+                              <span className="text-emerald-600 dark:text-emerald-400 font-bold block">{formatTaka(prod.sellPrice)}</span>
+                              <div className="text-[10px] text-slate-500 dark:text-slate-400 flex items-center justify-end gap-1.5 mt-0.5">
+                                <span>মোট: <strong className="text-slate-800 dark:text-slate-200">{toBnDigit(totalStock)}</strong></span>
+                                <span>·</span>
+                                <span>বুকড: <strong className="text-amber-600 dark:text-amber-400">{toBnDigit(bookedCount)}</strong></span>
+                                <span>·</span>
+                                <span className={remainingFree > 0 ? 'text-emerald-600 dark:text-emerald-400 font-bold' : 'text-rose-600 dark:text-rose-400 font-bold'}>
+                                  ফ্রি: {toBnDigit(remainingFree)}
+                                </span>
+                              </div>
                             </div>
                           </div>
-                          <div className="text-right shrink-0">
-                            <span className="text-emerald-600 dark:text-emerald-400 font-bold block">{formatTaka(prod.sellPrice)}</span>
-                            <span className="text-[10px] text-slate-500 dark:text-slate-400">স্টক: {toBnDigit(prod.stockPairs)} জোড়া</span>
-                          </div>
-                        </div>
-                      ))
+                        );
+                      })
                     )}
                   </div>
                 )}

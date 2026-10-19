@@ -157,15 +157,6 @@ export const LoginModal: React.FC<LoginModalProps> = ({
         
         {/* Top Header */}
         <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 p-6 border-b border-indigo-900/50 text-center relative">
-          {onClose && (
-            <button
-              onClick={onClose}
-              className="absolute right-4 top-4 p-1.5 rounded-full bg-slate-950/60 text-slate-400 hover:text-white transition cursor-pointer"
-              title="বন্ধ করুন"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          )}
           <div className="mx-auto w-14 h-14 bg-amber-500/10 rounded-2xl border border-amber-500/30 flex items-center justify-center text-amber-400 mb-3 shadow-inner">
             <Footprints className="w-8 h-8" />
           </div>
@@ -275,20 +266,6 @@ export const LoginModal: React.FC<LoginModalProps> = ({
                 <LogIn className="w-4 h-4" />
                 <span>{loginLoading ? 'লগইন হচ্ছে...' : 'লগইন করুন'}</span>
               </button>
-
-              {/* Guest Browse Button */}
-              {onClose && (
-                <div className="pt-2">
-                  <button
-                    type="button"
-                    onClick={onClose}
-                    className="w-full py-2.5 bg-slate-950 hover:bg-slate-800 text-slate-300 font-semibold text-xs rounded-xl border border-slate-800 transition flex items-center justify-center gap-2 cursor-pointer"
-                  >
-                    <ShoppingBag className="w-4 h-4 text-amber-400" />
-                    <span>বিনা লগইনে প্রোডাক্ট ব্রাউজ করুন</span>
-                  </button>
-                </div>
-              )}
             </form>
           ) : (
             /* Shopkeeper Registration Form */

@@ -82,7 +82,7 @@ export const DEFAULT_SYSTEM_CONFIG: SystemConfig = {
   enableStockAlerts: true,
   enableProfitCalculation: true,
   enableSMS: true,
-  allowGuestBrowsingAndOrder: true,
+  allowGuestBrowsingAndOrder: false,
   allowSellerToSeeFinancials: false,
   allowSellerToSeeOtherSellersSales: false,
   allowSellerToSeeOtherSellersDue: true,

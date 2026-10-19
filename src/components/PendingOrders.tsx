@@ -24,6 +24,7 @@ import { useLanguage } from '../contexts/LanguageContext';
 
 interface PendingOrdersProps {
   orders: Order[];
+  allOrders?: Order[];
   products?: ShoeProduct[];
   activeTheme: UITheme;
   onSelectOrderForInvoice: (order: Order) => void;
@@ -36,6 +37,7 @@ interface PendingOrdersProps {
 
 export const PendingOrders: React.FC<PendingOrdersProps> = ({
   orders,
+  allOrders,
   products = [],
   activeTheme,
   onSelectOrderForInvoice,
@@ -553,6 +555,7 @@ export const PendingOrders: React.FC<PendingOrdersProps> = ({
         <EditPendingOrderModal
           order={editingOrder}
           products={products}
+          orders={allOrders || orders}
           onClose={() => setEditingOrder(null)}
           onSave={(updated) => {
             onUpdateOrder(updated);

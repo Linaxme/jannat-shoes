@@ -69,12 +69,37 @@ export const StockManagement: React.FC<StockManagementProps> = ({
   const [itemsPerPage, setItemsPerPage] = useState<number | 'all'>(100);
   const productsContainerRef = React.useRef<HTMLDivElement>(null);
 
-  const getBookedPairs = (productId: string) => {
+  const isSameProduct = (item: { productId?: string; articleCode?: string }, prod: ShoeProduct): boolean => {
+    if (item.productId && prod.id && item.productId === prod.id) return true;
+    const itemCode = (item.articleCode || '').trim().toLowerCase();
+    const prodCode = (prod.articleCode || '').trim().toLowerCase();
+    return Boolean(itemCode && prodCode && itemCode === prodCode);
+  };
+
+  const isOrderBooked = (order: Order): boolean => {
+    return (
+      order.deliveryStatus === 'booked' ||
+      (order.orderType === 'sample_booking' && order.deliveryStatus !== 'delivered')
+    );
+  };
+
+  const getBookedPairs = (productIdOrProd: string | ShoeProduct) => {
     if (!orders) return 0;
+    const targetProd =
+      typeof productIdOrProd === 'string'
+        ? products.find(
+            (p) =>
+              p.id === productIdOrProd ||
+              (p.articleCode || '').trim().toLowerCase() === productIdOrProd.trim().toLowerCase()
+          )
+        : productIdOrProd;
+
     return orders.reduce((sum, order) => {
-      if (order.deliveryStatus !== 'booked') return sum;
-      const item = order.items.find((i) => i.productId === productId);
-      return sum + (item ? item.totalPairs : 0);
+      if (!isOrderBooked(order)) return sum;
+      const orderProdPairs = (order.items || [])
+        .filter((i) => (targetProd ? isSameProduct(i, targetProd) : i.productId === productIdOrProd))
+        .reduce((iSum, i) => iSum + (Number(i.totalPairs) || 0), 0);
+      return sum + orderProdPairs;
     }, 0);
   };
 
@@ -222,13 +247,9 @@ export const StockManagement: React.FC<StockManagementProps> = ({
 
   const totalStockPairs = products.reduce((sum, p) => sum + p.stockPairs, 0);
   const totalStockValueBuy = products.reduce((sum, p) => sum + p.stockPairs * p.buyPrice, 0);
-  const allPendingBookedPairs = (orders || []).reduce((sum, order) => {
-    if (order.deliveryStatus !== 'booked') return sum;
-    const orderPairs = (order.items || []).reduce((iSum, item) => iSum + (item.totalPairs || 0), 0);
-    return sum + orderPairs;
-  }, 0);
-  const freeStockPairs = Math.max(0, totalStockPairs - allPendingBookedPairs);
-  const lowStockCount = products.filter((p) => p.stockPairs <= p.minStockAlert).length;
+  const allPendingBookedPairs = products.reduce((sum, p) => sum + getBookedPairs(p), 0);
+  const freeStockPairs = products.reduce((sum, p) => sum + Math.max(0, p.stockPairs - getBookedPairs(p)), 0);
+  const lowStockCount = products.filter((p) => Math.max(0, p.stockPairs - getBookedPairs(p)) <= p.minStockAlert).length;
 
   const handleCreateProduct = (e: React.FormEvent) => {
     e.preventDefault();
@@ -721,19 +742,19 @@ export const StockManagement: React.FC<StockManagementProps> = ({
                     </div>
 
                     {/* Stock Details Box */}
-                    <div className="bg-white dark:bg-slate-900/90 p-1.5 rounded-lg border border-slate-200 dark:border-slate-800 space-y-0.5 text-[10px] mt-1">
+                    <div className="bg-white dark:bg-slate-900/90 p-1.5 rounded-lg border border-slate-200 dark:border-slate-800 space-y-0.5 text-[10px] mt-1 font-mono tabular-nums">
                       <div className="flex justify-between items-center text-slate-700 dark:text-slate-300">
-                        <span>মজুদ:</span>
+                        <span className="font-sans">মোট স্টক:</span>
                         <strong className={`font-bold ${isLowStock ? 'text-rose-600 dark:text-rose-400' : 'text-slate-800 dark:text-slate-200'}`}>
                           {toBnDigit(p.stockPairs)} জোড়া
                         </strong>
                       </div>
                       <div className="flex justify-between items-center text-slate-500 dark:text-slate-400">
-                        <span>বুকড:</span>
+                        <span className="font-sans">বুকড:</span>
                         <strong className="text-amber-700 dark:text-amber-300 font-bold">{toBnDigit(bookedPairs)} জোড়া</strong>
                       </div>
-                      <div className="flex justify-between items-center text-emerald-700 dark:text-emerald-400 border-t border-slate-100 dark:border-slate-800/80 pt-0.5 font-semibold">
-                        <span>ফ্রি স্টক:</span>
+                      <div className={`flex justify-between items-center border-t border-slate-100 dark:border-slate-800/80 pt-0.5 font-semibold ${Math.max(0, p.stockPairs - bookedPairs) > 0 ? 'text-emerald-700 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
+                        <span className="font-sans">ফ্রি স্টক:</span>
                         <strong className="font-extrabold">{toBnDigit(Math.max(0, p.stockPairs - bookedPairs))} জোড়া</strong>
                       </div>
                     </div>
@@ -854,7 +875,7 @@ export const StockManagement: React.FC<StockManagementProps> = ({
 
                       {/* Net Available Free Stock */}
                       <td className="py-3 px-3 text-center">
-                        <div className="font-bold text-sm text-emerald-700 dark:text-emerald-400">
+                        <div className={`font-bold text-sm font-mono tabular-nums ${Math.max(0, p.stockPairs - bookedPairs) > 0 ? 'text-emerald-700 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
                           {toBnDigit(Math.max(0, p.stockPairs - bookedPairs))} জোড়া
                         </div>
                         <div className="text-[10px] text-slate-500 dark:text-slate-400">
