@@ -6,6 +6,7 @@ import {
   persistentMultipleTabManager,
   collection,
   getDocs,
+  getDocsFromCache,
   doc,
   setDoc,
   getDoc,
@@ -50,16 +51,7 @@ try {
 
 export const db = firestoreDb;
 
-// Check connection gracefully in the background without throwing unhandled exceptions
-if (typeof window !== 'undefined') {
-  setTimeout(() => {
-    getDocFromServer(doc(db, 'systemConfig', 'conn_ping')).catch(() => {
-      // Offline mode or handshake in progress
-    });
-  }, 1000);
-}
-
 export const auth = getAuth(app);
 
-export { collection, getDocs, doc, setDoc, getDoc, updateDoc, deleteDoc, addDoc, writeBatch, query, orderBy, where };
+export { collection, getDocs, getDocsFromCache, doc, setDoc, getDoc, getDocFromServer, updateDoc, deleteDoc, addDoc, writeBatch, query, orderBy, where };
 export { RecaptchaVerifier, signInWithPhoneNumber };

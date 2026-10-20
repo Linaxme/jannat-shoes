@@ -194,11 +194,18 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
   const [stockError, setStockError] = useState<string | null>(null);
   const [isSubmittingOrder, setIsSubmittingOrder] = useState<boolean>(false);
 
-  const isSameProduct = (item: { productId?: string; articleCode?: string }, prod: ShoeProduct): boolean => {
-    if (item.productId && prod.id && item.productId === prod.id) return true;
+  const isSameProduct = (
+    item: { productId?: string; articleCode?: string; sizeRange?: string },
+    prod: ShoeProduct
+  ): boolean => {
+    if (item.productId && prod.id) {
+      return item.productId === prod.id;
+    }
     const itemCode = (item.articleCode || '').trim().toLowerCase();
     const prodCode = (prod.articleCode || '').trim().toLowerCase();
-    return Boolean(itemCode && prodCode && itemCode === prodCode);
+    if (!itemCode || !prodCode || itemCode !== prodCode) return false;
+    const normalizeSize = (s?: string) => (s || '').replace(/\(.*?\)/g, '').trim().toLowerCase();
+    return normalizeSize(item.sizeRange) === normalizeSize(prod.sizeRange);
   };
 
   const isOrderBooked = (order: Order): boolean => {
@@ -208,11 +215,11 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
     );
   };
 
-  // Calculate booked pairs in pending orders for a product
+  // Calculate booked pairs in pending orders for a specific product (size group)
   const getBookedPairs = (prod: ShoeProduct | string): number => {
     const targetProd =
       typeof prod === 'string'
-        ? products.find((p) => p.id === prod || (p.articleCode || '').trim().toLowerCase() === prod.trim().toLowerCase())
+        ? products.find((p) => p.id === prod)
         : prod;
 
     return (orders || []).reduce((sum, order) => {
@@ -299,16 +306,18 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
     const totalStock = Number(p.stockPairs) || 0;
     const bookedPairs = getBookedPairs(p) + getCartPairs(p);
     const remainingFree = getRemainingFreeStock(p);
+    const sizeLabel = p.sizeRange ? ` (${p.sizeRange.replace(/\(.*?\)/g, '').trim()})` : '';
     if (remainingFree <= 0) {
       setStockError(
-        `"${p.articleCode}" মেমো করা যাবে না (মোট স্টক: ${toBnDigit(totalStock)} জোড়া, বুকড: ${toBnDigit(bookedPairs)} জোড়া, ফ্রি স্টক: ০ জোড়া)`
+        `"${p.articleCode}${sizeLabel}" মেমো করা যাবে না (মোট স্টক: ${toBnDigit(totalStock)} জোড়া, বুকড: ${toBnDigit(bookedPairs)} জোড়া, ফ্রি স্টক: ০ জোড়া)`
       );
       setShowSuggestions(false);
       return;
     }
     setStockError(null);
     setSelectedProduct(p);
-    setProductSearchInput(`${p.articleCode} - ${p.name}`);
+    const nameSuffix = p.name && p.name !== p.articleCode ? ` - ${p.name}` : '';
+    setProductSearchInput(`${p.articleCode}${sizeLabel}${nameSuffix}`);
     setEntryPricePerPair(p.sellPrice || p.buyPrice || '');
     setEntryCommissionPerPair('');
     setShowSuggestions(false);
@@ -322,12 +331,17 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
 
     if (!prod && productSearchInput.trim()) {
       const q = productSearchInput.trim().toLowerCase();
-      const matches = products.filter(
-        (p) =>
-          (p.articleCode || "").toLowerCase() === q ||
-          `${(p.articleCode || "").toLowerCase()} - ${(p.name || "").toLowerCase()}` === q ||
-          (p.name || "").toLowerCase().includes(q)
-      );
+      const matches = products.filter((p) => {
+        const code = (p.articleCode || '').toLowerCase();
+        const name = (p.name || '').toLowerCase();
+        const size = (p.sizeRange || '').replace(/\(.*?\)/g, '').trim().toLowerCase();
+        return (
+          code === q ||
+          `${code} (${size})` === q ||
+          `${code} - ${name}` === q ||
+          name.includes(q)
+        );
+      });
       prod = matches.find((p) => getRemainingFreeStock(p) > 0) || matches[0] || null;
     }
 
@@ -339,12 +353,12 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
     const totalStock = Number(prod.stockPairs) || 0;
     const bookedPairs = getBookedPairs(prod);
     const currentCartPairs = getCartPairs(prod);
-    const freeStock = getFreeStock(prod);
     const remainingFree = getRemainingFreeStock(prod);
+    const sizeLabel = prod.sizeRange ? ` (${prod.sizeRange.replace(/\(.*?\)/g, '').trim()})` : '';
 
     if (remainingFree <= 0) {
       setStockError(
-        `"${prod.articleCode}" মেমো করা যাবে না (মোট স্টক: ${toBnDigit(totalStock)} জোড়া, বুকড: ${toBnDigit(bookedPairs + currentCartPairs)} জোড়া, ফ্রি স্টক: ০ জোড়া)`
+        `"${prod.articleCode}${sizeLabel}" মেমো করা যাবে না (মোট স্টক: ${toBnDigit(totalStock)} জোড়া, বুকড: ${toBnDigit(bookedPairs + currentCartPairs)} জোড়া, ফ্রি স্টক: ০ জোড়া)`
       );
       return;
     }
@@ -368,12 +382,15 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
     const itemGrossAmount = calculatedPairs * price;
 
     const existingIndex = cartItems.findIndex(
-      (item) => isSameProduct(item, prod!) && item.unitType === entryUnitType
+      (item) =>
+        item.productId === prod!.id &&
+        (item.sizeRange || '') === (prod!.sizeRange || '') &&
+        item.unitType === entryUnitType
     );
 
     if (calculatedPairs > remainingFree) {
       setStockError(
-        `"${prod.articleCode}" এর মোট স্টক ${toBnDigit(totalStock)} জোড়া, বুকড ${toBnDigit(bookedPairs + currentCartPairs)} জোড়া, ফ্রি স্টক আছে ${toBnDigit(remainingFree)} জোড়া (আপনি দিচ্ছেন ${toBnDigit(calculatedPairs)} জোড়া)।`
+        `"${prod.articleCode}${sizeLabel}" এর মোট স্টক ${toBnDigit(totalStock)} জোড়া, বুকড ${toBnDigit(bookedPairs + currentCartPairs)} জোড়া, ফ্রি স্টক আছে ${toBnDigit(remainingFree)} জোড়া (আপনি দিচ্ছেন ${toBnDigit(calculatedPairs)} জোড়া)।`
       );
       return;
     }

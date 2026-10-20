@@ -69,11 +69,18 @@ export const StockManagement: React.FC<StockManagementProps> = ({
   const [itemsPerPage, setItemsPerPage] = useState<number | 'all'>(100);
   const productsContainerRef = React.useRef<HTMLDivElement>(null);
 
-  const isSameProduct = (item: { productId?: string; articleCode?: string }, prod: ShoeProduct): boolean => {
-    if (item.productId && prod.id && item.productId === prod.id) return true;
+  const isSameProduct = (
+    item: { productId?: string; articleCode?: string; sizeRange?: string },
+    prod: ShoeProduct
+  ): boolean => {
+    if (item.productId && prod.id) {
+      return item.productId === prod.id;
+    }
     const itemCode = (item.articleCode || '').trim().toLowerCase();
     const prodCode = (prod.articleCode || '').trim().toLowerCase();
-    return Boolean(itemCode && prodCode && itemCode === prodCode);
+    if (!itemCode || !prodCode || itemCode !== prodCode) return false;
+    const normalizeSize = (s?: string) => (s || '').replace(/\(.*?\)/g, '').trim().toLowerCase();
+    return normalizeSize(item.sizeRange) === normalizeSize(prod.sizeRange);
   };
 
   const isOrderBooked = (order: Order): boolean => {
@@ -87,11 +94,7 @@ export const StockManagement: React.FC<StockManagementProps> = ({
     if (!orders) return 0;
     const targetProd =
       typeof productIdOrProd === 'string'
-        ? products.find(
-            (p) =>
-              p.id === productIdOrProd ||
-              (p.articleCode || '').trim().toLowerCase() === productIdOrProd.trim().toLowerCase()
-          )
+        ? products.find((p) => p.id === productIdOrProd)
         : productIdOrProd;
 
     return orders.reduce((sum, order) => {

@@ -25,7 +25,7 @@ import {
   FileText
 } from 'lucide-react';
 import { UITheme, UserAccount, SystemConfig, SMSLog } from '../types';
-import { saveDocumentToFirestore, deleteDocumentFromFirestore } from '../lib/firestoreService';
+import { saveDocumentToFirestore, deleteDocumentFromFirestore, cleanupExpiredSMSLogs, SMS_LOG_RETENTION_MS, getSMSLogTimestamp } from '../lib/firestoreService';
 import { collection, getDocs, db } from '../lib/firebase';
 import { normalizeBDPhoneNumber, isValidBDPhone } from '../utils/phoneUtils';
 
@@ -144,7 +144,8 @@ export const SMSPanel: React.FC<SMSPanelProps> = ({
     setIsLoadingLogs(true);
     try {
       const snap = await getDocs(collection(db, 'smsLogs'));
-      const list: SMSLog[] = snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as SMSLog));
+      const rawList: SMSLog[] = snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as SMSLog));
+      const list = await cleanupExpiredSMSLogs(rawList);
       list.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
       setLogsList(list);
     } catch (err) {
@@ -157,7 +158,19 @@ export const SMSPanel: React.FC<SMSPanelProps> = ({
   useEffect(() => {
     if (!isSuperAdmin) return;
     if (smsLogs && smsLogs.length > 0) {
-      setLogsList(smsLogs);
+      const now = Date.now();
+      const valid = smsLogs.filter(l => now - getSMSLogTimestamp(l) < SMS_LOG_RETENTION_MS);
+      const expired = smsLogs.filter(l => now - getSMSLogTimestamp(l) >= SMS_LOG_RETENTION_MS);
+      if (expired.length > 0) {
+        expired.forEach(l => {
+          if (onDeleteLog) {
+            onDeleteLog(l.id);
+          } else {
+            deleteDocumentFromFirestore('smsLogs', l.id);
+          }
+        });
+      }
+      setLogsList(valid);
     } else {
       fetchSMSLogs();
     }

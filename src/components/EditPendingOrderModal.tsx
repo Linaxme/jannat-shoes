@@ -68,11 +68,18 @@ export const EditPendingOrderModal: React.FC<EditPendingOrderModalProps> = ({
   const [newCommission, setNewCommission] = useState<number | string>('');
   const [itemToRemoveIndex, setItemToRemoveIndex] = useState<number | null>(null);
 
-  const isSameProduct = (item: { productId?: string; articleCode?: string }, prod: ShoeProduct): boolean => {
-    if (item.productId && prod.id && item.productId === prod.id) return true;
+  const isSameProduct = (
+    item: { productId?: string; articleCode?: string; sizeRange?: string },
+    prod: ShoeProduct
+  ): boolean => {
+    if (item.productId && prod.id) {
+      return item.productId === prod.id;
+    }
     const itemCode = (item.articleCode || '').trim().toLowerCase();
     const prodCode = (prod.articleCode || '').trim().toLowerCase();
-    return Boolean(itemCode && prodCode && itemCode === prodCode);
+    if (!itemCode || !prodCode || itemCode !== prodCode) return false;
+    const normalizeSize = (s?: string) => (s || '').replace(/\(.*?\)/g, '').trim().toLowerCase();
+    return normalizeSize(item.sizeRange) === normalizeSize(prod.sizeRange);
   };
 
   const isOrderBooked = (o: Order): boolean => {
@@ -96,11 +103,7 @@ export const EditPendingOrderModal: React.FC<EditPendingOrderModalProps> = ({
   const getMaxAllowedPairs = (productIdOrProd: string | ShoeProduct): number => {
     const prod =
       typeof productIdOrProd === 'string'
-        ? products.find(
-            (p) =>
-              p.id === productIdOrProd ||
-              (p.articleCode || '').trim().toLowerCase() === productIdOrProd.trim().toLowerCase()
-          )
+        ? products.find((p) => p.id === productIdOrProd)
         : productIdOrProd;
     if (!prod) return 0;
     const physicalStock = Number(prod.stockPairs) || 0;
@@ -142,16 +145,18 @@ export const EditPendingOrderModal: React.FC<EditPendingOrderModalProps> = ({
     const totalStock = Number(prod.stockPairs) || 0;
     const bookedCount = getOtherBookedPairs(prod) + getCurrentMemoPairs(prod);
     const remainingFree = getRemainingFreePairs(prod);
+    const sizeLabel = prod.sizeRange ? ` (${prod.sizeRange.replace(/\(.*?\)/g, '').trim()})` : '';
     if (remainingFree <= 0) {
       setModalError(
-        `"${prod.articleCode}" মেমোতে যুক্ত করা যাবে না (মোট স্টক: ${toBnDigit(totalStock)} জোড়া, বুকড: ${toBnDigit(bookedCount)} জোড়া, ফ্রি স্টক: ০ জোড়া)`
+        `"${prod.articleCode}${sizeLabel}" মেমোতে যুক্ত করা যাবে না (মোট স্টক: ${toBnDigit(totalStock)} জোড়া, বুকড: ${toBnDigit(bookedCount)} জোড়া, ফ্রি স্টক: ০ জোড়া)`
       );
       setShowProductDropdown(false);
       return;
     }
     setModalError(null);
     setSelectedProduct(prod);
-    setProductSearchInput(`${prod.articleCode} - ${prod.name}`);
+    const nameSuffix = prod.name && prod.name !== prod.articleCode ? ` - ${prod.name}` : '';
+    setProductSearchInput(`${prod.articleCode}${sizeLabel}${nameSuffix}`);
     setNewPrice(prod.sellPrice || 0);
     setNewQuantity(1);
     setNewCommission('');
@@ -179,24 +184,28 @@ export const EditPendingOrderModal: React.FC<EditPendingOrderModalProps> = ({
     const remainingFree = getRemainingFreePairs(selectedProduct);
     const totalStock = Number(selectedProduct.stockPairs) || 0;
     const bookedCount = getOtherBookedPairs(selectedProduct) + currentPairsInMemo;
+    const sizeLabel = selectedProduct.sizeRange ? ` (${selectedProduct.sizeRange.replace(/\(.*?\)/g, '').trim()})` : '';
 
     if (remainingFree <= 0) {
       setModalError(
-        `"${selectedProduct.articleCode}" স্টকে নেই (মোট স্টক: ${toBnDigit(totalStock)} জোড়া, বুকড: ${toBnDigit(bookedCount)} জোড়া, ফ্রি স্টক: ০ জোড়া)`
+        `"${selectedProduct.articleCode}${sizeLabel}" স্টকে নেই (মোট স্টক: ${toBnDigit(totalStock)} জোড়া, বুকড: ${toBnDigit(bookedCount)} জোড়া, ফ্রি স্টক: ০ জোড়া)`
       );
       return;
     }
 
     if (currentPairsInMemo + totalPairs > maxAllowed) {
       setModalError(
-        `"${selectedProduct.articleCode}" এর ফ্রি স্টক আছে ${toBnDigit(remainingFree)} জোড়া। এর বেশি মেমো করা যাবে না!`
+        `"${selectedProduct.articleCode}${sizeLabel}" এর ফ্রি স্টক আছে ${toBnDigit(remainingFree)} জোড়া। এর বেশি মেমো করা যাবে না!`
       );
       return;
     }
 
-    // Check if already in items with same unit type
+    // Check if already in items with same productId, sizeRange, and unitType
     const existingIndex = items.findIndex(
-      (item) => item.productId === selectedProduct.id && item.unitType === newUnitType
+      (item) =>
+        item.productId === selectedProduct.id &&
+        (item.sizeRange || '') === (selectedProduct.sizeRange || '') &&
+        item.unitType === newUnitType
     );
 
     if (existingIndex > -1) {

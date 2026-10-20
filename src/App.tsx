@@ -29,23 +29,35 @@ import { Sidebar } from './components/Sidebar';
 import { TabLoadingFallback } from './components/TabLoadingFallback';
 import PosOrderBuilder from './components/PosOrderBuilder';
 
-// Lazy-loaded components for rapid initial boot & light bundle size
-const Dashboard = lazy(() => import('./components/Dashboard').then(m => ({ default: m.Dashboard })));
-const InvoiceModal = lazy(() => import('./components/InvoiceModal').then(m => ({ default: m.InvoiceModal })));
-const StockManagement = lazy(() => import('./components/StockManagement').then(m => ({ default: m.StockManagement })));
-const DueManagement = lazy(() => import('./components/DueManagement').then(m => ({ default: m.DueManagement })));
-const SalesHistory = lazy(() => import('./components/SalesHistory').then(m => ({ default: m.SalesHistory })));
-const PendingOrders = lazy(() => import('./components/PendingOrders').then(m => ({ default: m.PendingOrders })));
-const LoginModal = lazy(() => import('./components/LoginModal').then(m => ({ default: m.LoginModal })));
+import { Dashboard } from './components/Dashboard';
+import { InvoiceModal } from './components/InvoiceModal';
+import { StockManagement } from './components/StockManagement';
+import { DueManagement } from './components/DueManagement';
+import { SalesHistory } from './components/SalesHistory';
+import { PendingOrders } from './components/PendingOrders';
+import { LoginModal } from './components/LoginModal';
+import { ShopManagement } from './components/ShopManagement';
+
+// Lazy-loaded secondary admin tools
 const UserManagement = lazy(() => import('./components/UserManagement').then(m => ({ default: m.UserManagement })));
 const FeatureManagement = lazy(() => import('./components/FeatureManagement').then(m => ({ default: m.FeatureManagement })));
 const SellerTracking = lazy(() => import('./components/SellerTracking').then(m => ({ default: m.SellerTracking })));
 const SMSPanel = lazy(() => import('./components/SMSPanel').then(m => ({ default: m.SMSPanel })));
 const Reports = lazy(() => import('./components/Reports').then(m => ({ default: m.Reports })));
-const ShopManagement = lazy(() => import('./components/ShopManagement').then(m => ({ default: m.ShopManagement })));
 const TrashManagement = lazy(() => import('./components/TrashManagement').then(m => ({ default: m.TrashManagement })));
 
-import { fetchFirestoreData, seedFirestoreData, saveDocumentToFirestore, deleteDocumentFromFirestore, clearAllDatabaseData } from './lib/firestoreService';
+import {
+  fetchFirestoreData,
+  fetchFirestoreCachedData,
+  loadCachedAppData,
+  saveCachedAppData,
+  seedFirestoreData,
+  saveDocumentToFirestore,
+  deleteDocumentFromFirestore,
+  clearAllDatabaseData,
+  SMS_LOG_RETENTION_MS,
+  getSMSLogTimestamp,
+} from './lib/firestoreService';
 import { generateSMSMessage, sendAutoSMS, SMSType } from './utils/smsService';
 import { normalizeBDPhoneNumber, formatPhoneForDisplay } from './utils/phoneUtils';
 import { calculateCustomerBalance } from './utils/customerLedger';
@@ -56,6 +68,8 @@ import { CheckCircle2, X } from 'lucide-react';
 
 export default function App() {
   const { t } = useLanguage();
+  const initialCached = useMemo(() => loadCachedAppData(), []);
+
   const [currentUser, setCurrentUser] = useState<UserAccount | null>(() => {
     const saved = localStorage.getItem('lixa_active_user');
     if (saved) {
@@ -78,17 +92,23 @@ export default function App() {
     if (currentUser?.role === 'seller') return 'pos';
     return 'dashboard';
   });
-  const [isLoadingCloud, setIsLoadingCloud] = useState<boolean>(true);
+  const [isLoadingCloud, setIsLoadingCloud] = useState<boolean>(() => !initialCached);
 
-  const [products, setProducts] = useState<ShoeProduct[]>([]);
-  const [customers, setCustomers] = useState<Customer[]>([]);
-  const [sellers, setSellers] = useState<SalesRep[]>([]);
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [paymentLogs, setPaymentLogs] = useState<DuePaymentLog[]>([]);
-  const [userAccounts, setUserAccounts] = useState<UserAccount[]>(INITIAL_USER_ACCOUNTS);
-  const [systemConfig, setSystemConfig] = useState<SystemConfig>(DEFAULT_SYSTEM_CONFIG);
-  const [trashItems, setTrashItems] = useState<TrashItem[]>([]);
-  const [smsLogs, setSmsLogs] = useState<SMSLog[]>([]);
+  const [products, setProducts] = useState<ShoeProduct[]>(() => initialCached?.products || []);
+  const [customers, setCustomers] = useState<Customer[]>(() => initialCached?.customers || []);
+  const [sellers, setSellers] = useState<SalesRep[]>(() => initialCached?.sellers || []);
+  const [orders, setOrders] = useState<Order[]>(() =>
+    initialCached?.orders ? [...initialCached.orders].sort(compareOrdersNewestFirst) : []
+  );
+  const [paymentLogs, setPaymentLogs] = useState<DuePaymentLog[]>(() => initialCached?.paymentLogs || []);
+  const [userAccounts, setUserAccounts] = useState<UserAccount[]>(
+    () => initialCached?.userAccounts || INITIAL_USER_ACCOUNTS
+  );
+  const [systemConfig, setSystemConfig] = useState<SystemConfig>(
+    () => initialCached?.systemConfig || DEFAULT_SYSTEM_CONFIG
+  );
+  const [trashItems, setTrashItems] = useState<TrashItem[]>(() => initialCached?.trashItems || []);
+  const [smsLogs, setSmsLogs] = useState<SMSLog[]>(() => initialCached?.smsLogs || []);
 
   // PWA Install Prompt State
   const [deferredInstallPrompt, setDeferredInstallPrompt] = useState<any>(null);
@@ -127,19 +147,33 @@ export default function App() {
     return [...ordersList].sort(compareOrdersNewestFirst);
   };
 
-  // Load from Firestore on mount
+  // Load from Firestore on mount (instant IndexedDB cache first, then live cloud sync)
   useEffect(() => {
-    async function loadData() {
-      setIsLoadingCloud(true);
+    let isMounted = true;
 
-      const res = await fetchFirestoreData();
-
+    const applySnapshot = (
+      res: {
+        products?: ShoeProduct[];
+        customers?: Customer[];
+        sellers?: SalesRep[];
+        orders?: Order[];
+        paymentLogs?: DuePaymentLog[];
+        userAccounts?: UserAccount[];
+        systemConfig?: SystemConfig;
+        trashItems?: TrashItem[];
+        smsLogs?: SMSLog[];
+      },
+      shouldPersistFixes: boolean
+    ) => {
+      if (!isMounted) return;
       const loadedOrders = sortOrdersByRecency(res.orders || []);
       const loadedPayments = res.paymentLogs || [];
       const reconciledCustomers = (res.customers || []).map((c) => {
         const trueDue = calculateCustomerBalance(c.id, c, loadedOrders, loadedPayments);
         if (Math.abs(Number(c.currentDue || 0) - trueDue) > 0.01) {
-          saveDocumentToFirestore('customers', c.id, { ...c, currentDue: trueDue });
+          if (shouldPersistFixes) {
+            saveDocumentToFirestore('customers', c.id, { ...c, currentDue: trueDue });
+          }
           return { ...c, currentDue: trueDue };
         }
         return c;
@@ -162,7 +196,7 @@ export default function App() {
               phone: u.phone === '01711002233' || !u.phone ? '01872259237' : u.phone,
               loginId: u.loginId === '01711002233' || !u.loginId ? '01872259237' : u.loginId,
             };
-            if (u.phone === '01711002233' || u.loginId === '01711002233') {
+            if (shouldPersistFixes && (u.phone === '01711002233' || u.loginId === '01711002233')) {
               saveDocumentToFirestore('userAccounts', updatedAdmin.id, updatedAdmin);
             }
             return updatedAdmin;
@@ -182,7 +216,9 @@ export default function App() {
             createdAt: '2026-01-01'
           };
           accounts.push(defaultAdmin);
-          saveDocumentToFirestore('userAccounts', defaultAdmin.id, defaultAdmin);
+          if (shouldPersistFixes) {
+            saveDocumentToFirestore('userAccounts', defaultAdmin.id, defaultAdmin);
+          }
         }
 
         setUserAccounts(accounts);
@@ -191,11 +227,65 @@ export default function App() {
         setSystemConfig(res.systemConfig);
       }
       if (res.smsLogs) {
-        setSmsLogs(res.smsLogs.sort((a, b) => b.timestamp - a.timestamp));
+        setSmsLogs([...res.smsLogs].sort((a, b) => b.timestamp - a.timestamp));
       }
+    };
+
+    async function loadData() {
+      // 1. Try ultra-fast Firestore IndexedDB cache (~10ms) before waiting for network
+      fetchFirestoreCachedData().then((cached) => {
+        if (cached && isMounted) {
+          applySnapshot(cached, false);
+          setIsLoadingCloud(false);
+        }
+      });
+
+      // 2. Fetch fresh data from Firestore in background
+      const res = await fetchFirestoreData();
+      if (!isMounted) return;
+      applySnapshot(res, true);
       setIsLoadingCloud(false);
     }
+
     loadData();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  // Keep local snapshot synced whenever core data changes for 0ms next boot
+  useEffect(() => {
+    if (isLoadingCloud) return;
+    const timer = setTimeout(() => {
+      saveCachedAppData({
+        products,
+        customers,
+        sellers,
+        orders,
+        paymentLogs,
+        userAccounts,
+        systemConfig,
+        trashItems,
+        smsLogs,
+      });
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [products, customers, sellers, orders, paymentLogs, userAccounts, systemConfig, trashItems, smsLogs, isLoadingCloud]);
+
+  // Automatically delete SMS logs older than 48 hours while the app is open
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const now = Date.now();
+      setSmsLogs((prev) => {
+        const expired = prev.filter((l) => now - getSMSLogTimestamp(l) >= SMS_LOG_RETENTION_MS);
+        if (expired.length === 0) return prev;
+        expired.forEach((l) => {
+          deleteDocumentFromFirestore('smsLogs', l.id);
+        });
+        return prev.filter((l) => now - getSMSLogTimestamp(l) < SMS_LOG_RETENTION_MS);
+      });
+    }, 60000);
+    return () => clearInterval(interval);
   }, []);
 
   // Modal Invoice Viewer State
@@ -637,11 +727,15 @@ export default function App() {
     if (target.deliveryStatus === 'delivered' && target.items && target.items.length > 0) {
       const updatedProducts = products.map((p) => {
         const orderedPairs = (target.items || [])
-          .filter(
-            (i) =>
-              i.productId === p.id ||
-              (p.articleCode && (i.articleCode || '').trim().toLowerCase() === p.articleCode.trim().toLowerCase())
-          )
+          .filter((i) => {
+            if (i.productId && p.id) return i.productId === p.id;
+            const sameCode =
+              p.articleCode && (i.articleCode || '').trim().toLowerCase() === p.articleCode.trim().toLowerCase();
+            const sameSize =
+              (i.sizeRange || '').replace(/\(.*?\)/g, '').trim().toLowerCase() ===
+              (p.sizeRange || '').replace(/\(.*?\)/g, '').trim().toLowerCase();
+            return Boolean(sameCode && sameSize);
+          })
           .reduce((sum, i) => sum + (Number(i.totalPairs) || 0), 0);
         if (orderedPairs > 0) {
           const restoredStock = p.stockPairs + orderedPairs;
@@ -730,11 +824,15 @@ export default function App() {
     if (newOrder.deliveryStatus === 'delivered') {
       const updatedProducts = products.map((p) => {
         const orderedPairs = (newOrder.items || [])
-          .filter(
-            (i) =>
-              i.productId === p.id ||
-              (p.articleCode && (i.articleCode || '').trim().toLowerCase() === p.articleCode.trim().toLowerCase())
-          )
+          .filter((i) => {
+            if (i.productId && p.id) return i.productId === p.id;
+            const sameCode =
+              p.articleCode && (i.articleCode || '').trim().toLowerCase() === p.articleCode.trim().toLowerCase();
+            const sameSize =
+              (i.sizeRange || '').replace(/\(.*?\)/g, '').trim().toLowerCase() ===
+              (p.sizeRange || '').replace(/\(.*?\)/g, '').trim().toLowerCase();
+            return Boolean(sameCode && sameSize);
+          })
           .reduce((sum, i) => sum + (Number(i.totalPairs) || 0), 0);
         if (orderedPairs > 0) {
           const updatedStock = Math.max(0, p.stockPairs - orderedPairs);
@@ -839,11 +937,15 @@ export default function App() {
     // Deduct physical stock now
     const updatedProducts = products.map((p) => {
       const orderedPairs = (updatedOrder.items || [])
-        .filter(
-          (i) =>
-            i.productId === p.id ||
-            (p.articleCode && (i.articleCode || '').trim().toLowerCase() === p.articleCode.trim().toLowerCase())
-        )
+        .filter((i) => {
+          if (i.productId && p.id) return i.productId === p.id;
+          const sameCode =
+            p.articleCode && (i.articleCode || '').trim().toLowerCase() === p.articleCode.trim().toLowerCase();
+          const sameSize =
+            (i.sizeRange || '').replace(/\(.*?\)/g, '').trim().toLowerCase() ===
+            (p.sizeRange || '').replace(/\(.*?\)/g, '').trim().toLowerCase();
+          return Boolean(sameCode && sameSize);
+        })
         .reduce((sum, i) => sum + (Number(i.totalPairs) || 0), 0);
       if (orderedPairs > 0) {
         const updatedStock = Math.max(0, p.stockPairs - orderedPairs);
