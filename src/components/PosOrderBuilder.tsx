@@ -98,16 +98,20 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
     }).slice(0, 8);
   }, [customers, customerSearchQuery]);
 
-  // If user types a full 11-digit phone number, auto-select if exact match exists
+  // If user types ONLY a full 11-digit phone number (and no customer is selected yet), auto-select if a unique match exists
   useEffect(() => {
-    const clean = normalizeBDPhoneNumber(customerSearchQuery) || convertBnToEnDigits(customerSearchQuery).replace(/\D/g, '');
+    if (selectedCustomerId) return;
+    const raw = customerSearchQuery.trim();
+    if (!raw || !/^[0-9০-৯+\-\s()]+$/.test(raw)) return;
+
+    const clean = normalizeBDPhoneNumber(raw) || convertBnToEnDigits(raw).replace(/\D/g, '');
     if (clean.length === 11) {
-      const exactMatch = customers.find((c) => {
+      const matches = customers.filter((c) => {
         const cPhone = normalizeBDPhoneNumber(c.phone || '') || (c.phone || '').replace(/\D/g, '');
         return cPhone === clean;
       });
-      if (exactMatch && exactMatch.id !== selectedCustomerId) {
-        setSelectedCustomerId(exactMatch.id);
+      if (matches.length === 1) {
+        setSelectedCustomerId(matches[0].id);
         setShowCustomerDropdown(false);
       }
     }
@@ -265,7 +269,13 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
   const [newOpeningDue, setNewOpeningDue] = useState<number | string>('');
 
   // Get selected customer details - null/undefined if no customer is selected yet
-  const selectedCustomer = customers.find((c) => c.id === selectedCustomerId);
+  const selectedCustomer = useMemo(() => {
+    if (!selectedCustomerId) return undefined;
+    return (
+      customers.find((c) => c.id === selectedCustomerId) ||
+      customers.find((c) => c.id === selectedCustomerId.replace(/^usr_/, 'c_'))
+    );
+  }, [customers, selectedCustomerId]);
 
   // Suggestions for auto-complete
   const suggestions = useMemo(() => {
@@ -781,7 +791,11 @@ export const PosOrderBuilder: React.FC<PosOrderBuilderProps> = ({
                 type="text"
                 value={customerSearchQuery}
                 onChange={(e) => {
-                  setCustomerSearchQuery(e.target.value);
+                  const val = e.target.value;
+                  setCustomerSearchQuery(val);
+                  if (selectedCustomerId) {
+                    setSelectedCustomerId('');
+                  }
                   setShowCustomerDropdown(true);
                 }}
                 onFocus={() => setShowCustomerDropdown(true)}

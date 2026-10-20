@@ -311,21 +311,20 @@ export const UserManagement: React.FC<UserManagementProps> = ({
     if (usr.role !== 'customer') return undefined;
     const userPhone = (usr.phone || usr.loginId || '').replace(/\D/g, '');
     const userShop = (usr.shopName || '').toLowerCase().trim();
-    const userName = (usr.name || '').toLowerCase().trim();
+    const expectedCustId = (usr.id || '').replace(/^usr_/, 'c_');
 
-    const found = customers.find((c) => {
-      const cPhone = (c.phone || '').replace(/\D/g, '');
-      if (userPhone && cPhone && userPhone.length >= 6 && (userPhone.endsWith(cPhone) || cPhone.endsWith(userPhone))) {
-        return true;
-      }
-      if (userShop && c.shopName && c.shopName.toLowerCase().trim() === userShop) {
-        return true;
-      }
-      if (userName && c.name && c.name.toLowerCase().trim() === userName) {
-        return true;
-      }
-      return false;
-    });
+    const found =
+      customers.find((c) => expectedCustId && c.id === expectedCustId) ||
+      customers.find((c) => userShop && c.shopName && c.shopName.toLowerCase().trim() === userShop) ||
+      customers.find((c) => {
+        const cPhone = (c.phone || '').replace(/\D/g, '');
+        const cShop = (c.shopName || '').toLowerCase().trim();
+        if (userShop && cShop && userShop !== cShop) return false;
+        if (userPhone && cPhone && userPhone.length >= 6 && (userPhone.endsWith(cPhone) || cPhone.endsWith(userPhone))) {
+          return true;
+        }
+        return false;
+      });
 
     if (found) return found;
 

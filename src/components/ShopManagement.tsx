@@ -142,16 +142,24 @@ export const ShopManagement: React.FC<ShopManagementProps> = ({
     customerUsers.forEach((u, idx) => {
       const uPhoneClean = (u.phone || u.loginId || '').replace(/\D/g, '');
       const uShopLower = (u.shopName || '').trim().toLowerCase();
+      const expectedCustId = (u.id || '').replace(/^usr_/, 'c_');
 
-      // Find matching Customer record
-      const matchedCust = customers.find((c) => {
-        const cPhoneClean = (c.phone || '').replace(/\D/g, '');
-        const cShopLower = (c.shopName || '').trim().toLowerCase();
-        return (
-          (uPhoneClean && cPhoneClean && uPhoneClean === cPhoneClean) ||
-          (uShopLower && cShopLower && uShopLower === cShopLower)
-        );
-      });
+      // Find matching Customer record without merging different shop names that share a phone number
+      const matchedCust =
+        customers.find((c) => !matchedCustIds.has(c.id) && expectedCustId && c.id === expectedCustId) ||
+        customers.find((c) => {
+          if (matchedCustIds.has(c.id)) return false;
+          const cShopLower = (c.shopName || '').trim().toLowerCase();
+          return Boolean(uShopLower && cShopLower && uShopLower === cShopLower);
+        }) ||
+        customers.find((c) => {
+          if (matchedCustIds.has(c.id)) return false;
+          const cPhoneClean = (c.phone || '').replace(/\D/g, '');
+          const cShopLower = (c.shopName || '').trim().toLowerCase();
+          // Only match by phone if shop names do not conflict
+          if (uShopLower && cShopLower && uShopLower !== cShopLower) return false;
+          return Boolean(uPhoneClean && cPhoneClean && uPhoneClean === cPhoneClean);
+        });
 
       if (matchedCust) matchedCustIds.add(matchedCust.id);
 
@@ -160,11 +168,11 @@ export const ShopManagement: React.FC<ShopManagementProps> = ({
       const sortedDates = custOrders.map((o) => o.date).filter(Boolean).sort().reverse();
 
       list.push({
-        id: u.id || matchedCust?.id || `shop_u_${idx}`,
-        name: u.name || matchedCust?.name || 'দোকানদার',
-        shopName: u.shopName || matchedCust?.shopName || u.name || 'দোকান',
-        phone: u.phone || u.loginId || matchedCust?.phone || '',
-        address: u.area || matchedCust?.address || '—',
+        id: matchedCust?.id || u.id || `shop_u_${idx}`,
+        name: matchedCust?.name || u.name || 'দোকানদার',
+        shopName: matchedCust?.shopName || u.shopName || u.name || 'দোকান',
+        phone: matchedCust?.phone || u.phone || u.loginId || '',
+        address: matchedCust?.address || u.area || '—',
         currentDue: matchedCust?.currentDue !== undefined ? matchedCust.currentDue : (u.initialDue || 0),
         creditLimit: matchedCust?.creditLimit || 50000,
         assignedSellerId: matchedCust?.assignedSellerId || u.sellerId || '',
@@ -850,7 +858,7 @@ export const ShopManagement: React.FC<ShopManagementProps> = ({
                   {/* New Memo / POS Button */}
                   {onNavigateToPos && (
                     <button
-                      onClick={() => onNavigateToPos(shop.id)}
+                      onClick={() => onNavigateToPos(shop.linkedCustomer?.id || shop.id)}
                       className="px-3 py-1.5 rounded-xl text-xs font-bold bg-amber-500 hover:bg-amber-400 text-slate-950 flex items-center gap-1.5 shadow-xs active:scale-95 transition cursor-pointer"
                     >
                       <ShoppingCart className="w-3.5 h-3.5" />

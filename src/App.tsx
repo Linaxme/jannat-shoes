@@ -572,15 +572,26 @@ export default function App() {
     setCustomers((prev) => prev.map((c) => (c.id === updatedCust.id ? updatedCust : c)));
     await saveDocumentToFirestore('customers', updatedCust.id, updatedCust);
 
-    // Sync corresponding userAccount if customer is registered
+    // Sync corresponding userAccount if customer is registered (without overwriting a different shop that shares a phone)
     const cleanPhone = (updatedCust.phone || '').replace(/\D/g, '');
+    const expectedUsrId = (updatedCust.id || '').replace(/^c_/, 'usr_');
+    const updatedShopLower = (updatedCust.shopName || '').trim().toLowerCase();
+
     setUserAccounts((prev) =>
       prev.map((u) => {
+        if (u.role !== 'customer') return u;
         const uCleanPhone = (u.phone || '').replace(/\D/g, '');
-        const matchesPhone = cleanPhone && uCleanPhone && cleanPhone === uCleanPhone;
-        const matchesShop = u.shopName && u.shopName.trim().toLowerCase() === (updatedCust.shopName || '').trim().toLowerCase();
-        
-        if (u.role === 'customer' && (matchesPhone || matchesShop)) {
+        const uShopLower = (u.shopName || '').trim().toLowerCase();
+        const matchesId = Boolean(expectedUsrId && u.id === expectedUsrId);
+        const matchesShop = Boolean(uShopLower && updatedShopLower && uShopLower === updatedShopLower);
+        const matchesPhoneWithoutShopConflict = Boolean(
+          cleanPhone &&
+            uCleanPhone &&
+            cleanPhone === uCleanPhone &&
+            (!uShopLower || !updatedShopLower || uShopLower === updatedShopLower)
+        );
+
+        if (matchesId || matchesShop || matchesPhoneWithoutShopConflict) {
           const updatedU = {
             ...u,
             name: updatedCust.name,
