@@ -146,7 +146,7 @@ export const ShopManagement: React.FC<ShopManagementProps> = ({
 
       // Find matching Customer record without merging different shop names that share a phone number
       const matchedCust =
-        customers.find((c) => !matchedCustIds.has(c.id) && expectedCustId && c.id === expectedCustId) ||
+        customers.find((c) => !matchedCustIds.has(c.id) && ((expectedCustId && c.id === expectedCustId) || c.id === u.id)) ||
         customers.find((c) => {
           if (matchedCustIds.has(c.id)) return false;
           const cShopLower = (c.shopName || '').trim().toLowerCase();
@@ -158,7 +158,12 @@ export const ShopManagement: React.FC<ShopManagementProps> = ({
           const cShopLower = (c.shopName || '').trim().toLowerCase();
           // Only match by phone if shop names do not conflict
           if (uShopLower && cShopLower && uShopLower !== cShopLower) return false;
-          return Boolean(uPhoneClean && cPhoneClean && uPhoneClean === cPhoneClean);
+          return Boolean(
+            uPhoneClean &&
+              cPhoneClean &&
+              uPhoneClean.length >= 6 &&
+              (uPhoneClean === cPhoneClean || uPhoneClean.endsWith(cPhoneClean) || cPhoneClean.endsWith(uPhoneClean))
+          );
         });
 
       if (matchedCust) matchedCustIds.add(matchedCust.id);

@@ -641,8 +641,8 @@ export default function App() {
         if (u.role === 'customer') {
           const uPhone = normalizePhoneNumber(u.phone || u.loginId);
           const uShop = (u.shopName || '').trim().toLowerCase();
-          if (targetPhone && uPhone && targetPhone === uPhone) return true;
           if (targetShop && uShop && targetShop === uShop) return true;
+          if (targetPhone && uPhone && targetPhone === uPhone && (!targetShop || !uShop || targetShop === uShop)) return true;
         }
       }
       return false;
@@ -661,8 +661,8 @@ export default function App() {
       const cShop = (c.shopName || '').trim().toLowerCase();
       const cName = (c.name || '').trim().toLowerCase();
 
-      if (targetPhone && cPhone && targetPhone === cPhone) return true;
       if (targetShop && cShop && targetShop === cShop) return true;
+      if (targetPhone && cPhone && targetPhone === cPhone && (!targetShop || !cShop || targetShop === cShop)) return true;
       if (targetName && cName && targetName === cName && targetShop && cShop === targetShop) return true;
       return false;
     });

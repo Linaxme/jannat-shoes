@@ -307,25 +307,45 @@ export const UserManagement: React.FC<UserManagementProps> = ({
     }
   };
 
-  const getCustomerForUser = (usr: UserAccount): Customer | undefined => {
+  const findMatchingCustomerForUser = (
+    usr: UserAccount,
+    excludeIds?: Set<string>
+  ): Customer | undefined => {
     if (usr.role !== 'customer') return undefined;
     const userPhone = (usr.phone || usr.loginId || '').replace(/\D/g, '');
     const userShop = (usr.shopName || '').toLowerCase().trim();
     const expectedCustId = (usr.id || '').replace(/^usr_/, 'c_');
 
-    const found =
-      customers.find((c) => expectedCustId && c.id === expectedCustId) ||
-      customers.find((c) => userShop && c.shopName && c.shopName.toLowerCase().trim() === userShop) ||
+    const isAvailable = (c: Customer) => !excludeIds || !excludeIds.has(c.id);
+
+    return (
+      customers.find((c) => isAvailable(c) && ((expectedCustId && c.id === expectedCustId) || c.id === usr.id)) ||
+      customers.find(
+        (c) => isAvailable(c) && Boolean(userShop && c.shopName && c.shopName.toLowerCase().trim() === userShop)
+      ) ||
       customers.find((c) => {
+        if (!isAvailable(c)) return false;
         const cPhone = (c.phone || '').replace(/\D/g, '');
         const cShop = (c.shopName || '').toLowerCase().trim();
         if (userShop && cShop && userShop !== cShop) return false;
-        if (userPhone && cPhone && userPhone.length >= 6 && (userPhone.endsWith(cPhone) || cPhone.endsWith(userPhone))) {
+        if (
+          userPhone &&
+          cPhone &&
+          userPhone.length >= 6 &&
+          (userPhone === cPhone || userPhone.endsWith(cPhone) || cPhone.endsWith(userPhone))
+        ) {
           return true;
         }
         return false;
-      });
+      })
+    );
+  };
 
+  const getCustomerForUser = (usr: UserAccount & { linkedCustomer?: Customer }): Customer | undefined => {
+    if (usr.role !== 'customer') return undefined;
+    if (usr.linkedCustomer) return usr.linkedCustomer;
+
+    const found = findMatchingCustomerForUser(usr);
     if (found) return found;
 
     return {
@@ -351,12 +371,25 @@ export const UserManagement: React.FC<UserManagementProps> = ({
     const matchedCustomerIds = new Set<string>();
 
     customerUsers.forEach((u) => {
-      const cust = getCustomerForUser(u);
-      if (cust) matchedCustomerIds.add(cust.id);
+      const matchedCust = findMatchingCustomerForUser(u, matchedCustomerIds);
+      if (matchedCust) {
+        matchedCustomerIds.add(matchedCust.id);
+      }
+      const fallbackCust: Customer = matchedCust || {
+        id: u.id,
+        name: u.name,
+        shopName: u.shopName || u.name,
+        phone: u.phone || u.loginId,
+        address: u.area || '',
+        assignedSellerId: '',
+        assignedSellerName: 'উন্মুক্ত / সরাসরি',
+        currentDue: u.initialDue || 0,
+        creditLimit: 50000,
+      };
       list.push({
         ...u,
         isOffline: false,
-        linkedCustomer: cust,
+        linkedCustomer: fallbackCust,
       });
     });
 
