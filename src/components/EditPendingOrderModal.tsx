@@ -72,14 +72,22 @@ export const EditPendingOrderModal: React.FC<EditPendingOrderModalProps> = ({
     item: { productId?: string; articleCode?: string; sizeRange?: string },
     prod: ShoeProduct
   ): boolean => {
+    const normalizeSize = (s?: string) => (s || '').replace(/\(.*?\)/g, '').trim().toLowerCase();
+    const itemSize = normalizeSize(item.sizeRange);
+    const prodSize = normalizeSize(prod.sizeRange);
+
     if (item.productId && prod.id) {
-      return item.productId === prod.id;
+      if (item.productId === prod.id) {
+        if (itemSize && prodSize) return itemSize === prodSize;
+        return true;
+      }
+      return false;
     }
     const itemCode = (item.articleCode || '').trim().toLowerCase();
     const prodCode = (prod.articleCode || '').trim().toLowerCase();
     if (!itemCode || !prodCode || itemCode !== prodCode) return false;
-    const normalizeSize = (s?: string) => (s || '').replace(/\(.*?\)/g, '').trim().toLowerCase();
-    return normalizeSize(item.sizeRange) === normalizeSize(prod.sizeRange);
+    if (itemSize && prodSize) return itemSize === prodSize;
+    return true;
   };
 
   const isOrderBooked = (o: Order): boolean => {
@@ -683,17 +691,34 @@ export const EditPendingOrderModal: React.FC<EditPendingOrderModalProps> = ({
               </div>
             ) : (
               <div className="bg-white dark:bg-slate-950 rounded-2xl border border-slate-200 dark:border-slate-800 divide-y divide-slate-100 dark:divide-slate-800 overflow-hidden">
-                {items.map((item, idx) => (
+                {items.map((item, idx) => {
+                  const matchedProd = products.find((p) => isSameProduct(item, p));
+                  const itemFreeStock = matchedProd ? getRemainingFreePairs(matchedProd) : null;
+                  return (
                   <div key={idx} className="p-3 flex items-center justify-between gap-3 flex-wrap sm:flex-nowrap">
                     <div className="flex-1 min-w-[140px]">
-                      <div className="font-bold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
+                      <div className="font-bold text-slate-900 dark:text-slate-100 flex items-center gap-1.5 flex-wrap">
                         <span className="px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-500/20 text-amber-800 dark:text-amber-300 font-mono text-[11px] font-bold">
                           {item.articleCode}
                         </span>
-                        <span>{item.productName}</span>
+                        <span className="px-1.5 py-0.5 rounded bg-indigo-50 dark:bg-indigo-500/15 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-500/30 text-[10px] font-bold">
+                          সাইজ: {item.sizeRange}
+                        </span>
+                        {item.productName && item.productName !== item.articleCode && (
+                          <span>{item.productName}</span>
+                        )}
                       </div>
-                      <div className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">
-                        সাইজ: {item.sizeRange} | মোট: {toBnDigit(item.totalPairs)} জোড়া
+                      <div className="text-[10px] text-slate-500 dark:text-slate-400 mt-1 flex items-center gap-2 flex-wrap">
+                        <span>মোট: <strong className="text-slate-800 dark:text-slate-200">{toBnDigit(item.totalPairs)} জোড়া</strong></span>
+                        {itemFreeStock !== null && (
+                          <span className={`px-1.5 py-0.5 rounded font-bold ${
+                            itemFreeStock > 0
+                              ? 'bg-emerald-50 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-300'
+                              : 'bg-rose-50 dark:bg-rose-500/15 text-rose-600 dark:text-rose-400'
+                          }`}>
+                            ফ্রি স্টক: {toBnDigit(itemFreeStock)} জোড়া
+                          </span>
+                        )}
                       </div>
                     </div>
 
@@ -752,7 +777,8 @@ export const EditPendingOrderModal: React.FC<EditPendingOrderModalProps> = ({
                       </button>
                     </div>
                   </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
@@ -821,7 +847,7 @@ export const EditPendingOrderModal: React.FC<EditPendingOrderModalProps> = ({
           </div>
 
           {/* Summary Box */}
-          <div className="bg-amber-50/60 dark:bg-gradient-to-r dark:from-amber-950/40 dark:to-slate-950 p-4 rounded-2xl border border-amber-200 dark:border-amber-500/30 flex items-center justify-between flex-wrap gap-2">
+          <div className="bg-amber-50/60 dark:bg-gradient-to-r dark:from-amber-950/40 dark:to-slate-950 p-4 rounded-2xl border border-amber-200 dark:border-amber-500/30 flex items-center justify-between flex-wrap gap-3">
             <div>
               <span className="text-slate-600 dark:text-slate-400 text-[10px] block">সংশোধিত মোট জোড়া:</span>
               <span className="font-extrabold text-slate-900 dark:text-white text-sm">{toBnDigit(totalPairs)} জোড়া</span>
@@ -837,8 +863,16 @@ export const EditPendingOrderModal: React.FC<EditPendingOrderModalProps> = ({
               <span className="font-black text-amber-700 dark:text-amber-300 text-sm">{formatTaka(grandTotal)}</span>
             </div>
             <div>
-              <span className="text-slate-600 dark:text-slate-400 text-[10px] block">সংশোধিত বাকী:</span>
+              <span className="text-slate-600 dark:text-slate-400 text-[10px] block">এই মেমোর বাকী:</span>
               <span className="font-black text-rose-600 dark:text-rose-400 text-sm">{formatTaka(dueAmount)}</span>
+            </div>
+            <div>
+              <span className="text-slate-600 dark:text-slate-400 text-[10px] block">পূর্বের বকেয়া:</span>
+              <span className="font-bold text-slate-800 dark:text-slate-200 text-sm">{formatTaka(previousDue)}</span>
+            </div>
+            <div>
+              <span className="text-slate-600 dark:text-slate-400 text-[10px] block">নিট বকেয়া:</span>
+              <span className="font-black text-rose-700 dark:text-rose-300 text-sm">{formatTaka(totalNetDue)}</span>
             </div>
           </div>
 

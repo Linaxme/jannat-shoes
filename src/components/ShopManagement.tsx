@@ -21,9 +21,10 @@ import {
   TrendingUp,
   Coins,
   Trash2,
+  Printer,
 } from 'lucide-react';
-import { Customer, UserAccount, SalesRep, Order, UITheme, SystemConfig } from '../types';
-import { formatTaka, toBnDigit } from '../utils/formatters';
+import { Customer, UserAccount, SalesRep, Order, DuePaymentLog, UITheme, SystemConfig } from '../types';
+import { formatTaka, toBnDigit, compareOrdersNewestFirst, formatBnDate, getLocalDateStr } from '../utils/formatters';
 import { normalizeBDPhoneNumber } from '../utils/phoneUtils';
 import { useLanguage } from '../contexts/LanguageContext';
 import * as XLSX from 'xlsx';
@@ -39,6 +40,8 @@ interface ShopManagementProps {
   onAddShop: (customer: Customer, userAccount: UserAccount) => Promise<void> | void;
   onUpdateShop?: (customer: Customer, userAccount?: UserAccount) => Promise<void> | void;
   onDeleteShop?: (userId: string, customerId?: string) => Promise<void> | void;
+  onRecordPayment?: (newLog: DuePaymentLog) => Promise<void> | void;
+  onSelectOrderForInvoice?: (order: Order) => void;
   onNavigateToPos?: (customerId: string) => void;
 }
 
@@ -57,6 +60,7 @@ export interface UnifiedShopItem {
   totalOrdersCount: number;
   totalOrderAmount: number;
   lastOrderDate?: string;
+  ordersList?: Order[];
 }
 
 export const ShopManagement: React.FC<ShopManagementProps> = ({
@@ -68,6 +72,8 @@ export const ShopManagement: React.FC<ShopManagementProps> = ({
   onAddShop,
   onUpdateShop,
   onDeleteShop,
+  onRecordPayment,
+  onSelectOrderForInvoice,
   onNavigateToPos,
 }) => {
   const { t } = useLanguage();
@@ -82,6 +88,10 @@ export const ShopManagement: React.FC<ShopManagementProps> = ({
   const [editingShop, setEditingShop] = useState<UnifiedShopItem | null>(null);
   const [shopToTrash, setShopToTrash] = useState<UnifiedShopItem | null>(null);
   const [selectedShopDetail, setSelectedShopDetail] = useState<UnifiedShopItem | null>(null);
+  const [paymentTargetShop, setPaymentTargetShop] = useState<UnifiedShopItem | null>(null);
+  const [paymentAmountInput, setPaymentAmountInput] = useState('');
+  const [paymentMethodInput, setPaymentMethodInput] = useState<'নগদ ক্যাশ' | 'বিকাশ' | 'নগদ' | 'ব্যাংক'>('নগদ ক্যাশ');
+  const [paymentNoteInput, setPaymentNoteInput] = useState('');
   const [copiedPhoneId, setCopiedPhoneId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -168,7 +178,11 @@ export const ShopManagement: React.FC<ShopManagementProps> = ({
 
       if (matchedCust) matchedCustIds.add(matchedCust.id);
 
-      const custOrders = getShopOrders(matchedCust?.id || '', u.shopName || u.name, u.phone || u.loginId);
+      const custOrders = getShopOrders(
+        matchedCust?.id || '',
+        matchedCust?.shopName || u.shopName || u.name,
+        matchedCust?.phone || u.phone || u.loginId
+      ).sort(compareOrdersNewestFirst);
       const totalAmount = custOrders.reduce((sum, ord) => sum + (ord.grandTotal || 0), 0);
       const sortedDates = custOrders.map((o) => o.date).filter(Boolean).sort().reverse();
 
@@ -187,13 +201,23 @@ export const ShopManagement: React.FC<ShopManagementProps> = ({
         totalOrdersCount: custOrders.length,
         totalOrderAmount: totalAmount,
         lastOrderDate: sortedDates[0] || u.createdAt || '—',
+        ordersList: custOrders,
       });
     });
 
-    // 2. Add customers who do not have a separate UserAccount record
+    // 2. Add customers who do not have a separate UserAccount record (with duplicate guard)
     customers.forEach((c) => {
       if (!matchedCustIds.has(c.id)) {
-        const custOrders = getShopOrders(c.id, c.shopName, c.phone);
+        const cShopLower = (c.shopName || '').trim().toLowerCase();
+        const cPhoneClean = (c.phone || '').replace(/\D/g, '').slice(-11);
+        const alreadyExists = list.some((existing) => {
+          const exShop = (existing.shopName || '').trim().toLowerCase();
+          const exPhone = (existing.phone || '').replace(/\D/g, '').slice(-11);
+          return Boolean(cShopLower && exShop && cShopLower === exShop && (!cPhoneClean || !exPhone || cPhoneClean === exPhone));
+        });
+        if (alreadyExists) return;
+
+        const custOrders = getShopOrders(c.id, c.shopName, c.phone).sort(compareOrdersNewestFirst);
         const totalAmount = custOrders.reduce((sum, ord) => sum + (ord.grandTotal || 0), 0);
         const sortedDates = custOrders.map((o) => o.date).filter(Boolean).sort().reverse();
 
@@ -211,12 +235,60 @@ export const ShopManagement: React.FC<ShopManagementProps> = ({
           totalOrdersCount: custOrders.length,
           totalOrderAmount: totalAmount,
           lastOrderDate: sortedDates[0] || '—',
+          ordersList: custOrders,
         });
       }
     });
 
     return list;
   }, [customers, userAccounts, orders]);
+
+  const handleOpenPaymentModal = (shop: UnifiedShopItem) => {
+    setPaymentTargetShop(shop);
+    setPaymentAmountInput('');
+    setPaymentMethodInput('নগদ ক্যাশ');
+    setPaymentNoteInput('');
+  };
+
+  const handleSubmitQuickPayment = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!paymentTargetShop || !onRecordPayment) return;
+    const amt = parseFloat(paymentAmountInput) || 0;
+    if (amt <= 0) return;
+
+    const targetCustId = paymentTargetShop.linkedCustomer?.id || paymentTargetShop.id;
+    const prevDue = paymentTargetShop.currentDue || 0;
+    const remainingDue = prevDue - amt;
+    const now = new Date();
+    const newLog: DuePaymentLog = {
+      id: `pay_${Date.now()}`,
+      receiptNo: `RCP-${Date.now().toString().slice(-6)}`,
+      date: getLocalDateStr(now),
+      time: now.toLocaleTimeString('bn-BD', { hour: '2-digit', minute: '2-digit' }),
+      customerId: targetCustId,
+      customerName: paymentTargetShop.name,
+      shopName: paymentTargetShop.shopName,
+      sellerId: currentUser?.sellerId || currentUser?.id || paymentTargetShop.assignedSellerId || 's1',
+      sellerName: currentUser?.name || paymentTargetShop.assignedSellerName || 'প্রধান শাখা',
+      amountPaid: amt,
+      previousDue: prevDue,
+      remainingDue,
+      paymentMethod: paymentMethodInput,
+      receivedBy: currentUser?.name || 'প্রধান শাখা',
+      notes: paymentNoteInput.trim() || undefined,
+    };
+
+    await onRecordPayment(newLog);
+    if (selectedShopDetail && selectedShopDetail.id === paymentTargetShop.id) {
+      setSelectedShopDetail({
+        ...selectedShopDetail,
+        currentDue: remainingDue,
+      });
+    }
+    setPaymentTargetShop(null);
+    setPaymentAmountInput('');
+    setPaymentNoteInput('');
+  };
 
   // Seller identifiers
   const currentSellerId = currentUser?.sellerId || currentUser?.id || '';
@@ -841,6 +913,17 @@ export const ShopManagement: React.FC<ShopManagementProps> = ({
                       <span>হিসাব</span>
                     </button>
 
+                    {onRecordPayment && (
+                      <button
+                        onClick={() => handleOpenPaymentModal(shop)}
+                        className="px-2.5 py-1.5 rounded-lg text-xs font-bold bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border border-emerald-500/25 transition flex items-center gap-1 cursor-pointer"
+                        title="বকেয়া জমা নিন"
+                      >
+                        <Coins className="w-3 h-3" />
+                        <span>জমা</span>
+                      </button>
+                    )}
+
                     <button
                       onClick={() => handleOpenEdit(shop)}
                       className="p-1.5 rounded-lg text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
@@ -1238,29 +1321,188 @@ export const ShopManagement: React.FC<ShopManagementProps> = ({
                 </div>
               </div>
 
+              {/* Shop Memo / Order History List */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                    <Receipt className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+                    <span>মেমো তালিকা ({toBnDigit(selectedShopDetail.ordersList?.length || 0)})</span>
+                  </span>
+                </div>
+
+                {!selectedShopDetail.ordersList || selectedShopDetail.ordersList.length === 0 ? (
+                  <div className="p-4 text-center text-slate-400 dark:text-slate-500 bg-slate-50 dark:bg-slate-950 rounded-xl border border-slate-200 dark:border-slate-800">
+                    কোনো মেমো নেই
+                  </div>
+                ) : (
+                  <div className="max-h-56 overflow-y-auto divide-y divide-slate-200 dark:divide-slate-800 bg-slate-50 dark:bg-slate-950 rounded-xl border border-slate-200 dark:border-slate-800">
+                    {selectedShopDetail.ordersList.map((ord) => (
+                      <div
+                        key={ord.id}
+                        className="p-2.5 flex items-center justify-between gap-2 hover:bg-slate-100 dark:hover:bg-slate-900/60 transition"
+                      >
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2">
+                            <span className="font-mono font-bold text-amber-700 dark:text-amber-400">#{ord.memoNo}</span>
+                            <span className="text-[11px] text-slate-500 dark:text-slate-400">{formatBnDate(ord.deliveryDate || ord.date)}</span>
+                            <span className="text-[10px] font-mono text-slate-600 dark:text-slate-300">
+                              · {toBnDigit(ord.totalPairs)} জোড়া
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2 mt-0.5 font-mono tabular-nums text-[11px]">
+                            <span className="text-slate-700 dark:text-slate-300">বিল: <strong>{formatTaka(ord.grandTotal)}</strong></span>
+                            <span>·</span>
+                            <span className="text-emerald-600 dark:text-emerald-400">জমা: {formatTaka(ord.paidAmount || 0)}</span>
+                            {(ord.dueAmount || 0) > 0 && (
+                              <>
+                                <span>·</span>
+                                <span className="text-rose-600 dark:text-rose-400 font-bold">বাকী: {formatTaka(ord.dueAmount)}</span>
+                              </>
+                            )}
+                          </div>
+                        </div>
+
+                        {onSelectOrderForInvoice && (
+                          <button
+                            type="button"
+                            onClick={() => onSelectOrderForInvoice(ord)}
+                            className="px-2.5 py-1.5 rounded-lg bg-white dark:bg-slate-800 hover:bg-amber-500 hover:text-slate-950 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 text-[11px] font-bold flex items-center gap-1 shrink-0 transition cursor-pointer"
+                          >
+                            <Printer className="w-3 h-3" />
+                            <span>মেমো</span>
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
               {/* Action Buttons */}
-              <div className="pt-2 flex items-center justify-end gap-2.5">
+              <div className="pt-2 flex flex-wrap items-center justify-end gap-2">
+                {onRecordPayment && (
+                  <button
+                    onClick={() => handleOpenPaymentModal(selectedShopDetail)}
+                    className="px-3.5 py-2 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white flex items-center gap-1.5 transition cursor-pointer"
+                  >
+                    <Coins className="w-3.5 h-3.5" />
+                    <span>বকেয়া জমা নিন</span>
+                  </button>
+                )}
                 {onNavigateToPos && (
                   <button
                     onClick={() => {
-                      const id = selectedShopDetail.id;
+                      const id = selectedShopDetail.linkedCustomer?.id || selectedShopDetail.id;
                       setSelectedShopDetail(null);
                       onNavigateToPos(id);
                     }}
-                    className="px-4 py-2 rounded-xl text-xs font-bold bg-amber-500 hover:bg-amber-400 text-slate-950 flex items-center gap-1.5 transition"
+                    className="px-3.5 py-2 rounded-xl text-xs font-bold bg-amber-500 hover:bg-amber-400 text-slate-950 flex items-center gap-1.5 transition cursor-pointer"
                   >
                     <ShoppingCart className="w-3.5 h-3.5" />
-                    <span>এই দোকানে মেমো তৈরি করুন</span>
+                    <span>নতুন মেমো</span>
                   </button>
                 )}
                 <button
                   onClick={() => setSelectedShopDetail(null)}
-                  className="px-4 py-2 rounded-xl text-xs font-semibold bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition"
+                  className="px-3.5 py-2 rounded-xl text-xs font-semibold bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition cursor-pointer"
                 >
                   বন্ধ করুন
                 </button>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL: Quick Due Payment Collection */}
+      {paymentTargetShop && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 dark:bg-slate-950/80 backdrop-blur-sm animate-fadeIn">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 w-full max-w-md rounded-2xl shadow-2xl overflow-hidden">
+            <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-950">
+              <div className="flex items-center gap-2">
+                <Coins className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                <div>
+                  <h3 className="text-sm font-bold text-slate-900 dark:text-white">{paymentTargetShop.shopName}</h3>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400">প্রোপাইটার: {paymentTargetShop.name}</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setPaymentTargetShop(null)}
+                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-white cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSubmitQuickPayment} className="p-4 space-y-3.5 text-xs">
+              <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 font-mono">
+                <span className="text-slate-500 dark:text-slate-400 font-sans">বর্তমান বকেয়া:</span>
+                <span className="text-sm font-black text-rose-600 dark:text-rose-400">{formatTaka(paymentTargetShop.currentDue)}</span>
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">জমার পরিমাণ (৳)</label>
+                <input
+                  type="number"
+                  required
+                  min="1"
+                  step="any"
+                  value={paymentAmountInput}
+                  onChange={(e) => setPaymentAmountInput(e.target.value)}
+                  placeholder="0"
+                  className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl text-sm font-bold font-mono text-emerald-600 dark:text-emerald-400 focus:outline-none focus:border-emerald-500"
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">মাধ্যম</label>
+                <div className="grid grid-cols-4 gap-1.5">
+                  {(['নগদ ক্যাশ', 'বিকাশ', 'নগদ', 'ব্যাংক'] as const).map((method) => (
+                    <button
+                      key={method}
+                      type="button"
+                      onClick={() => setPaymentMethodInput(method)}
+                      className={`py-1.5 px-2 rounded-lg text-[11px] font-bold border transition cursor-pointer ${
+                        paymentMethodInput === method
+                          ? 'bg-emerald-600 text-white border-emerald-600'
+                          : 'bg-slate-50 dark:bg-slate-950 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-800'
+                      }`}
+                    >
+                      {method}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">নোট</label>
+                <input
+                  type="text"
+                  value={paymentNoteInput}
+                  onChange={(e) => setPaymentNoteInput(e.target.value)}
+                  placeholder="রশিদ বা মন্তব্য..."
+                  className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:border-emerald-500"
+                />
+              </div>
+
+              <div className="pt-2 flex items-center justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setPaymentTargetShop(null)}
+                  className="px-3.5 py-2 rounded-xl font-semibold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 cursor-pointer"
+                >
+                  বাতিল
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 rounded-xl font-bold bg-emerald-600 hover:bg-emerald-500 text-white flex items-center gap-1.5 cursor-pointer"
+                >
+                  <Check className="w-4 h-4" />
+                  <span>জমা সংরক্ষণ</span>
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

@@ -369,8 +369,19 @@ export const UserManagement: React.FC<UserManagementProps> = ({
   const unifiedCustomerList = useMemo(() => {
     const list: (UserAccount & { isOffline?: boolean; linkedCustomer?: Customer })[] = [];
     const matchedCustomerIds = new Set<string>();
+    const seenShopKeys = new Set<string>();
 
     customerUsers.forEach((u) => {
+      const userPhone = (u.phone || u.loginId || '').replace(/\D/g, '');
+      const userShop = (u.shopName || '').toLowerCase().trim();
+      const dedupeKey = `${userShop}::${userPhone.slice(-11)}`;
+      if (userShop && seenShopKeys.has(dedupeKey)) {
+        return;
+      }
+      if (userShop) {
+        seenShopKeys.add(dedupeKey);
+      }
+
       const matchedCust = findMatchingCustomerForUser(u, matchedCustomerIds);
       if (matchedCust) {
         matchedCustomerIds.add(matchedCust.id);
@@ -395,7 +406,11 @@ export const UserManagement: React.FC<UserManagementProps> = ({
 
     // Add offline customers who do not have an online UserAccount
     customers.forEach((c) => {
-      if (!matchedCustomerIds.has(c.id)) {
+      const cPhone = (c.phone || '').replace(/\D/g, '');
+      const cShop = (c.shopName || '').toLowerCase().trim();
+      const dedupeKey = `${cShop}::${cPhone.slice(-11)}`;
+      if (!matchedCustomerIds.has(c.id) && (!cShop || !seenShopKeys.has(dedupeKey))) {
+        if (cShop) seenShopKeys.add(dedupeKey);
         list.push({
           id: `cust_${c.id}`,
           name: c.name,

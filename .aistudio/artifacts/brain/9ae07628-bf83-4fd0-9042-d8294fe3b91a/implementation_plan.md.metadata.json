@@ -1,6 +1,6 @@
 {
-  "summary": "Implementation plan for enforcing real-time Free Stock calculation (Total Stock minus Booked Stock) across POS memo creation, pending order editing, and stock views so that booked items preserve total physical stock while reducing free stock to zero and blocking over-booking in subsequent memos.",
-  "updatedAt": "2026-10-19T11:35:13.314854531Z",
+  "summary": "লজিক নির্ভুলতা (ট্র্যাশ রিস্টোর ও ডেলিভারিতে সাইজভিত্তিক স্টক হিসাব, মেমো এডিটে বকেয়া অটো-সিঙ্ক, ডুপ্লিকেট প্রোফাইল মার্জ) এবং ইউজার ইন্টারফেস উন্নয়নের (দোকান পেজে সরাসরি বকেয়া জমা ও মেমো ভিউ, এডিট মোডালে সাইজ ও ফ্রি স্টক ব্যাজ, স্টকে কুইক ফিল্টার এবং মোবাইলে কম্প্যাক্ট মেমো ভিউ) পূর্ণাঙ্গ বাস্তবায়ন পরিকল্পনা।",
+  "updatedAt": "2026-10-20T11:59:25.065779962Z",
   "requestFeedback": true,
   "userFacing": true
 }

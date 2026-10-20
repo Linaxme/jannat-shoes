@@ -60,9 +60,9 @@ import {
 } from './lib/firestoreService';
 import { generateSMSMessage, sendAutoSMS, SMSType } from './utils/smsService';
 import { normalizeBDPhoneNumber, formatPhoneForDisplay } from './utils/phoneUtils';
-import { calculateCustomerBalance } from './utils/customerLedger';
+import { calculateCustomerBalance, getOrderAccurateBalances } from './utils/customerLedger';
 import { OrderItem } from './types';
-import { normalizePhoneNumber, compareOrdersNewestFirst, getLocalDateStr } from './utils/formatters';
+import { normalizePhoneNumber, compareOrdersNewestFirst, getLocalDateStr, toBnDigit } from './utils/formatters';
 
 import { CheckCircle2, X } from 'lucide-react';
 
@@ -168,7 +168,7 @@ export default function App() {
       if (!isMounted) return;
       const loadedOrders = sortOrdersByRecency(res.orders || []);
       const loadedPayments = res.paymentLogs || [];
-      const reconciledCustomers = (res.customers || []).map((c) => {
+      const rawReconciledCustomers = (res.customers || []).map((c) => {
         const trueDue = calculateCustomerBalance(c.id, c, loadedOrders, loadedPayments);
         if (Math.abs(Number(c.currentDue || 0) - trueDue) > 0.01) {
           if (shouldPersistFixes) {
@@ -177,6 +177,26 @@ export default function App() {
           return { ...c, currentDue: trueDue };
         }
         return c;
+      });
+
+      // Auto-merge duplicate customer entries that have the exact same shopName AND phone
+      const seenCustomerKeys = new Map<string, Customer>();
+      const reconciledCustomers: Customer[] = [];
+      rawReconciledCustomers.forEach((c) => {
+        const shopKey = (c.shopName || '').trim().toLowerCase();
+        const phoneKey = (c.phone || '').replace(/\D/g, '').slice(-11);
+        const compositeKey = shopKey ? `${shopKey}__${phoneKey}` : '';
+        if (compositeKey && seenCustomerKeys.has(compositeKey)) {
+          const existing = seenCustomerKeys.get(compositeKey)!;
+          if (!existing.address && c.address) existing.address = c.address;
+          if (!existing.assignedSellerId && c.assignedSellerId) {
+            existing.assignedSellerId = c.assignedSellerId;
+            existing.assignedSellerName = c.assignedSellerName;
+          }
+          return;
+        }
+        if (compositeKey) seenCustomerKeys.set(compositeKey, c);
+        reconciledCustomers.push(c);
       });
 
       setProducts(res.products || []);
@@ -220,6 +240,20 @@ export default function App() {
             saveDocumentToFirestore('userAccounts', defaultAdmin.id, defaultAdmin);
           }
         }
+
+        // Auto-deduplicate customer UserAccounts that share identical shopName + phone
+        const seenUserShopKeys = new Set<string>();
+        accounts = accounts.filter((u) => {
+          if (u.role !== 'customer') return true;
+          const shopKey = (u.shopName || '').trim().toLowerCase();
+          const phoneKey = (u.phone || u.loginId || '').replace(/\D/g, '').slice(-11);
+          const compositeKey = shopKey ? `${shopKey}__${phoneKey}` : '';
+          if (compositeKey && seenUserShopKeys.has(compositeKey)) {
+            return false;
+          }
+          if (compositeKey) seenUserShopKeys.add(compositeKey);
+          return true;
+        });
 
         setUserAccounts(accounts);
       }
@@ -897,19 +931,36 @@ export default function App() {
     setPosPreSelectedCustomerId('');
   };
 
+  const doesOrderItemMatchProduct = (
+    item: { productId?: string; articleCode?: string; sizeRange?: string },
+    prod: ShoeProduct
+  ): boolean => {
+    if (item.productId && prod.id && item.productId === prod.id) {
+      return true;
+    }
+    const itemCode = (item.articleCode || '').trim().toLowerCase();
+    const prodCode = (prod.articleCode || '').trim().toLowerCase();
+    if (!itemCode || !prodCode || itemCode !== prodCode) return false;
+    const normalizeSize = (s?: string) => (s || '').replace(/\(.*?\)/g, '').trim().toLowerCase();
+    return normalizeSize(item.sizeRange) === normalizeSize(prod.sizeRange);
+  };
+
   // 1.1 Confirm Delivery & Issue Cash Memo for Booked Sample Orders
   const handleConfirmDelivery = async (orderId: string, deliveryData?: ConfirmDeliveryData) => {
     const targetOrder = orders.find((o) => o.id === orderId);
     if (!targetOrder) return;
 
-    // Validate physical stock availability before confirming delivery
+    // Validate physical stock availability per size-specific product before confirming delivery
     for (const item of targetOrder.items || []) {
-      const prod = products.find((p) => p.id === item.productId);
+      const prod = products.find((p) => doesOrderItemMatchProduct(item, p));
       const totalOrderedForProd = (targetOrder.items || [])
-        .filter((i) => i.productId === item.productId)
+        .filter((i) => (prod ? doesOrderItemMatchProduct(i, prod) : i.productId === item.productId))
         .reduce((sum, i) => sum + (Number(i.totalPairs) || 0), 0);
       if (prod && totalOrderedForProd > (Number(prod.stockPairs) || 0)) {
-        triggerToast(`দুঃখিত, "${item.articleCode}" স্টকে আছে ${prod.stockPairs} জোড়া, ডেলিভারির জন্য পর্যাপ্ত স্টক নেই!`);
+        const sizeLabel = prod.sizeRange ? ` (${prod.sizeRange.replace(/\(.*?\)/g, '').trim()})` : '';
+        triggerToast(
+          `দুঃখিত, "${item.articleCode}${sizeLabel}" স্টকে আছে ${toBnDigit(prod.stockPairs)} জোড়া, ডেলিভারির জন্য পর্যাপ্ত স্টক নেই!`
+        );
         return;
       }
     }
@@ -929,7 +980,7 @@ export default function App() {
       newStatus = 'আংশিক বাকী';
     }
 
-    const updatedOrder: Order = {
+    const draftDeliveredOrder: Order = {
       ...targetOrder,
       deliveryStatus: 'delivered',
       deliveryDate,
@@ -942,21 +993,25 @@ export default function App() {
       time: new Date().toLocaleTimeString('bn-BD', { hour: '2-digit', minute: '2-digit' }),
     };
 
+    const allOrdersWithDelivered = [draftDeliveredOrder, ...orders.filter((o) => o.id !== orderId)];
+    const targetCust = targetOrder.customerId ? customers.find((c) => c.id === targetOrder.customerId) : undefined;
+    const accurateBal = targetOrder.customerId
+      ? getOrderAccurateBalances(orderId, targetOrder.customerId, targetCust, allOrdersWithDelivered, paymentLogs)
+      : { previousDue: targetOrder.previousDue || 0, totalNetDue: (targetOrder.previousDue || 0) + newDueAmount };
+
+    const updatedOrder: Order = {
+      ...draftDeliveredOrder,
+      previousDue: accurateBal.previousDue,
+      totalNetDue: accurateBal.totalNetDue,
+    };
+
     setOrders((prev) => sortOrdersByRecency([updatedOrder, ...prev.filter((o) => o.id !== orderId)]));
     await saveDocumentToFirestore('orders', orderId, updatedOrder);
 
-    // Deduct physical stock now
+    // Deduct physical stock now per size-specific product
     const updatedProducts = products.map((p) => {
       const orderedPairs = (updatedOrder.items || [])
-        .filter((i) => {
-          if (i.productId && p.id) return i.productId === p.id;
-          const sameCode =
-            p.articleCode && (i.articleCode || '').trim().toLowerCase() === p.articleCode.trim().toLowerCase();
-          const sameSize =
-            (i.sizeRange || '').replace(/\(.*?\)/g, '').trim().toLowerCase() ===
-            (p.sizeRange || '').replace(/\(.*?\)/g, '').trim().toLowerCase();
-          return Boolean(sameCode && sameSize);
-        })
+        .filter((i) => doesOrderItemMatchProduct(i, p))
         .reduce((sum, i) => sum + (Number(i.totalPairs) || 0), 0);
       if (orderedPairs > 0) {
         const updatedStock = Math.max(0, p.stockPairs - orderedPairs);
@@ -970,9 +1025,7 @@ export default function App() {
 
     // Reconcile Customer Due accurately based on full ledger balance
     if (targetOrder.customerId) {
-      const targetCust = customers.find((c) => c.id === targetOrder.customerId);
-      const allOrdersUpdated = [updatedOrder, ...orders.filter((o) => o.id !== orderId)];
-      const trueCurrentDue = calculateCustomerBalance(targetOrder.customerId, targetCust, allOrdersUpdated, paymentLogs);
+      const trueCurrentDue = calculateCustomerBalance(targetOrder.customerId, targetCust, allOrdersWithDelivered, paymentLogs);
       const updatedCustomers = customers.map((c) => {
         if (c.id === targetOrder.customerId) {
           const updatedC = { ...c, currentDue: trueCurrentDue };
@@ -1000,20 +1053,18 @@ export default function App() {
   const handleUpdateOrder = async (updatedOrder: Order) => {
     const previousOrder = orders.find((o) => o.id === updatedOrder.id);
 
-    // If order was already delivered, adjust physical inventory differences
+    // If order was already delivered, adjust physical inventory differences accurately per size variant
     if (previousOrder && previousOrder.deliveryStatus === 'delivered') {
-      const productPairDiffs: Record<string, number> = {};
-      (previousOrder.items || []).forEach((it) => {
-        productPairDiffs[it.productId] = (productPairDiffs[it.productId] || 0) - (it.totalPairs || 0);
-      });
-      (updatedOrder.items || []).forEach((it) => {
-        productPairDiffs[it.productId] = (productPairDiffs[it.productId] || 0) + (it.totalPairs || 0);
-      });
-
       let stockModified = false;
       const updatedProducts = products.map((p) => {
-        const diff = productPairDiffs[p.id];
-        if (diff !== undefined && diff !== 0) {
+        const prevPairs = (previousOrder.items || [])
+          .filter((it) => doesOrderItemMatchProduct(it, p))
+          .reduce((sum, it) => sum + (Number(it.totalPairs) || 0), 0);
+        const nextPairs = (updatedOrder.items || [])
+          .filter((it) => doesOrderItemMatchProduct(it, p))
+          .reduce((sum, it) => sum + (Number(it.totalPairs) || 0), 0);
+        const diff = nextPairs - prevPairs;
+        if (diff !== 0) {
           stockModified = true;
           const newStock = Math.max(0, p.stockPairs - diff);
           const updatedP = { ...p, stockPairs: newStock };
@@ -1027,16 +1078,28 @@ export default function App() {
       }
     }
 
-    setOrders((prev) => sortOrdersByRecency([updatedOrder, ...prev.filter((o) => o.id !== updatedOrder.id)]));
-    await saveDocumentToFirestore('orders', updatedOrder.id, updatedOrder);
+    // Reconcile accurate previousDue & totalNetDue on the updated memo
+    const targetCust = updatedOrder.customerId ? customers.find((c) => c.id === updatedOrder.customerId) : undefined;
+    const provisionalOrders = [updatedOrder, ...orders.filter((o) => o.id !== updatedOrder.id)];
+    const accurateBal = updatedOrder.customerId
+      ? getOrderAccurateBalances(updatedOrder.id, updatedOrder.customerId, targetCust, provisionalOrders, paymentLogs)
+      : { previousDue: updatedOrder.previousDue || 0, totalNetDue: updatedOrder.totalNetDue || 0 };
+
+    const syncedOrder: Order = {
+      ...updatedOrder,
+      previousDue: accurateBal.previousDue,
+      totalNetDue: accurateBal.totalNetDue,
+    };
+
+    const allOrdersUpdated = [syncedOrder, ...orders.filter((o) => o.id !== syncedOrder.id)];
+    setOrders(sortOrdersByRecency(allOrdersUpdated));
+    await saveDocumentToFirestore('orders', syncedOrder.id, syncedOrder);
 
     // Update customer due accurately based on full ledger balance
-    if (updatedOrder.customerId) {
-      const targetCust = customers.find((c) => c.id === updatedOrder.customerId);
-      const allOrdersUpdated = [updatedOrder, ...orders.filter((o) => o.id !== updatedOrder.id)];
-      const trueCurrentDue = calculateCustomerBalance(updatedOrder.customerId, targetCust, allOrdersUpdated, paymentLogs);
+    if (syncedOrder.customerId) {
+      const trueCurrentDue = calculateCustomerBalance(syncedOrder.customerId, targetCust, allOrdersUpdated, paymentLogs);
       const updatedCustomers = customers.map((c) => {
-        if (c.id === updatedOrder.customerId) {
+        if (c.id === syncedOrder.customerId) {
           const updatedC = { ...c, currentDue: trueCurrentDue };
           saveDocumentToFirestore('customers', c.id, updatedC);
           return updatedC;
@@ -1046,7 +1109,7 @@ export default function App() {
       setCustomers(updatedCustomers);
     }
 
-    triggerToast(t('toast_order_updated').replace('{{memoNo}}', updatedOrder.memoNo));
+    triggerToast(t('toast_order_updated').replace('{{memoNo}}', syncedOrder.memoNo));
   };
 
   // 2. Record Due Payment Handler
@@ -1154,12 +1217,14 @@ export default function App() {
         await saveDocumentToFirestore('orders', orderData.id, orderData);
         setOrders((prev) => sortOrdersByRecency([orderData, ...prev.filter((o) => o.id !== orderData.id)]));
 
-        // Re-deduct physical stock if this was a delivered order
+        // Re-deduct physical stock if this was a delivered order (summing all matching size lines)
         if (orderData.deliveryStatus === 'delivered' && orderData.items && orderData.items.length > 0) {
           const updatedProducts = products.map((p) => {
-            const it = orderData.items.find((i) => i.productId === p.id);
-            if (it) {
-              const updatedStock = Math.max(0, p.stockPairs - it.totalPairs);
+            const orderedPairs = (orderData.items || [])
+              .filter((i) => doesOrderItemMatchProduct(i, p))
+              .reduce((sum, i) => sum + (Number(i.totalPairs) || 0), 0);
+            if (orderedPairs > 0) {
+              const updatedStock = Math.max(0, p.stockPairs - orderedPairs);
               const updatedP = { ...p, stockPairs: updatedStock };
               saveDocumentToFirestore('products', p.id, updatedP);
               return updatedP;
@@ -1172,7 +1237,7 @@ export default function App() {
         // Re-apply customer due accurately using true customer ledger
         if (orderData.customerId) {
           const targetCust = customers.find((c) => c.id === orderData.customerId);
-          const restoredOrders = [orderData, ...orders];
+          const restoredOrders = [orderData, ...orders.filter((o) => o.id !== orderData.id)];
           const updatedDue = calculateCustomerBalance(orderData.customerId, targetCust, restoredOrders, paymentLogs);
           const updatedCustomers = customers.map((c) => {
             if (c.id === orderData.customerId) {
@@ -1708,7 +1773,7 @@ export default function App() {
         {activeTab === 'shops' && currentUser && (
           <ShopManagement
             currentUser={currentUser}
-            customers={customers}
+            customers={getVisibleCustomers()}
             userAccounts={userAccounts}
             sellers={allSellers}
             orders={orders}
@@ -1717,6 +1782,8 @@ export default function App() {
             onAddShop={handleAddShop}
             onUpdateShop={handleUpdateShop}
             onDeleteShop={handleDeleteUserAccount}
+            onRecordPayment={handleRecordPayment}
+            onSelectOrderForInvoice={setSelectedInvoiceOrder}
             onNavigateToPos={(customerId) => {
               setPosPreSelectedCustomerId(customerId);
               setActiveTab('pos');

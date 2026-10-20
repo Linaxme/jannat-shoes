@@ -62,8 +62,9 @@ export const StockManagement: React.FC<StockManagementProps> = ({
 
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategoryFilter, setSelectedCategoryFilter] = useState<string>('সব');
+  const [selectedSizeFilter, setSelectedSizeFilter] = useState<string>('সব');
   const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState<boolean>(false);
-  const [stockAlertFilter, setStockAlertFilter] = useState<'all' | 'low'>('all');
+  const [stockAlertFilter, setStockAlertFilter] = useState<'all' | 'in_stock' | 'low' | 'out'>('all');
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [itemsPerPage, setItemsPerPage] = useState<number | 'all'>(100);
@@ -217,6 +218,16 @@ export const StockManagement: React.FC<StockManagementProps> = ({
     }
   };
 
+  const normalizeSizeLabel = (s?: string) => (s || '').replace(/\(.*?\)/g, '').trim();
+
+  const availableSizeGroups = Array.from(
+    new Set(
+      products
+        .map((p) => normalizeSizeLabel(p.sizeRange))
+        .filter((s) => Boolean(s))
+    )
+  );
+
   const filteredProducts = products.filter((p) => {
     const matchesSearch =
       (p.articleCode || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -228,7 +239,18 @@ export const StockManagement: React.FC<StockManagementProps> = ({
       return false;
     }
 
-    if (stockAlertFilter === 'low' && p.stockPairs > p.minStockAlert) {
+    if (selectedSizeFilter !== 'সব' && normalizeSizeLabel(p.sizeRange) !== selectedSizeFilter) {
+      return false;
+    }
+
+    const freePairs = Math.max(0, p.stockPairs - getBookedPairs(p));
+    if (stockAlertFilter === 'in_stock' && freePairs <= 0) {
+      return false;
+    }
+    if (stockAlertFilter === 'low' && (freePairs <= 0 || freePairs > p.minStockAlert)) {
+      return false;
+    }
+    if (stockAlertFilter === 'out' && freePairs > 0) {
       return false;
     }
 
@@ -252,7 +274,12 @@ export const StockManagement: React.FC<StockManagementProps> = ({
   const totalStockValueBuy = products.reduce((sum, p) => sum + p.stockPairs * p.buyPrice, 0);
   const allPendingBookedPairs = products.reduce((sum, p) => sum + getBookedPairs(p), 0);
   const freeStockPairs = products.reduce((sum, p) => sum + Math.max(0, p.stockPairs - getBookedPairs(p)), 0);
-  const lowStockCount = products.filter((p) => Math.max(0, p.stockPairs - getBookedPairs(p)) <= p.minStockAlert).length;
+  const inStockCount = products.filter((p) => Math.max(0, p.stockPairs - getBookedPairs(p)) > 0).length;
+  const lowStockCount = products.filter((p) => {
+    const free = Math.max(0, p.stockPairs - getBookedPairs(p));
+    return free > 0 && free <= p.minStockAlert;
+  }).length;
+  const outOfStockCount = products.filter((p) => Math.max(0, p.stockPairs - getBookedPairs(p)) <= 0).length;
 
   const handleCreateProduct = (e: React.FormEvent) => {
     e.preventDefault();
@@ -633,6 +660,104 @@ export const StockManagement: React.FC<StockManagementProps> = ({
             <span className="hidden xs:inline">টেবিল</span>
           </button>
         </div>
+      </div>
+
+      {/* Quick Filter Chips: Stock Status & Size Groups */}
+      <div className="flex flex-wrap items-center justify-between gap-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 shadow-xs">
+        <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none">
+          <button
+            type="button"
+            onClick={() => {
+              setStockAlertFilter('all');
+              setCurrentPage(1);
+            }}
+            className={`px-2.5 py-1 rounded-lg text-[11px] font-bold whitespace-nowrap transition cursor-pointer ${
+              stockAlertFilter === 'all'
+                ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-950'
+                : 'bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+            }`}
+          >
+            সব ({toBnDigit(products.length)})
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setStockAlertFilter('in_stock');
+              setCurrentPage(1);
+            }}
+            className={`px-2.5 py-1 rounded-lg text-[11px] font-bold whitespace-nowrap transition cursor-pointer ${
+              stockAlertFilter === 'in_stock'
+                ? 'bg-emerald-600 text-white'
+                : 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/20'
+            }`}
+          >
+            স্টকে আছে ({toBnDigit(inStockCount)})
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setStockAlertFilter('low');
+              setCurrentPage(1);
+            }}
+            className={`px-2.5 py-1 rounded-lg text-[11px] font-bold whitespace-nowrap transition cursor-pointer ${
+              stockAlertFilter === 'low'
+                ? 'bg-amber-500 text-slate-950'
+                : 'bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-500/20'
+            }`}
+          >
+            স্টক কম ({toBnDigit(lowStockCount)})
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setStockAlertFilter('out');
+              setCurrentPage(1);
+            }}
+            className={`px-2.5 py-1 rounded-lg text-[11px] font-bold whitespace-nowrap transition cursor-pointer ${
+              stockAlertFilter === 'out'
+                ? 'bg-rose-600 text-white'
+                : 'bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-500/20'
+            }`}
+          >
+            স্টক আউট ({toBnDigit(outOfStockCount)})
+          </button>
+        </div>
+
+        {availableSizeGroups.length > 0 && (
+          <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none">
+            <button
+              type="button"
+              onClick={() => {
+                setSelectedSizeFilter('সব');
+                setCurrentPage(1);
+              }}
+              className={`px-2.5 py-1 rounded-lg text-[11px] font-bold whitespace-nowrap transition cursor-pointer ${
+                selectedSizeFilter === 'সব'
+                  ? 'bg-indigo-600 text-white'
+                  : 'bg-indigo-50/80 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 border border-indigo-200/80 dark:border-indigo-500/20'
+              }`}
+            >
+              সব সাইজ
+            </button>
+            {availableSizeGroups.map((sz) => (
+              <button
+                key={sz}
+                type="button"
+                onClick={() => {
+                  setSelectedSizeFilter(sz);
+                  setCurrentPage(1);
+                }}
+                className={`px-2.5 py-1 rounded-lg text-[11px] font-bold whitespace-nowrap transition cursor-pointer ${
+                  selectedSizeFilter === sz
+                    ? 'bg-indigo-600 text-white'
+                    : 'bg-indigo-50/80 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 border border-indigo-200/80 dark:border-indigo-500/20 hover:bg-indigo-100 dark:hover:bg-indigo-500/20'
+                }`}
+              >
+                সাইজ: {sz}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Stock Items Container */}
